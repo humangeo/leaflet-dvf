@@ -1,0 +1,122 @@
+var map;
+var lastLayer;
+var legendControl;
+
+// JSONP callback function for displaying the latest earthquake data
+var eqfeed_callback = function (data) {
+
+	// Initialize framework linear functions for mapping earthquake data properties to Leaflet style properties
+	var magnitudeColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '25%'});
+	var magnitudeFillColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '50%'});
+	var magnitudeRadiusFunction = new L.LinearFunction(new L.Point(0,3), new L.Point(10,20));
+	
+	var now = Math.round((new Date()).getTime());
+	var start = now - 86400000;
+
+	// Initialize a linear function to map earthquake time to opacity
+	var timeOpacityFunction = new L.LinearFunction(new L.Point(start,0.3), new L.Point(now,1));
+	
+	// Setup a new data layer
+	var dataLayer = new L.DataLayer(data,{
+		recordsField: 'features',
+		latitudeField: 'geometry.coordinates.1',
+		longitudeField: 'geometry.coordinates.0',
+		locationMode: L.LocationModes.LATLNG,
+		displayOptions: {
+			'properties.mag': {
+				displayName: 'Magnitude',
+				color: magnitudeColorFunction,
+				fillColor: magnitudeFillColorFunction,
+				radius: magnitudeRadiusFunction
+			},
+			'properties.time': {
+				displayName: 'Time',
+				opacity: timeOpacityFunction,
+				fillOpacity: timeOpacityFunction,
+				displayText: function (value) {
+					return dateFormat(new Date(Number(value)),'mm/dd/yy HH:MM');
+				}
+			}
+		},
+		layerOptions: {
+			numberOfSides: 4,
+			radius: 10,
+			weight: 1,
+			color: '#000',
+			opacity: 0.2,
+			fillOpacity: 0.7
+		},
+		tooltipOptions: {
+			iconSize: new L.Point(90,76),
+			iconAnchor: new L.Point(-4,76)
+		},
+		onEachRecord: function (layer,record) {
+			var $html = L.HTMLUtils.buildTable(record);
+			
+			layer.bindPopup($html.wrap('<div/>').parent().html(),{
+				minWidth: 400,
+				maxWidth: 400
+			});
+		}
+	});
+	
+	// Add the data layer to the map
+	map.addLayer(dataLayer);
+	
+	lastLayer = dataLayer;
+};
+
+$(document).ready(function() {
+
+	// Function for resizing the map to fill the available space on the screen
+	var resize = function () {
+		var $map = $('#map');
+		
+		$map.height($(window).height() - $('div.navbar').outerHeight());
+		
+		if (map) {
+			map.invalidateSize();
+		}
+	};
+	
+	// Resize the map element on window resize
+	$(window).on('resize', function () {
+		resize();
+	});
+	
+	// Resize the map element
+	resize();
+	
+	// Initialize the map
+	map = L.map('map').setView([0.0, 0.0], 2);
+	
+	// Add a CloudMade tile layer with style #997
+	L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
+	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
+	}).addTo(map);
+	
+	// Initialize the legend control and add it to the map
+	legendControl = new L.Control.Legend();
+	
+	legendControl.addTo(map);
+	
+	// Function for requesting the latest earthquakes from USGS
+	var getData = function () {
+		
+		if (lastLayer) {
+			map.removeLayer(lastLayer);
+		}
+		
+		$.ajax({
+			url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
+			type: 'GET',
+			dataType: 'jsonp'
+		});
+	};
+	
+	// Get the latest earthquake data
+	getData();
+	
+	// Periodically request the latest data
+	setInterval(getData,300000);
+});

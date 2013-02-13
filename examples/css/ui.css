@@ -1,0 +1,47 @@
+body {
+	padding: 0px;
+	margin: 0px;
+}
+
+#map {
+	width: 100%;
+}
+
+div.navbar {
+	margin-bottom: 0px;
+}
+
+div.navbar-inner {
+	border-radius: 0px;
+}
+
+div.container-fluid {
+	padding: 0px;
+	margin: 0px;
+}
+
+.leaflet-control-legend {
+	background-color: rgba(255, 255, 255, 0.7);
+	padding: 10px;
+	border-radius: 4px;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	max-height: 70px;
+	width: 268px;
+	box-shadow: 0 1px 7px #999;
+	overflow: hidden;
+}
+
+.leaflet-control-legend.larger {
+	max-height: 50%;
+	overflow: auto;
+}
+
+.leaflet-control-legend .legend {
+	padding: 0px;
+}
+
+.leaflet-control-legend i {
+	background-image: none;
+	vertical-align: text-bottom;
+}

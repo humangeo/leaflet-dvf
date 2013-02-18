@@ -12,21 +12,23 @@ New marker types (see the markers example below):
 
 * RegularPolygonMarker - create N-sided shapes like triangles, squares, hexagons, etc.
 * StarMarker - create stars with N points
-* ChartMarkers:
+* ChartMarkers - useful for analyzing multiple data properties at each location:
 	* BarChartMarker
 	* PieChartMarker
 	* RadialBarChartMarker
 	* CoxcombChartMarker
+	* RadialMeterMarker
+	* StackedRegularPolygonMarker - a variation on the bar chart
 
 Functions for easily mapping data properties to Leaflet style values:
 
 * LinearFunction
 * Color functions:
-	* HSLHueFunction
-	* HSLSaturationFunction
-	* HSLLuminosityFunction
+	* HSLHueFunction - vary the output hue based on a data property
+	* HSLSaturationFunction - vary the output saturation based on a data property
+	* HSLLuminosityFunction - vary the output lightness/luminosity based on a data property
 	* Various RGB functions
-* PiecewiseFunction - use multiple LinearFunction classes in sequence
+* PiecewiseFunction - use multiple LinearFunction classes in sequence (e.g. vary a color from white to yellow, yellow to red)
 
 New layer types that simplify reading and visualizing any JSON-based data structure:
 

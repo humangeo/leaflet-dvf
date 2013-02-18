@@ -277,3 +277,38 @@ L.squareMarker = function (centerLatLng, options) {
 	return new L.SquareMarker(centerLatLng, options);
 };
 
+L.PentagonMarker = L.RegularPolygonMarker.extend({
+	options: {
+		numberOfSides: 5,
+		rotation: -18.0,
+		radius: 5
+	}
+});
+
+L.pentagonMarker = function (centerLatLng, options) {
+	return new L.PentagonMarker(centerLatLng, options);
+};
+
+L.HexagonMarker = L.RegularPolygonMarker.extend({
+	options: {
+		numberOfSides: 6,
+		rotation: 30.0,
+		radius: 5
+	}
+});
+
+L.hexagonMarker = function (centerLatLng, options) {
+	return new L.HexagonMarker(centerLatLng, options);
+};
+
+L.OctagonMarker = L.RegularPolygonMarker.extend({
+	options: {
+		numberOfSides: 8,
+		rotation: 22.5,
+		radius: 5
+	}
+});
+
+L.octagonMarker = function (centerLatLng, options) {
+	return new L.OctagonMarker(centerLatLng, options);
+};

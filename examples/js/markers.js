@@ -30,6 +30,8 @@ $(document).ready(function() {
 		return new L.LatLng(Math.random() * 179 - 89,Math.random() * 359 - 179);
 	};
 	
+	// Create some sample basic shape markers.  There are built-in classes for constructing the common shapes:
+	// triangles, squares, pentagons, hexagons, and octagons that can be used instead of the L.RegularPolygonMarker class.
 	var triangle = new L.TriangleMarker(new L.LatLng(0,0), {
 		radius: 20,
 		weight: 1,
@@ -48,10 +50,8 @@ $(document).ready(function() {
 		fillColor: 'hsl(30, 100%, 50%)'
 	});
 	
-	var pentagon = new L.RegularPolygonMarker(new L.LatLng(0,10), {
+	var pentagon = new L.PentagonMarker(new L.LatLng(0, 10), {
 		radius: 20,
-		numberOfSides: 5,
-		rotation: -18,
 		weight: 1,
 		opacity: 1,
 		fillOpacity: 0.9,
@@ -59,10 +59,8 @@ $(document).ready(function() {
 		fillColor: 'hsl(60, 100%, 50%)'
 	});
 	
-	var hexagon = new L.RegularPolygonMarker(new L.LatLng(0,15), {
+	var hexagon = new L.HexagonMarker(new L.LatLng(0,15), {
 		radius: 20,
-		numberOfSides: 6,
-		rotation: 0,
 		weight: 1,
 		opacity: 1,
 		fillOpacity: 0.9,
@@ -70,14 +68,25 @@ $(document).ready(function() {
 		fillColor: 'hsl(90, 100%, 50%)'
 	});
 	
+	var octagon = new L.OctagonMarker(new L.LatLng(0,20), {
+		radius: 20,
+		weight: 1,
+		opacity: 1,
+		fillOpacity: 0.9,
+		color: '#000000',
+		fillColor: 'hsl(120, 100%, 50%)'
+	});
+	
 	map.addLayer(triangle);
 	map.addLayer(square);
 	map.addLayer(pentagon);
 	map.addLayer(hexagon);
+	map.addLayer(octagon);
 	
+	// Create two StackedRegularPolygonMarkers
 	var stackedOptions = {
 		chartOptions: {
-			'dataPoint1': {
+			'dataPoint4': {
 				fillColor: 'rgb(255, 255, 212)',
 				minValue: 0,
 				maxValue: 20,
@@ -86,7 +95,7 @@ $(document).ready(function() {
 					return value.toFixed(2);
 				}
 			},
-			'dataPoint2': {
+			'dataPoint3': {
 				fillColor: 'rgb(254, 217, 142)',
 				minValue: 0,
 				maxValue: 20,
@@ -95,7 +104,7 @@ $(document).ready(function() {
 					return value.toFixed(2);
 				}
 			},
-			'dataPoint3': {
+			'dataPoint2': {
 				fillColor: 'rgb(254, 153, 41)',
 				minValue: 0,
 				maxValue: 20,
@@ -104,7 +113,7 @@ $(document).ready(function() {
 					return value.toFixed(2);
 				}
 			},
-			'dataPoint4': {
+			'dataPoint1': {
 				fillColor: 'rgb(204, 76, 2)',
 				minValue: 0,
 				maxValue: 20,
@@ -139,6 +148,8 @@ $(document).ready(function() {
 	
 	map.addLayer(stackedMarker);
 	map.addLayer(stackedMarker2);
+	
+	// Create 20 of each of the various new markers available through the framework
 	for (var index = 0;index < 20;++index) {
 		var centerLatLng = getCenterLatLng();
 		var numberOfSides = Math.floor((Math.random() * 5) + 3);
@@ -163,6 +174,7 @@ $(document).ready(function() {
 			offset: 0
 		};
 		
+		// Add a RadialMeterMarker
 		var meterMarkerOptions = {
 			data: {
 				'Speed': 200
@@ -201,6 +213,7 @@ $(document).ready(function() {
 		
 		map.addLayer(testMeter);
 		
+		// Add a StarMarker
 		options.innerRadius = radiusX - 8;
 		options.rotation = 55;
 		
@@ -209,6 +222,7 @@ $(document).ready(function() {
 		marker = new L.StarMarker(centerLatLng,options);
 		map.addLayer(marker);
 		
+		// Add a RegularPolygonMarker
 		options.numberOfSides = Math.floor((Math.random() * 5) + 3);
 		
 		centerLatLng = getCenterLatLng();
@@ -223,6 +237,8 @@ $(document).ready(function() {
 		options.width = 10;
 		
 		options.rotation = 0;
+		
+		// Add a RadialBarChartMarker
 		options.data = {
 			'dataPoint1': Math.random() * 20,
 			'dataPoint2': Math.random() * 20,
@@ -268,15 +284,14 @@ $(document).ready(function() {
 				}
 			}
 		};
-		
-		//options.maxDegrees = 180.0;
-		
+
 		centerLatLng = getCenterLatLng();
 		
 		marker = new L.RadialBarChartMarker(centerLatLng,options);
 		
 		map.addLayer(marker);
 		
+		// Add a CoxcombChartMarker
 		centerLatLng = getCenterLatLng();
 		
 		options.chartOptions['dataPoint1'].fillColor = '#EDF8FB';
@@ -288,6 +303,7 @@ $(document).ready(function() {
 		
 		map.addLayer(marker);
 		
+		// Add a PieChartMarker
 		centerLatLng = getCenterLatLng();
 		
 		options.barThickness = 6;
@@ -301,6 +317,7 @@ $(document).ready(function() {
 		
 		map.addLayer(marker);
 		
+		// Add a BarChartMarker
 		centerLatLng = getCenterLatLng();
 		
 		options.width = 8;

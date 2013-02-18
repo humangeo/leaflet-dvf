@@ -18,9 +18,8 @@ $(document).ready(function() {
 	resize();
 	
 	map = L.map('map').setView([0.0, 0.0], 2);
-	
-	// add a CloudMade tile layer with style #997
-	L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/997/256/{z}/{x}/{y}.png', {
+
+	L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
 	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
 	}).addTo(map);
 	
@@ -76,6 +75,70 @@ $(document).ready(function() {
 	map.addLayer(pentagon);
 	map.addLayer(hexagon);
 	
+	var stackedOptions = {
+		chartOptions: {
+			'dataPoint1': {
+				fillColor: 'rgb(255, 255, 212)',
+				minValue: 0,
+				maxValue: 20,
+				maxRadius: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dataPoint2': {
+				fillColor: 'rgb(254, 217, 142)',
+				minValue: 0,
+				maxValue: 20,
+				maxRadius: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dataPoint3': {
+				fillColor: 'rgb(254, 153, 41)',
+				minValue: 0,
+				maxValue: 20,
+				maxRadius: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dataPoint4': {
+				fillColor: 'rgb(204, 76, 2)',
+				minValue: 0,
+				maxValue: 20,
+				maxRadius: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			}
+		},
+		data: {
+			dataPoint1: 5,
+			dataPoint2: 3,
+			dataPoint3: 8,
+			dataPoint4: 15
+		},
+		color: '#000000',
+		weight: 1,
+		numberOfSides: 6,
+		rotation: 0
+	};
+	
+	var stackedMarker = new L.StackedRegularPolygonMarker(new L.LatLng(20, 20), stackedOptions);
+	
+	stackedOptions.data = {
+		dataPoint1: 8,
+		dataPoint2: 18,
+		dataPoint3: 3,
+		dataPoint4: 10
+	};
+	
+	var stackedMarker2 = new L.StackedRegularPolygonMarker(new L.LatLng(30, 20), stackedOptions);
+	
+	map.addLayer(stackedMarker);
+	map.addLayer(stackedMarker2);
 	for (var index = 0;index < 20;++index) {
 		var centerLatLng = getCenterLatLng();
 		var numberOfSides = Math.floor((Math.random() * 5) + 3);

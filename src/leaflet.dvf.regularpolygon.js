@@ -149,32 +149,6 @@ L.RegularPolygonMarker = L.Path.extend({
 	},
 
 	getPathString: function () {
-//		var points = this._points;
-//		var innerPoints = this._innerPoints;
-//		
-//		var getPath = function (points) {
-//			var point = points[0];
-//			var pathString = 'M' + point.x + ',' + point.y;
-//			
-//			for (var index = 1;index < points.length;index++) {
-//				point = points[index];
-//				pathString += 'L' + point.x + ',' + point.y;
-//			}
-//			
-//			pathString += 'Z';
-//			
-//			return pathString;
-//		};
-//		
-//		if (L.Browser.svg) {
-//			var pathString = getPath(points);
-//			
-//			if (innerPoints) {
-//				pathString += getPath(innerPoints);
-//			}
-//			
-//			return pathString;
-//		}
 		return new L.SVGPathBuilder(this._points, this._innerPoints).toString();
 	},
 

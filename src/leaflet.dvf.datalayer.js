@@ -758,7 +758,7 @@ L.DataLayer = L.LayerGroup.extend({
 								var maxX = bounds ? bounds[1].x : displayProperties.maxValue;
 								var average = (minX + maxX) / 2;
 								
-								var binFunction = new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments - 1, maxX));
+								var binFunction = new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
 								
 								displayMin = minX;
 								displayMax = maxX;
@@ -777,7 +777,7 @@ L.DataLayer = L.LayerGroup.extend({
 								var x = binFunction.evaluate(index);
 								var value = valueFunction.evaluate ? valueFunction.evaluate(x) : valueFunction(x);
 		
-								L.StyleConverter.setCSSProperty($i, property, value); //this.setCSSProperty($i, property, value);
+								L.StyleConverter.setCSSProperty($i, property, value);
 								
 								var min = (segmentSize * index) + minX;
 								var max = min + segmentSize;
@@ -799,11 +799,9 @@ L.DataLayer = L.LayerGroup.extend({
 
 				}
 			}
-			
-			
-			
-//			$legendElement.append('<div class="legend-title">' + displayName + '</div>');
+
 			$legendElement.append($legendItems);
+
 		}
 		
 		return $legendElement.wrap('<div/>').parent().html();
@@ -966,7 +964,7 @@ L.BarChartDataLayer = L.ChartDataLayer.extend({
 	},
 	
 	_getMarker: function (latLng, options) {
-		return new L.BarChartMarker(latLng,options);
+		return new L.BarChartMarker(latLng, options);
 	}
 });
 
@@ -979,7 +977,7 @@ L.RadialBarChartDataLayer = L.ChartDataLayer.extend({
 	},
 	
 	_getMarker: function (latLng, options) {
-		return new L.RadialBarChartMarker(latLng,options);
+		return new L.RadialBarChartMarker(latLng, options);
 	}
 });
 
@@ -992,7 +990,7 @@ L.PieChartDataLayer = L.ChartDataLayer.extend({
 	},
 	
 	_getMarker: function (latLng, options) {
-		return new L.PieChartMarker(latLng,options);
+		return new L.PieChartMarker(latLng, options);
 	}
 });
 
@@ -1005,6 +1003,19 @@ L.CoxcombChartDataLayer = L.ChartDataLayer.extend({
 	},
 	
 	_getMarker: function (latLng, options) {
-		return new L.CoxcombChartMarker(latLng,options);
+		return new L.CoxcombChartMarker(latLng, options);
+	}
+});
+
+/*
+ *
+ */
+L.StackedRegularPolygonDataLayer = L.ChartDataLayer.extend({
+	initialize: function (data, options) {
+		L.ChartDataLayer.prototype.initialize.call(this, data, options);
+	},
+	
+	_getMarker: function (latLng, options) {
+		return new L.StackedRegularPolygonMarker(latLng, options);
 	}
 });

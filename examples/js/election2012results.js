@@ -24,17 +24,17 @@ $(document).ready(function() {
 	legendControl = new L.Control.Legend();
 	
 	legendControl.addTo(map);
-	
-	// add a CloudMade tile layer with style #997
+
 	L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/997/256/{z}/{x}/{y}.png', {
 	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
 	}).addTo(map);
 	
-	var fillColorFunctionRomney = new L.HSLLuminosityFunction(new L.Point(0, 0.95), new L.Point(55,0.4), {outputHue: 0, outputSaturation: '100%'});
-	var fillColorFunctionObama = new L.HSLLuminosityFunction(new L.Point(0, 0.95), new L.Point(55,0.4), {outputHue: 240, outputSaturation: '100%'});
+	// Define a fill color function for Romney (light red to red) and a fill color function for Obama (light blue to blue)
+	var fillColorFunctionRomney = new L.HSLLuminosityFunction(new L.Point(0, 0.95), new L.Point(55, 0.4), {outputHue: 0, outputSaturation: '100%'});
+	var fillColorFunctionObama = new L.HSLLuminosityFunction(new L.Point(0, 0.95), new L.Point(55, 0.4), {outputHue: 240, outputSaturation: '100%'});
 	
 	var opacityFunction = new L.PiecewiseFunction([new L.LinearFunction(new L.Point(0, 0), new L.Point(1, 0.7)), new L.LinearFunction(new L.Point(1, 0.7), new L.Point(55, 0.7))]);
-	
+
 	var options = {
 		recordsField: 'electoral_votes',
 		locationMode: L.LocationModes.STATE,

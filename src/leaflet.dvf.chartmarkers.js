@@ -678,6 +678,78 @@ L.radialBarChartMarker = function (centerLatLng, options) {
 	return new L.RadialBarChartMarker(centerLatLng, options);
 };
 
+L.StackedRegularPolygonMarker = L.ChartMarker.extend({
+	options: {
+		iconSize: new L.Point(50, 40)
+	},
+	
+	initialize: function (centerLatLng, options) {
+		L.Util.setOptions(this, options);
+		
+		L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
+	},
+	
+	_loadBars: function () {
+		var value;
+		var sum = 0;
+		var angle = 0;
+		var percentage = 0.0;
+		var maxDegrees = this.options.maxDegrees || 360.0;
+		var lastRadiusX = 0;
+		var lastRadiusY = 0;
+		var bar;
+		var options = this.options;
+		var dataPoint;
+		var data = this.options.data;
+		var chartOptions = this.options.chartOptions;
+		var chartOption;
+		var key;
+		
+		// Iterate through the data values
+		for (key in data) {		
+			value = parseFloat(data[key]);
+			chartOption = chartOptions[key];
+			
+			minValue = chartOption.minValue || 0;
+			maxValue = chartOption.maxValue || 100;
+			
+			// TODO:  Add support for x and y radii
+			minRadius = chartOption.minRadius || 0;
+			maxRadius = chartOption.maxRadius || 10;
+			
+			options.fillColor = chartOption.fillColor || this.options.fillColor;
+			options.value = value;
+			options.minValue = minValue;
+			options.maxValue = maxValue;
+			
+			var evalFunction = new L.LinearFunction(new L.Point(minValue, minRadius), new L.Point(maxValue, maxRadius));
+			
+			var barThickness = evalFunction.evaluate(value);
+			
+			options.radiusX = lastRadiusX + barThickness;
+			options.radiusY = lastRadiusY + barThickness;
+			options.innerRadiusX = lastRadiusX;
+			options.innerRadiusY = lastRadiusY;
+			
+			options.key = key;
+			options.displayName = chartOption.displayName;
+			options.opacity = this.options.opacity || 1.0;
+			options.fillOpacity = this.options.fillOpacity || 0.7;
+			options.weight = this.options.weight || 1;
+			options.color = chartOption.color || this.options.color;
+			options.displayText = chartOption.displayText;
+			
+			bar = new L.RegularPolygonMarker(this._centerLatLng, options);
+			
+			this._bindMouseEvents(bar);
+			
+			lastRadiusX = options.radiusX;
+			lastRadiusY = options.radiusY;
+			
+			this.addLayer(bar);
+		}
+	}
+});
 
 /*
  * 

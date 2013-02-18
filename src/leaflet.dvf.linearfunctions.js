@@ -341,7 +341,7 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 		var found = false;
 		var currentFunction;
 		
-		for (var index in this._functions) {
+		for (var index = 0; index < this._functions.length; ++index) {
 			currentFunction = this._functions[index];
 			bounds = currentFunction.getBounds();
 			
@@ -354,7 +354,8 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 			}
 		}
 		
-		return found ? currentFunction : null;
+		// If found return the found function; otherwise return the last function
+		return found ? currentFunction : this._functions[this._functions.length - 1];
 	},
 	
 	evaluate: function (x) {

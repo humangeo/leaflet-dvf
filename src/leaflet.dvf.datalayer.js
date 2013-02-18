@@ -756,8 +756,7 @@ L.DataLayer = L.LayerGroup.extend({
 								var bounds = valueFunction.getBounds ? valueFunction.getBounds() : null;
 								var minX = bounds ? bounds[0].x : displayProperties.minValue;
 								var maxX = bounds ? bounds[1].x : displayProperties.maxValue;
-								var average = (minX + maxX) / 2;
-								
+
 								var binFunction = new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
 								
 								displayMin = minX;

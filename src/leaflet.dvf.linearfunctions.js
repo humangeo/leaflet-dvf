@@ -16,8 +16,14 @@ L.LinearFunction = L.Class.extend({
 	},
 	
 	_calculateParameters: function (minPoint, maxPoint) {
-		this._slope = (maxPoint.y - minPoint.y) / (maxPoint.x - minPoint.x);
-		this._b = minPoint.y - this._slope * minPoint.x;
+		if (minPoint.x === maxPoint.x) {
+			this._slope = 0;
+			this._b = minPoint.y;
+		}
+		else {
+			this._slope = (maxPoint.y - minPoint.y) / (maxPoint.x - minPoint.x);
+			this._b = minPoint.y - this._slope * minPoint.x;
+		}
 	},
 	
 	getBounds: function () {
@@ -32,10 +38,6 @@ L.LinearFunction = L.Class.extend({
 	setRange: function (minPoint, maxPoint) {
 		this._minPoint = minPoint;
 		this._maxPoint = maxPoint;
-		
-		if (maxPoint.x === minPoint.x) {
-			maxPoint.x = maxPoint.x + 0.0000001;
-		}
 		
 		this._calculateParameters(minPoint, maxPoint);
 		

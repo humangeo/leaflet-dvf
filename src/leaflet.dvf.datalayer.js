@@ -416,11 +416,13 @@ L.DataLayer = L.LayerGroup.extend({
 		var location;
 		
 		for (var recordIndex in records) {
-			var record = records[recordIndex];
+			if (records.hasOwnProperty(recordIndex)) {
+				var record = records[recordIndex];
 			
-			location = this._getLocation(record, recordIndex);
+				location = this._getLocation(record, recordIndex);
 			
-			this.locationToLayer(location, record);
+				this.locationToLayer(location, record);
+			}
 		}
 	},
 	
@@ -430,11 +432,13 @@ L.DataLayer = L.LayerGroup.extend({
 		var indexedRecords = {};
 		
 		for (var recordIndex in records) {
-			var record = records[recordIndex];
-			var fieldValue = this._getFieldValue(record,locationField);
+			if (records.hasOwnProperty(recordIndex)) {
+				var record = records[recordIndex];
+				var fieldValue = this._getFieldValue(record,locationField);
 			
-			indexedRecords[fieldValue] = record;
-			locationValues.push(fieldValue);
+				indexedRecords[fieldValue] = record;
+				locationValues.push(fieldValue);
+			}
 		}
 		
 		if (this.options.getLocation) {

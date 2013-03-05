@@ -6,9 +6,9 @@ Leaflet Data Visualization Framework (DVF)
 The Leaflet DVF is an extension to [CloudMade][]'s [Leaflet][] JavaScript mapping library.
 The primary goal of the framework is to simplify data visualization and thematic mapping.
 
-![Markers](http://humangeo.github.com/images/markers.png "Markers")
-![Election Mapping](http://humangeo.github.com/images/electionmapping.png "Election Mapping")
-![Country Data](http://humangeo.github.com/images/countrydata.png "Country Data")
+![Markers](http://humangeo.github.com/leaflet-dvf/images/markers.png "Markers")
+![Election Mapping](http://humangeo.github.com/leaflet-dvf/images/electionmapping.png "Election Mapping")
+![Country Data](http://humangeo.github.com/leaflet-dvf/images/countrydata.png "Country Data")
 
 It includes:
 

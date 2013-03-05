@@ -47,19 +47,19 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 Check out the examples:
 
 New Marker Types:
-* [Markers](http://htmlpreview.github.com/?https://github.com/humangeo/leaflet-dvf/blob/master/examples/html/markers.html)
+* [Markers](http://humangeo.github.com/leaflet-dvf/examples/html/markers.html)
 
 Proportional Symbol:
-* [USGS Earthquakes](http://htmlpreview.github.com/?https://github.com/humangeo/leaflet-dvf/blob/master/examples/html/earthquakes.html)
-* [Meetup Finder](http://htmlpreview.github.com/?https://github.com/humangeo/leaflet-dvf/blob/master/examples/html/meetups.html)
-* [Weather](http://htmlpreview.github.com/?https://github.com/humangeo/leaflet-dvf/blob/master/examples/html/weather.html)
+* [USGS Earthquakes](http://humangeo.github.com/leaflet-dvf/examples/html/earthquakes.html)
+* [Meetup Finder](http://humangeo.github.com/leaflet-dvf/examples/html/meetups.html)
+* [Weather](http://humangeo.github.com/leaflet-dvf/examples/html/weather.html)
 
 Choropleth Mapping:
-* [WorldBank and UN Data](http://htmlpreview.github.com/?https://github.com/humangeo/leaflet-dvf/blob/master/examples/html/incomelevels.html)
-* [Election 2012 Polling](http://htmlpreview.github.com/?https://github.com/humangeo/leaflet-dvf/blob/master/examples/html/election2012.html)
-* [2008 vs 2012 Election Results](http://htmlpreview.github.com/?https://github.com/humangeo/leaflet-dvf/blob/master/examples/html/election2012results.html)
-* [2008 Election Results](http://htmlpreview.github.com/?https://github.com/humangeo/leaflet-dvf/blob/master/examples/html/uselectiondata.html)
-* [Geohashes](http://htmlpreview.github.com/?https://github.com/humangeo/leaflet-dvf/blob/master/examples/html/geohashes.html)
+* [WorldBank and UN Data](http://humangeo.github.com/leaflet-dvf/examples/html/incomelevels.html)
+* [Election 2012 Polling](http://humangeo.github.com/leaflet-dvf/examples/html/election2012.html)
+* [2008 vs 2012 Election Results](http://humangeo.github.com/leaflet-dvf/examples/html/election2012results.html)
+* [2008 Election Results](http://humangeo.github.com/leaflet-dvf/examples/html/uselectiondata.html)
+* [Geohashes](http://humangeo.github.com/leaflet-dvf/examples/html/geohashes.html)
 
 Tutorials coming soon to [HumanGeo](http://www.thehumangeo.com/)'s [blog](http://blog.thehumangeo.com)
 

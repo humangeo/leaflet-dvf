@@ -6,9 +6,24 @@ var legendControl;
 var eqfeed_callback = function (data) {
 
 	// Initialize framework linear functions for mapping earthquake data properties to Leaflet style properties
+	// Color scale - green to red using the basic HSLHueFunction
 	var magnitudeColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '25%'});
 	var magnitudeFillColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '50%'});
 	var magnitudeRadiusFunction = new L.LinearFunction(new L.Point(0,3), new L.Point(10,20));
+
+	// Color scale - white to orange to red using a PiecewiseFunction
+	// NOTE:  Uncomment these lines to see the difference
+	/*
+	var magnitudeColorFunction = new L.PiecewiseFunction([
+		new L.HSLLuminosityFunction(new L.Point(0,0.8), new L.Point(4,0.3), {outputSaturation: '100%', outputHue: 30}),
+		new L.HSLHueFunction(new L.Point(4,30), new L.Point(10,0), {outputLuminosity: '30%'})
+	]);
+		
+	var magnitudeFillColorFunction = new L.PiecewiseFunction([
+		new L.HSLLuminosityFunction(new L.Point(0,1), new L.Point(4,0.5), {outputSaturation: '100%', outputHue: 30}),
+		new L.HSLHueFunction(new L.Point(4,30), new L.Point(10,0))
+	]);
+	*/
 	
 	var now = Math.round((new Date()).getTime());
 	var start = now - 86400000;
@@ -90,15 +105,28 @@ $(document).ready(function() {
 	// Initialize the map
 	map = L.map('map').setView([0.0, 0.0], 2);
 	
-	// Add a CloudMade tile layer with style #997
-	L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
+	// Add a CloudMade tile layer with style #999
+	var baseLayer = L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
 	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
-	}).addTo(map);
+	});
+	
+	baseLayer.addTo(map);
+	
+	var prccEarthquakesLayer = L.tileLayer('http://{s}.tiles.mapbox.com/v3/bclc-apec.map-rslgvy56/{z}/{x}/{y}.png', {
+		attribution: 'Map &copy; Pacific Rim Coordination Center (PRCC).  Certain data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
+	});
 	
 	// Initialize the legend control and add it to the map
-	legendControl = new L.Control.Legend();
+	var legendControl = new L.Control.Legend();
 	
 	legendControl.addTo(map);
+	
+	var layerControl = new L.Control.Layers({
+		'Cloudmade': baseLayer,
+		'PRCC Earthquake Risk Zones': prccEarthquakesLayer 
+	});
+	
+	layerControl.addTo(map);
 	
 	// Function for requesting the latest earthquakes from USGS
 	var getData = function () {

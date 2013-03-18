@@ -779,9 +779,20 @@ L.DataLayer = L.LayerGroup.extend({
 								
 								var segmentSize = (maxX - minX) / numSegments;
 								var x = binFunction.evaluate(index);
+								var nextX = binFunction.evaluate(index + 1);
 								var value = valueFunction.evaluate ? valueFunction.evaluate(x) : valueFunction(x);
-		
+								var nextValue = valueFunction.evaluate ? valueFunction.evaluate(nextX) : valueFunction(nextX);
+								
 								L.StyleConverter.setCSSProperty($i, property, value);
+								
+								// If this is the fillColor property then setup the legend so that the background is a left-right gradient
+								// moving from the lowest value of the range to the highest value of the range
+								if (property === 'fillColor') {
+									$i.css('background-image', 'linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
+									$i.css('background-image', '-ms-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
+									$i.css('background-image', '-moz-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
+									$i.css('background-image', '-webkit-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
+								}
 								
 								var min = (segmentSize * index) + minX;
 								var max = min + segmentSize;

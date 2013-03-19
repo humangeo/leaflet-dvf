@@ -13,6 +13,13 @@ html, body {
 	overflow: auto;
 }
 
+.leaflet-control-layers label input {
+	margin-bottom: 2px;
+}
+.leaflet-control-layers label span {
+	vertical-align: text-top;
+}
+
 .leaflet-popup-content {
 	overflow: auto;
 	max-height: 300px;

@@ -19,8 +19,14 @@ $(document).ready(function() {
 	
 	map = L.map('map').setView([0.0, 0.0], 2);
 
-	L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
+	var baseLayer = L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
 	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
+	});
+	
+	baseLayer.addTo(map);
+	
+	var layerControl = L.control.layers({
+		'Cloudmade (Dark)': baseLayer 
 	}).addTo(map);
 	
 	var marker;
@@ -28,6 +34,15 @@ $(document).ready(function() {
 	
 	var getCenterLatLng = function () {
 		return new L.LatLng(Math.random() * 179 - 89,Math.random() * 359 - 179);
+	};
+
+	var createLayerGroup = function (name) {
+		var layerGroup = new L.LayerGroup();
+		
+		map.addLayer(layerGroup);
+		layerControl.addOverlay(layerGroup, name);
+		
+		return layerGroup;
 	};
 	
 	// Create some sample basic shape markers.  There are built-in classes for constructing the common shapes:
@@ -77,11 +92,15 @@ $(document).ready(function() {
 		fillColor: 'hsl(120, 100%, 50%)'
 	});
 	
-	map.addLayer(triangle);
-	map.addLayer(square);
-	map.addLayer(pentagon);
-	map.addLayer(hexagon);
-	map.addLayer(octagon);
+	var regularPolygonLayer = createLayerGroup('Regular Polygons');
+	
+	regularPolygonLayer.addLayer(triangle);
+	regularPolygonLayer.addLayer(square);
+	regularPolygonLayer.addLayer(pentagon);
+	regularPolygonLayer.addLayer(hexagon);
+	regularPolygonLayer.addLayer(octagon);
+	
+	var hollowPolygonLayer = createLayerGroup('Regular Polygons (Hollow)');
 	
 	// Create two StackedRegularPolygonMarkers
 	var stackedOptions = {
@@ -146,8 +165,18 @@ $(document).ready(function() {
 	
 	var stackedMarker2 = new L.StackedRegularPolygonMarker(new L.LatLng(30, 20), stackedOptions);
 	
-	map.addLayer(stackedMarker);
-	map.addLayer(stackedMarker2);
+	var stackedLayer = createLayerGroup('Stacked Regular Polygons');
+	
+	stackedLayer.addLayer(stackedMarker);
+	stackedLayer.addLayer(stackedMarker2);
+	
+	var meterMarkerLayer = createLayerGroup('Meter Markers');
+	var starLayer = createLayerGroup('Star Markers');
+	
+	var radialBarChartLayer = createLayerGroup('Radial Bar Charts');
+	var coxcombChartLayer = createLayerGroup('Coxcomb Charts');
+	var pieChartLayer = createLayerGroup('Pie Charts');
+	var barChartLayer = createLayerGroup('Bar Charts');
 	
 	// Create 20 of each of the various new markers available through the framework
 	for (var index = 0;index < 20;++index) {
@@ -175,6 +204,8 @@ $(document).ready(function() {
 		};
 		
 		// Add a RadialMeterMarker
+		var minHue = 120;
+		var maxHue = 0;
 		var meterMarkerOptions = {
 			data: {
 				'Speed': 200
@@ -193,8 +224,8 @@ $(document).ready(function() {
 			},
 			displayOptions: {
 				'Speed': {
-					color: new L.HSLHueFunction(new L.Point(0,120), new L.Point(200,0), {outputSaturation: '100%', outputLuminosity: '25%'}),
-					fillColor: new L.HSLHueFunction(new L.Point(0,120), new L.Point(200,0), {outputSaturation: '100%', outputLuminosity: '50%'})
+					color: new L.HSLHueFunction(new L.Point(0,minHue), new L.Point(200,maxHue), {outputSaturation: '100%', outputLuminosity: '25%'}),
+					fillColor: new L.HSLHueFunction(new L.Point(0,minHue), new L.Point(200,maxHue), {outputSaturation: '100%', outputLuminosity: '50%'})
 				}
 			},
 			fillOpacity: 0.8,
@@ -209,9 +240,8 @@ $(document).ready(function() {
 		
 		meterMarkerOptions.data['Speed'] = Math.random() * 200;
 		
-		var testMeter = new L.RadialMeterMarker(centerLatLng, meterMarkerOptions);
-		
-		map.addLayer(testMeter);
+		var meterMarker = new L.RadialMeterMarker(centerLatLng, meterMarkerOptions);
+		meterMarkerLayer.addLayer(meterMarker);
 		
 		// Add a StarMarker
 		options.innerRadius = radiusX - 8;
@@ -219,8 +249,8 @@ $(document).ready(function() {
 		
 		centerLatLng = getCenterLatLng();
 		
-		marker = new L.StarMarker(centerLatLng,options);
-		map.addLayer(marker);
+		var starMarker = new L.StarMarker(centerLatLng,options);
+		starLayer.addLayer(starMarker);
 		
 		// Add a RegularPolygonMarker
 		options.numberOfSides = Math.floor((Math.random() * 5) + 3);
@@ -229,14 +259,16 @@ $(document).ready(function() {
 
 		options.rotation = Math.random() * 360;
 		
-		marker = new L.RegularPolygonMarker(centerLatLng,options);
+		var marker = new L.RegularPolygonMarker(centerLatLng,options);
 
-		map.addLayer(marker);
+		hollowPolygonLayer.addLayer(marker);
 		
 		options.numberOfSides = 50;
 		options.width = 10;
 		
 		options.rotation = 0;
+		options.radiusX = 0;
+		options.radiusY = 0;
 		
 		// Add a RadialBarChartMarker
 		options.data = {
@@ -287,9 +319,9 @@ $(document).ready(function() {
 
 		centerLatLng = getCenterLatLng();
 		
-		marker = new L.RadialBarChartMarker(centerLatLng,options);
+		var radialBarMarker = new L.RadialBarChartMarker(centerLatLng,options);
 		
-		map.addLayer(marker);
+		radialBarChartLayer.addLayer(radialBarMarker);
 		
 		// Add a CoxcombChartMarker
 		centerLatLng = getCenterLatLng();
@@ -299,9 +331,9 @@ $(document).ready(function() {
 		options.chartOptions['dataPoint3'].fillColor = '#66C2A4';
 		options.chartOptions['dataPoint4'].fillColor = '#238B45';
 		
-		marker = new L.CoxcombChartMarker(centerLatLng,options);
+		var coxcombChartMarker = new L.CoxcombChartMarker(centerLatLng,options);
 		
-		map.addLayer(marker);
+		coxcombChartLayer.addLayer(coxcombChartMarker);
 		
 		// Add a PieChartMarker
 		centerLatLng = getCenterLatLng();
@@ -313,9 +345,9 @@ $(document).ready(function() {
 		options.chartOptions['dataPoint3'].fillColor = '#74A9CF';
 		options.chartOptions['dataPoint4'].fillColor = '#0570B0';
 		
-		marker = new L.PieChartMarker(centerLatLng,options);
+		var pieChartMarker = new L.PieChartMarker(centerLatLng,options);
 		
-		map.addLayer(marker);
+		pieChartLayer.addLayer(pieChartMarker);
 		
 		// Add a BarChartMarker
 		centerLatLng = getCenterLatLng();
@@ -328,9 +360,9 @@ $(document).ready(function() {
 		options.chartOptions['dataPoint3'].fillColor = '#9E9AC8';
 		options.chartOptions['dataPoint4'].fillColor = '#6A51A3';
 		
-		marker = new L.BarChartMarker(centerLatLng, options);
+		var barChartMarker = new L.BarChartMarker(centerLatLng, options);
 		
-		map.addLayer(marker);
+		barChartLayer.addLayer(barChartMarker);
 		
 	}
 });

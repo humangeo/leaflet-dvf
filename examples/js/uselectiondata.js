@@ -16,7 +16,6 @@ $(document).ready(function() {
 	var options = {
 		recordsField: 'locals',
 		locationMode: L.LocationModes.STATE,
-		//locationMode: L.LocationModes.CUSTOM,
 		codeField: 'abbr',
 		displayOptions: {
 			'electoral': {
@@ -33,22 +32,6 @@ $(document).ready(function() {
 		tooltipOptions: {
 			iconSize: new L.Point(80,55),
 			iconAnchor: new L.Point(-5,55)
-		},
-		
-		getLocation: function (record, codeField, fieldValue, callback) {			
-			var success = function (context, keyField, data, centroids) {
-				callback({
-					centroid: centroids[fieldValue],
-					location: new L.GeoJSON(data[fieldValue]),
-					text: context['name']
-				})
-			};
-			
-			var error = function (jqXHR, textStatus, errorThrown) {
-				console.log(errorThrown);
-			};
-			
-			boundaryService.getBoundaries('states', record, 'STUSPS', [fieldValue], success, error);
 		}
 	};
 	

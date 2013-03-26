@@ -125,6 +125,60 @@ L.legendIcon = function (fields, layerOptions, options) {
 };
 
 L.GeometryUtils = {
+
+	// Merges a set of properties into the properties of each feature of a GeoJSON FeatureCollection
+	mergeProperties: function (properties, featureCollection, mergeKey) {
+		var features = featureCollection['features'];
+		var featureIndex = L.GeometryUtils.indexFeatureCollection(features, mergeKey);
+		var property;
+		var mergeValue;
+		var newFeatureCollection = {
+			type: 'FeatureCollection',
+			features: []
+		};
+		
+		for (var key in properties) {
+			if (properties.hasOwnProperty(key)) {
+				property = properties[key];
+				
+				mergeValue = property[mergeKey];
+				
+				if (mergeValue) {
+					var feature = featureIndex[mergeValue];
+					
+					for (var prop in property) {
+						feature.properties[prop] = property[prop];	
+					}
+					
+					newFeatureCollection.features.push(feature);
+				}				
+			}
+		}
+		
+		return newFeatureCollection;
+	},
+	
+	// Indexes a GeoJSON FeatureCollection using the provided key
+	indexFeatureCollection: function (featureCollection, indexKey) {
+		var features = featureCollection.features;
+		var feature;
+		var properties;
+		var featureIndex = {};
+		var value;
+		
+		for (var index = 0; index < features.length; ++index) {
+			feature = features[index];
+			
+			properties = feature.properties;
+			
+			value = properties[indexKey];
+			
+			featureIndex[value] = feature;			
+		}
+		
+		return featureIndex;
+	},
+	
 	arrayToMap: function (array, fromKey, toKey) {
 		var map = {}; 
 		var item;
@@ -135,7 +189,8 @@ L.GeometryUtils = {
 			item = array[index];
 			
 			from = item[fromKey];
-			to = item[toKey];
+			
+			to = toKey ? item[toKey] : item;
 			
 			map[from] = to;
 			
@@ -169,7 +224,7 @@ L.GeometryUtils = {
 				toKey = mapLink.to;
 				
 				from = item[fromKey];
-				to = item[toKey];
+				to = toKey ? item[toKey] : item;
 				
 				map[from] = to;
 			}
@@ -179,46 +234,50 @@ L.GeometryUtils = {
 	},
 	
 	loadCentroid:  function (feature) {
-		var parser = new jsts.io.GeoJSONParser();
-		var jstsFeature = parser.read(feature);
+		var centroidLatLng = null;
 		var centroid;
 		var x,y;
 		
-		if (jstsFeature.getCentroid) {
-			centroid = jstsFeature.getCentroid();
-			x = centroid.coordinate.x;
-			y = centroid.coordinate.y;
-		}
-		else if (jstsFeature.features) {
-			var totalCentroidX = 0;
-			var totalCentroidY = 0;
-			
-			for (var i=0;i < jstsFeature.features.length;++i) {
-				centroid = jstsFeature.features[i].geometry.getCentroid();
-				
-				totalCentroidX += centroid.coordinate.x;
-				totalCentroidY += centroid.coordinate.y;
+		if (jsts) {
+		
+			var parser = new jsts.io.GeoJSONParser();
+			var jstsFeature = parser.read(feature);
+		
+			if (jstsFeature.getCentroid) {
+				centroid = jstsFeature.getCentroid();
+				x = centroid.coordinate.x;
+				y = centroid.coordinate.y;
 			}
+			else if (jstsFeature.features) {
+				var totalCentroidX = 0;
+				var totalCentroidY = 0;
 			
-			x = totalCentroidX/jstsFeature.features.length;
-			y = totalCentroidY/jstsFeature.features.length;
-		}
-		else {
-			centroid = jstsFeature.geometry.getCentroid();
-			x = centroid.coordinate.x;
-			y = centroid.coordinate.y;
+				for (var i=0;i < jstsFeature.features.length;++i) {
+					centroid = jstsFeature.features[i].geometry.getCentroid();
+				
+					totalCentroidX += centroid.coordinate.x;
+					totalCentroidY += centroid.coordinate.y;
+				}
+			
+				x = totalCentroidX/jstsFeature.features.length;
+				y = totalCentroidY/jstsFeature.features.length;
+			}
+			else {
+				centroid = jstsFeature.geometry.getCentroid();
+				x = centroid.coordinate.x;
+				y = centroid.coordinate.y;
+			}
+		
+			centroidLatLng = new L.LatLng(y, x);
+		
 		}
 		
-		return new L.LatLng(y,x);
+		return centroidLatLng;
 	},
 	
 	loadCentroids:  function (dictionary) {
 		var centroids = {};
 		var feature;
-		var parser = new jsts.io.GeoJSONParser();
-		var jstsFeature;
-		var centroid;
-		var x,y;
 		
 		for (var key in dictionary) {
 			feature = dictionary[key];

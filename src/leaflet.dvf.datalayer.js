@@ -9,6 +9,7 @@ L.LocationModes = {
 	COUNTRY: 'country',
 	STATE: 'state',
 	GEOJSON: 'geojson',
+	LOOKUP: 'lookup',
 	CUSTOM: 'custom'
 };
 
@@ -165,8 +166,7 @@ L.DataLayer = L.LayerGroup.extend({
 		if (locationInfo.latitude[2] && locationInfo.longitude[2]) {
 			bounds = new L.LatLngBounds(new L.LatLng(locationInfo.latitude[0], locationInfo.longitude[0]), new L.LatLng(locationInfo.latitude[1], locationInfo.longitude[1]));
 		}
-		
-		//return bounds;
+
 		return {
 			location: bounds,
 			text: geohash,
@@ -174,6 +174,22 @@ L.DataLayer = L.LayerGroup.extend({
 		};
 	},
 	
+	_getLocationLookup: function (record, index) {
+		var code = this.options.codeField ? this._getFieldValue(record, this.options.codeField) : index;
+
+		this._lookupIndex = this._lookupIndex || L.GeometryUtils.indexFeatureCollection(this.options.locationLookup, this.options.codeField);
+		
+		var geoJSON = this._lookupIndex[code];
+		var location = null;
+		
+		if (geoJSON) {
+			location = this._getGeoJSONLocation(geoJSON, record);
+		}	
+		
+		return location;
+	},
+	
+	// TODO: Break this out into separate functions
 	_getLocationChoropleth: function (record, index) {
 		var code = this.options.codeField ? this._getFieldValue(record, this.options.codeField) : index;
 		var geoJSON;
@@ -238,40 +254,53 @@ L.DataLayer = L.LayerGroup.extend({
 
 	},
 	
-	_getLocationGeoJSON: function (record) {
+	_getGeoJSONLocation: function (geoJSON, record) {
 		var self = this;
+		
+		var geoJSONLayer = new L.GeoJSON(geoJSON, {
+			pointToLayer: function (feature, latlng) {
+				var location = {
+					location: latlng,
+					text: self.options.locationTextField ? self._getFieldValue(record, this.options.locationTextField) : [latlng.lat.toFixed(3),latlng.lng.toFixed(3)].join(', '),
+					center: latlng
+				};
+				
+				return self.recordToLayer(location, record);
+			}
+		});
+		
+		var center = null;
+		
+		try {
+			center = L.GeometryUtils.loadCentroid(geoJSON);
+		}
+		catch (ex) {
+			console.log('Error loading centroid for ' + JSON.stringify(geoJSON));
+		}
+		
+		// Fallback to the center of the layer bounds
+		if (!center) {
+			center = geoJSONLayer.getBounds().getCenter();
+		}
+		
+		return {
+			location: geoJSONLayer,
+			text: this.options.locationTextField ? this._getFieldValue(record, this.options.locationTextField) : null,
+			center: center
+		};
+	},
+	
+	_getLocationGeoJSON: function (record) {
 		var locationField = this.options.geoJSONField;
 
 		var geoJSON = locationField ? this._getFieldValue(record, locationField) : record;
+		var location = null;
 		
 		if (geoJSON) {
-			var geoJSONLayer = new L.GeoJSON(geoJSON, {
-				pointToLayer: function (feature, latlng) {
-					var location = {
-						location: latlng,
-						text: self.options.locationTextField ? self._getFieldValue(record, this.options.locationTextField) : [latlng.lat.toFixed(3),latlng.lng.toFixed(3)].join(', '),
-						center: latlng
-					};
-					
-			        return self.recordToLayer(location, record);
-			    }
-			});
-			
-			var center = null;
-			
-			try {
-				center = L.GeometryUtils.loadCentroid(geoJSON);
-			}
-			catch (ex) {
-				console.log('Error loading centroid for ' + JSON.stringify(geoJSON));
-			}
-			
-			return {
-				location: geoJSONLayer,
-				text: this.options.locationTextField ? this._getFieldValue(record, this.options.locationTextField) : null,
-				center: center
-			};
+			location = this._getGeoJSONLocation(geoJSON, record);	
 		}
+		
+		return location;
 	},
 	
 	_getLocationCustom: function (record) {
@@ -311,6 +340,9 @@ L.DataLayer = L.LayerGroup.extend({
 		case L.LocationModes.GEOJSON:
 			location = this._getLocationGeoJSON(record);
 			break;
+		case L.LocationModes.LOOKUP:
+			location = this._getLocationLookup(record, index);
+			break;
 		case L.LocationModes.CUSTOM:
 			if (!this.options.preload) {
 				location = this._getLocationCustom(record);
@@ -322,9 +354,7 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 	
 	_processLocation: function (location) {
-		var processedLocation = location;
-		
-		processedLocation = location.center;
+		var processedLocation = location.center;
 		
 		return processedLocation;
 	},
@@ -392,6 +422,19 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 	
 	_getLayer: function (location, options, record) {
+	
+		if (this.options.includeBoundary && location.location.setStyle) {
+			var style = this.options.boundaryStyle || $.extend(true, {}, options, {
+				//fill: false//,
+				fillOpacity: 0.2,
+				clickable: false
+			});
+			
+			location.location.setStyle(style);
+		
+			this.addLayer(location.location);
+		}
+				
 		location = this._processLocation(location);
 		
 		return this._getMarker(location, options, record);
@@ -401,7 +444,7 @@ L.DataLayer = L.LayerGroup.extend({
 		var marker;
 		
 		if (location) {
-			if (options.numberOfSides >= 30) {
+			if (options.numberOfSides >= 30 && !(options.innerRadius || (options.innerRadiusX && options.innerRadiusY))) {
 				marker = new L.CircleMarker(location, options);
 			}
 			else {
@@ -630,9 +673,9 @@ L.DataLayer = L.LayerGroup.extend({
 					}
 				},
 				color: {
-					property: ['border-color'], //border
+					property: ['border-color'], 
 					valueFunction: function (value) {
-						return value;  //solid 1px
+						return value; 
 					}
 				},
 				weight: {

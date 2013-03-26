@@ -193,9 +193,7 @@ $(document).ready(function() {
 			radiusX: radiusX,
 			radiusY: radiusY,
 			fillOpacity: 0.7,
-			//numberOfSides: numberOfSides,
 			rotation: 0.0,
-			//barThickness: 6,
 			position: {
 				x: 0,
 				y: 0
@@ -243,9 +241,12 @@ $(document).ready(function() {
 		var meterMarker = new L.RadialMeterMarker(centerLatLng, meterMarkerOptions);
 		meterMarkerLayer.addLayer(meterMarker);
 		
+		options.numberOfSides = Math.floor((Math.random() * 5) + 3);
+		
 		// Add a StarMarker
 		options.innerRadius = radiusX - 8;
 		options.rotation = 55;
+		options.numberOfPoints = Math.floor((Math.random() * 5) + 5);
 		
 		centerLatLng = getCenterLatLng();
 		
@@ -253,8 +254,6 @@ $(document).ready(function() {
 		starLayer.addLayer(starMarker);
 		
 		// Add a RegularPolygonMarker
-		options.numberOfSides = Math.floor((Math.random() * 5) + 3);
-		
 		centerLatLng = getCenterLatLng();
 
 		options.rotation = Math.random() * 360;
@@ -323,6 +322,8 @@ $(document).ready(function() {
 		
 		radialBarChartLayer.addLayer(radialBarMarker);
 		
+		options.radius = 20;
+		
 		// Add a CoxcombChartMarker
 		centerLatLng = getCenterLatLng();
 		
@@ -338,7 +339,7 @@ $(document).ready(function() {
 		// Add a PieChartMarker
 		centerLatLng = getCenterLatLng();
 		
-		options.barThickness = 6;
+		options.barThickness = 10;
 
 		options.chartOptions['dataPoint1'].fillColor = '#F1EEF6';
 		options.chartOptions['dataPoint2'].fillColor = '#BDC9E1';

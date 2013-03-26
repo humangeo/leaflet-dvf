@@ -6,13 +6,8 @@ var L = L || {};
  */
 L.LinearFunction = L.Class.extend({
 	initialize: function (minPoint, maxPoint, options) {
-
-		L.Util.setOptions(this, options);
-		
+		this.setOptions(options);
 		this.setRange(minPoint, maxPoint);
-		
-		this._preProcess = this.options.preProcess;
-		this._postProcess = this.options.postProcess;
 	},
 	
 	_calculateParameters: function (minPoint, maxPoint) {
@@ -26,6 +21,20 @@ L.LinearFunction = L.Class.extend({
 		}
 	},
 	
+	_arrayToPoint: function (array) {
+		return {
+			x: array[0],
+			y: array[1]
+		}
+	},
+	
+	setOptions: function (options) {
+		L.Util.setOptions(this, options);
+		
+		this._preProcess = this.options.preProcess;
+		this._postProcess = this.options.postProcess;
+	},
+	
 	getBounds: function () {
 		var minX = Math.min(this._minPoint.x, this._maxPoint.x);
 		var maxX = Math.max(this._minPoint.x, this._maxPoint.x);
@@ -36,6 +45,9 @@ L.LinearFunction = L.Class.extend({
 	},
 	
 	setRange: function (minPoint, maxPoint) {
+		minPoint = minPoint instanceof Array ? this._arrayToPoint(minPoint) : minPoint;
+		maxPoint = maxPoint instanceof Array ? this._arrayToPoint(maxPoint) : maxPoint;
+		
 		this._minPoint = minPoint;
 		this._maxPoint = maxPoint;
 		
@@ -86,6 +98,99 @@ L.LinearFunction = L.Class.extend({
 	}
 });
 
+
+L.ColorFunction = L.LinearFunction.extend({
+	options: {
+		alpha: 1.0,
+		includeAlpha: false
+	},
+	
+	initialize: function (minPoint, maxPoint, options) {
+		L.Util.setOptions(this, options);
+		
+		// Order of output parts (e.g., ['r','g','b'])
+		this._parts = [];
+	
+		// Part of the output that's dynamic (e.g. 'r')
+		this._dynamicPart = null;
+		this._outputPrecision = 0;
+	
+		// Output prefix (e.g. rgb, hsl, etc.)
+		this._prefix = null;
+	
+		// Override this as necessary
+		this._formatOutput = function (y) {
+			return y.toFixed(this._outputPrecision);
+		},
+	
+		this._mapOutput = function (parts) {
+			var outputParts = [];
+		
+			for (var i = 0; i < this._parts.length; ++i) {
+				var part = this._parts[i];
+				outputParts.push(parts[part]);
+			}
+		
+			if (this.options.includeAlpha) {
+				outputParts.push(this.options.alpha);
+			}
+		
+			return outputParts;
+		};
+	
+		this._getColorString = function (y) {		
+			y = this._formatOutput(y);
+		
+			this.options[this.	_dynamicPart] = y;
+		
+			var parts = this._mapOutput(this.options);
+		
+			return this._writeColor(this._prefix, parts);
+		};
+	
+		this._writeColor = function (prefix, parts) {
+			if (this.options.includeAlpha) {
+				prefix += 'a';
+			}
+		
+			return prefix + '(' + parts.join(',') + ')';
+		};
+		
+		var postProcess = function (y) {
+			if (options && options.postProcess) {
+				y = options.postProcess.call(this, y);
+			}
+			
+			return this._getColorString(y);
+		};
+		
+		L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
+			preProcess: this.options.preProcess,
+			postProcess: postProcess
+		});
+	}
+});
+
+L.HSLColorFunction = L.ColorFunction.extend({
+	initialize: function (minPoint, maxPoint, options) {
+		L.ColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+		
+		this._parts = ['outputHue', 'outputSaturation', 'outputLuminosity'];
+		this._prefix = 'hsl';
+		this._outputPrecision = 2;
+	}
+});
+
+L.RGBColorFunction = L.ColorFunction.extend({
+	initialize: function (minPoint, maxPoint, options) {
+		L.ColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+	
+		this._parts = ['outputRed', 'outputBlue', 'outputGreen'];
+		this._prefix = 'rgb';
+		this._outputPrecision = 0;
+	}
+});
+
 L.RGBRedFunction = L.LinearFunction.extend({
 	
 	options: {
@@ -94,24 +199,9 @@ L.RGBRedFunction = L.LinearFunction.extend({
 	},
 	
 	initialize: function (minPoint, maxPoint, options) {
-
-		L.Util.setOptions(this, options);
-		
-		var outputGreen = this.options.outputGreen;
-		var outputBlue = this.options.outputBlue;
-		
-		var postProcess = function (y) {
-			y = y.toFixed(0);
-			
-			var parts = [y, outputGreen, outputBlue];
-			
-			return 'rgb(' + parts.join(',') + ')'; 
-		};
-		
-		L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
-			preProcess: this.options.preProcess,
-			postProcess: postProcess
-		});
+		L.RGBColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+				
+		this._dynamicPart = 'outputRed';
 	}
 });
 
@@ -126,24 +216,9 @@ L.RGBBlueFunction = L.LinearFunction.extend({
 	},
 	
 	initialize: function (minPoint, maxPoint, options) {
-
-		L.Util.setOptions(this, options);
-		
-		var outputRed = this.options.outputRed;
-		var outputGreen = this.options.outputGreen;
-		
-		var postProcess = function (y) {
-			y = y.toFixed(0);
-			
-			var parts = [outputRed, outputGreen, y];
-			
-			return 'rgb(' + parts.join(',') + ')'; 
-		};
-		
-		L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
-			preProcess: this.options.preProcess,
-			postProcess: postProcess
-		});
+		L.RGBColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+				
+		this._dynamicPart = 'outputBlue';
 	}
 });
 
@@ -158,29 +233,14 @@ L.RGBGreenFunction = L.LinearFunction.extend({
 	},
 	
 	initialize: function (minPoint, maxPoint, options) {
-		
-		L.Util.setOptions(this, options);
-		
-		var outputRed = this.options.outputRed;
-		var outputBlue = this.options.outputBlue;
-		
-		var postProcess = function (y) {
-			y = y.toFixed(0);
-			
-			var parts = [outputRed, y, outputBlue];
-			
-			return 'rgb(' + parts.join(',') + ')'; 
-		};
-		
-		L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
-			preProcess: this.options.preProcess,
-			postProcess: postProcess
-		});
+		L.RGBColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+				
+		this._dynamicPart = 'outputGreen';
 	}
 });
 
 /*
- * 
+ * Produces a gradient between two RGB colors.  The colors are specified rgb arrays (e.g. [255, 0, 255])
  */
 L.RGBColorBlendFunction = L.LinearFunction.extend({
 	initialize: function (minX, maxX, rgbMinColor, rgbMaxColor) {
@@ -224,33 +284,22 @@ L.RGBColorBlendFunction = L.LinearFunction.extend({
 	}
 });
 
+
+
 /*
  * Class for varying the hue linearly and producing an HSL color value
  */
-L.HSLHueFunction = L.LinearFunction.extend({
+L.HSLHueFunction = L.HSLColorFunction.extend({
 	
 	options: {
 		outputSaturation: '100%',
 		outputLuminosity: '50%'
 	},
-	
+
 	initialize: function (minPoint, maxPoint, options) {
+		L.HSLColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
 		
-		L.Util.setOptions(this, options);
-		
-		var outputSaturation = this.options.outputSaturation;
-		var outputLuminosity = this.options.outputLuminosity;
-		
-		var postProcess = function (y) {
-			var parts = [y, outputSaturation, outputLuminosity];
-			
-			return 'hsl(' + parts.join(',') + ')'; 
-		};
-		
-		L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
-			preProcess: this.options.preProcess,
-			postProcess: postProcess
-		});
+		this._dynamicPart = 'outputHue';
 	}
 });
 
@@ -265,22 +314,13 @@ L.HSLSaturationFunction = L.LinearFunction.extend({
 	},
 	
 	initialize: function (minPoint, maxPoint, options) {
+		L.HSLColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
 		
-		L.Util.setOptions(this, options);
-		
-		var outputHue = this.options.outputHue;
-		var outputLuminosity = this.options.outputLuminosity;
-		
-		var postProcess = function (y) {
-			var parts = [outputHue, (y * 100).toFixed(2) + '%', outputLuminosity];
-			
-			return 'hsl(' + parts.join(',') + ')'; 
+		this._formatOutput = function (y) {
+			return (y * 100).toFixed(this._outputPrecision) + '%';
 		};
 		
-		L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
-			preProcess: this.options.preProcess,
-			postProcess: postProcess
-		});
+		this._dynamicPart = 'outputSaturation';
 	}
 });
 
@@ -295,22 +335,13 @@ L.HSLLuminosityFunction = L.LinearFunction.extend({
 	},
 	
 	initialize: function (minPoint, maxPoint, options) {
+		L.HSLColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
 		
-		L.Util.setOptions(this, options);
-		
-		var outputHue = this.options.outputHue;
-		var outputSaturation = this.options.outputSaturation;
-		
-		var postProcess = function (y) {
-			var parts = [outputHue, outputSaturation, (y * 100).toFixed(2) + '%'];
-			
-			return 'hsl(' + parts.join(',') + ')'; 
+		this._formatOutput = function (y) {
+			return (y * 100).toFixed(this._outputPrecision) + '%';
 		};
 		
-		L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
-			preProcess: this.options.preProcess,
-			postProcess: postProcess
-		});
+		this._dynamicPart = 'outputLuminosity';
 	}
 });
 

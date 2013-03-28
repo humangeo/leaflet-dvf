@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Netherlands Population</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <style>     
+      body {
+      	margin: 0;
+      	padding: 0;
+      }
+      #map {
+      	width: 100%;
+      	height: 600px;
+      }
+    </style>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css" />
+    <link rel="stylesheet" href="http://humangeo.github.com/leaflet-dvf/dist/css/dvf.css" type="text/css" media="screen" />
+</head>
+
+<body>
+	<div id="map"></div>
+	<script type="text/javascript" src="../data/NETPOPZ2.js"></script>
+	<script type="text/javascript" src="../data/NETZIP2.js"></script>
+	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.js"></script>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
+	<script type="text/javascript" src="../lib/javascript.util.js"></script>
+	<script type="text/javascript" src="../lib/jsts.js"></script>
+	<script type="text/javascript">
+		
+		var map = L.map('map').setView([52.21, 5.50], 8);
+
+		var resize = function () {
+			var $map = $('#map');
+		
+			$map.height($(window).height());
+		
+			if (map) {
+				map.invalidateSize();
+			}
+		};
+	
+		$(window).on('resize', function () {
+			resize();
+		});
+	
+		resize();
+	
+		var baseLayer = L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/61193/256/{z}/{x}/{y}.png', {
+	    	attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
+		});
+	
+		baseLayer.addTo(map);
+		
+		var layerControl = new L.Control.Layers({
+			'Dark Grey': baseLayer
+		});
+		
+		layerControl.addTo(map);
+		
+		var legendControl = new L.Control.Legend();
+		
+		legendControl.addTo(map);
+		
+		var options = {
+			locationMode: L.LocationModes.LOOKUP,
+			recordsField: null,
+			codeField: 'GEOZIP2NL',
+			locationLookup: zipData, // A GeoJSON FeatureCollection that will be used to lookup boundaries/location
+			locationTextField: 'GEOZIP2NL',
+			includeBoundary: true, // Whether or not to include a background boundary so people know what boundary each marker is associated with
+			layerOptions: {
+				fillOpacity: 0.9,
+				opacity: 1,
+				weight: 1
+			},
+			displayOptions: {
+				POPU: {
+					displayName: 'Population',
+					fillColor: new L.HSLSaturationFunction(new L.Point(90000, 0), new L.Point(635100, 1), {
+						outputHue: 240
+					}),
+					color: new L.HSLSaturationFunction(new L.Point(90000, 0), new L.Point(635100, 1	), {
+						outputHue: 240,
+						outputLuminosity: '35%'
+					})
+				}
+			}
+		};
+		
+		var nlPopLayerChoropleth = new L.ChoroplethDataLayer(NLpopdens, options);
+		layerControl.addOverlay(nlPopLayerChoropleth, 'Choropleth');
+		
+		var symbolOptions = $.extend(true, {}, options, {
+			layerOptions: {
+				numberOfSides: 50
+			},
+			displayOptions: {
+				POPU: {
+					displayName: 'Population',
+					fillColor: new L.HSLLuminosityFunction(new L.Point(90000, 1), new L.Point(635100, 0.5), {
+						outputHue: 0
+					}),
+					color: new L.HSLLuminosityFunction(new L.Point(90000, 0.7), new L.Point(635100, 0.2), {
+						outputHue: 0
+					}),
+					radius: new L.LinearFunction([90000, 15],[635100, 25]),
+					innerRadius: new L.LinearFunction([90000, 5],[635100, 15])
+				}
+			}
+		});
+		
+		var nlPopLayerSymbol = new L.DataLayer(NLpopdens, symbolOptions);
+		
+		map.addLayer(nlPopLayerSymbol);
+		layerControl.addOverlay(nlPopLayerSymbol, 'Proportional Symbol');
+
+	</script>
+</body>
+</html>

@@ -59,11 +59,14 @@ Proportional Symbol:
 
 Choropleth Mapping:
 * [Color Functions](http://humangeo.github.com/leaflet-dvf/examples/html/colors.html)
+* [Geohashes](http://humangeo.github.com/leaflet-dvf/examples/html/geohashes.html)
+
+Mix:
 * [WorldBank and UN Data](http://humangeo.github.com/leaflet-dvf/examples/html/incomelevels.html)
 * [Election 2012 Polling](http://humangeo.github.com/leaflet-dvf/examples/html/election2012.html)
 * [2008 vs 2012 Election Results](http://humangeo.github.com/leaflet-dvf/examples/html/election2012results.html)
 * [2008 Election Results](http://humangeo.github.com/leaflet-dvf/examples/html/uselectiondata.html)
-* [Geohashes](http://humangeo.github.com/leaflet-dvf/examples/html/geohashes.html)
+* [Netherlands Population by ZIP 2](http://humangeo.github.com/leaflet-dvf/examples/html/nlzip.html) ** Thanks to Steven De Schrijver of [Conundra](http://www.conundra.eu) for providing the example use case **
 
 Tutorials coming soon to [HumanGeo](http://www.thehumangeo.com/)'s [blog](http://blog.thehumangeo.com)
 
@@ -116,13 +119,7 @@ numberOfPoints | Number | 5 | The number of points the star should have
 
 ### ChartMarkers
 
-> Display dynamic charts as markers
-
-L.BarChartMarker
-L.RadialBarChartMarker
-L.PieChartMarker
-L.CoxcombChartMarker
-L.StackedRegularPolygonMarker
+> Display dynamic charts (bar chart, radial bar chart, pie chart, coxcomb chart, etc.) as markers
 
 #### Usage
 `L.BarChartMarker(<LatLng> LatLng, <Chart options> options?);`
@@ -220,6 +217,11 @@ Option | Type | Default | Description
 preProcess | Function | null | A function for pre-processing an input value 
 postProcess | Function | null | A function for post-processing an output value
 
+#### Key Methods
+Method | Usage | Description
+--- | --- | ---
+evaluate | `linearFunction.evaluate(<value>);` | Interpolates an output value based on the passed in input value
+
 ### Color Functions 
 
 > Used to map a data property to a color.  The framework includes tools for mapping color using Hue, Saturation, and Lightness/Luminosity (HSL) or Red, Green, Blue (RGB) color.  See the [Colors](http://humangeo.github.com/leaflet-dvf/examples/html/colors.html) example.
@@ -313,7 +315,7 @@ var colorFunction = new L.PiecewiseFunction([whiteToYellow, yellowToRed]);
 #### Options
 Option | Type | Default | Description
 --- | --- | --- | ---
-recordsField | String | 'features' | A pointer to the field in the input data that contains the records to be visualized.  Use dot notation to specify child properties (e.g. data.election.resultsByState)
+recordsField | String | 'features' | A pointer to the field in the input data that contains the records to be visualized.  Use null when the data being passed in is the set of records to be visualized.  Use dot notation to specify child properties (e.g. data.election.resultsByState), see note below.
 locationMode | String | 'latlng' OR L.LocationModes.LATLNG | The mode used to determine a location for each record.  Use a string or the *L.LocationModes* constant values 
 latitudeField | String | 'coordinates.1' | The property of each record that contains the latitude *NOTE: Use with 'latlng' locationMode*
 longitudeField | String | 'coordinates.0' | The property of each record that contains the longitude *NOTE: Use with 'latlng' locationMode*
@@ -328,12 +330,65 @@ getLocation | Function | null | A function for getting a custom location from a 
 locationLookup | Object (GeoJSON FeatureCollection) | null | A GeoJSON FeatureCollection that will be used to lookup the location associated with a given record. This is useful when you have some data that maps to political/statistical boundaries other than US states or countries.  *NOTE: Use with 'lookup locationMode*
 includeBoundary | Boolean | null | true/false - whether or not the boundary polygon should be displayed when displaying proportional symbols.  This is useful for identifying the boundary associated with each symbol.
 
+#### Referencing Data Properties
+
+Use dot notation to reference items in the passed in data object.  This applies to all field options (e.g. recordsField) as well as displayOptions.
+
+Given an object like:
+
+```javascript
+{
+	data: {
+		values: [
+			{
+				property1: 1,
+				property2: 'akdfljlkfds',
+				property3: 234,
+				location: [-1.234324, 13.123213],
+				additional: {
+					property1: 2,
+					property2: 56
+				}
+			},
+			...
+			{
+				property1: 34,
+				property2: 'werewrwer',
+				property3: 56,
+				location: [5.435444, 8.999345],
+				additional: {
+					property1: 88,
+					property2: 3
+				}
+			}
+		]
+	}
+}
+```
+
+You might specify the following options:
+
+```javascript
+{
+	recordsField: 'data.values',
+	locationMode: L.LocationModes.LATLNG,
+	latitudeField: 'location.1'  // Points to the second item in the location array
+	longitudeField: 'location.0' // Points to the first item in the location array,
+	displayOptions: {
+		'additional.property1': {
+			... // See displayOptions below
+		}
+	}
+}
+```
+
 #### displayOptions
 
 > The *displayOptions* option is used to define how data properties are dynamically mapped to display styles. It's a JavaScript object of key/value pairs that follows the pattern:
+
 ```javascript
 {
-	<data property 1>: {
+	<reference to data property 1>: {
 		displayName: <Human-readable text describing this property>,
 		displayText: <Function for converting the value of this property to a human-readable value>,
 		// Leaflet L.Path style properties with static values or L.LinearFunction instances
@@ -342,13 +397,13 @@ includeBoundary | Boolean | null | true/false - whether or not the boundary poly
 		fillColor:  <Color function or basic function (e.g. L.HSLHueFunction)>,
 		...
 	},
-	<data property 2>: {
+	<reference to data property 2>: {
 		displayName: ...,
 		displayText: ...,
 		...
 	},
 	...
-	<data property X>: {
+	<reference to data property X>: {
 		displayName: ...,
 		displayText: ...,
 		...

@@ -80,7 +80,7 @@ Tutorials coming soon to [HumanGeo](http://www.thehumangeo.com/)'s [blog](http:/
 
 ### L.RegularPolygonMarker
 
-![Regular Polygon Markers](http://humangeo.github.com/leaflet-dvf/images/regularpolygonmarkers.png "Regular Polygon Markers")
+<img alt="Bar Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/regularpolygonmarkers.png" width="290" height="72"/>
 
 > Creates an N-sided marker
 
@@ -109,7 +109,7 @@ innerRadius OR innerRadiusX, innerRadiusY | Number | null | The inner radius of 
 
 ### L.StarMarker
 
-![Star Marker](http://humangeo.github.com/leaflet-dvf/images/stars.png "Star Markers")
+<img alt="Star Marker" src="http://humangeo.github.com/leaflet-dvf/images/stars.png" width="83" height="87"/>
 
 > Creates a star-shaped marker with N-points
 
@@ -123,7 +123,7 @@ numberOfPoints | Number | 5 | The number of points the star should have
 
 ### ChartMarkers
 
-![Bar Chart Marker](http://humangeo.github.com/leaflet-dvf/images/barchartmarker.png "Bar Chart Marker") ![Radial Bar Chart Marker](http://humangeo.github.com/leaflet-dvf/images/radialbarchartmarker.png "Radial Bar Chart Marker") ![Pie Chart Marker](http://humangeo.github.com/leaflet-dvf/images/piechartmarker.png "Pie Chart Marker") ![Coxcomb Chart Marker](http://humangeo.github.com/leaflet-dvf/images/coxcombchartmarker.png "Coxcomb Chart Marker") ![Stacked Regular Polygon Marker](http://humangeo.github.com/leaflet-dvf/images/stackedregularpolygon.png "Stacked Regular Polygon Marker") ![Radial Meter Marker](http://humangeo.github.com/leaflet-dvf/images/radialmetermarker.png "Radial Meter Marker") 
+<img alt="Bar Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/barchartmarker.png" width="83" height="87"/><img alt="Radial Bar Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/radialbarchartmarker.png" width="83" height="87"/><img alt="Pie Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/piechartmarker.png" width="83" height="87"/><img alt="Coxcomb Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/coxcombchartmarker.png" width="83" height="87"/><img alt="Stacked Regular Polygon Marker" src="http://humangeo.github.com/leaflet-dvf/images/stackedregularpolygon.png" width="83" height="87"/><img alt="Radial Meter Marker" src="http://humangeo.github.com/leaflet-dvf/images/radialmetermarker.png" width="83" height="87"/>
 
 > Display dynamic charts (bar chart, radial bar chart, pie chart, coxcomb chart, etc.) as markers
 

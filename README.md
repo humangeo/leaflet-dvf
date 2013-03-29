@@ -80,6 +80,8 @@ Tutorials coming soon to [HumanGeo](http://www.thehumangeo.com/)'s [blog](http:/
 
 ### L.RegularPolygonMarker
 
+![Regular Polygon Markers](http://humangeo.github.com/leaflet-dvf/images/regularpolygonmarkers.png "Regular Polygon Markers")
+
 > Creates an N-sided marker
 
 #### Usage
@@ -107,6 +109,8 @@ innerRadius OR innerRadiusX, innerRadiusY | Number | null | The inner radius of 
 
 ### L.StarMarker
 
+![Star Marker](http://humangeo.github.com/leaflet-dvf/images/stars.png "Star Markers")
+
 > Creates a star-shaped marker with N-points
 
 #### Usage
@@ -118,6 +122,8 @@ Option | Type | Default | Description
 numberOfPoints | Number | 5 | The number of points the star should have
 
 ### ChartMarkers
+
+![Bar Chart Marker](http://humangeo.github.com/leaflet-dvf/images/barchartmarker.png "Bar Chart Marker") ![Radial Bar Chart Marker](http://humangeo.github.com/leaflet-dvf/images/radialbarchartmarker.png "Radial Bar Chart Marker") ![Pie Chart Marker](http://humangeo.github.com/leaflet-dvf/images/piechartmarker.png "Pie Chart Marker") ![Coxcomb Chart Marker](http://humangeo.github.com/leaflet-dvf/images/coxcombchartmarker.png "Coxcomb Chart Marker") ![Stacked Regular Polygon Marker](http://humangeo.github.com/leaflet-dvf/images/stackedregularpolygon.png "Stacked Regular Polygon Marker") ![Radial Meter Marker](http://humangeo.github.com/leaflet-dvf/images/radialmetermarker.png "Radial Meter Marker") 
 
 > Display dynamic charts (bar chart, radial bar chart, pie chart, coxcomb chart, etc.) as markers
 
@@ -321,7 +327,7 @@ latitudeField | String | 'coordinates.1' | The property of each record that cont
 longitudeField | String | 'coordinates.0' | The property of each record that contains the longitude *NOTE: Use with 'latlng' locationMode*
 codeField | String | null | The property of each record that contains the code used to lookup a location *NOTE: Use with 'state', 'country', or 'lookup' locationMode values*
 geohashField | String | null | The property of each record that contains the geohash used to determine a location *NOTE: Use with 'geohash' locationMode values*
-layerOptions | Object | null | Default style - An object containing Leaflet L.Path style properties that will be used as the default style for DataLayer markers/polygons.  These properties will be overridden by the dynamicOptions.
+layerOptions | Object | null | Default style - An object containing Leaflet L.Path style properties that will be used as the default style for DataLayer markers/polygons.  These properties will be overridden by the displayOptions.
 displayOptions | Object | null | Dynamic styles - An object containing pointers to one or property values of each record with associated L.Path style properties and LinearFunction objects
 tooltipOptions | Object | null | Options used to configure the tooltips that are displayed on mouseover (iconSize and iconAnchor)
 onEachRecord | Function | null | A function that performs additional operations (e.g. binding a popup) on a created layer based on the record associated with that layer (similar to the L.GeoJSON onEachFeature method

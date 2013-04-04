@@ -90,6 +90,123 @@ L.regularPolygon = function (centerLatLng, options) {
 };
 
 /*
+ * Draws a Leaflet map marker using SVG rather than an icon, allowing the marker to be dynamically styled
+ */
+L.MapMarker = L.Path.extend({
+	initialize: function (centerLatLng, options) {
+		L.Path.prototype.initialize.call(this, options);
+		
+		this._centerLatLng = centerLatLng;
+	},
+
+	options: {
+		fill: true,
+		fillOpacity: 1,
+		opacity: 1,
+		radius: 15,
+		innerRadius: 5,
+		position: {
+			x: 0,
+			y: 0
+		},
+		rotation: 0,
+		numberOfSides: 50,
+		color: '#000000',
+		fillColor: '#0000FF',
+		weight: 1
+	},
+
+	setLatLng: function (latlng) {
+		this._centerLatLng = latlng;
+		return this.redraw();
+	},
+	
+	projectLatlngs: function () {
+		this._point = this._map.latLngToLayerPoint(this._centerLatLng);
+		this._points = this._getPoints();
+		
+		if (this.options.innerRadius) {
+			this._innerPoints = this._getPoints(true).reverse();
+		}
+	},
+
+	getBounds: function () {
+		var map = this._map,
+			height = this.options.radius * 3,
+			point = map.project(this._centerLatLng),
+			swPoint = new L.Point(point.x - this.options.radius, point.y),
+			nePoint = new L.Point(point.x + this.options.radius, point.y - height),
+			sw = map.unproject(swPoint),
+			ne = map.unproject(nePoint);
+
+		return new L.LatLngBounds(sw, ne);
+	},
+
+	getLatLng: function () {
+		return this._centerLatLng;
+	},
+
+	getPathString: function () {
+		return new L.SVGPathBuilder(this._points, this._innerPoints).toString();
+	},
+
+	_getPoints: function (inner) {
+		var maxDegrees = !inner ? 210 : 360;
+		var angleSize = !inner ? maxDegrees / 50 : maxDegrees / Math.max(this.options.numberOfSides, 3);
+		var degrees = !inner ? maxDegrees : maxDegrees + this.options.rotation;
+		var angle = !inner ? -30 : this.options.rotation;
+		var points = [];
+		var newPoint;
+		var angleRadians;
+		var radius = this.options.radius;
+		
+		var toRad = function (number) {
+			return number * Math.PI / 180;
+		};
+		
+		var startPoint = this._point;
+		
+		if (!inner) {
+			points.push(startPoint);
+			points.push(new L.Point(startPoint.x + Math.sqrt(0.75) * radius, startPoint.y - 1.5 * radius));
+		}
+		
+		while (angle < degrees) {
+			
+			angleRadians = toRad(angle);
+			
+			// Calculate the point the radius pixels away from the center point at the
+			// given angle;
+			newPoint = this._getPoint(angleRadians, radius, inner);
+			
+			// Add the point to the latlngs array
+			points.push(newPoint);
+			
+			// Increment the angle
+			angle += angleSize;
+		}
+		
+		if (!inner) {
+			points.push(new L.Point(startPoint.x - Math.sqrt(0.75) * radius, startPoint.y - 1.5 * radius));
+		}
+		
+		return points;
+	},
+	
+	_getPoint: function (angle, radius, inner) {
+		var markerRadius = radius;
+		
+		radius = !inner ? radius : this.options.innerRadius;
+		
+		return new L.Point(this._point.x + this.options.position.x + radius * Math.cos(angle), this._point.y - 2 * markerRadius + this.options.position.y - radius * Math.sin(angle));
+	}
+});
+
+L.mapMarker = function (centerLatLng, options) {
+	return new L.MapMarker(centerLatLng, options);
+};
+
+/*
  * Draws a regular polygon marker on the map given a radius (or x and y radii) in pixels
  */
 L.RegularPolygonMarker = L.Path.extend({
@@ -145,7 +262,7 @@ L.RegularPolygonMarker = L.Path.extend({
 	},
 
 	getLatLng: function () {
-		return this._latlng;
+		return this._centerLatLng;
 	},
 
 	getPathString: function () {

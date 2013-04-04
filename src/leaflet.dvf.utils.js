@@ -519,6 +519,53 @@ L.HTMLUtils = {
 	}	
 };
 
+/*
+ * Provides basic animation of numeric properties
+ */
+L.AnimationUtils = {
+	animate: function (layer, from, to, options) {
+		var delay = options.delay || 0;
+		var frames = options.frames || 30;
+		var duration = options.duration || 500;
+		var linearFunctions = {};
+		var easeFunction = options.easeFunction || function (step) { return step };
+		var complete = options.complete;
+		var step = duration / frames;
+		
+		for (var key in from) {
+			if (key != 'color' && key != 'fillColor' && to[key]) {
+				linearFunctions[key] = new L.LinearFunction([0, from[key]], [frames - 1, to[key]]); 
+			}
+		}
+		
+		var layerOptions = {};
+		
+		var frame = 0;
+		
+		var updateLayer = function () {
+			for (var key in linearFunctions) {
+				layerOptions[key] = linearFunctions[key].evaluate(frame);		
+			}	
+			
+			layer.options = $.extend(true, {}, layer.options, layerOptions);
+			layer.redraw();
+			
+			frame++;
+			
+			step = easeFunction(step);
+			
+			if (frame < frames) {
+				setTimeout(updateLayer, step);
+			}
+			else {
+				complete();
+			}
+		};
+		
+		setTimeout(updateLayer, delay);	
+	}
+};
+
 /**
  * Adapted from:  http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
  * These functions will be used to provide backwards compatibility with browsers that don't support hsl 

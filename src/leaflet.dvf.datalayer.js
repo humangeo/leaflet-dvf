@@ -866,6 +866,13 @@ L.DataLayer = L.LayerGroup.extend({
 	}
 });
 
+L.MapMarkerDataLayer = L.DataLayer.extend({	
+	_getMarker: function (latLng, layerOptions, record) {
+		return new L.MapMarker(latLng, layerOptions);
+	}
+});
+
+
 /*
  * 
  */

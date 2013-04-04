@@ -177,6 +177,7 @@ $(document).ready(function() {
 	var coxcombChartLayer = createLayerGroup('Coxcomb Charts');
 	var pieChartLayer = createLayerGroup('Pie Charts');
 	var barChartLayer = createLayerGroup('Bar Charts');
+	var mapMarkerLayer = createLayerGroup('Map Markers');
 	
 	// Create 20 of each of the various new markers available through the framework
 	for (var index = 0;index < 20;++index) {
@@ -240,6 +241,16 @@ $(document).ready(function() {
 		
 		var meterMarker = new L.RadialMeterMarker(centerLatLng, meterMarkerOptions);
 		meterMarkerLayer.addLayer(meterMarker);
+		
+		// Add a map marker
+		centerLatLng = getCenterLatLng();
+		
+		options.radius = (Math.random() * 15) + 10;
+		options.innerRadius = options.radius/2;
+		
+		var mapMarker = new L.MapMarker(centerLatLng, options);
+		
+		mapMarkerLayer.addLayer(mapMarker);
 		
 		options.numberOfSides = Math.floor((Math.random() * 5) + 3);
 		

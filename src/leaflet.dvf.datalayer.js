@@ -158,8 +158,8 @@ L.DataLayer = L.LayerGroup.extend({
 		return location;
 	},
 	
-	_getLocationGeohash: function (record) {
-		var geohash = this._getFieldValue(record, this.options.geohashField);
+	_getLocationGeohash: function (record, index) {
+		var geohash = this.options.geohashField ? this._getFieldValue(record, this.options.geohashField) : index;
 		var locationInfo = decodeGeoHash(geohash);
 		var bounds;
 		
@@ -329,7 +329,7 @@ L.DataLayer = L.LayerGroup.extend({
 			location = this._getLocationLatLng(record);
 			break;
 		case L.LocationModes.GEOHASH:
-			location = this._getLocationGeohash(record);
+			location = this._getLocationGeohash(record, index);
 			break;
 		case L.LocationModes.COUNTRY:
 			location = this._getLocationChoropleth(record, index);
@@ -403,7 +403,7 @@ L.DataLayer = L.LayerGroup.extend({
 						}
 					}
 				}
-				else if (valueField[part]) {
+				else if (valueField && valueField.hasOwnProperty(part)) {
 					valueField = valueField[part];
 				}
 				else {

@@ -245,7 +245,7 @@ $(document).ready(function() {
 		// Add a map marker
 		centerLatLng = getCenterLatLng();
 		
-		options.radius = (Math.random() * 15) + 10;
+		options.radius = (Math.random() * 15) + 5;
 		options.innerRadius = options.radius/2;
 		
 		var mapMarker = new L.MapMarker(centerLatLng, options);
@@ -272,6 +272,8 @@ $(document).ready(function() {
 		var marker = new L.RegularPolygonMarker(centerLatLng,options);
 
 		hollowPolygonLayer.addLayer(marker);
+
+		centerLatLng = getCenterLatLng();
 		
 		options.numberOfSides = 50;
 		options.width = 10;

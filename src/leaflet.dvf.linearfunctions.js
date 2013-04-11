@@ -11,12 +11,12 @@ L.LinearFunction = L.Class.extend({
 	},
 	
 	_calculateParameters: function (minPoint, maxPoint) {
-		if (minPoint.x === maxPoint.x) {
+		if (this._xRange === 0) {
 			this._slope = 0;
 			this._b = minPoint.y;
 		}
 		else {
-			this._slope = (maxPoint.y - minPoint.y) / (maxPoint.x - minPoint.x);
+			this._slope = (maxPoint.y - minPoint.y) / this._xRange;
 			this._b = minPoint.y - this._slope * minPoint.x;
 		}
 	},
@@ -50,6 +50,7 @@ L.LinearFunction = L.Class.extend({
 		
 		this._minPoint = minPoint;
 		this._maxPoint = maxPoint;
+		this._xRange = maxPoint.x - minPoint.x;
 		
 		this._calculateParameters(minPoint, maxPoint);
 		
@@ -95,6 +96,29 @@ L.LinearFunction = L.Class.extend({
 		}
 		
 		return y;
+	},
+	
+	random: function () {
+		var randomX = Math.random() * this._xRange + this._minPoint.x;
+		
+		return this.evaluate(randomX);
+	},
+	
+	sample: function (count) {
+		count = Math.max(count, 2);
+		
+		var segmentCount = count - 1;
+		var segmentSize = this._xRange / segmentCount;
+		var x = this._minPoint.x;
+		var yValues = [];
+		
+		while (x <= this._maxPoint.x) {
+			yValues.push(this.evaluate(x));
+			
+			x += segmentSize;	
+		}
+		
+		return yValues;
 	}
 });
 

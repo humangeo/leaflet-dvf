@@ -310,7 +310,11 @@ L.RadialBarMarker = L.Path.extend({
 		fill: true,
 		radius: 10,
 		rotation: 0,
-		numberOfSides: 30
+		numberOfSides: 30,
+		position: {
+			x: 0,
+			y: 0
+		}
 	},
 
 	setLatLng: function (latlng) {
@@ -356,51 +360,52 @@ L.RadialBarMarker = L.Path.extend({
 		var innerPoints = [];
 		var newPoint, innerPoint;
 		var angleRadians;
-		var radiusX = this.options.radiusX || this.options.radius;
-		var radiusY = this.options.radiusY || this.options.radius;
+		var radiusX = 'radiusX' in this.options ? this.options.radiusX : this.options.radius; 
+		var radiusY = 'radiusY' in this.options ? this.options.radiusY : this.options.radius;
 		var toRad = function (number) {
 			return number * Math.PI / 180;
 		};
 
-		if (!this.options.barThickness) {
-			points.push(this._point);
-		}
+		if (angleSize > 0) {
+			if (!this.options.barThickness) {
+				points.push(this._point);
+			}
 		
-		while (angle <= degrees + 1) {
+			while (angle <= degrees + 1) {
 			
-			angleRadians = toRad(angle);
+				angleRadians = toRad(angle);
 			
-			// Calculate the point the radius meters away from the center point at the
-			// given angle;
-			newPoint = this._getPoint(angleRadians, radiusX, radiusY);
+				// Calculate the point the radius meters away from the center point at the
+				// given angle;
+				newPoint = this._getPoint(angleRadians, radiusX, radiusY);
 			
-			// Add the point to the latlngs array
-			points.push(newPoint);
+				// Add the point to the latlngs array
+				points.push(newPoint);
 			
-			// If a barThickness is specified, then compute the inner points of the bar polygon
+				// If a barThickness is specified, then compute the inner points of the bar polygon
+				if (this.options.barThickness) {
+					innerPoint = this._getPoint(angleRadians, radiusX - this.options.barThickness, radiusY - this.options.barThickness);
+					innerPoints.push(innerPoint);
+				}
+			
+				// Increment the angle
+				angle += angleSize;
+			}
+		
+			// Reverse the inner points and add them to the bar polygon points
 			if (this.options.barThickness) {
-				innerPoint = this._getPoint(angleRadians, radiusX - this.options.barThickness, radiusY - this.options.barThickness);
-				innerPoints.push(innerPoint);
-			}
+				innerPoints.reverse();
 			
-			// Increment the angle
-			angle += angleSize;
-		}
-		
-		// Reverse the inner points and add them to the bar polygon points
-		if (this.options.barThickness) {
-			innerPoints.reverse();
-			
-			for (var index in innerPoints) {
-				points.push(innerPoints[index]);
+				for (var index = 0; index < innerPoints.length; ++index) {
+					points.push(innerPoints[index]);
+				}
 			}
 		}
-		
 		return points;
 	},
 	
 	_getPoint: function (angle, radiusX, radiusY) {
-		return new L.Point(this._point.x + radiusX * Math.cos(angle), this._point.y + radiusY * Math.sin(angle));
+		return new L.Point(this._point.x + this.options.position.x + radiusX * Math.cos(angle), this._point.y + this.options.position.y + radiusY * Math.sin(angle));
 	}
 });
 
@@ -473,39 +478,41 @@ L.PieChartMarker = L.ChartMarker.extend({
 		
 		// Calculate the sum of the data values
 		for (key in data) {
-			value = getValue(data, key); //parseFloat(data[key]);
+			value = getValue(data, key);
 			sum += value;
 		}
 		
 		// Iterate through the data values
-		for (key in data) {		
-			value = parseFloat(data[key]);
-			chartOption = chartOptions[key];
-			percentage = value / sum;
+		if (sum > 0) {
+			for (key in data) {		
+				value = parseFloat(data[key]);
+				chartOption = chartOptions[key];
+				percentage = value / sum;
 			
-			angle = percentage * maxDegrees;
+				angle = percentage * maxDegrees;
 			
-			options.startAngle = lastAngle;
-			options.endAngle = lastAngle + angle;
-			options.fillColor = chartOption.fillColor;
-			options.color = chartOption.color || '#000';
-			options.radiusX = this.options.radiusX || this.options.radius;
-			options.radiusY = this.options.radiusY || this.options.radius;
-			options.rotation = 0;
+				options.startAngle = lastAngle;
+				options.endAngle = lastAngle + angle;
+				options.fillColor = chartOption.fillColor;
+				options.color = chartOption.color || '#000';
+				options.radiusX = this.options.radiusX || this.options.radius;
+				options.radiusY = this.options.radiusY || this.options.radius;
+				options.rotation = 0;
 
-			// Set the key and value for use later
-			options.key = key;
-			options.value = value;
-			options.displayName = chartOption.displayName;
-			options.displayText = chartOption.displayText;
+				// Set the key and value for use later
+				options.key = key;
+				options.value = value;
+				options.displayName = chartOption.displayName;
+				options.displayText = chartOption.displayText;
 			
-			bar = new L.RadialBarMarker(this._centerLatLng, options);
+				bar = new L.RadialBarMarker(this._centerLatLng, options);
 			
-			this._bindMouseEvents(bar);
+				this._bindMouseEvents(bar);
 			
-			lastAngle = options.endAngle;
+				lastAngle = options.endAngle;
 			
-			this.addLayer(bar);
+				this.addLayer(bar);
+			}
 		}
 	}
 });
@@ -547,8 +554,8 @@ L.CoxcombChartMarker = L.PieChartMarker.extend({
 		var bar;
 		var options = this.options;
 		var dataPoint;
-		var radiusX = this.options.radiusX || this.options.radius;
-		var radiusY = this.options.radiusY || this.options.radius;
+		var radiusX = 'radiusX' in this.options ? this.options.radiusX : this.options.radius;
+		var radiusY = 'radiusY' in this.options ? this.options.radiusY : this.options.radius;
 		var keys = Object.keys(this.options.data);
 		var count = keys.length;
 		var data = this.options.data;
@@ -644,9 +651,9 @@ L.RadialBarChartMarker = L.ChartMarker.extend({
 			minValue = chartOption.minValue || 0;
 			maxValue = chartOption.maxValue || 100;
 			
-			var range = maxValue - minValue;
+			var angleFunction = new L.LinearFunction(new L.Point(minValue, 0), new L.Point(maxValue, maxDegrees));
 			
-			angle = (maxDegrees / range) * value - (maxDegrees / range) * minValue;
+			angle = angleFunction.evaluate(value);
 			
 			options.startAngle = this.options.rotation;
 			options.endAngle = this.options.rotation + angle;

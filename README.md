@@ -48,6 +48,9 @@ Polygons are indexed via a state or country code and lookups are created to map 
 Automatic legend generation and a simple legend control.
 To generate a legend, just call getLegend on any DataLayer, or use the provided legend control and the legend will be displayed automatically.
 
+*NOTE:  The dist folder includes a minified version of the full framework as well as a minified version of the code required to use the new markers*
+*Use leaflet-dvf.markers.min.js if you want to use the new markers without the rest of the framework*
+
 ## Examples
 
 *NOTE:  Most of these examples have multiple layers; use the layers control to see all of the layers*

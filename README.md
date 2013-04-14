@@ -13,9 +13,10 @@ It includes:
 
 New marker types (see the markers example below):
 
+* MapMarker - create an SVG-based map marker similar to Leaflet's image-based marker, but fully customizable via L.Path style properties
 * RegularPolygonMarker - create N-sided shapes like triangles, squares, hexagons, etc.
 * StarMarker - create stars with N points
-* ChartMarkers - useful for analyzing multiple data properties at each location:
+* ChartMarkers - useful for displaying multiple data properties at each location:
 	* BarChartMarker
 	* PieChartMarker
 	* RadialBarChartMarker
@@ -49,12 +50,14 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 
 ## Examples
 
+*NOTE:  Most of these examples have multiple layers; use the layers control to see all of the layers*
+
 New Marker Types:
 * [Markers](http://humangeo.github.com/leaflet-dvf/examples/html/markers.html)
 
 Proportional Symbol:
 * [USGS Earthquakes](http://humangeo.github.com/leaflet-dvf/examples/html/earthquakes.html)
-* [Meetup Finder](http://humangeo.github.com/leaflet-dvf/examples/html/meetups.html)
+* [Meetup Finder](http://humangeo.github.com/leaflet-dvf/examples/html/meetups.html) - zoom to an area of interest, put in a Meetup topic, and click the search button
 * [Weather](http://humangeo.github.com/leaflet-dvf/examples/html/weather.html)
 
 Choropleth Mapping:
@@ -77,6 +80,31 @@ Tutorials coming soon to [HumanGeo](http://www.thehumangeo.com/)'s [blog](http:/
 ## Markers
 
 > The framework adds several new marker types geared towards dynamic data visualization.  See the [Markers](http://humangeo.github.com/leaflet-dvf/examples/html/markers.html) example for an illustration of each of these markers.
+
+### L.MapMarker
+
+> Creates an SVG-based map marker, similar to the default Leaflet image-based marker but fully customizable using the basic L.Path properties
+
+#### Usage
+`L.MapMarker(<LatLng> LatLng, <Marker options> options?);`
+
+```javascript
+var marker = new L.MapMarker(new L.LatLng(0, 0), {
+	radius: 10,
+	// L.Path style options
+	...
+});
+
+map.addLayer(marker);
+```
+
+#### Options
+Option | Type | Default | Description
+--- | --- | --- | ---
+numberOfSides | Number | 3 | If an inner radius is specified, then the marker will have a hole in center.  This property determines the shape of the hole.
+rotation | Number | 0 | If an inner radius is specified, this controls the rotation of the hole in the center.
+radius OR radiusX, radiusY | Number | 10 | The radius of the circular part of the marker, also adjusts the height of the marker
+innerRadius OR innerRadiusX, innerRadiusY | Number | null | The inner radius of the marker hole in pixels.
 
 ### L.RegularPolygonMarker
 
@@ -194,7 +222,7 @@ var barChartMarker = new L.BarChartMarker(new L.LatLng(0, 0), options);
 Option | Type | Default | Description
 --- | --- | --- | ---
 data | Object | null | A set of key/value pairs that provides a data value for each property displayed by the marker 
-chartOptions | Object | null | A set of key/value paris that defines the options associated with each data property displayed by the marker.
+chartOptions | Object | null | A set of key/value pairs that defines the options associated with each data property displayed by the marker.
 
 ## Utility Functions
 

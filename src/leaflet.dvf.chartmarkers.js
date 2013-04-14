@@ -545,7 +545,7 @@ L.CoxcombChartMarker = L.PieChartMarker.extend({
 	},
 
 	_loadBars: function () {
-		var value;
+		var value, minValue, maxValue;
 		var sum = 0;
 		var angle = 0;
 		var percentage = 0.0;
@@ -569,16 +569,18 @@ L.CoxcombChartMarker = L.PieChartMarker.extend({
 			value = parseFloat(data[key]);
 			chartOption = chartOptions[key];
 			
-			maxValue = chartOption.maxValue;
+			var minValue = chartOption.minValue || 0;
+			var maxValue = chartOption.maxValue;
 			
-			percentage = value / maxValue;
-			
+			var evalFunctionX = new L.LinearFunction(new L.Point(minValue, 0), new L.Point(maxValue, radiusX));
+			var evalFunctionY = new L.LinearFunction(new L.Point(minValue, 0), new L.Point(maxValue, radiusY)); 
+
 			options.startAngle = lastAngle;
 			options.endAngle = lastAngle + angle;
 			options.fillColor = chartOption.fillColor;
 			options.color = chartOption.color || '#000';
-			options.radiusX = percentage * radiusX
-			options.radiusY = percentage * radiusY;
+			options.radiusX = evalFunctionX.evaluate(value);
+			options.radiusY = evalFunctionY.evaluate(value);
 			options.rotation = 0;
 			
 			// Set the key and value for use later

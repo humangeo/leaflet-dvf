@@ -42,6 +42,72 @@ if (!Object.keys) {
 
 var L = L || {};
 
+L.Util.getProperty = function (obj, property, defaultValue) {
+	return (property in obj) ? obj[property] : defaultValue;
+};
+
+L.Util.getFieldValue = function (record, fieldName) {
+	
+	var value = null;
+	
+	if (fieldName) {
+		var parts = fieldName.split('.');
+		var valueField = record;
+		var part;
+		var searchParts;
+		var searchKey;
+		var searchValue;
+		var testObject;
+		var searchPart;
+		var bracketIndex = -1;
+		var testValue;
+		
+		for (var partIndex = 0; partIndex < parts.length; ++partIndex) {
+			part = parts[partIndex];
+			
+			bracketIndex = part.indexOf('[');
+			
+			if (bracketIndex > -1) {
+				
+				searchPart = part.substring(bracketIndex);
+				part = part.substring(0, bracketIndex);
+				
+				searchPart = searchPart.replace('[', '').replace(']', '');
+				
+				searchParts = searchPart.split('=');
+				searchKey = searchParts[0];
+				searchValue = searchParts[1];
+				
+				valueField = valueField[part];
+				
+				for (var valueIndex = 0; valueIndex < valueField.length; ++valueIndex) {
+					testObject = valueField[valueIndex];
+
+					testValue = testObject[searchKey];
+					
+					if (testValue && testValue === searchValue) {
+						valueField = testObject;
+					}
+				}
+			}
+			else if (valueField && valueField.hasOwnProperty(part)) {
+				valueField = valueField[part];
+			}
+			else {
+				valueField = null;
+				break;
+			}
+		}
+		
+		value = valueField;
+	}
+	else {
+		value = record;
+	}
+
+	return value;
+};
+
 L.CategoryLegend = L.Class.extend({
 	initialize: function (options) {
 		L.Util.setOptions(this, options);
@@ -125,7 +191,57 @@ L.legendIcon = function (fields, layerOptions, options) {
 };
 
 L.GeometryUtils = {
-
+	
+	getName: function (geoJSON) {
+		var name = null;
+		
+		if (geoJSON && geoJSON.features) {
+			for (var index = 0; index < geoJSON.features.length; ++index) {
+				var feature = geoJSON.features[index];
+				if (feature.properties && feature.properties.name) {
+					name = feature.properties.name;
+					break;
+				}
+			}
+		}
+		
+		return name;
+	},
+	
+	getGeoJSONLocation: function (geoJSON, record, locationTextField, recordToLayer) {
+		var geoJSONLayer = new L.GeoJSON(geoJSON, {
+			pointToLayer: function (feature, latlng) {
+				var location = {
+					location: latlng,
+					text: locationTextField ? L.Util.getFieldValue(record, locationTextField) : [latlng.lat.toFixed(3),latlng.lng.toFixed(3)].join(', '),
+					center: latlng
+				};
+				
+				return recordToLayer(location, record);
+			}
+		});
+		
+		var center = null;
+		
+		try {
+			center = L.GeometryUtils.loadCentroid(geoJSON);
+		}
+		catch (ex) {
+			console.log('Error loading centroid for ' + JSON.stringify(geoJSON));
+		}
+		
+		// Fallback to the center of the layer bounds
+		if (!center) {
+			center = geoJSONLayer.getBounds().getCenter();
+		}
+		
+		return {
+			location: geoJSONLayer,
+			text: locationTextField ? L.Util.getFieldValue(record, locationTextField) : null,
+			center: center
+		};
+	},
+	
 	// Merges a set of properties into the properties of each feature of a GeoJSON FeatureCollection
 	mergeProperties: function (properties, featureCollection, mergeKey) {
 		var features = featureCollection['features'];

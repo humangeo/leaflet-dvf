@@ -3,15 +3,163 @@ var L = L || {};
 /*
  * 
  */
+
 L.LocationModes = {
-	LATLNG: 'latlng',
-	GEOHASH: 'geohash',
-	COUNTRY: 'country',
-	STATE: 'state',
-	GEOJSON: 'geojson',
-	LOOKUP: 'lookup',
-	CUSTOM: 'custom'
+	LATLNG: function (record, index) {
+		var latitude = L.Util.getFieldValue(record, this.options.latitudeField);
+		var longitude = L.Util.getFieldValue(record, this.options.longitudeField);
+		var self = this;
+		
+		var getLocation = function (latitudeField, longitudeField) {
+			var latitude = L.Util.getFieldValue(record, latitudeField);
+			var longitude = L.Util.getFieldValue(record, longitudeField);
+			var location = null;
+			
+			if (latitude && longitude) {
+				var latlng = new L.LatLng(latitude, longitude);
+				location = {
+					location: latlng,
+					text: [latlng.lat.toFixed(3),latlng.lng.toFixed(3)].join(', '),
+					center: latlng
+				};
+			}
+			
+			return location;
+		};
+		
+		var location = getLocation(this.options.latitudeField, this.options.longitudeField);
+
+		if (!location && this.options.fallbackLocationFields) {
+			var index = 0;
+			var fallbackLocationFields;
+			while (!location && index < this.options.fallbackLocationFields.length) {
+				fallbackLocationFields = this.options.fallbackLocationFields[index];
+				location = getLocation(fallbackLocationFields.latitudeField, fallbackLocationFields.longitudeField);
+				index++;
+			}
+		}
+
+		return location;
+	},
+	GEOHASH: function (record, index) {
+		var geohash = this.options.geohashField ? L.Util.getFieldValue(record, this.options.geohashField) : index;
+		var locationInfo = decodeGeoHash(geohash);
+		var bounds;
+		
+		if (locationInfo.latitude[2] && locationInfo.longitude[2]) {
+			bounds = new L.LatLngBounds(new L.LatLng(locationInfo.latitude[0], locationInfo.longitude[0]), new L.LatLng(locationInfo.latitude[1], locationInfo.longitude[1]));
+		}
+
+		return {
+			location: bounds,
+			text: geohash,
+			center: bounds.getCenter()
+		};
+	},
+	COUNTRY: function (record, index) {
+		var code = this.options.codeField ? L.Util.getFieldValue(record, this.options.codeField) : index;
+		var geoJSON;
+		var centroid;
+		var codeLookup = L.codeLookup || {};
+		var alpha2Lookup = L.alpha2Lookup || {};
+		var fips2Lookup = L.fips2Lookup || {};
+		var countries = L.countries || {};
+		var countryCentroids = L.countryCentroids || {};
+		var originalCode = code.toUpperCase();
+		
+		code = originalCode;
+		
+		if (code.length === 2) {
+			// Lookup 3 digit ISO code
+			code = alpha2Lookup[originalCode] || fips2Lookup[originalCode];
+		}
+		else if (code.length === 3) {
+			code = codeLookup[originalCode] || code;
+		}
+		
+		if (code) {
+			geoJSON = countries[code];
+			centroid = countryCentroids[code];
+		}
+		else {
+			console.log('Code not found: ' + originalCode);
+		}
+		
+		var geoJSONLayer = new L.GeoJSON(geoJSON);
+		
+		return {
+			location: geoJSONLayer,
+			text: L.GeometryUtils.getName(geoJSON) || code,
+			center: centroid
+		};
+
+	},
+	STATE: function (record, index) {
+		var code = this.options.codeField ? L.Util.getFieldValue(record, this.options.codeField) : index;
+		var geoJSON;
+		var centroid;
+		var states = L.states || {};
+		var stateCentroids = L.stateCentroids || {};
+		var originalCode = code.toUpperCase();
+		
+		code = originalCode;
+		
+		geoJSON = states[code];
+		centroid = stateCentroids[code];
+		
+		var geoJSONLayer = new L.GeoJSON(geoJSON);
+		
+		return {
+			location: geoJSONLayer,
+			text: L.GeometryUtils.getName(geoJSON) || code,
+			center: centroid
+		};
+	},
+	GEOJSON: function (record, index) {
+		var locationField = this.options.geoJSONField;
+
+		var geoJSON = locationField ? L.Util.getFieldValue(record, locationField) : record;
+		var location = null;
+		
+		if (geoJSON) {
+			location = L.GeometryUtils.getGeoJSONLocation(geoJSON, record, this.options.locationTextField, this.recordToLayer);	
+		}
+		
+		return location;
+	},
+	LOOKUP: function (record, index) {
+		var code = this.options.codeField ? L.Util.getFieldValue(record, this.options.codeField) : index;
+
+		this._lookupIndex = this._lookupIndex || L.GeometryUtils.indexFeatureCollection(this.options.locationLookup, this.options.codeField);
+		
+		var geoJSON = this._lookupIndex[code];
+		var location = null;
+		
+		if (geoJSON) {
+			location = L.GeometryUtils.getGeoJSONLocation(geoJSON, record, this.options.locationTextField, this.recordToLayer);
+		}	
+		
+		return location;
+	},
+	CUSTOM: function (record, index) {
+		var locationField = this.options.codeField;
+		var fieldValue = L.Util.getFieldValue(record, locationField);
+		var context = {};
+		
+		context[fieldValue] = record;
+		
+		if (this.options.getLocation) {
+			
+			var self = this;
+			var callback = function (key, location) {
+				self.locationToLayer(location, context[key]);
+			};
+			
+			options.getLocation(context, locationField, [fieldValue], callback);
+		}
+	}
 };
+
 
 /*
  * 
@@ -121,236 +269,10 @@ L.DataLayer = L.LayerGroup.extend({
 		}
 	},
 	
-	_getLocationLatLng: function (record) {
-		var latitude = this._getFieldValue(record, this.options.latitudeField);
-		var longitude = this._getFieldValue(record, this.options.longitudeField);
-		var self = this;
-		
-		var getLocation = function (latitudeField, longitudeField) {
-			var latitude = self._getFieldValue(record, latitudeField);
-			var longitude = self._getFieldValue(record, longitudeField);
-			var location = null;
-			
-			if (latitude && longitude) {
-				var latlng = new L.LatLng(latitude, longitude);
-				location = {
-					location: latlng,
-					text: [latlng.lat.toFixed(3),latlng.lng.toFixed(3)].join(', '),
-					center: latlng
-				};
-			}
-			
-			return location;
-		};
-		
-		var location = getLocation(this.options.latitudeField, this.options.longitudeField);
-
-		if (!location && this.options.fallbackLocationFields) {
-			var index = 0;
-			var fallbackLocationFields;
-			while (!location && index < this.options.fallbackLocationFields.length) {
-				fallbackLocationFields = this.options.fallbackLocationFields[index];
-				location = getLocation(fallbackLocationFields.latitudeField, fallbackLocationFields.longitudeField);
-				index++;
-			}
-		}
-
-		return location;
-	},
-	
-	_getLocationGeohash: function (record, index) {
-		var geohash = this.options.geohashField ? this._getFieldValue(record, this.options.geohashField) : index;
-		var locationInfo = decodeGeoHash(geohash);
-		var bounds;
-		
-		if (locationInfo.latitude[2] && locationInfo.longitude[2]) {
-			bounds = new L.LatLngBounds(new L.LatLng(locationInfo.latitude[0], locationInfo.longitude[0]), new L.LatLng(locationInfo.latitude[1], locationInfo.longitude[1]));
-		}
-
-		return {
-			location: bounds,
-			text: geohash,
-			center: bounds.getCenter()
-		};
-	},
-	
-	_getLocationLookup: function (record, index) {
-		var code = this.options.codeField ? this._getFieldValue(record, this.options.codeField) : index;
-
-		this._lookupIndex = this._lookupIndex || L.GeometryUtils.indexFeatureCollection(this.options.locationLookup, this.options.codeField);
-		
-		var geoJSON = this._lookupIndex[code];
-		var location = null;
-		
-		if (geoJSON) {
-			location = this._getGeoJSONLocation(geoJSON, record);
-		}	
-		
-		return location;
-	},
-	
-	// TODO: Break this out into separate functions
-	_getLocationChoropleth: function (record, index) {
-		var code = this.options.codeField ? this._getFieldValue(record, this.options.codeField) : index;
-		var geoJSON;
-		var centroid;
-		var codeLookup = L.codeLookup || {};
-		var alpha2Lookup = L.alpha2Lookup || {};
-		var fips2Lookup = L.fips2Lookup || {};
-		var countries = L.countries || {};
-		var countryCentroids = L.countryCentroids || {};
-		var states = L.states || {};
-		var stateCentroids = L.stateCentroids || {};
-		var originalCode = code.toUpperCase();
-		
-		code = originalCode;
-		
-		if (this.options.locationMode === L.LocationModes.COUNTRY) {
-
-			if (code.length === 2) {
-				// Lookup 3 digit ISO code
-				code = alpha2Lookup[originalCode] || fips2Lookup[originalCode];
-			}
-			else if (code.length === 3) {
-				code = codeLookup[originalCode] || code;
-			}
-			
-			if (code) {
-				geoJSON = countries[code];
-				centroid = countryCentroids[code];
-			}
-			else {
-				console.log('Code not found: ' + originalCode);
-			}
-		}
-		else if (this.options.locationMode === L.LocationModes.STATE) {
-			geoJSON = states[code];
-			centroid = stateCentroids[code];
-		}
-		
-		var geoJSONLayer = new L.GeoJSON(geoJSON);
-		
-		var getName = function (geoJSON) {
-			var name = null;
-			
-			if (geoJSON && geoJSON.features) {
-				for (var index = 0; index < geoJSON.features.length; ++index) {
-					var feature = geoJSON.features[index];
-					if (feature.properties && feature.properties.name) {
-						name = feature.properties.name;
-						break;
-					}
-				}
-			}
-			
-			return name;
-		};
-		
-		return {
-			location: geoJSONLayer,
-			text: getName(geoJSON) || code,
-			center: centroid
-		};
-
-	},
-	
-	_getGeoJSONLocation: function (geoJSON, record) {
-		var self = this;
-		
-		var geoJSONLayer = new L.GeoJSON(geoJSON, {
-			pointToLayer: function (feature, latlng) {
-				var location = {
-					location: latlng,
-					text: self.options.locationTextField ? self._getFieldValue(record, this.options.locationTextField) : [latlng.lat.toFixed(3),latlng.lng.toFixed(3)].join(', '),
-					center: latlng
-				};
-				
-				return self.recordToLayer(location, record);
-			}
-		});
-		
-		var center = null;
-		
-		try {
-			center = L.GeometryUtils.loadCentroid(geoJSON);
-		}
-		catch (ex) {
-			console.log('Error loading centroid for ' + JSON.stringify(geoJSON));
-		}
-		
-		// Fallback to the center of the layer bounds
-		if (!center) {
-			center = geoJSONLayer.getBounds().getCenter();
-		}
-		
-		return {
-			location: geoJSONLayer,
-			text: this.options.locationTextField ? this._getFieldValue(record, this.options.locationTextField) : null,
-			center: center
-		};
-	},
-	
-	_getLocationGeoJSON: function (record) {
-		var locationField = this.options.geoJSONField;
-
-		var geoJSON = locationField ? this._getFieldValue(record, locationField) : record;
-		var location = null;
-		
-		if (geoJSON) {
-			location = this._getGeoJSONLocation(geoJSON, record);	
-		}
-		
-		return location;
-	},
-	
-	_getLocationCustom: function (record) {
-		var locationField = this.options.codeField;
-		var fieldValue = this._getFieldValue(record,locationField);
-		var context = {};
-		
-		context[fieldValue] = record;
-		
-		if (this.options.getLocation) {
-			
-			var self = this;
-			var callback = function (key, location) {
-				self.locationToLayer(location, context[key]);
-			};
-			
-			this.options.getLocation(context, locationField, [fieldValue], callback);
-		}
-	},
-	
 	_getLocation: function (record, index) {
 		var location;
 		
-		switch (this.options.locationMode) {
-		case L.LocationModes.LATLNG:
-			location = this._getLocationLatLng(record);
-			break;
-		case L.LocationModes.GEOHASH:
-			location = this._getLocationGeohash(record, index);
-			break;
-		case L.LocationModes.COUNTRY:
-			location = this._getLocationChoropleth(record, index);
-			break;
-		case L.LocationModes.STATE:
-			location = this._getLocationChoropleth(record, index);
-			break;
-		case L.LocationModes.GEOJSON:
-			location = this._getLocationGeoJSON(record);
-			break;
-		case L.LocationModes.LOOKUP:
-			location = this._getLocationLookup(record, index);
-			break;
-		case L.LocationModes.CUSTOM:
-			if (!this.options.preload) {
-				location = this._getLocationCustom(record);
-			}
-			break;
-		}
-		
-		return location;
+		return this.options.locationMode.call(this, record, index);
 	},
 	
 	_processLocation: function (location) {
@@ -359,73 +281,10 @@ L.DataLayer = L.LayerGroup.extend({
 		return processedLocation;
 	},
 	
-	_getFieldValue: function (record, fieldName) {
-		
-		var value = null;
-		
-		if (fieldName) {
-			var parts = fieldName.split('.');
-			var valueField = record;
-			var part;
-			var searchParts;
-			var searchKey;
-			var searchValue;
-			var testObject;
-			var searchPart;
-			var bracketIndex = -1;
-			var testValue;
-			
-			for (var partIndex = 0; partIndex < parts.length; ++partIndex) {
-				part = parts[partIndex];
-				
-				bracketIndex = part.indexOf('[');
-				
-				if (bracketIndex > -1) {
-					
-					searchPart = part.substring(bracketIndex);
-					part = part.substring(0, bracketIndex);
-					
-					searchPart = searchPart.replace('[', '').replace(']', '');
-					
-					searchParts = searchPart.split('=');
-					searchKey = searchParts[0];
-					searchValue = searchParts[1];
-					
-					valueField = valueField[part];
-					
-					for (var valueIndex = 0; valueIndex < valueField.length; ++valueIndex) {
-						testObject = valueField[valueIndex];
-
-						testValue = testObject[searchKey];
-						
-						if (testValue && testValue === searchValue) {
-							valueField = testObject;
-						}
-					}
-				}
-				else if (valueField && valueField.hasOwnProperty(part)) {
-					valueField = valueField[part];
-				}
-				else {
-					valueField = null;
-					break;
-				}
-			}
-			
-			value = valueField;
-		}
-		else {
-			value = record;
-		}
-	
-		return value;
-	},
-	
 	_getLayer: function (location, options, record) {
 	
 		if (this.options.includeBoundary && location.location.setStyle) {
 			var style = this.options.boundaryStyle || $.extend(true, {}, options, {
-				//fill: false//,
 				fillOpacity: 0.2,
 				clickable: false
 			});
@@ -477,7 +336,7 @@ L.DataLayer = L.LayerGroup.extend({
 		for (var recordIndex in records) {
 			if (records.hasOwnProperty(recordIndex)) {
 				var record = records[recordIndex];
-				var fieldValue = this._getFieldValue(record,locationField);
+				var fieldValue = L.Util.getFieldValue(record, locationField);
 			
 				indexedRecords[fieldValue] = record;
 				locationValues.push(fieldValue);
@@ -495,7 +354,7 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 	
 	addData: function (data) {
-		var records = this.options.recordsField !== null && this.options.recordsField.length > 0 ? this._getFieldValue(data, this.options.recordsField) : data;
+		var records = this.options.recordsField !== null && this.options.recordsField.length > 0 ? L.Util.getFieldValue(data, this.options.recordsField) : data;
 		var layer;
 		var location;
 		
@@ -616,7 +475,7 @@ L.DataLayer = L.LayerGroup.extend({
 			for (var property in displayOptions) {
 				
 				var propertyOptions = displayOptions[property];
-				var fieldValue = this._getFieldValue(record, property);
+				var fieldValue = L.Util.getFieldValue(record, property);
 				var valueFunction;
 				var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
 				
@@ -991,7 +850,7 @@ L.ChartDataLayer = L.DataLayer.extend({
 		options.chartOptions = chartOptions;
 		
 		for (var key in this.options.chartOptions) {
-			options.data[key] = this._getFieldValue(record, key);			
+			options.data[key] = L.Util.getFieldValue(record, key);			
 		} 
 		
 		for (var key in this.options.tooltipOptions) {

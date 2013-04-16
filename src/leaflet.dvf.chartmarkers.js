@@ -35,13 +35,10 @@ L.BarMarker = L.Path.extend({
 
 	getBounds: function () {
 		var map = this._map,
-			radiusX = this.options.radiusX || this.options.radius,
-			radiusY = this.options.radiusY || this.options.radius,
-			deltaX = radiusX * Math.cos(Math.PI / 4),
-			deltaY = radiusY * Math.sin(Math.PI / 4),
 			point = map.project(this._centerLatLng),
-			swPoint = new L.Point(point.x - deltaX, point.y + deltaY),
-			nePoint = new L.Point(point.x + deltaX, point.y - deltaY),
+			halfWidth = this.options.width/2,
+			swPoint = new L.Point(point.x - halfWidth, point.y),
+			nePoint = new L.Point(point.x + halfWidth, point.y - this.options.maxHeight),
 			sw = map.unproject(swPoint),
 			ne = map.unproject(nePoint);
 
@@ -92,21 +89,6 @@ L.ChartMarker = L.FeatureGroup.extend({
 		this._centerLatLng = centerLatLng;
 		
 		this._loadBars();
-	},
-
-	getBounds: function () {
-		var map = this._map,
-			radiusX = this.options.radiusX || this.options.radius,
-			radiusY = this.options.radiusY || this.options.radius,
-			deltaX = radiusX * Math.cos(Math.PI / 4),
-			deltaY = radiusY * Math.sin(Math.PI / 4),
-			point = map.project(this._centerLatLng),
-			swPoint = new L.Point(point.x - deltaX, point.y + deltaY),
-			nePoint = new L.Point(point.x + deltaX, point.y - deltaY),
-			sw = map.unproject(swPoint),
-			ne = map.unproject(nePoint);
-	
-		return new L.LatLngBounds(sw, ne);
 	},
 	
 	setLatLng: function (latlng) {

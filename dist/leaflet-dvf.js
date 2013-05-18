@@ -1635,6 +1635,9 @@ L.RadialBarMarker = L.Path.extend({
         var toRad = function(number) {
             return number * Math.PI / 180;
         };
+        if (angleDelta === 360) {
+            degrees = degrees - .1;
+        }
         var startRadians = toRad(angle);
         var endRadians = toRad(degrees);
         points.push(this._getPoint(startRadians, radiusX, radiusY));
@@ -1643,8 +1646,8 @@ L.RadialBarMarker = L.Path.extend({
             this._innerPoints = [];
             var innerRadiusX = radiusX - this.options.barThickness;
             var innerRadiusY = radiusY - this.options.barThickness;
-            this._innerPoints.push(this._getPoint(toRad(degrees), radiusX - this.options.barThickness, radiusY - this.options.barThickness));
-            this._innerPoints.push(this._getPoint(toRad(angle), radiusX - this.options.barThickness, radiusY - this.options.barThickness));
+            this._innerPoints.push(this._getPoint(endRadians, radiusX - this.options.barThickness, radiusY - this.options.barThickness));
+            this._innerPoints.push(this._getPoint(startRadians, radiusX - this.options.barThickness, radiusY - this.options.barThickness));
         }
         return points;
     },

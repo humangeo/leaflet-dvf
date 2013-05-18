@@ -371,6 +371,10 @@ L.RadialBarMarker = L.Path.extend({
 			return number * Math.PI / 180;
 		};
 
+		if (angleDelta === 360.0) {
+			degrees = degrees - 0.1;
+		}
+		
 		var startRadians = toRad(angle);
 		var endRadians = toRad(degrees);
 		
@@ -383,8 +387,8 @@ L.RadialBarMarker = L.Path.extend({
 			var innerRadiusX = radiusX - this.options.barThickness;
 			var innerRadiusY = radiusY - this.options.barThickness;
 			
-			this._innerPoints.push(this._getPoint(toRad(degrees), radiusX - this.options.barThickness, radiusY - this.options.barThickness));
-			this._innerPoints.push(this._getPoint(toRad(angle), radiusX - this.options.barThickness, radiusY - this.options.barThickness));
+			this._innerPoints.push(this._getPoint(endRadians, radiusX - this.options.barThickness, radiusY - this.options.barThickness));
+			this._innerPoints.push(this._getPoint(startRadians, radiusX - this.options.barThickness, radiusY - this.options.barThickness));
 		}
 		
 		return points;

@@ -64,7 +64,9 @@ $(document).ready(function() {
 						weight: 1,
 						fillOpacity: 0.7,
 						opacity: 1.0,
-						numberOfSides: 50
+						numberOfSides: 50,
+						gradient: true,
+						dropShadow: true
 					},
 					tooltipOptions: {
 						iconSize: new L.Point(100,75),

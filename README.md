@@ -48,6 +48,8 @@ Polygons are indexed via a state or country code and lookups are created to map 
 Automatic legend generation and a simple legend control.
 To generate a legend, just call getLegend on any DataLayer, or use the provided legend control and the legend will be displayed automatically.
 
+Support for gradient fills and drop shadows.
+
 *NOTE:  The dist folder includes a minified version of the full framework as well as a minified version of the code required to use the new markers*
 *Use leaflet-dvf.markers.min.js if you want to use the new markers without the rest of the framework*
 
@@ -79,6 +81,26 @@ Tutorials coming soon to [HumanGeo](http://www.thehumangeo.com/)'s [blog](http:/
 # Documentation
 
 > A work in progress ...
+
+## Basic Enhancements (New)
+
+> Two new optional properties have been added to the basic L.Path properties to enable for a gradient fill and drop shadow.  For now, these properties are boolean values, but in the future, support might be added for fine-grained control over the appearance of gradients/drop shadows.
+
+#### Usage
+```javascript
+var layer = new <Leaflet Path-based Layer (e.g. L.Polygon)>(<Constructor inputs>, {
+	// L.Path style options
+	...
+	gradient: true,
+	dropShadow: true
+});
+```
+
+#### Options
+Option | Type | Default | Description
+--- | --- | --- | ---
+gradient | Boolean | differs depending on the layer class (most new marker types use a gradient by default) | Specifying a value of true will fill the path with a gradient from white to the specified fillColor (top left - bottom right)
+dropShadow | Boolean | false | Specifying a value of true will add a dropShadow to the path
 
 ## Markers
 

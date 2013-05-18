@@ -53,7 +53,9 @@ $(document).ready(function() {
 		opacity: 1,
 		fillOpacity: 0.9,
 		color: '#000000',
-		fillColor: 'hsl(0, 100%, 50%)'
+		fillColor: 'hsl(0, 100%, 50%)',
+		gradient: true,
+		dropShadow: true
 	});
 	
 	var square = new L.SquareMarker(new L.LatLng(0,5), {
@@ -62,7 +64,9 @@ $(document).ready(function() {
 		opacity: 1,
 		fillOpacity: 0.9,
 		color: '#000000',
-		fillColor: 'hsl(30, 100%, 50%)'
+		fillColor: 'hsl(30, 100%, 50%)',
+		gradient: true,
+		dropShadow: true
 	});
 	
 	var pentagon = new L.PentagonMarker(new L.LatLng(0, 10), {
@@ -71,7 +75,9 @@ $(document).ready(function() {
 		opacity: 1,
 		fillOpacity: 0.9,
 		color: '#000000',
-		fillColor: 'hsl(60, 100%, 50%)'
+		fillColor: 'hsl(60, 100%, 50%)',
+		gradient: true,
+		dropShadow: true
 	});
 	
 	var hexagon = new L.HexagonMarker(new L.LatLng(0,15), {
@@ -80,7 +86,9 @@ $(document).ready(function() {
 		opacity: 1,
 		fillOpacity: 0.9,
 		color: '#000000',
-		fillColor: 'hsl(90, 100%, 50%)'
+		fillColor: 'hsl(90, 100%, 50%)',
+		gradient: true,
+		dropShadow: true
 	});
 	
 	var octagon = new L.OctagonMarker(new L.LatLng(0,20), {
@@ -89,7 +97,9 @@ $(document).ready(function() {
 		opacity: 1,
 		fillOpacity: 0.9,
 		color: '#000000',
-		fillColor: 'hsl(120, 100%, 50%)'
+		fillColor: 'hsl(120, 100%, 50%)',
+		gradient: true,
+		dropShadow: true
 	});
 	
 	var regularPolygonLayer = createLayerGroup('Regular Polygons');
@@ -279,8 +289,6 @@ $(document).ready(function() {
 		options.width = 10;
 		
 		options.rotation = 0;
-		options.radiusX = 0;
-		options.radiusY = 0;
 		
 		// Add a RadialBarChartMarker
 		options.data = {
@@ -353,7 +361,7 @@ $(document).ready(function() {
 		centerLatLng = getCenterLatLng();
 		
 		options.barThickness = 10;
-
+	
 		options.chartOptions['dataPoint1'].fillColor = '#F1EEF6';
 		options.chartOptions['dataPoint2'].fillColor = '#BDC9E1';
 		options.chartOptions['dataPoint3'].fillColor = '#74A9CF';

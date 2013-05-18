@@ -9,7 +9,7 @@ var eqfeed_callback = function (data) {
 	// Color scale - green to red using the basic HSLHueFunction
 	var magnitudeColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '25%'});
 	var magnitudeFillColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '50%'});
-	var magnitudeRadiusFunction = new L.LinearFunction(new L.Point(0,3), new L.Point(10,20));
+	var magnitudeRadiusFunction = new L.LinearFunction(new L.Point(0,5), new L.Point(10,25));
 
 	// Color scale - white to orange to red using a PiecewiseFunction
 	// NOTE:  Uncomment these lines to see the difference
@@ -59,7 +59,8 @@ var eqfeed_callback = function (data) {
 			weight: 1,
 			color: '#000',
 			opacity: 0.2,
-			fillOpacity: 0.7
+			fillOpacity: 0.7,
+			dropShadow: true
 		},
 		tooltipOptions: {
 			iconSize: new L.Point(90,76),

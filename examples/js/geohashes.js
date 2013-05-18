@@ -430,13 +430,15 @@ $(document).ready(function() {
 		displayOptions: {
 			count: {
 				color: colorFunction,
-				fillColor: fillColorFunction
+				fillColor: fillColorFunction,
+				gradient: true
 			}
 		},
 		layerOptions: {
 			fillOpacity: 0.7,
 			opacity: 1,
-			weight: 1
+			weight: 1,
+			gradient: true
 		}
 	};
 	

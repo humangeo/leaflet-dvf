@@ -1,5 +1,150 @@
 var L = L || {};
 
+var PathFunctions = {
+	__updateStyle: L.Path.prototype._updateStyle,
+	
+	_createDefs: function () {
+		this._defs = this._createElement('defs');
+		this._container.appendChild(this._defs);
+	},
+	
+	_createGradient: function (options) {
+	
+		if (!this._defs) {
+			this._createDefs();
+		};
+		
+		var gradient = this._createElement('linearGradient');
+		var gradientGuid = L.Util.guid();
+		
+		options = options || {
+			x1: '0%',
+			x2: '100%',
+			y1: '0%',
+			y2: '100%'
+		};
+		
+		options.id = 'grad' + gradientGuid;
+		
+		var stops = [
+			{
+				offset: '0%',
+				style: 'stop-color:rgb(255, 255, 255);stop-opacity:1'
+			},
+			{
+				offset: '60%',
+				style: 'stop-color:' + (this.options.fillColor || this.options.color) + ';stop-opacity:1'
+			}
+		];
+		
+		for (var key in options) {
+			gradient.setAttribute(key, options[key]);
+		}
+		
+		for (var i = 0; i < stops.length; ++i) {
+			var stop = stops[i];
+			var stopElement = this._createElement('stop');
+			
+			for (var key in stop) {
+				stopElement.setAttribute(key, stop[key]);
+			}
+			
+			gradient.appendChild(stopElement);
+		}
+		
+		this._gradient = gradient;
+		this._defs.appendChild(gradient);
+	},
+	
+	_createDropShadow: function (options) {
+	
+		if (!this._defs) {
+			this._createDefs();
+		};
+		
+		var filterGuid = L.Util.guid();
+		var filter = this._createElement('filter');
+		var feOffset = this._createElement('feOffset');
+		var feGaussianBlur = this._createElement('feGaussianBlur');
+		var feBlend = this._createElement('feBlend');
+		
+		options = options || {
+			width: '200%',
+			height: '200%'
+		};
+		
+		options.id = 'filter' + filterGuid;
+		
+		for (var key in options) {
+			filter.setAttribute(key, options[key]);
+		}
+		
+		var offsetOptions = {
+			result: 'offOut',
+			in: 'SourceAlpha',
+			dx: '2',
+			dy: '2'
+		};
+		
+		var blurOptions = {
+			result: 'blurOut',
+			in: 'offOut',
+			stdDeviation: '2'
+		};
+
+		var blendOptions = {
+			in: 'SourceGraphic',
+			in2: 'blurOut',
+			mode: 'lighten'
+		};
+
+		for (var key in offsetOptions) {
+			feOffset.setAttribute(key, offsetOptions[key]);
+		}
+		
+		for (var key in blurOptions) {
+			feGaussianBlur.setAttribute(key, blurOptions[key]);
+		}
+		
+		for (var key in blendOptions) {
+			feBlend.setAttribute(key, blendOptions[key]);
+		}
+		
+		filter.appendChild(feOffset);
+		filter.appendChild(feGaussianBlur);
+		filter.appendChild(feBlend);
+		
+		this._dropShadow = filter;
+		this._defs.appendChild(filter);
+	},
+	
+	_updateStyle: function () {
+		this.__updateStyle.call(this);
+		
+		if (this.options.gradient) {
+			if (!this._gradient) {
+				this._createGradient();
+			}
+			
+			this._path.setAttribute('fill', 'url(#' + this._gradient.getAttribute('id') + ')');
+		}
+		
+		if (this.options.dropShadow) {
+			if (!this._dropShadow) {
+				this._createDropShadow();
+			}
+
+			this._path.setAttribute('filter', 'url(#' + this._dropShadow.getAttribute('id') + ')');
+		}
+	}
+
+};
+
+L.Path.include(PathFunctions);
+L.Polygon.include(PathFunctions);
+L.Polyline.include(PathFunctions);
+L.CircleMarker.include(PathFunctions);
+
 /*
  * Draws a Leaflet map marker using SVG rather than an icon, allowing the marker to be dynamically styled
  */
@@ -24,7 +169,9 @@ L.MapMarker = L.Path.extend({
 		numberOfSides: 50,
 		color: '#000000',
 		fillColor: '#0000FF',
-		weight: 1
+		weight: 1,
+		gradient: true,
+		dropShadow: true
 	},
 
 	setLatLng: function (latlng) {
@@ -58,7 +205,8 @@ L.MapMarker = L.Path.extend({
 	},
 
 	getPathString: function () {
-		return new L.SVGPathBuilder(this._points, this._innerPoints).toString();
+		this._path.setAttribute('shape-rendering', 'geometricPrecision');
+		return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
 	},
 
 	_getPoints: function (inner) {
@@ -140,7 +288,9 @@ L.RegularPolygonMarker = L.Path.extend({
 			x: 0,
 			y: 0
 		},
-		maxDegrees: 360
+		maxDegrees: 360,
+		gradient: true,
+		dropShadow: false
 	},
 
 	setLatLng: function (latlng) {
@@ -177,7 +327,8 @@ L.RegularPolygonMarker = L.Path.extend({
 	},
 
 	getPathString: function () {
-		return new L.SVGPathBuilder(this._points, this._innerPoints).toString();
+		this._path.setAttribute('shape-rendering', 'geometricPrecision');
+		return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
 	},
 
 	_getPoints: function (inner) {
@@ -227,8 +378,11 @@ L.StarMarker = L.RegularPolygonMarker.extend({
 	options: {
 		numberOfPoints: 5,
 		rotation: -15.0,
-		maxDegrees: 360
+		maxDegrees: 360,
+		gradient: true,
+		dropShadow: true
 	},
+	
 	_getPoints: function (inner) {
 		var maxDegrees = this.options.maxDegrees || 360;
 		var angleSize = maxDegrees / this.options.numberOfPoints;

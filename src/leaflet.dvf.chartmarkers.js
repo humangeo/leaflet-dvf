@@ -20,7 +20,9 @@ L.BarMarker = L.Path.extend({
 		},
 		weight: 1,
 		color: '#000',
-		opacity: 1.0
+		opacity: 1.0,
+		gradient: true,
+		dropShadow: false
 	},
 
 	setLatLng: function (latlng) {
@@ -50,6 +52,7 @@ L.BarMarker = L.Path.extend({
 	},
 
 	getPathString: function () {
+		this._path.setAttribute('shape-rendering', 'crispEdges');
 		return new L.SVGPathBuilder(this._points).toString();
 	},
 
@@ -285,9 +288,9 @@ L.RadialBarMarker = L.Path.extend({
 	initialize: function (centerLatLng, options) {
 		L.Path.prototype.initialize.call(this, options);
 
-		this._centerLatLng = centerLatLng;		
+		this._centerLatLng = centerLatLng;	
 	},
-
+	
 	options: {
 		fill: true,
 		radius: 10,
@@ -296,7 +299,9 @@ L.RadialBarMarker = L.Path.extend({
 		position: {
 			x: 0,
 			y: 0
-		}
+		},
+		gradient: true,
+		dropShadow: false
 	},
 
 	setLatLng: function (latlng) {
@@ -329,7 +334,25 @@ L.RadialBarMarker = L.Path.extend({
 	},
 
 	getPathString: function () {
-		return new L.SVGPathBuilder(this._points).toString();
+	
+		var angle = this.options.endAngle - this.options.startAngle;
+		var largeArc = angle >= 180 ? '1' : '0';
+		var radiusX = this.options.radiusX || this.options.radius;
+		var radiusY = this.options.radiusY || this.options.radius;
+		var path = 'M' + this._points[0].x.toFixed(2) + ',' + this._points[0].y.toFixed(2) + 'A' + radiusX.toFixed(2) + ',' + radiusY.toFixed(2) + ' 0 ' + largeArc + ',1 ' + this._points[1].x.toFixed(2) + ',' + this._points[1].y.toFixed(2) + 'L'; 
+		
+		if (this._innerPoints) {
+			path = path + this._innerPoints[0].x.toFixed(2) + ',' + this._innerPoints[0].y.toFixed(2);
+			path = path + 'A' + (radiusX - this.options.barThickness).toFixed(2) + ',' + (radiusY - this.options.barThickness).toFixed(2) + ' 0 ' + largeArc + ',0 ' + this._innerPoints[1].x.toFixed(2) + ',' + this._innerPoints[1].y.toFixed(2) + 'z';;
+		}
+		else {
+			path = path + this._point.x.toFixed(2) + ',' + this._point.y.toFixed(2) + 'z';
+		}
+		
+		this._path.setAttribute('shape-rendering', 'geometricPrecision');
+		
+		return path;
+
 	},
 
 	_getPoints: function () {
@@ -348,41 +371,22 @@ L.RadialBarMarker = L.Path.extend({
 			return number * Math.PI / 180;
 		};
 
-		if (angleSize > 0) {
-			if (!this.options.barThickness) {
-				points.push(this._point);
-			}
+		var startRadians = toRad(angle);
+		var endRadians = toRad(degrees);
 		
-			while (angle <= degrees + 1) {
-			
-				angleRadians = toRad(angle);
-			
-				// Calculate the point the radius meters away from the center point at the
-				// given angle;
-				newPoint = this._getPoint(angleRadians, radiusX, radiusY);
-			
-				// Add the point to the latlngs array
-				points.push(newPoint);
-			
-				// If a barThickness is specified, then compute the inner points of the bar polygon
-				if (this.options.barThickness) {
-					innerPoint = this._getPoint(angleRadians, radiusX - this.options.barThickness, radiusY - this.options.barThickness);
-					innerPoints.push(innerPoint);
-				}
-			
-				// Increment the angle
-				angle += angleSize;
-			}
+		points.push(this._getPoint(startRadians, radiusX, radiusY));
+		points.push(this._getPoint(endRadians, radiusX, radiusY));
 		
-			// Reverse the inner points and add them to the bar polygon points
-			if (this.options.barThickness) {
-				innerPoints.reverse();
+		if (this.options.barThickness) {
+			this._innerPoints = [];
 			
-				for (var index = 0; index < innerPoints.length; ++index) {
-					points.push(innerPoints[index]);
-				}
-			}
+			var innerRadiusX = radiusX - this.options.barThickness;
+			var innerRadiusY = radiusY - this.options.barThickness;
+			
+			this._innerPoints.push(this._getPoint(toRad(degrees), radiusX - this.options.barThickness, radiusY - this.options.barThickness));
+			this._innerPoints.push(this._getPoint(toRad(angle), radiusX - this.options.barThickness, radiusY - this.options.barThickness));
 		}
+		
 		return points;
 	},
 	

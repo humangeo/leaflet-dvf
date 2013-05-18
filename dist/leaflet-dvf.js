@@ -2,7 +2,1367 @@
  Leaflet Data Visualization Framework, a JavaScript library for creating thematic maps using Leaflet
  (c) 2013, Scott Fairgrieve, HumanGeo
 */
+if (!Object.keys) {
+    Object.keys = function() {
+        var hasOwnProperty = Object.prototype.hasOwnProperty, hasDontEnumBug = !{
+            toString: null
+        }.propertyIsEnumerable("toString"), dontEnums = [ "toString", "toLocaleString", "valueOf", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "constructor" ], dontEnumsLength = dontEnums.length;
+        return function(obj) {
+            var result, prop, i;
+            if (typeof obj !== "object" && typeof obj !== "function" || obj === null) {
+                throw new TypeError("Object.keys called on non-object");
+            }
+            result = [];
+            for (prop in obj) {
+                if (hasOwnProperty.call(obj, prop)) {
+                    result.push(prop);
+                }
+            }
+            if (hasDontEnumBug) {
+                for (i = 0; i < dontEnumsLength; i++) {
+                    if (hasOwnProperty.call(obj, dontEnums[i])) {
+                        result.push(dontEnums[i]);
+                    }
+                }
+            }
+            return result;
+        };
+    }();
+}
+
 var L = L || {};
+
+L.Util.guid = function() {
+    var s4 = function() {
+        return Math.floor((1 + Math.random()) * 65536).toString(16).substring(1);
+    };
+    return s4() + s4() + "-" + s4() + "-" + s4() + "-" + s4() + "-" + s4() + s4() + s4();
+};
+
+L.Util.getProperty = function(obj, property, defaultValue) {
+    return property in obj ? obj[property] : defaultValue;
+};
+
+L.Util.getFieldValue = function(record, fieldName) {
+    var value = null;
+    if (fieldName) {
+        var parts = fieldName.split(".");
+        var valueField = record;
+        var part;
+        var searchParts;
+        var searchKey;
+        var searchValue;
+        var testObject;
+        var searchPart;
+        var bracketIndex = -1;
+        var testValue;
+        for (var partIndex = 0; partIndex < parts.length; ++partIndex) {
+            part = parts[partIndex];
+            bracketIndex = part.indexOf("[");
+            if (bracketIndex > -1) {
+                searchPart = part.substring(bracketIndex);
+                part = part.substring(0, bracketIndex);
+                searchPart = searchPart.replace("[", "").replace("]", "");
+                searchParts = searchPart.split("=");
+                searchKey = searchParts[0];
+                searchValue = searchParts[1];
+                valueField = valueField[part];
+                for (var valueIndex = 0; valueIndex < valueField.length; ++valueIndex) {
+                    testObject = valueField[valueIndex];
+                    testValue = testObject[searchKey];
+                    if (testValue && testValue === searchValue) {
+                        valueField = testObject;
+                    }
+                }
+            } else if (valueField && valueField.hasOwnProperty(part)) {
+                valueField = valueField[part];
+            } else {
+                valueField = null;
+                break;
+            }
+        }
+        value = valueField;
+    } else {
+        value = record;
+    }
+    return value;
+};
+
+L.CategoryLegend = L.Class.extend({
+    initialize: function(options) {
+        L.Util.setOptions(this, options);
+    },
+    generate: function(options) {
+        options = options || {};
+        var legend = '<div class="legend"></div>';
+        var $legend = $(legend);
+        var className = options.className;
+        var legendOptions = this.options;
+        if (className) {
+            $legend.addClass(className);
+        }
+        if (options.title) {
+            $legend.append('<div class="legend-title">' + options.title + "</div>");
+        }
+        for (var key in legendOptions) {
+            categoryOptions = legendOptions[key];
+            var displayName = categoryOptions.displayName || key;
+            var $legendElement = $('<div class="data-layer-legend"><div class="legend-box"></div><div class="key">' + displayName + "</div></div>");
+            var $legendBox = $legendElement.find(".legend-box");
+            L.StyleConverter.applySVGStyle($legendBox, categoryOptions);
+            $legend.append($legendElement);
+        }
+        return $legend.wrap("<div/>").parent().html();
+    }
+});
+
+L.LegendIcon = L.DivIcon.extend({
+    initialize: function(fields, layerOptions, options) {
+        var html = '<div class="legend-content"><div class="title"></div><div class="legend-box"></div><div class="legend-values"></div></div>';
+        var $html = $(html);
+        var $legendBox = $html.find(".legend-box");
+        var $legendValues = $html.find(".legend-values");
+        var field;
+        var title = layerOptions.title || layerOptions.name;
+        if (title) {
+            $html.find(".title").text(title);
+        }
+        for (var key in fields) {
+            field = fields[key];
+            var displayName = field.name || key;
+            var displayText = field.value;
+            $legendValues.append('<div class="key">' + displayName + '</div><div class="value">' + displayText + "</div>");
+        }
+        L.StyleConverter.applySVGStyle($legendBox, layerOptions);
+        $legendBox.height(5);
+        html = $html.wrap("<div>").parent().html();
+        options.html = html;
+        options.className = options.className || "legend-icon";
+        L.DivIcon.prototype.initialize.call(this, options);
+    }
+});
+
+L.legendIcon = function(fields, layerOptions, options) {
+    return new L.LegendIcon(fields, layerOptions, options);
+};
+
+L.GeometryUtils = {
+    getName: function(geoJSON) {
+        var name = null;
+        if (geoJSON && geoJSON.features) {
+            for (var index = 0; index < geoJSON.features.length; ++index) {
+                var feature = geoJSON.features[index];
+                if (feature.properties && feature.properties.name) {
+                    name = feature.properties.name;
+                    break;
+                }
+            }
+        }
+        return name;
+    },
+    getGeoJSONLocation: function(geoJSON, record, locationTextField, recordToLayer) {
+        var geoJSONLayer = new L.GeoJSON(geoJSON, {
+            pointToLayer: function(feature, latlng) {
+                var location = {
+                    location: latlng,
+                    text: locationTextField ? L.Util.getFieldValue(record, locationTextField) : [ latlng.lat.toFixed(3), latlng.lng.toFixed(3) ].join(", "),
+                    center: latlng
+                };
+                return recordToLayer(location, record);
+            }
+        });
+        var center = null;
+        try {
+            center = L.GeometryUtils.loadCentroid(geoJSON);
+        } catch (ex) {
+            console.log("Error loading centroid for " + JSON.stringify(geoJSON));
+        }
+        if (!center) {
+            center = geoJSONLayer.getBounds().getCenter();
+        }
+        return {
+            location: geoJSONLayer,
+            text: locationTextField ? L.Util.getFieldValue(record, locationTextField) : null,
+            center: center
+        };
+    },
+    mergeProperties: function(properties, featureCollection, mergeKey) {
+        var features = featureCollection["features"];
+        var featureIndex = L.GeometryUtils.indexFeatureCollection(features, mergeKey);
+        var property;
+        var mergeValue;
+        var newFeatureCollection = {
+            type: "FeatureCollection",
+            features: []
+        };
+        for (var key in properties) {
+            if (properties.hasOwnProperty(key)) {
+                property = properties[key];
+                mergeValue = property[mergeKey];
+                if (mergeValue) {
+                    var feature = featureIndex[mergeValue];
+                    for (var prop in property) {
+                        feature.properties[prop] = property[prop];
+                    }
+                    newFeatureCollection.features.push(feature);
+                }
+            }
+        }
+        return newFeatureCollection;
+    },
+    indexFeatureCollection: function(featureCollection, indexKey) {
+        var features = featureCollection.features;
+        var feature;
+        var properties;
+        var featureIndex = {};
+        var value;
+        for (var index = 0; index < features.length; ++index) {
+            feature = features[index];
+            properties = feature.properties;
+            value = properties[indexKey];
+            featureIndex[value] = feature;
+        }
+        return featureIndex;
+    },
+    arrayToMap: function(array, fromKey, toKey) {
+        var map = {};
+        var item;
+        var from;
+        var to;
+        for (var index = 0; index < array.length; ++index) {
+            item = array[index];
+            from = item[fromKey];
+            to = toKey ? item[toKey] : item;
+            map[from] = to;
+        }
+        return map;
+    },
+    arrayToMaps: function(array, mapLinks) {
+        var map;
+        var item;
+        var from;
+        var to;
+        var maps = [];
+        var mapLink;
+        var fromKey;
+        var toKey;
+        for (var i = 0; i < mapLinks.length; ++i) {
+            maps.push({});
+        }
+        for (var index = 0; index < array.length; ++index) {
+            item = array[index];
+            for (var keyIndex = 0; keyIndex < mapLinks.length; ++keyIndex) {
+                map = maps[keyIndex];
+                mapLink = mapLinks[keyIndex];
+                fromKey = mapLink.from;
+                toKey = mapLink.to;
+                from = item[fromKey];
+                to = toKey ? item[toKey] : item;
+                map[from] = to;
+            }
+        }
+        return maps;
+    },
+    loadCentroid: function(feature) {
+        var centroidLatLng = null;
+        var centroid;
+        var x, y;
+        if (jsts) {
+            var parser = new jsts.io.GeoJSONParser();
+            var jstsFeature = parser.read(feature);
+            if (jstsFeature.getCentroid) {
+                centroid = jstsFeature.getCentroid();
+                x = centroid.coordinate.x;
+                y = centroid.coordinate.y;
+            } else if (jstsFeature.features) {
+                var totalCentroidX = 0;
+                var totalCentroidY = 0;
+                for (var i = 0; i < jstsFeature.features.length; ++i) {
+                    centroid = jstsFeature.features[i].geometry.getCentroid();
+                    totalCentroidX += centroid.coordinate.x;
+                    totalCentroidY += centroid.coordinate.y;
+                }
+                x = totalCentroidX / jstsFeature.features.length;
+                y = totalCentroidY / jstsFeature.features.length;
+            } else {
+                centroid = jstsFeature.geometry.getCentroid();
+                x = centroid.coordinate.x;
+                y = centroid.coordinate.y;
+            }
+            centroidLatLng = new L.LatLng(y, x);
+        }
+        return centroidLatLng;
+    },
+    loadCentroids: function(dictionary) {
+        var centroids = {};
+        var feature;
+        for (var key in dictionary) {
+            feature = dictionary[key];
+            centroids[key] = L.GeometryUtils.loadCentroid(feature);
+        }
+        return centroids;
+    }
+};
+
+L.SVGPathBuilder = L.Class.extend({
+    initialize: function(points, innerPoints, options) {
+        this._points = points || [];
+        this._innerPoints = innerPoints || [];
+        L.Util.setOptions(this, options);
+    },
+    _getPathString: function(points, digits) {
+        var pathString = "";
+        if (points.length > 0) {
+            var point = points[0];
+            var digits = digits || 2;
+            pathString = "M" + point.x.toFixed(digits) + "," + point.y.toFixed(digits);
+            for (var index = 1; index < points.length; index++) {
+                point = points[index];
+                pathString += "L" + point.x.toFixed(digits) + "," + point.y.toFixed(digits);
+            }
+            pathString += "Z";
+        }
+        return pathString;
+    },
+    addPoint: function(point, inner) {
+        inner ? this._innerPoints.push(point) : this._points.push(point);
+    },
+    toString: function(digits) {
+        digits = digits || this.options.digits;
+        var pathString = this._getPathString(this._points, digits);
+        if (this._innerPoints) {
+            pathString += this._getPathString(this._innerPoints, digits);
+        }
+        return pathString;
+    }
+});
+
+L.StyleConverter = {
+    keyMap: {
+        fillColor: {
+            property: [ "background-color" ],
+            valueFunction: function(value) {
+                return value;
+            }
+        },
+        color: {
+            property: [ "border-color" ],
+            valueFunction: function(value) {
+                return value;
+            }
+        },
+        weight: {
+            property: [ "border-width" ],
+            valueFunction: function(value) {
+                return value + "px";
+            }
+        },
+        stroke: {
+            property: [ "border-style" ],
+            valueFunction: function(value) {
+                return value === true ? "solid" : "none";
+            }
+        },
+        dashArray: {
+            property: [ "border-style" ],
+            valueFunction: function(value) {
+                var style = "solid";
+                if (value) {
+                    style = "dashed";
+                }
+                return style;
+            }
+        },
+        radius: {
+            property: [ "height" ],
+            valueFunction: function(value) {
+                return 2 * value + "px";
+            }
+        },
+        fillOpacity: {
+            property: [ "opacity" ],
+            valueFunction: function(value) {
+                return value;
+            }
+        }
+    },
+    applySVGStyle: function($element, svgStyle, additionalKeys) {
+        var keyMap = L.StyleConverter.keyMap;
+        if (additionalKeys) {
+            keyMap = L.Util.extend(keyMap, additionalKeys);
+        }
+        $element.css("border-style", "solid");
+        for (var property in svgStyle) {
+            $element = L.StyleConverter.setCSSProperty($element, property, svgStyle[property], keyMap);
+        }
+        return $element;
+    },
+    setCSSProperty: function($element, key, value, keyMap) {
+        var keyMap = keyMap || L.StyleConverter.keyMap;
+        var cssProperty = keyMap[key];
+        if (cssProperty) {
+            var propertyKey = cssProperty.property;
+            for (var propertyIndex = 0; propertyIndex < propertyKey.length; ++propertyIndex) {
+                $element.css(propertyKey[propertyIndex], cssProperty.valueFunction(value));
+            }
+        }
+        return $element;
+    }
+};
+
+L.StylesBuilder = L.Class.extend({
+    initialize: function(categories, styleFunctionMap) {
+        this._categories = categories;
+        this._styleFunctionMap = styleFunctionMap;
+        this._buildStyles();
+    },
+    _buildStyles: function() {
+        var map = {};
+        var category;
+        var styleFunction;
+        var styleValue;
+        for (var index = 0; index < this._categories.length; ++index) {
+            category = this._categories[index];
+            map[category] = {};
+            for (var property in this._styleFunctionMap) {
+                styleFunction = this._styleFunctionMap[property];
+                styleValue = styleFunction.evaluate ? styleFunction.evaluate(index) : typeof styleFunction === "function" ? styleFunction(index) : styleFunction;
+                map[category][property] = styleValue;
+            }
+        }
+        this._styleMap = map;
+    },
+    getStyles: function() {
+        return this._styleMap;
+    }
+});
+
+L.PaletteBuilder = L.Class.extend({
+    initialize: function(styleFunctionMap) {
+        this._styleFunctionMap = styleFunctionMap;
+    },
+    generate: function(options) {
+        options = options || {};
+        var $paletteElement = $('<div class="palette"></div>');
+        var count = options.count || 10;
+        var categories = function(count) {
+            var categoryArray = [];
+            for (var i = 0; i < count; ++i) {
+                categoryArray.push(i);
+            }
+            return categoryArray;
+        }(count);
+        var styleBuilder = new L.StylesBuilder(categories, this._styleFunctionMap);
+        var styles = styleBuilder.getStyles();
+        if (options.className) {
+            $paletteElement.addClass(options.className);
+        }
+        for (var styleKey in styles) {
+            var $i = $('<i class="palette-element"></i>');
+            var style = styles[styleKey];
+            L.StyleConverter.applySVGStyle($i, style);
+            $paletteElement.append($i);
+        }
+        return $paletteElement.wrap("<div/>").parent().html();
+    }
+});
+
+L.HTMLUtils = {
+    buildTable: function(obj, className, ignoreFields) {
+        className = className || "table table-condensed table-striped table-bordered";
+        var html = '<table class="' + className + '"><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody></tbody></table>';
+        var $html = $(html);
+        var $tbody = $html.find("tbody");
+        ignoreFields = ignoreFields || [];
+        for (var property in obj) {
+            if (obj.hasOwnProperty(property) && $.inArray(ignoreFields, property) === -1) {
+                if ($.isPlainObject(obj[property]) || obj[property] instanceof Array) {
+                    $tbody.append("<tr><td>" + property + "</td><td>" + L.HTMLUtils.buildTable(obj[property], ignoreFields).wrap("<div/>").parent().html() + "</td></tr>");
+                } else {
+                    $tbody.append("<tr><td>" + property + "</td><td>" + obj[property] + "</td></tr>");
+                }
+            }
+        }
+        return $html;
+    }
+};
+
+L.AnimationUtils = {
+    animate: function(layer, from, to, options) {
+        var delay = options.delay || 0;
+        var frames = options.frames || 30;
+        var duration = options.duration || 500;
+        var linearFunctions = {};
+        var easeFunction = options.easeFunction || function(step) {
+            return step;
+        };
+        var complete = options.complete;
+        var step = duration / frames;
+        for (var key in from) {
+            if (key != "color" && key != "fillColor" && to[key]) {
+                linearFunctions[key] = new L.LinearFunction([ 0, from[key] ], [ frames - 1, to[key] ]);
+            }
+        }
+        var layerOptions = {};
+        var frame = 0;
+        var updateLayer = function() {
+            for (var key in linearFunctions) {
+                layerOptions[key] = linearFunctions[key].evaluate(frame);
+            }
+            layer.options = $.extend(true, {}, layer.options, layerOptions);
+            layer.redraw();
+            frame++;
+            step = easeFunction(step);
+            if (frame < frames) {
+                setTimeout(updateLayer, step);
+            } else {
+                complete();
+            }
+        };
+        setTimeout(updateLayer, delay);
+    }
+};
+
+L.ColorUtils = {
+    hslToRgbString: function(h, s, l) {
+        return L.ColorUtils.rgbArrayToString(L.ColorUtils.hslToRgb(h, s, l));
+    },
+    rgbArrayToString: function(rgbArray) {
+        var hexValues = [];
+        for (var index = 0; index < rgbArray.length; ++index) {
+            var hexValue = rgbArray[index].toString(16);
+            if (hexValue.length === 1) {
+                hexValue = "0" + hexValue;
+            }
+            hexValues.push(hexValue);
+        }
+        return "#" + hexValues.join("");
+    },
+    rgbToHsl: function(r, g, b) {
+        r /= 255, g /= 255, b /= 255;
+        var max = Math.max(r, g, b), min = Math.min(r, g, b);
+        var h, s, l = (max + min) / 2;
+        if (max == min) {
+            h = s = 0;
+        } else {
+            var d = max - min;
+            s = l > .5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+              case r:
+                h = (g - b) / d + (g < b ? 6 : 0);
+                break;
+
+              case g:
+                h = (b - r) / d + 2;
+                break;
+
+              case b:
+                h = (r - g) / d + 4;
+                break;
+            }
+            h /= 6;
+        }
+        return [ h, s, l ];
+    },
+    hslToRgb: function(h, s, l) {
+        var r, g, b;
+        if (s == 0) {
+            r = g = b = l;
+        } else {
+            function hue2rgb(p, q, t) {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1 / 6) return p + (q - p) * 6 * t;
+                if (t < 1 / 2) return q;
+                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                return p;
+            }
+            var q = l < .5 ? l * (1 + s) : l + s - l * s;
+            var p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1 / 3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1 / 3);
+        }
+        return [ r * 255, g * 255, b * 255 ];
+    },
+    rgbToHsv: function(r, g, b) {
+        r = r / 255, g = g / 255, b = b / 255;
+        var max = Math.max(r, g, b), min = Math.min(r, g, b);
+        var h, s, v = max;
+        var d = max - min;
+        s = max == 0 ? 0 : d / max;
+        if (max == min) {
+            h = 0;
+        } else {
+            switch (max) {
+              case r:
+                h = (g - b) / d + (g < b ? 6 : 0);
+                break;
+
+              case g:
+                h = (b - r) / d + 2;
+                break;
+
+              case b:
+                h = (r - g) / d + 4;
+                break;
+            }
+            h /= 6;
+        }
+        return [ h, s, v ];
+    },
+    hsvToRgb: function(h, s, v) {
+        var r, g, b;
+        var i = Math.floor(h * 6);
+        var f = h * 6 - i;
+        var p = v * (1 - s);
+        var q = v * (1 - f * s);
+        var t = v * (1 - (1 - f) * s);
+        switch (i % 6) {
+          case 0:
+            r = v, g = t, b = p;
+            break;
+
+          case 1:
+            r = q, g = v, b = p;
+            break;
+
+          case 2:
+            r = p, g = v, b = t;
+            break;
+
+          case 3:
+            r = p, g = q, b = v;
+            break;
+
+          case 4:
+            r = t, g = p, b = v;
+            break;
+
+          case 5:
+            r = v, g = p, b = q;
+            break;
+        }
+        return [ r * 255, g * 255, b * 255 ];
+    }
+};
+
+
+
+L.LinearFunction = L.Class.extend({
+    initialize: function(minPoint, maxPoint, options) {
+        this.setOptions(options);
+        this.setRange(minPoint, maxPoint);
+    },
+    _calculateParameters: function(minPoint, maxPoint) {
+        if (this._xRange === 0) {
+            this._slope = 0;
+            this._b = minPoint.y;
+        } else {
+            this._slope = (maxPoint.y - minPoint.y) / this._xRange;
+            this._b = minPoint.y - this._slope * minPoint.x;
+        }
+    },
+    _arrayToPoint: function(array) {
+        return {
+            x: array[0],
+            y: array[1]
+        };
+    },
+    setOptions: function(options) {
+        L.Util.setOptions(this, options);
+        this._preProcess = this.options.preProcess;
+        this._postProcess = this.options.postProcess;
+    },
+    getBounds: function() {
+        var minX = Math.min(this._minPoint.x, this._maxPoint.x);
+        var maxX = Math.max(this._minPoint.x, this._maxPoint.x);
+        var minY = Math.min(this._minPoint.y, this._maxPoint.y);
+        var maxY = Math.max(this._minPoint.y, this._maxPoint.y);
+        return [ new L.Point(minX, minY), new L.Point(maxX, maxY) ];
+    },
+    setRange: function(minPoint, maxPoint) {
+        minPoint = minPoint instanceof Array ? this._arrayToPoint(minPoint) : minPoint;
+        maxPoint = maxPoint instanceof Array ? this._arrayToPoint(maxPoint) : maxPoint;
+        this._minPoint = minPoint;
+        this._maxPoint = maxPoint;
+        this._xRange = maxPoint.x - minPoint.x;
+        this._calculateParameters(minPoint, maxPoint);
+        return this;
+    },
+    setMin: function(point) {
+        this.setRange(point, this._maxPoint);
+        return this;
+    },
+    setMax: function(point) {
+        this.setRange(this._minPoint, point);
+        return this;
+    },
+    setPreProcess: function(preProcess) {
+        this._preProcess = preProcess;
+        return this;
+    },
+    setPostProcess: function(postProcess) {
+        this._postProcess = postProcess;
+        return this;
+    },
+    evaluate: function(x) {
+        var y;
+        if (this._preProcess) {
+            x = this._preProcess(x);
+        }
+        y = Number((this._slope * x).toFixed(6)) + Number(this._b.toFixed(6));
+        if (this._postProcess) {
+            y = this._postProcess(y);
+        }
+        return y;
+    },
+    random: function() {
+        var randomX = Math.random() * this._xRange + this._minPoint.x;
+        return this.evaluate(randomX);
+    },
+    sample: function(count) {
+        count = Math.max(count, 2);
+        var segmentCount = count - 1;
+        var segmentSize = this._xRange / segmentCount;
+        var x = this._minPoint.x;
+        var yValues = [];
+        while (x <= this._maxPoint.x) {
+            yValues.push(this.evaluate(x));
+            x += segmentSize;
+        }
+        return yValues;
+    }
+});
+
+L.ColorFunction = L.LinearFunction.extend({
+    options: {
+        alpha: 1,
+        includeAlpha: false
+    },
+    initialize: function(minPoint, maxPoint, options) {
+        L.Util.setOptions(this, options);
+        this._parts = [];
+        this._dynamicPart = null;
+        this._outputPrecision = 0;
+        this._prefix = null;
+        this._formatOutput = function(y) {
+            return y.toFixed(this._outputPrecision);
+        }, this._mapOutput = function(parts) {
+            var outputParts = [];
+            for (var i = 0; i < this._parts.length; ++i) {
+                var part = this._parts[i];
+                outputParts.push(parts[part]);
+            }
+            if (this.options.includeAlpha) {
+                outputParts.push(this.options.alpha);
+            }
+            return outputParts;
+        };
+        this._getColorString = function(y) {
+            y = this._formatOutput(y);
+            this.options[this._dynamicPart] = y;
+            var parts = this._mapOutput(this.options);
+            return this._writeColor(this._prefix, parts);
+        };
+        this._writeColor = function(prefix, parts) {
+            if (this.options.includeAlpha) {
+                prefix += "a";
+            }
+            return prefix + "(" + parts.join(",") + ")";
+        };
+        var postProcess = function(y) {
+            if (options && options.postProcess) {
+                y = options.postProcess.call(this, y);
+            }
+            return this._getColorString(y);
+        };
+        L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
+            preProcess: this.options.preProcess,
+            postProcess: postProcess
+        });
+    }
+});
+
+L.HSLColorFunction = L.ColorFunction.extend({
+    initialize: function(minPoint, maxPoint, options) {
+        L.ColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+        this._parts = [ "outputHue", "outputSaturation", "outputLuminosity" ];
+        this._prefix = "hsl";
+        this._outputPrecision = 2;
+    }
+});
+
+L.RGBColorFunction = L.ColorFunction.extend({
+    initialize: function(minPoint, maxPoint, options) {
+        L.ColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+        this._parts = [ "outputRed", "outputBlue", "outputGreen" ];
+        this._prefix = "rgb";
+        this._outputPrecision = 0;
+    }
+});
+
+L.RGBRedFunction = L.LinearFunction.extend({
+    options: {
+        outputGreen: 0,
+        outputBlue: 0
+    },
+    initialize: function(minPoint, maxPoint, options) {
+        L.RGBColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+        this._dynamicPart = "outputRed";
+    }
+});
+
+L.RGBBlueFunction = L.LinearFunction.extend({
+    options: {
+        outputRed: 0,
+        outputGreen: 0
+    },
+    initialize: function(minPoint, maxPoint, options) {
+        L.RGBColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+        this._dynamicPart = "outputBlue";
+    }
+});
+
+L.RGBGreenFunction = L.LinearFunction.extend({
+    options: {
+        outputRed: 0,
+        outputBlue: 0
+    },
+    initialize: function(minPoint, maxPoint, options) {
+        L.RGBColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+        this._dynamicPart = "outputGreen";
+    }
+});
+
+L.RGBColorBlendFunction = L.LinearFunction.extend({
+    initialize: function(minX, maxX, rgbMinColor, rgbMaxColor) {
+        var red1 = rgbMinColor[0];
+        var red2 = rgbMaxColor[0];
+        var green1 = rgbMinColor[1];
+        var green2 = rgbMaxColor[1];
+        var blue1 = rgbMinColor[2];
+        var blue2 = rgbMaxColor[2];
+        var postProcess = function(y) {
+            return y.toFixed(0);
+        };
+        this._minX = minX;
+        this._maxX = maxX;
+        this._redFunction = new L.LinearFunction(new L.Point(minX, red1), new L.Point(maxX, red2), {
+            postProcess: postProcess
+        });
+        this._greenFunction = new L.LinearFunction(new L.Point(minX, green1), new L.Point(maxX, green2), {
+            postProcess: postProcess
+        });
+        this._blueFunction = new L.LinearFunction(new L.Point(minX, blue1), new L.Point(maxX, blue2), {
+            postProcess: postProcess
+        });
+    },
+    getBounds: function() {
+        var redBounds = this._redFunction.getBounds();
+        var greenBounds = this._greenFunction.getBounds();
+        var blueBounds = this._blueFunction.getBounds();
+        var minY = Math.min(redBounds[0].y, greenBounds[0].y, blueBounds[0].y);
+        var maxY = Math.max(redBounds[0].y, greenBounds[0].y, blueBounds[0].y);
+        return [ new L.Point(redBounds[0].x, minY), new L.Point(redBounds[1].x, maxY) ];
+    },
+    evaluate: function(x) {
+        return "rgb(" + [ this._redFunction.evaluate(x), this._greenFunction.evaluate(x), this._blueFunction.evaluate(x) ].join(",") + ")";
+    }
+});
+
+L.HSLHueFunction = L.HSLColorFunction.extend({
+    options: {
+        outputSaturation: "100%",
+        outputLuminosity: "50%"
+    },
+    initialize: function(minPoint, maxPoint, options) {
+        L.HSLColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+        this._dynamicPart = "outputHue";
+    }
+});
+
+L.HSLSaturationFunction = L.LinearFunction.extend({
+    options: {
+        outputHue: 0,
+        outputLuminosity: "50%"
+    },
+    initialize: function(minPoint, maxPoint, options) {
+        L.HSLColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+        this._formatOutput = function(y) {
+            return (y * 100).toFixed(this._outputPrecision) + "%";
+        };
+        this._dynamicPart = "outputSaturation";
+    }
+});
+
+L.HSLLuminosityFunction = L.LinearFunction.extend({
+    options: {
+        outputHue: 0,
+        outputSaturation: "100%"
+    },
+    initialize: function(minPoint, maxPoint, options) {
+        L.HSLColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
+        this._formatOutput = function(y) {
+            return (y * 100).toFixed(this._outputPrecision) + "%";
+        };
+        this._dynamicPart = "outputLuminosity";
+    }
+});
+
+L.PiecewiseFunction = L.LinearFunction.extend({
+    initialize: function(functions, options) {
+        L.Util.setOptions(this, options);
+        this._functions = functions;
+        var startPoint;
+        var endPoint;
+        startPoint = functions[0].getBounds()[0];
+        endPoint = functions[functions.length - 1].getBounds()[1];
+        L.LinearFunction.prototype.initialize.call(this, startPoint, endPoint, {
+            preProcess: this.options.preProcess,
+            postProcess: this.options.postProcess
+        });
+    },
+    _getFunction: function(x) {
+        var bounds;
+        var startPoint;
+        var endPoint;
+        var found = false;
+        var currentFunction;
+        for (var index = 0; index < this._functions.length; ++index) {
+            currentFunction = this._functions[index];
+            bounds = currentFunction.getBounds();
+            startPoint = bounds[0];
+            endPoint = bounds[1];
+            if (x >= startPoint.x && x < endPoint.x) {
+                found = true;
+                break;
+            }
+        }
+        return found ? currentFunction : this._functions[this._functions.length - 1];
+    },
+    evaluate: function(x) {
+        var currentFunction;
+        var y = null;
+        if (this._preProcess) {
+            x = this._preProcess(x);
+        }
+        currentFunction = this._getFunction(x);
+        if (currentFunction) {
+            y = currentFunction.evaluate(x);
+            if (this._postProcess) {
+                y = this._postProcess(y);
+            }
+        }
+        return y;
+    }
+});
+
+L.CategoryFunction = L.Class.extend({
+    initialize: function(categoryMap, options) {
+        L.Util.setOptions(this, options);
+        this._categoryKeys = Object.keys(categoryMap);
+        this._categoryMap = categoryMap;
+        this._preProcess = this.options.preProcess;
+        this._postProcess = this.options.postProcess;
+    },
+    evaluate: function(x) {
+        var y;
+        if (this._preProcess) {
+            x = this._preProcess(x);
+        }
+        y = this._categoryMap[x];
+        if (this._postProcess) {
+            y = this._postProcess(y);
+        }
+        return y;
+    },
+    getCategories: function() {
+        return this._categoryKeys;
+    }
+});
+
+
+
+var PathFunctions = {
+    __updateStyle: L.Path.prototype._updateStyle,
+    _createDefs: function() {
+        this._defs = this._createElement("defs");
+        this._container.appendChild(this._defs);
+    },
+    _createGradient: function(options) {
+        if (!this._defs) {
+            this._createDefs();
+        }
+        var gradient = this._createElement("linearGradient");
+        var gradientGuid = L.Util.guid();
+        options = options || {
+            x1: "0%",
+            x2: "100%",
+            y1: "0%",
+            y2: "100%"
+        };
+        options.id = "grad" + gradientGuid;
+        var stops = [ {
+            offset: "0%",
+            style: "stop-color:rgb(255, 255, 255);stop-opacity:1"
+        }, {
+            offset: "60%",
+            style: "stop-color:" + (this.options.fillColor || this.options.color) + ";stop-opacity:1"
+        } ];
+        for (var key in options) {
+            gradient.setAttribute(key, options[key]);
+        }
+        for (var i = 0; i < stops.length; ++i) {
+            var stop = stops[i];
+            var stopElement = this._createElement("stop");
+            for (var key in stop) {
+                stopElement.setAttribute(key, stop[key]);
+            }
+            gradient.appendChild(stopElement);
+        }
+        this._gradient = gradient;
+        this._defs.appendChild(gradient);
+    },
+    _createDropShadow: function(options) {
+        if (!this._defs) {
+            this._createDefs();
+        }
+        var filterGuid = L.Util.guid();
+        var filter = this._createElement("filter");
+        var feOffset = this._createElement("feOffset");
+        var feGaussianBlur = this._createElement("feGaussianBlur");
+        var feBlend = this._createElement("feBlend");
+        options = options || {
+            width: "200%",
+            height: "200%"
+        };
+        options.id = "filter" + filterGuid;
+        for (var key in options) {
+            filter.setAttribute(key, options[key]);
+        }
+        var offsetOptions = {
+            result: "offOut",
+            "in": "SourceAlpha",
+            dx: "2",
+            dy: "2"
+        };
+        var blurOptions = {
+            result: "blurOut",
+            "in": "offOut",
+            stdDeviation: "2"
+        };
+        var blendOptions = {
+            "in": "SourceGraphic",
+            in2: "blurOut",
+            mode: "lighten"
+        };
+        for (var key in offsetOptions) {
+            feOffset.setAttribute(key, offsetOptions[key]);
+        }
+        for (var key in blurOptions) {
+            feGaussianBlur.setAttribute(key, blurOptions[key]);
+        }
+        for (var key in blendOptions) {
+            feBlend.setAttribute(key, blendOptions[key]);
+        }
+        filter.appendChild(feOffset);
+        filter.appendChild(feGaussianBlur);
+        filter.appendChild(feBlend);
+        this._dropShadow = filter;
+        this._defs.appendChild(filter);
+    },
+    _updateStyle: function() {
+        this.__updateStyle.call(this);
+        if (this.options.gradient) {
+            if (!this._gradient) {
+                this._createGradient();
+            }
+            this._path.setAttribute("fill", "url(#" + this._gradient.getAttribute("id") + ")");
+        }
+        if (this.options.dropShadow) {
+            if (!this._dropShadow) {
+                this._createDropShadow();
+            }
+            this._path.setAttribute("filter", "url(#" + this._dropShadow.getAttribute("id") + ")");
+        }
+    }
+};
+
+L.Path.include(PathFunctions);
+
+L.Polygon.include(PathFunctions);
+
+L.Polyline.include(PathFunctions);
+
+L.CircleMarker.include(PathFunctions);
+
+L.MapMarker = L.Path.extend({
+    initialize: function(centerLatLng, options) {
+        L.Path.prototype.initialize.call(this, options);
+        this._centerLatLng = centerLatLng;
+    },
+    options: {
+        fill: true,
+        fillOpacity: 1,
+        opacity: 1,
+        radius: 15,
+        innerRadius: 5,
+        position: {
+            x: 0,
+            y: 0
+        },
+        rotation: 0,
+        numberOfSides: 50,
+        color: "#000000",
+        fillColor: "#0000FF",
+        weight: 1,
+        gradient: true,
+        dropShadow: true
+    },
+    setLatLng: function(latlng) {
+        this._centerLatLng = latlng;
+        return this.redraw();
+    },
+    projectLatlngs: function() {
+        this._point = this._map.latLngToLayerPoint(this._centerLatLng);
+        this._points = this._getPoints();
+        if (this.options.innerRadius) {
+            this._innerPoints = this._getPoints(true).reverse();
+        }
+    },
+    getBounds: function() {
+        var map = this._map, height = this.options.radius * 3, point = map.project(this._centerLatLng), swPoint = new L.Point(point.x - this.options.radius, point.y), nePoint = new L.Point(point.x + this.options.radius, point.y - height), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
+        return new L.LatLngBounds(sw, ne);
+    },
+    getLatLng: function() {
+        return this._centerLatLng;
+    },
+    getPathString: function() {
+        this._path.setAttribute("shape-rendering", "geometricPrecision");
+        return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+    },
+    _getPoints: function(inner) {
+        var maxDegrees = !inner ? 210 : 360;
+        var angleSize = !inner ? maxDegrees / 50 : maxDegrees / Math.max(this.options.numberOfSides, 3);
+        var degrees = !inner ? maxDegrees : maxDegrees + this.options.rotation;
+        var angle = !inner ? -30 : this.options.rotation;
+        var points = [];
+        var newPoint;
+        var angleRadians;
+        var radius = this.options.radius;
+        var toRad = function(number) {
+            return number * Math.PI / 180;
+        };
+        var startPoint = this._point;
+        if (!inner) {
+            points.push(startPoint);
+            points.push(new L.Point(startPoint.x + Math.sqrt(.75) * radius, startPoint.y - 1.5 * radius));
+        }
+        while (angle < degrees) {
+            angleRadians = toRad(angle);
+            newPoint = this._getPoint(angleRadians, radius, inner);
+            points.push(newPoint);
+            angle += angleSize;
+        }
+        if (!inner) {
+            points.push(new L.Point(startPoint.x - Math.sqrt(.75) * radius, startPoint.y - 1.5 * radius));
+        }
+        return points;
+    },
+    _getPoint: function(angle, radius, inner) {
+        var markerRadius = radius;
+        radius = !inner ? radius : this.options.innerRadius;
+        return new L.Point(this._point.x + this.options.position.x + radius * Math.cos(angle), this._point.y - 2 * markerRadius + this.options.position.y - radius * Math.sin(angle));
+    }
+});
+
+L.mapMarker = function(centerLatLng, options) {
+    return new L.MapMarker(centerLatLng, options);
+};
+
+L.RegularPolygonMarker = L.Path.extend({
+    initialize: function(centerLatLng, options) {
+        L.Path.prototype.initialize.call(this, options);
+        this._centerLatLng = centerLatLng;
+        this.options.numberOfSides = Math.max(this.options.numberOfSides, 3);
+    },
+    options: {
+        fill: true,
+        radiusX: 10,
+        radiusY: 10,
+        rotation: 0,
+        numberOfSides: 3,
+        position: {
+            x: 0,
+            y: 0
+        },
+        maxDegrees: 360,
+        gradient: true,
+        dropShadow: false
+    },
+    setLatLng: function(latlng) {
+        this._centerLatLng = latlng;
+        return this.redraw();
+    },
+    projectLatlngs: function() {
+        this._point = this._map.latLngToLayerPoint(this._centerLatLng);
+        this._points = this._getPoints();
+        if (this.options.innerRadius || this.options.innerRadiusX && this.options.innerRadiusY) {
+            this._innerPoints = this._getPoints(true).reverse();
+        }
+    },
+    getBounds: function() {
+        var map = this._map, radiusX = this.options.radius || this.options.radiusX, radiusY = this.options.radius || this.options.radiusY, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._centerLatLng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
+        return new L.LatLngBounds(sw, ne);
+    },
+    getLatLng: function() {
+        return this._centerLatLng;
+    },
+    getPathString: function() {
+        this._path.setAttribute("shape-rendering", "geometricPrecision");
+        return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+    },
+    _getPoints: function(inner) {
+        var maxDegrees = this.options.maxDegrees || 360;
+        var angleSize = maxDegrees / Math.max(this.options.numberOfSides, 3);
+        var degrees = maxDegrees + this.options.rotation;
+        var angle = this.options.rotation;
+        var points = [];
+        var newPoint;
+        var angleRadians;
+        var radiusX = !inner ? this.options.radius || this.options.radiusX : this.options.innerRadius || this.options.innerRadiusX;
+        var radiusY = !inner ? this.options.radius || this.options.radiusY : this.options.innerRadius || this.options.innerRadiusY;
+        var toRad = function(number) {
+            return number * Math.PI / 180;
+        };
+        while (angle < degrees) {
+            angleRadians = toRad(angle);
+            newPoint = this._getPoint(angleRadians, radiusX, radiusY);
+            points.push(newPoint);
+            angle += angleSize;
+        }
+        return points;
+    },
+    _getPoint: function(angle, radiusX, radiusY) {
+        return new L.Point(this._point.x + this.options.position.x + radiusX * Math.cos(angle), this._point.y + this.options.position.y + radiusY * Math.sin(angle));
+    }
+});
+
+L.regularPolygonMarker = function(centerLatLng, options) {
+    return new L.RegularPolygonMarker(centerLatLng, options);
+};
+
+L.StarMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfPoints: 5,
+        rotation: -15,
+        maxDegrees: 360,
+        gradient: true,
+        dropShadow: true
+    },
+    _getPoints: function(inner) {
+        var maxDegrees = this.options.maxDegrees || 360;
+        var angleSize = maxDegrees / this.options.numberOfPoints;
+        var degrees = maxDegrees + this.options.rotation;
+        var angle = this.options.rotation;
+        var points = [];
+        var newPoint, newPointInner;
+        var angleRadians;
+        var radiusX = !inner ? this.options.radius || this.options.radiusX : this.options.innerRadius || this.options.innerRadiusX;
+        var radiusY = !inner ? this.options.radius || this.options.radiusY : this.options.innerRadius || this.options.innerRadiusY;
+        var toRad = function(number) {
+            return number * Math.PI / 180;
+        };
+        while (angle < degrees) {
+            angleRadians = toRad(angle);
+            newPoint = this._getPoint(angleRadians, radiusX, radiusY);
+            newPointInner = this._getPoint(angleRadians + toRad(angleSize) / 2, radiusX / 2, radiusY / 2);
+            points.push(newPoint);
+            points.push(newPointInner);
+            angle += angleSize;
+        }
+        return points;
+    }
+});
+
+L.starMarker = function(centerLatLng, options) {
+    return new L.StarMarker(centerLatLng, options);
+};
+
+L.TriangleMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfSides: 3,
+        rotation: 30,
+        radius: 5
+    }
+});
+
+L.triangleMarker = function(centerLatLng, options) {
+    return new L.TriangleMarker(centerLatLng, options);
+};
+
+L.DiamondMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfSides: 4,
+        radiusX: 5,
+        radiusY: 10
+    }
+});
+
+L.diamondMarker = function(centerLatLng, options) {
+    return new L.DiamondMarker(centerLatLng, options);
+};
+
+L.SquareMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfSides: 4,
+        rotation: 45,
+        radius: 5
+    }
+});
+
+L.squareMarker = function(centerLatLng, options) {
+    return new L.SquareMarker(centerLatLng, options);
+};
+
+L.PentagonMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfSides: 5,
+        rotation: -18,
+        radius: 5
+    }
+});
+
+L.pentagonMarker = function(centerLatLng, options) {
+    return new L.PentagonMarker(centerLatLng, options);
+};
+
+L.HexagonMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfSides: 6,
+        rotation: 30,
+        radius: 5
+    }
+});
+
+L.hexagonMarker = function(centerLatLng, options) {
+    return new L.HexagonMarker(centerLatLng, options);
+};
+
+L.OctagonMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfSides: 8,
+        rotation: 22.5,
+        radius: 5
+    }
+});
+
+L.octagonMarker = function(centerLatLng, options) {
+    return new L.OctagonMarker(centerLatLng, options);
+};
+
+
 
 L.BarMarker = L.Path.extend({
     initialize: function(centerLatLng, options) {
@@ -19,7 +1379,9 @@ L.BarMarker = L.Path.extend({
         },
         weight: 1,
         color: "#000",
-        opacity: 1
+        opacity: 1,
+        gradient: true,
+        dropShadow: false
     },
     setLatLng: function(latlng) {
         this._centerLatLng = latlng;
@@ -37,6 +1399,7 @@ L.BarMarker = L.Path.extend({
         return this._centerLatlng;
     },
     getPathString: function() {
+        this._path.setAttribute("shape-rendering", "crispEdges");
         return new L.SVGPathBuilder(this._points).toString();
     },
     _getPoints: function() {
@@ -224,7 +1587,9 @@ L.RadialBarMarker = L.Path.extend({
         position: {
             x: 0,
             y: 0
-        }
+        },
+        gradient: true,
+        dropShadow: false
     },
     setLatLng: function(latlng) {
         this._centerLatLng = latlng;
@@ -242,7 +1607,19 @@ L.RadialBarMarker = L.Path.extend({
         return this._centerLatlng;
     },
     getPathString: function() {
-        return new L.SVGPathBuilder(this._points).toString();
+        var angle = this.options.endAngle - this.options.startAngle;
+        var largeArc = angle >= 180 ? "1" : "0";
+        var radiusX = this.options.radiusX || this.options.radius;
+        var radiusY = this.options.radiusY || this.options.radius;
+        var path = "M" + this._points[0].x.toFixed(2) + "," + this._points[0].y.toFixed(2) + "A" + radiusX.toFixed(2) + "," + radiusY.toFixed(2) + " 0 " + largeArc + ",1 " + this._points[1].x.toFixed(2) + "," + this._points[1].y.toFixed(2) + "L";
+        if (this._innerPoints) {
+            path = path + this._innerPoints[0].x.toFixed(2) + "," + this._innerPoints[0].y.toFixed(2);
+            path = path + "A" + (radiusX - this.options.barThickness).toFixed(2) + "," + (radiusY - this.options.barThickness).toFixed(2) + " 0 " + largeArc + ",0 " + this._innerPoints[1].x.toFixed(2) + "," + this._innerPoints[1].y.toFixed(2) + "z";
+        } else {
+            path = path + this._point.x.toFixed(2) + "," + this._point.y.toFixed(2) + "z";
+        }
+        this._path.setAttribute("shape-rendering", "geometricPrecision");
+        return path;
     },
     _getPoints: function() {
         var angleDelta = this.options.endAngle - this.options.startAngle;
@@ -258,26 +1635,16 @@ L.RadialBarMarker = L.Path.extend({
         var toRad = function(number) {
             return number * Math.PI / 180;
         };
-        if (angleSize > 0) {
-            if (!this.options.barThickness) {
-                points.push(this._point);
-            }
-            while (angle <= degrees + 1) {
-                angleRadians = toRad(angle);
-                newPoint = this._getPoint(angleRadians, radiusX, radiusY);
-                points.push(newPoint);
-                if (this.options.barThickness) {
-                    innerPoint = this._getPoint(angleRadians, radiusX - this.options.barThickness, radiusY - this.options.barThickness);
-                    innerPoints.push(innerPoint);
-                }
-                angle += angleSize;
-            }
-            if (this.options.barThickness) {
-                innerPoints.reverse();
-                for (var index = 0; index < innerPoints.length; ++index) {
-                    points.push(innerPoints[index]);
-                }
-            }
+        var startRadians = toRad(angle);
+        var endRadians = toRad(degrees);
+        points.push(this._getPoint(startRadians, radiusX, radiusY));
+        points.push(this._getPoint(endRadians, radiusX, radiusY));
+        if (this.options.barThickness) {
+            this._innerPoints = [];
+            var innerRadiusX = radiusX - this.options.barThickness;
+            var innerRadiusY = radiusY - this.options.barThickness;
+            this._innerPoints.push(this._getPoint(toRad(degrees), radiusX - this.options.barThickness, radiusY - this.options.barThickness));
+            this._innerPoints.push(this._getPoint(toRad(angle), radiusX - this.options.barThickness, radiusY - this.options.barThickness));
         }
         return points;
     },
@@ -638,50 +2005,7 @@ L.RadialMeterMarker = L.ChartMarker.extend({
     }
 });
 
-L.Control.Legend = L.Control.extend({
-    options: {
-        position: "bottomright"
-    },
-    onAdd: function(map) {
-        var className = "leaflet-control-legend", container = L.DomUtil.create("div", className);
-        var self = this;
-        map.on("layeradd", function(e) {
-            var layer = e.layer;
-            var id = L.Util.stamp(layer);
-            if (layer.getLegend) {
-                self.addLegend(id, layer.getLegend());
-            }
-        });
-        map.on("layerremove", function(e) {
-            var layer = e.layer;
-            var id = L.Util.stamp(layer);
-            if (layer.getLegend) {
-                $(self._container).find("#" + id).remove();
-            }
-        });
-        $(container).on("mouseover mouseout", function(e) {
-            $(this).toggleClass("larger");
-        });
-        L.DomEvent.addListener(container, "click", L.DomEvent.stopPropagation).addListener(container, "click", L.DomEvent.preventDefault);
-        return container;
-    },
-    clear: function() {
-        $(this._container).empty();
-    },
-    toggleSize: function() {
-        $(this._container).toggleClass("larger", "slow");
-    },
-    addLegend: function(id, html) {
-        var $container = $(this._container);
-        var $html = $(html);
-        var $existingLegend = $container.find("#" + id);
-        if ($existingLegend.size() === 0) {
-            $container.append('<div id="' + id + '">' + html + "</div>");
-        } else {
-            $existingLegend.find("div.legend").replaceWith($html);
-        }
-    }
-});
+
 
 L.LocationModes = {
     LATLNG: function(record, index) {
@@ -1389,595 +2713,7 @@ L.StackedRegularPolygonDataLayer = L.ChartDataLayer.extend({
     }
 });
 
-L.LinearFunction = L.Class.extend({
-    initialize: function(minPoint, maxPoint, options) {
-        this.setOptions(options);
-        this.setRange(minPoint, maxPoint);
-    },
-    _calculateParameters: function(minPoint, maxPoint) {
-        if (this._xRange === 0) {
-            this._slope = 0;
-            this._b = minPoint.y;
-        } else {
-            this._slope = (maxPoint.y - minPoint.y) / this._xRange;
-            this._b = minPoint.y - this._slope * minPoint.x;
-        }
-    },
-    _arrayToPoint: function(array) {
-        return {
-            x: array[0],
-            y: array[1]
-        };
-    },
-    setOptions: function(options) {
-        L.Util.setOptions(this, options);
-        this._preProcess = this.options.preProcess;
-        this._postProcess = this.options.postProcess;
-    },
-    getBounds: function() {
-        var minX = Math.min(this._minPoint.x, this._maxPoint.x);
-        var maxX = Math.max(this._minPoint.x, this._maxPoint.x);
-        var minY = Math.min(this._minPoint.y, this._maxPoint.y);
-        var maxY = Math.max(this._minPoint.y, this._maxPoint.y);
-        return [ new L.Point(minX, minY), new L.Point(maxX, maxY) ];
-    },
-    setRange: function(minPoint, maxPoint) {
-        minPoint = minPoint instanceof Array ? this._arrayToPoint(minPoint) : minPoint;
-        maxPoint = maxPoint instanceof Array ? this._arrayToPoint(maxPoint) : maxPoint;
-        this._minPoint = minPoint;
-        this._maxPoint = maxPoint;
-        this._xRange = maxPoint.x - minPoint.x;
-        this._calculateParameters(minPoint, maxPoint);
-        return this;
-    },
-    setMin: function(point) {
-        this.setRange(point, this._maxPoint);
-        return this;
-    },
-    setMax: function(point) {
-        this.setRange(this._minPoint, point);
-        return this;
-    },
-    setPreProcess: function(preProcess) {
-        this._preProcess = preProcess;
-        return this;
-    },
-    setPostProcess: function(postProcess) {
-        this._postProcess = postProcess;
-        return this;
-    },
-    evaluate: function(x) {
-        var y;
-        if (this._preProcess) {
-            x = this._preProcess(x);
-        }
-        y = Number((this._slope * x).toFixed(6)) + Number(this._b.toFixed(6));
-        if (this._postProcess) {
-            y = this._postProcess(y);
-        }
-        return y;
-    },
-    random: function() {
-        var randomX = Math.random() * this._xRange + this._minPoint.x;
-        return this.evaluate(randomX);
-    },
-    sample: function(count) {
-        count = Math.max(count, 2);
-        var segmentCount = count - 1;
-        var segmentSize = this._xRange / segmentCount;
-        var x = this._minPoint.x;
-        var yValues = [];
-        while (x <= this._maxPoint.x) {
-            yValues.push(this.evaluate(x));
-            x += segmentSize;
-        }
-        return yValues;
-    }
-});
 
-L.ColorFunction = L.LinearFunction.extend({
-    options: {
-        alpha: 1,
-        includeAlpha: false
-    },
-    initialize: function(minPoint, maxPoint, options) {
-        L.Util.setOptions(this, options);
-        this._parts = [];
-        this._dynamicPart = null;
-        this._outputPrecision = 0;
-        this._prefix = null;
-        this._formatOutput = function(y) {
-            return y.toFixed(this._outputPrecision);
-        }, this._mapOutput = function(parts) {
-            var outputParts = [];
-            for (var i = 0; i < this._parts.length; ++i) {
-                var part = this._parts[i];
-                outputParts.push(parts[part]);
-            }
-            if (this.options.includeAlpha) {
-                outputParts.push(this.options.alpha);
-            }
-            return outputParts;
-        };
-        this._getColorString = function(y) {
-            y = this._formatOutput(y);
-            this.options[this._dynamicPart] = y;
-            var parts = this._mapOutput(this.options);
-            return this._writeColor(this._prefix, parts);
-        };
-        this._writeColor = function(prefix, parts) {
-            if (this.options.includeAlpha) {
-                prefix += "a";
-            }
-            return prefix + "(" + parts.join(",") + ")";
-        };
-        var postProcess = function(y) {
-            if (options && options.postProcess) {
-                y = options.postProcess.call(this, y);
-            }
-            return this._getColorString(y);
-        };
-        L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
-            preProcess: this.options.preProcess,
-            postProcess: postProcess
-        });
-    }
-});
-
-L.HSLColorFunction = L.ColorFunction.extend({
-    initialize: function(minPoint, maxPoint, options) {
-        L.ColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-        this._parts = [ "outputHue", "outputSaturation", "outputLuminosity" ];
-        this._prefix = "hsl";
-        this._outputPrecision = 2;
-    }
-});
-
-L.RGBColorFunction = L.ColorFunction.extend({
-    initialize: function(minPoint, maxPoint, options) {
-        L.ColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-        this._parts = [ "outputRed", "outputBlue", "outputGreen" ];
-        this._prefix = "rgb";
-        this._outputPrecision = 0;
-    }
-});
-
-L.RGBRedFunction = L.LinearFunction.extend({
-    options: {
-        outputGreen: 0,
-        outputBlue: 0
-    },
-    initialize: function(minPoint, maxPoint, options) {
-        L.RGBColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-        this._dynamicPart = "outputRed";
-    }
-});
-
-L.RGBBlueFunction = L.LinearFunction.extend({
-    options: {
-        outputRed: 0,
-        outputGreen: 0
-    },
-    initialize: function(minPoint, maxPoint, options) {
-        L.RGBColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-        this._dynamicPart = "outputBlue";
-    }
-});
-
-L.RGBGreenFunction = L.LinearFunction.extend({
-    options: {
-        outputRed: 0,
-        outputBlue: 0
-    },
-    initialize: function(minPoint, maxPoint, options) {
-        L.RGBColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-        this._dynamicPart = "outputGreen";
-    }
-});
-
-L.RGBColorBlendFunction = L.LinearFunction.extend({
-    initialize: function(minX, maxX, rgbMinColor, rgbMaxColor) {
-        var red1 = rgbMinColor[0];
-        var red2 = rgbMaxColor[0];
-        var green1 = rgbMinColor[1];
-        var green2 = rgbMaxColor[1];
-        var blue1 = rgbMinColor[2];
-        var blue2 = rgbMaxColor[2];
-        var postProcess = function(y) {
-            return y.toFixed(0);
-        };
-        this._minX = minX;
-        this._maxX = maxX;
-        this._redFunction = new L.LinearFunction(new L.Point(minX, red1), new L.Point(maxX, red2), {
-            postProcess: postProcess
-        });
-        this._greenFunction = new L.LinearFunction(new L.Point(minX, green1), new L.Point(maxX, green2), {
-            postProcess: postProcess
-        });
-        this._blueFunction = new L.LinearFunction(new L.Point(minX, blue1), new L.Point(maxX, blue2), {
-            postProcess: postProcess
-        });
-    },
-    getBounds: function() {
-        var redBounds = this._redFunction.getBounds();
-        var greenBounds = this._greenFunction.getBounds();
-        var blueBounds = this._blueFunction.getBounds();
-        var minY = Math.min(redBounds[0].y, greenBounds[0].y, blueBounds[0].y);
-        var maxY = Math.max(redBounds[0].y, greenBounds[0].y, blueBounds[0].y);
-        return [ new L.Point(redBounds[0].x, minY), new L.Point(redBounds[1].x, maxY) ];
-    },
-    evaluate: function(x) {
-        return "rgb(" + [ this._redFunction.evaluate(x), this._greenFunction.evaluate(x), this._blueFunction.evaluate(x) ].join(",") + ")";
-    }
-});
-
-L.HSLHueFunction = L.HSLColorFunction.extend({
-    options: {
-        outputSaturation: "100%",
-        outputLuminosity: "50%"
-    },
-    initialize: function(minPoint, maxPoint, options) {
-        L.HSLColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-        this._dynamicPart = "outputHue";
-    }
-});
-
-L.HSLSaturationFunction = L.LinearFunction.extend({
-    options: {
-        outputHue: 0,
-        outputLuminosity: "50%"
-    },
-    initialize: function(minPoint, maxPoint, options) {
-        L.HSLColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-        this._formatOutput = function(y) {
-            return (y * 100).toFixed(this._outputPrecision) + "%";
-        };
-        this._dynamicPart = "outputSaturation";
-    }
-});
-
-L.HSLLuminosityFunction = L.LinearFunction.extend({
-    options: {
-        outputHue: 0,
-        outputSaturation: "100%"
-    },
-    initialize: function(minPoint, maxPoint, options) {
-        L.HSLColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-        this._formatOutput = function(y) {
-            return (y * 100).toFixed(this._outputPrecision) + "%";
-        };
-        this._dynamicPart = "outputLuminosity";
-    }
-});
-
-L.PiecewiseFunction = L.LinearFunction.extend({
-    initialize: function(functions, options) {
-        L.Util.setOptions(this, options);
-        this._functions = functions;
-        var startPoint;
-        var endPoint;
-        startPoint = functions[0].getBounds()[0];
-        endPoint = functions[functions.length - 1].getBounds()[1];
-        L.LinearFunction.prototype.initialize.call(this, startPoint, endPoint, {
-            preProcess: this.options.preProcess,
-            postProcess: this.options.postProcess
-        });
-    },
-    _getFunction: function(x) {
-        var bounds;
-        var startPoint;
-        var endPoint;
-        var found = false;
-        var currentFunction;
-        for (var index = 0; index < this._functions.length; ++index) {
-            currentFunction = this._functions[index];
-            bounds = currentFunction.getBounds();
-            startPoint = bounds[0];
-            endPoint = bounds[1];
-            if (x >= startPoint.x && x < endPoint.x) {
-                found = true;
-                break;
-            }
-        }
-        return found ? currentFunction : this._functions[this._functions.length - 1];
-    },
-    evaluate: function(x) {
-        var currentFunction;
-        var y = null;
-        if (this._preProcess) {
-            x = this._preProcess(x);
-        }
-        currentFunction = this._getFunction(x);
-        if (currentFunction) {
-            y = currentFunction.evaluate(x);
-            if (this._postProcess) {
-                y = this._postProcess(y);
-            }
-        }
-        return y;
-    }
-});
-
-L.CategoryFunction = L.Class.extend({
-    initialize: function(categoryMap, options) {
-        L.Util.setOptions(this, options);
-        this._categoryKeys = Object.keys(categoryMap);
-        this._categoryMap = categoryMap;
-        this._preProcess = this.options.preProcess;
-        this._postProcess = this.options.postProcess;
-    },
-    evaluate: function(x) {
-        var y;
-        if (this._preProcess) {
-            x = this._preProcess(x);
-        }
-        y = this._categoryMap[x];
-        if (this._postProcess) {
-            y = this._postProcess(y);
-        }
-        return y;
-    },
-    getCategories: function() {
-        return this._categoryKeys;
-    }
-});
-
-L.MapMarker = L.Path.extend({
-    initialize: function(centerLatLng, options) {
-        L.Path.prototype.initialize.call(this, options);
-        this._centerLatLng = centerLatLng;
-    },
-    options: {
-        fill: true,
-        fillOpacity: 1,
-        opacity: 1,
-        radius: 15,
-        innerRadius: 5,
-        position: {
-            x: 0,
-            y: 0
-        },
-        rotation: 0,
-        numberOfSides: 50,
-        color: "#000000",
-        fillColor: "#0000FF",
-        weight: 1
-    },
-    setLatLng: function(latlng) {
-        this._centerLatLng = latlng;
-        return this.redraw();
-    },
-    projectLatlngs: function() {
-        this._point = this._map.latLngToLayerPoint(this._centerLatLng);
-        this._points = this._getPoints();
-        if (this.options.innerRadius) {
-            this._innerPoints = this._getPoints(true).reverse();
-        }
-    },
-    getBounds: function() {
-        var map = this._map, height = this.options.radius * 3, point = map.project(this._centerLatLng), swPoint = new L.Point(point.x - this.options.radius, point.y), nePoint = new L.Point(point.x + this.options.radius, point.y - height), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
-        return new L.LatLngBounds(sw, ne);
-    },
-    getLatLng: function() {
-        return this._centerLatLng;
-    },
-    getPathString: function() {
-        return new L.SVGPathBuilder(this._points, this._innerPoints).toString();
-    },
-    _getPoints: function(inner) {
-        var maxDegrees = !inner ? 210 : 360;
-        var angleSize = !inner ? maxDegrees / 50 : maxDegrees / Math.max(this.options.numberOfSides, 3);
-        var degrees = !inner ? maxDegrees : maxDegrees + this.options.rotation;
-        var angle = !inner ? -30 : this.options.rotation;
-        var points = [];
-        var newPoint;
-        var angleRadians;
-        var radius = this.options.radius;
-        var toRad = function(number) {
-            return number * Math.PI / 180;
-        };
-        var startPoint = this._point;
-        if (!inner) {
-            points.push(startPoint);
-            points.push(new L.Point(startPoint.x + Math.sqrt(.75) * radius, startPoint.y - 1.5 * radius));
-        }
-        while (angle < degrees) {
-            angleRadians = toRad(angle);
-            newPoint = this._getPoint(angleRadians, radius, inner);
-            points.push(newPoint);
-            angle += angleSize;
-        }
-        if (!inner) {
-            points.push(new L.Point(startPoint.x - Math.sqrt(.75) * radius, startPoint.y - 1.5 * radius));
-        }
-        return points;
-    },
-    _getPoint: function(angle, radius, inner) {
-        var markerRadius = radius;
-        radius = !inner ? radius : this.options.innerRadius;
-        return new L.Point(this._point.x + this.options.position.x + radius * Math.cos(angle), this._point.y - 2 * markerRadius + this.options.position.y - radius * Math.sin(angle));
-    }
-});
-
-L.mapMarker = function(centerLatLng, options) {
-    return new L.MapMarker(centerLatLng, options);
-};
-
-L.RegularPolygonMarker = L.Path.extend({
-    initialize: function(centerLatLng, options) {
-        L.Path.prototype.initialize.call(this, options);
-        this._centerLatLng = centerLatLng;
-        this.options.numberOfSides = Math.max(this.options.numberOfSides, 3);
-    },
-    options: {
-        fill: true,
-        radiusX: 10,
-        radiusY: 10,
-        rotation: 0,
-        numberOfSides: 3,
-        position: {
-            x: 0,
-            y: 0
-        },
-        maxDegrees: 360
-    },
-    setLatLng: function(latlng) {
-        this._centerLatLng = latlng;
-        return this.redraw();
-    },
-    projectLatlngs: function() {
-        this._point = this._map.latLngToLayerPoint(this._centerLatLng);
-        this._points = this._getPoints();
-        if (this.options.innerRadius || this.options.innerRadiusX && this.options.innerRadiusY) {
-            this._innerPoints = this._getPoints(true).reverse();
-        }
-    },
-    getBounds: function() {
-        var map = this._map, radiusX = this.options.radius || this.options.radiusX, radiusY = this.options.radius || this.options.radiusY, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._centerLatLng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
-        return new L.LatLngBounds(sw, ne);
-    },
-    getLatLng: function() {
-        return this._centerLatLng;
-    },
-    getPathString: function() {
-        return new L.SVGPathBuilder(this._points, this._innerPoints).toString();
-    },
-    _getPoints: function(inner) {
-        var maxDegrees = this.options.maxDegrees || 360;
-        var angleSize = maxDegrees / Math.max(this.options.numberOfSides, 3);
-        var degrees = maxDegrees + this.options.rotation;
-        var angle = this.options.rotation;
-        var points = [];
-        var newPoint;
-        var angleRadians;
-        var radiusX = !inner ? this.options.radius || this.options.radiusX : this.options.innerRadius || this.options.innerRadiusX;
-        var radiusY = !inner ? this.options.radius || this.options.radiusY : this.options.innerRadius || this.options.innerRadiusY;
-        var toRad = function(number) {
-            return number * Math.PI / 180;
-        };
-        while (angle < degrees) {
-            angleRadians = toRad(angle);
-            newPoint = this._getPoint(angleRadians, radiusX, radiusY);
-            points.push(newPoint);
-            angle += angleSize;
-        }
-        return points;
-    },
-    _getPoint: function(angle, radiusX, radiusY) {
-        return new L.Point(this._point.x + this.options.position.x + radiusX * Math.cos(angle), this._point.y + this.options.position.y + radiusY * Math.sin(angle));
-    }
-});
-
-L.regularPolygonMarker = function(centerLatLng, options) {
-    return new L.RegularPolygonMarker(centerLatLng, options);
-};
-
-L.StarMarker = L.RegularPolygonMarker.extend({
-    options: {
-        numberOfPoints: 5,
-        rotation: -15,
-        maxDegrees: 360
-    },
-    _getPoints: function(inner) {
-        var maxDegrees = this.options.maxDegrees || 360;
-        var angleSize = maxDegrees / this.options.numberOfPoints;
-        var degrees = maxDegrees + this.options.rotation;
-        var angle = this.options.rotation;
-        var points = [];
-        var newPoint, newPointInner;
-        var angleRadians;
-        var radiusX = !inner ? this.options.radius || this.options.radiusX : this.options.innerRadius || this.options.innerRadiusX;
-        var radiusY = !inner ? this.options.radius || this.options.radiusY : this.options.innerRadius || this.options.innerRadiusY;
-        var toRad = function(number) {
-            return number * Math.PI / 180;
-        };
-        while (angle < degrees) {
-            angleRadians = toRad(angle);
-            newPoint = this._getPoint(angleRadians, radiusX, radiusY);
-            newPointInner = this._getPoint(angleRadians + toRad(angleSize) / 2, radiusX / 2, radiusY / 2);
-            points.push(newPoint);
-            points.push(newPointInner);
-            angle += angleSize;
-        }
-        return points;
-    }
-});
-
-L.starMarker = function(centerLatLng, options) {
-    return new L.StarMarker(centerLatLng, options);
-};
-
-L.TriangleMarker = L.RegularPolygonMarker.extend({
-    options: {
-        numberOfSides: 3,
-        rotation: 30,
-        radius: 5
-    }
-});
-
-L.triangleMarker = function(centerLatLng, options) {
-    return new L.TriangleMarker(centerLatLng, options);
-};
-
-L.DiamondMarker = L.RegularPolygonMarker.extend({
-    options: {
-        numberOfSides: 4,
-        radiusX: 5,
-        radiusY: 10
-    }
-});
-
-L.diamondMarker = function(centerLatLng, options) {
-    return new L.DiamondMarker(centerLatLng, options);
-};
-
-L.SquareMarker = L.RegularPolygonMarker.extend({
-    options: {
-        numberOfSides: 4,
-        rotation: 45,
-        radius: 5
-    }
-});
-
-L.squareMarker = function(centerLatLng, options) {
-    return new L.SquareMarker(centerLatLng, options);
-};
-
-L.PentagonMarker = L.RegularPolygonMarker.extend({
-    options: {
-        numberOfSides: 5,
-        rotation: -18,
-        radius: 5
-    }
-});
-
-L.pentagonMarker = function(centerLatLng, options) {
-    return new L.PentagonMarker(centerLatLng, options);
-};
-
-L.HexagonMarker = L.RegularPolygonMarker.extend({
-    options: {
-        numberOfSides: 6,
-        rotation: 30,
-        radius: 5
-    }
-});
-
-L.hexagonMarker = function(centerLatLng, options) {
-    return new L.HexagonMarker(centerLatLng, options);
-};
-
-L.OctagonMarker = L.RegularPolygonMarker.extend({
-    options: {
-        numberOfSides: 8,
-        rotation: 22.5,
-        radius: 5
-    }
-});
-
-L.octagonMarker = function(centerLatLng, options) {
-    return new L.OctagonMarker(centerLatLng, options);
-};
 
 L.RegularPolygon = L.Polygon.extend({
     initialize: function(centerLatLng, options) {
@@ -2041,640 +2777,47 @@ L.regularPolygon = function(centerLatLng, options) {
     return new L.RegularPolygon(centerLatLng, options);
 };
 
-if (!Object.keys) {
-    Object.keys = function() {
-        var hasOwnProperty = Object.prototype.hasOwnProperty, hasDontEnumBug = !{
-            toString: null
-        }.propertyIsEnumerable("toString"), dontEnums = [ "toString", "toLocaleString", "valueOf", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "constructor" ], dontEnumsLength = dontEnums.length;
-        return function(obj) {
-            var result, prop, i;
-            if (typeof obj !== "object" && typeof obj !== "function" || obj === null) {
-                throw new TypeError("Object.keys called on non-object");
-            }
-            result = [];
-            for (prop in obj) {
-                if (hasOwnProperty.call(obj, prop)) {
-                    result.push(prop);
-                }
-            }
-            if (hasDontEnumBug) {
-                for (i = 0; i < dontEnumsLength; i++) {
-                    if (hasOwnProperty.call(obj, dontEnums[i])) {
-                        result.push(dontEnums[i]);
-                    }
-                }
-            }
-            return result;
-        };
-    }();
-}
-
-L.Util.getProperty = function(obj, property, defaultValue) {
-    return property in obj ? obj[property] : defaultValue;
-};
-
-L.Util.getFieldValue = function(record, fieldName) {
-    var value = null;
-    if (fieldName) {
-        var parts = fieldName.split(".");
-        var valueField = record;
-        var part;
-        var searchParts;
-        var searchKey;
-        var searchValue;
-        var testObject;
-        var searchPart;
-        var bracketIndex = -1;
-        var testValue;
-        for (var partIndex = 0; partIndex < parts.length; ++partIndex) {
-            part = parts[partIndex];
-            bracketIndex = part.indexOf("[");
-            if (bracketIndex > -1) {
-                searchPart = part.substring(bracketIndex);
-                part = part.substring(0, bracketIndex);
-                searchPart = searchPart.replace("[", "").replace("]", "");
-                searchParts = searchPart.split("=");
-                searchKey = searchParts[0];
-                searchValue = searchParts[1];
-                valueField = valueField[part];
-                for (var valueIndex = 0; valueIndex < valueField.length; ++valueIndex) {
-                    testObject = valueField[valueIndex];
-                    testValue = testObject[searchKey];
-                    if (testValue && testValue === searchValue) {
-                        valueField = testObject;
-                    }
-                }
-            } else if (valueField && valueField.hasOwnProperty(part)) {
-                valueField = valueField[part];
-            } else {
-                valueField = null;
-                break;
-            }
-        }
-        value = valueField;
-    } else {
-        value = record;
-    }
-    return value;
-};
-
-L.CategoryLegend = L.Class.extend({
-    initialize: function(options) {
-        L.Util.setOptions(this, options);
+L.Control.Legend = L.Control.extend({
+    options: {
+        position: "bottomright"
     },
-    generate: function(options) {
-        options = options || {};
-        var legend = '<div class="legend"></div>';
-        var $legend = $(legend);
-        var className = options.className;
-        var legendOptions = this.options;
-        if (className) {
-            $legend.addClass(className);
-        }
-        if (options.title) {
-            $legend.append('<div class="legend-title">' + options.title + "</div>");
-        }
-        for (var key in legendOptions) {
-            categoryOptions = legendOptions[key];
-            var displayName = categoryOptions.displayName || key;
-            var $legendElement = $('<div class="data-layer-legend"><div class="legend-box"></div><div class="key">' + displayName + "</div></div>");
-            var $legendBox = $legendElement.find(".legend-box");
-            L.StyleConverter.applySVGStyle($legendBox, categoryOptions);
-            $legend.append($legendElement);
-        }
-        return $legend.wrap("<div/>").parent().html();
-    }
-});
-
-L.LegendIcon = L.DivIcon.extend({
-    initialize: function(fields, layerOptions, options) {
-        var html = '<div class="legend-content"><div class="title"></div><div class="legend-box"></div><div class="legend-values"></div></div>';
-        var $html = $(html);
-        var $legendBox = $html.find(".legend-box");
-        var $legendValues = $html.find(".legend-values");
-        var field;
-        var title = layerOptions.title || layerOptions.name;
-        if (title) {
-            $html.find(".title").text(title);
-        }
-        for (var key in fields) {
-            field = fields[key];
-            var displayName = field.name || key;
-            var displayText = field.value;
-            $legendValues.append('<div class="key">' + displayName + '</div><div class="value">' + displayText + "</div>");
-        }
-        L.StyleConverter.applySVGStyle($legendBox, layerOptions);
-        $legendBox.height(5);
-        html = $html.wrap("<div>").parent().html();
-        options.html = html;
-        options.className = options.className || "legend-icon";
-        L.DivIcon.prototype.initialize.call(this, options);
-    }
-});
-
-L.legendIcon = function(fields, layerOptions, options) {
-    return new L.LegendIcon(fields, layerOptions, options);
-};
-
-L.GeometryUtils = {
-    getName: function(geoJSON) {
-        var name = null;
-        if (geoJSON && geoJSON.features) {
-            for (var index = 0; index < geoJSON.features.length; ++index) {
-                var feature = geoJSON.features[index];
-                if (feature.properties && feature.properties.name) {
-                    name = feature.properties.name;
-                    break;
-                }
-            }
-        }
-        return name;
-    },
-    getGeoJSONLocation: function(geoJSON, record, locationTextField, recordToLayer) {
-        var geoJSONLayer = new L.GeoJSON(geoJSON, {
-            pointToLayer: function(feature, latlng) {
-                var location = {
-                    location: latlng,
-                    text: locationTextField ? L.Util.getFieldValue(record, locationTextField) : [ latlng.lat.toFixed(3), latlng.lng.toFixed(3) ].join(", "),
-                    center: latlng
-                };
-                return recordToLayer(location, record);
+    onAdd: function(map) {
+        var className = "leaflet-control-legend", container = L.DomUtil.create("div", className);
+        var self = this;
+        map.on("layeradd", function(e) {
+            var layer = e.layer;
+            var id = L.Util.stamp(layer);
+            if (layer.getLegend) {
+                self.addLegend(id, layer.getLegend());
             }
         });
-        var center = null;
-        try {
-            center = L.GeometryUtils.loadCentroid(geoJSON);
-        } catch (ex) {
-            console.log("Error loading centroid for " + JSON.stringify(geoJSON));
-        }
-        if (!center) {
-            center = geoJSONLayer.getBounds().getCenter();
-        }
-        return {
-            location: geoJSONLayer,
-            text: locationTextField ? L.Util.getFieldValue(record, locationTextField) : null,
-            center: center
-        };
-    },
-    mergeProperties: function(properties, featureCollection, mergeKey) {
-        var features = featureCollection["features"];
-        var featureIndex = L.GeometryUtils.indexFeatureCollection(features, mergeKey);
-        var property;
-        var mergeValue;
-        var newFeatureCollection = {
-            type: "FeatureCollection",
-            features: []
-        };
-        for (var key in properties) {
-            if (properties.hasOwnProperty(key)) {
-                property = properties[key];
-                mergeValue = property[mergeKey];
-                if (mergeValue) {
-                    var feature = featureIndex[mergeValue];
-                    for (var prop in property) {
-                        feature.properties[prop] = property[prop];
-                    }
-                    newFeatureCollection.features.push(feature);
-                }
+        map.on("layerremove", function(e) {
+            var layer = e.layer;
+            var id = L.Util.stamp(layer);
+            if (layer.getLegend) {
+                $(self._container).find("#" + id).remove();
             }
-        }
-        return newFeatureCollection;
+        });
+        $(container).on("mouseover mouseout", function(e) {
+            $(this).toggleClass("larger");
+        });
+        L.DomEvent.addListener(container, "click", L.DomEvent.stopPropagation).addListener(container, "click", L.DomEvent.preventDefault);
+        return container;
     },
-    indexFeatureCollection: function(featureCollection, indexKey) {
-        var features = featureCollection.features;
-        var feature;
-        var properties;
-        var featureIndex = {};
-        var value;
-        for (var index = 0; index < features.length; ++index) {
-            feature = features[index];
-            properties = feature.properties;
-            value = properties[indexKey];
-            featureIndex[value] = feature;
-        }
-        return featureIndex;
+    clear: function() {
+        $(this._container).empty();
     },
-    arrayToMap: function(array, fromKey, toKey) {
-        var map = {};
-        var item;
-        var from;
-        var to;
-        for (var index = 0; index < array.length; ++index) {
-            item = array[index];
-            from = item[fromKey];
-            to = toKey ? item[toKey] : item;
-            map[from] = to;
-        }
-        return map;
+    toggleSize: function() {
+        $(this._container).toggleClass("larger", "slow");
     },
-    arrayToMaps: function(array, mapLinks) {
-        var map;
-        var item;
-        var from;
-        var to;
-        var maps = [];
-        var mapLink;
-        var fromKey;
-        var toKey;
-        for (var i = 0; i < mapLinks.length; ++i) {
-            maps.push({});
-        }
-        for (var index = 0; index < array.length; ++index) {
-            item = array[index];
-            for (var keyIndex = 0; keyIndex < mapLinks.length; ++keyIndex) {
-                map = maps[keyIndex];
-                mapLink = mapLinks[keyIndex];
-                fromKey = mapLink.from;
-                toKey = mapLink.to;
-                from = item[fromKey];
-                to = toKey ? item[toKey] : item;
-                map[from] = to;
-            }
-        }
-        return maps;
-    },
-    loadCentroid: function(feature) {
-        var centroidLatLng = null;
-        var centroid;
-        var x, y;
-        if (jsts) {
-            var parser = new jsts.io.GeoJSONParser();
-            var jstsFeature = parser.read(feature);
-            if (jstsFeature.getCentroid) {
-                centroid = jstsFeature.getCentroid();
-                x = centroid.coordinate.x;
-                y = centroid.coordinate.y;
-            } else if (jstsFeature.features) {
-                var totalCentroidX = 0;
-                var totalCentroidY = 0;
-                for (var i = 0; i < jstsFeature.features.length; ++i) {
-                    centroid = jstsFeature.features[i].geometry.getCentroid();
-                    totalCentroidX += centroid.coordinate.x;
-                    totalCentroidY += centroid.coordinate.y;
-                }
-                x = totalCentroidX / jstsFeature.features.length;
-                y = totalCentroidY / jstsFeature.features.length;
-            } else {
-                centroid = jstsFeature.geometry.getCentroid();
-                x = centroid.coordinate.x;
-                y = centroid.coordinate.y;
-            }
-            centroidLatLng = new L.LatLng(y, x);
-        }
-        return centroidLatLng;
-    },
-    loadCentroids: function(dictionary) {
-        var centroids = {};
-        var feature;
-        for (var key in dictionary) {
-            feature = dictionary[key];
-            centroids[key] = L.GeometryUtils.loadCentroid(feature);
-        }
-        return centroids;
-    }
-};
-
-L.SVGPathBuilder = L.Class.extend({
-    initialize: function(points, innerPoints) {
-        this._points = points || [];
-        this._innerPoints = innerPoints || [];
-    },
-    _getPathString: function(points, digits) {
-        var pathString = "";
-        if (points.length > 0) {
-            var point = points[0];
-            var digits = digits || 2;
-            pathString = "M" + point.x.toFixed(digits) + "," + point.y.toFixed(digits);
-            for (var index = 1; index < points.length; index++) {
-                point = points[index];
-                pathString += "L" + point.x.toFixed(digits) + "," + point.y.toFixed(digits);
-            }
-            pathString += "Z";
-        }
-        return pathString;
-    },
-    addPoint: function(point, inner) {
-        inner ? this._innerPoints.push(point) : this._points.push(point);
-    },
-    toString: function() {
-        var pathString = this._getPathString(this._points);
-        if (this._innerPoints) {
-            pathString += this._getPathString(this._innerPoints);
-        }
-        return pathString;
-    }
-});
-
-L.StyleConverter = {
-    keyMap: {
-        fillColor: {
-            property: [ "background-color" ],
-            valueFunction: function(value) {
-                return value;
-            }
-        },
-        color: {
-            property: [ "border-color" ],
-            valueFunction: function(value) {
-                return value;
-            }
-        },
-        weight: {
-            property: [ "border-width" ],
-            valueFunction: function(value) {
-                return value + "px";
-            }
-        },
-        stroke: {
-            property: [ "border-style" ],
-            valueFunction: function(value) {
-                return value === true ? "solid" : "none";
-            }
-        },
-        dashArray: {
-            property: [ "border-style" ],
-            valueFunction: function(value) {
-                var style = "solid";
-                if (value) {
-                    style = "dashed";
-                }
-                return style;
-            }
-        },
-        radius: {
-            property: [ "height" ],
-            valueFunction: function(value) {
-                return 2 * value + "px";
-            }
-        },
-        fillOpacity: {
-            property: [ "opacity" ],
-            valueFunction: function(value) {
-                return value;
-            }
-        }
-    },
-    applySVGStyle: function($element, svgStyle, additionalKeys) {
-        var keyMap = L.StyleConverter.keyMap;
-        if (additionalKeys) {
-            keyMap = L.Util.extend(keyMap, additionalKeys);
-        }
-        $element.css("border-style", "solid");
-        for (var property in svgStyle) {
-            $element = L.StyleConverter.setCSSProperty($element, property, svgStyle[property], keyMap);
-        }
-        return $element;
-    },
-    setCSSProperty: function($element, key, value, keyMap) {
-        var keyMap = keyMap || L.StyleConverter.keyMap;
-        var cssProperty = keyMap[key];
-        if (cssProperty) {
-            var propertyKey = cssProperty.property;
-            for (var propertyIndex = 0; propertyIndex < propertyKey.length; ++propertyIndex) {
-                $element.css(propertyKey[propertyIndex], cssProperty.valueFunction(value));
-            }
-        }
-        return $element;
-    }
-};
-
-L.StylesBuilder = L.Class.extend({
-    initialize: function(categories, styleFunctionMap) {
-        this._categories = categories;
-        this._styleFunctionMap = styleFunctionMap;
-        this._buildStyles();
-    },
-    _buildStyles: function() {
-        var map = {};
-        var category;
-        var styleFunction;
-        var styleValue;
-        for (var index = 0; index < this._categories.length; ++index) {
-            category = this._categories[index];
-            map[category] = {};
-            for (var property in this._styleFunctionMap) {
-                styleFunction = this._styleFunctionMap[property];
-                styleValue = styleFunction.evaluate ? styleFunction.evaluate(index) : typeof styleFunction === "function" ? styleFunction(index) : styleFunction;
-                map[category][property] = styleValue;
-            }
-        }
-        this._styleMap = map;
-    },
-    getStyles: function() {
-        return this._styleMap;
-    }
-});
-
-L.PaletteBuilder = L.Class.extend({
-    initialize: function(styleFunctionMap) {
-        this._styleFunctionMap = styleFunctionMap;
-    },
-    generate: function(options) {
-        options = options || {};
-        var $paletteElement = $('<div class="palette"></div>');
-        var count = options.count || 10;
-        var categories = function(count) {
-            var categoryArray = [];
-            for (var i = 0; i < count; ++i) {
-                categoryArray.push(i);
-            }
-            return categoryArray;
-        }(count);
-        var styleBuilder = new L.StylesBuilder(categories, this._styleFunctionMap);
-        var styles = styleBuilder.getStyles();
-        if (options.className) {
-            $paletteElement.addClass(options.className);
-        }
-        for (var styleKey in styles) {
-            var $i = $('<i class="palette-element"></i>');
-            var style = styles[styleKey];
-            L.StyleConverter.applySVGStyle($i, style);
-            $paletteElement.append($i);
-        }
-        return $paletteElement.wrap("<div/>").parent().html();
-    }
-});
-
-L.HTMLUtils = {
-    buildTable: function(obj, className, ignoreFields) {
-        className = className || "table table-condensed table-striped table-bordered";
-        var html = '<table class="' + className + '"><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody></tbody></table>';
+    addLegend: function(id, html) {
+        var $container = $(this._container);
         var $html = $(html);
-        var $tbody = $html.find("tbody");
-        ignoreFields = ignoreFields || [];
-        for (var property in obj) {
-            if (obj.hasOwnProperty(property) && $.inArray(ignoreFields, property) === -1) {
-                if ($.isPlainObject(obj[property]) || obj[property] instanceof Array) {
-                    $tbody.append("<tr><td>" + property + "</td><td>" + L.HTMLUtils.buildTable(obj[property], ignoreFields).wrap("<div/>").parent().html() + "</td></tr>");
-                } else {
-                    $tbody.append("<tr><td>" + property + "</td><td>" + obj[property] + "</td></tr>");
-                }
-            }
-        }
-        return $html;
-    }
-};
-
-L.AnimationUtils = {
-    animate: function(layer, from, to, options) {
-        var delay = options.delay || 0;
-        var frames = options.frames || 30;
-        var duration = options.duration || 500;
-        var linearFunctions = {};
-        var easeFunction = options.easeFunction || function(step) {
-            return step;
-        };
-        var complete = options.complete;
-        var step = duration / frames;
-        for (var key in from) {
-            if (key != "color" && key != "fillColor" && to[key]) {
-                linearFunctions[key] = new L.LinearFunction([ 0, from[key] ], [ frames - 1, to[key] ]);
-            }
-        }
-        var layerOptions = {};
-        var frame = 0;
-        var updateLayer = function() {
-            for (var key in linearFunctions) {
-                layerOptions[key] = linearFunctions[key].evaluate(frame);
-            }
-            layer.options = $.extend(true, {}, layer.options, layerOptions);
-            layer.redraw();
-            frame++;
-            step = easeFunction(step);
-            if (frame < frames) {
-                setTimeout(updateLayer, step);
-            } else {
-                complete();
-            }
-        };
-        setTimeout(updateLayer, delay);
-    }
-};
-
-/**
- * Adapted from:  http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
- * These functions may be used to provide backwards compatibility with browsers that don't support hsl 
- */
-L.ColorUtils = {
-    hslToRgbString: function(h, s, l) {
-        return L.ColorUtils.rgbArrayToString(L.ColorUtils.hslToRgb(h, s, l));
-    },
-    rgbArrayToString: function(rgbArray) {
-        var hexValues = [];
-        for (var index = 0; index < rgbArray.length; ++index) {
-            var hexValue = rgbArray[index].toString(16);
-            if (hexValue.length === 1) {
-                hexValue = "0" + hexValue;
-            }
-            hexValues.push(hexValue);
-        }
-        return "#" + hexValues.join("");
-    },
-    rgbToHsl: function(r, g, b) {
-        r /= 255, g /= 255, b /= 255;
-        var max = Math.max(r, g, b), min = Math.min(r, g, b);
-        var h, s, l = (max + min) / 2;
-        if (max == min) {
-            h = s = 0;
+        var $existingLegend = $container.find("#" + id);
+        if ($existingLegend.size() === 0) {
+            $container.append('<div id="' + id + '">' + html + "</div>");
         } else {
-            var d = max - min;
-            s = l > .5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-              case r:
-                h = (g - b) / d + (g < b ? 6 : 0);
-                break;
-
-              case g:
-                h = (b - r) / d + 2;
-                break;
-
-              case b:
-                h = (r - g) / d + 4;
-                break;
-            }
-            h /= 6;
+            $existingLegend.find("div.legend").replaceWith($html);
         }
-        return [ h, s, l ];
-    },
-    hslToRgb: function(h, s, l) {
-        var r, g, b;
-        if (s == 0) {
-            r = g = b = l;
-        } else {
-            function hue2rgb(p, q, t) {
-                if (t < 0) t += 1;
-                if (t > 1) t -= 1;
-                if (t < 1 / 6) return p + (q - p) * 6 * t;
-                if (t < 1 / 2) return q;
-                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-                return p;
-            }
-            var q = l < .5 ? l * (1 + s) : l + s - l * s;
-            var p = 2 * l - q;
-            r = hue2rgb(p, q, h + 1 / 3);
-            g = hue2rgb(p, q, h);
-            b = hue2rgb(p, q, h - 1 / 3);
-        }
-        return [ r * 255, g * 255, b * 255 ];
-    },
-    rgbToHsv: function(r, g, b) {
-        r = r / 255, g = g / 255, b = b / 255;
-        var max = Math.max(r, g, b), min = Math.min(r, g, b);
-        var h, s, v = max;
-        var d = max - min;
-        s = max == 0 ? 0 : d / max;
-        if (max == min) {
-            h = 0;
-        } else {
-            switch (max) {
-              case r:
-                h = (g - b) / d + (g < b ? 6 : 0);
-                break;
-
-              case g:
-                h = (b - r) / d + 2;
-                break;
-
-              case b:
-                h = (r - g) / d + 4;
-                break;
-            }
-            h /= 6;
-        }
-        return [ h, s, v ];
-    },
-    hsvToRgb: function(h, s, v) {
-        var r, g, b;
-        var i = Math.floor(h * 6);
-        var f = h * 6 - i;
-        var p = v * (1 - s);
-        var q = v * (1 - f * s);
-        var t = v * (1 - (1 - f) * s);
-        switch (i % 6) {
-          case 0:
-            r = v, g = t, b = p;
-            break;
-
-          case 1:
-            r = q, g = v, b = p;
-            break;
-
-          case 2:
-            r = p, g = v, b = t;
-            break;
-
-          case 3:
-            r = p, g = q, b = v;
-            break;
-
-          case 4:
-            r = t, g = p, b = v;
-            break;
-
-          case 5:
-            r = v, g = p, b = q;
-            break;
-        }
-        return [ r * 255, g * 255, b * 255 ];
     }
-};
+});

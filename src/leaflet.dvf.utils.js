@@ -42,6 +42,16 @@ if (!Object.keys) {
 
 var L = L || {};
 
+L.Util.guid = function () {
+	var s4 = function() {
+	  return Math.floor((1 + Math.random()) * 0x10000)
+				 .toString(16)
+				 .substring(1);
+	};
+
+	return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+};
+
 L.Util.getProperty = function (obj, property, defaultValue) {
 	return (property in obj) ? obj[property] : defaultValue;
 };
@@ -405,9 +415,11 @@ L.GeometryUtils = {
 };
 
 L.SVGPathBuilder = L.Class.extend({
-	initialize: function (points, innerPoints) {
+	initialize: function (points, innerPoints, options) {
 		this._points = points || [];
 		this._innerPoints = innerPoints || [];
+		
+		L.Util.setOptions(this, options);
 	},
 	
 	_getPathString: function (points, digits) {
@@ -436,11 +448,13 @@ L.SVGPathBuilder = L.Class.extend({
 		inner ? this._innerPoints.push(point) : this._points.push(point);
 	},
 
-	toString: function () {
-		var pathString = this._getPathString(this._points);
+	toString: function (digits) {
+		digits = digits || this.options.digits;
+		
+		var pathString = this._getPathString(this._points, digits);
 		
 		if (this._innerPoints) {
-			pathString += this._getPathString(this._innerPoints);
+			pathString += this._getPathString(this._innerPoints, digits);
 		}
 		
 		return pathString;
@@ -464,7 +478,7 @@ L.StyleConverter = {
 		weight: {
 			property: ['border-width'],
 			valueFunction: function (value) {
-				return value + 'px'; //'solid ' + value + 'px';
+				return value + 'px';
 			}
 		},
 		stroke: {

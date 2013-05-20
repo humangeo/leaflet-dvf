@@ -369,6 +369,8 @@ $(document).ready(function() {
 		
 		var pieChartMarker = new L.PieChartMarker(centerLatLng,options);
 		
+		pieChartMarker.bindPopup('<h1>Test</h1>');
+		
 		pieChartLayer.addLayer(pieChartMarker);
 		
 		// Add a BarChartMarker

@@ -1100,7 +1100,7 @@ L.CircleMarker.include(PathFunctions);
 L.MapMarker = L.Path.extend({
     initialize: function(centerLatLng, options) {
         L.Path.prototype.initialize.call(this, options);
-        this._centerLatLng = centerLatLng;
+        this._latlng = centerLatLng;
     },
     options: {
         fill: true,
@@ -1121,22 +1121,22 @@ L.MapMarker = L.Path.extend({
         dropShadow: true
     },
     setLatLng: function(latlng) {
-        this._centerLatLng = latlng;
+        this._latlng = latlng;
         return this.redraw();
     },
     projectLatlngs: function() {
-        this._point = this._map.latLngToLayerPoint(this._centerLatLng);
+        this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
         if (this.options.innerRadius) {
             this._innerPoints = this._getPoints(true).reverse();
         }
     },
     getBounds: function() {
-        var map = this._map, height = this.options.radius * 3, point = map.project(this._centerLatLng), swPoint = new L.Point(point.x - this.options.radius, point.y), nePoint = new L.Point(point.x + this.options.radius, point.y - height), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
+        var map = this._map, height = this.options.radius * 3, point = map.project(this._latlng), swPoint = new L.Point(point.x - this.options.radius, point.y), nePoint = new L.Point(point.x + this.options.radius, point.y - height), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
         return new L.LatLngBounds(sw, ne);
     },
     getLatLng: function() {
-        return this._centerLatLng;
+        return this._latlng;
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "geometricPrecision");
@@ -1184,7 +1184,7 @@ L.mapMarker = function(centerLatLng, options) {
 L.RegularPolygonMarker = L.Path.extend({
     initialize: function(centerLatLng, options) {
         L.Path.prototype.initialize.call(this, options);
-        this._centerLatLng = centerLatLng;
+        this._latlng = centerLatLng;
         this.options.numberOfSides = Math.max(this.options.numberOfSides, 3);
     },
     options: {
@@ -1202,22 +1202,22 @@ L.RegularPolygonMarker = L.Path.extend({
         dropShadow: false
     },
     setLatLng: function(latlng) {
-        this._centerLatLng = latlng;
+        this._latlng = latlng;
         return this.redraw();
     },
     projectLatlngs: function() {
-        this._point = this._map.latLngToLayerPoint(this._centerLatLng);
+        this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
         if (this.options.innerRadius || this.options.innerRadiusX && this.options.innerRadiusY) {
             this._innerPoints = this._getPoints(true).reverse();
         }
     },
     getBounds: function() {
-        var map = this._map, radiusX = this.options.radius || this.options.radiusX, radiusY = this.options.radius || this.options.radiusY, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._centerLatLng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
+        var map = this._map, radiusX = this.options.radius || this.options.radiusX, radiusY = this.options.radius || this.options.radiusY, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._latlng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
         return new L.LatLngBounds(sw, ne);
     },
     getLatLng: function() {
-        return this._centerLatLng;
+        return this._latlng;
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "geometricPrecision");
@@ -1367,7 +1367,7 @@ L.octagonMarker = function(centerLatLng, options) {
 L.BarMarker = L.Path.extend({
     initialize: function(centerLatLng, options) {
         L.Path.prototype.initialize.call(this, options);
-        this._centerLatLng = centerLatLng;
+        this._latlng = centerLatLng;
     },
     options: {
         fill: true,
@@ -1384,19 +1384,19 @@ L.BarMarker = L.Path.extend({
         dropShadow: false
     },
     setLatLng: function(latlng) {
-        this._centerLatLng = latlng;
+        this._latlng = latlng;
         return this.redraw();
     },
     projectLatlngs: function() {
-        this._point = this._map.latLngToLayerPoint(this._centerLatLng);
+        this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
     },
     getBounds: function() {
-        var map = this._map, point = map.project(this._centerLatLng), halfWidth = this.options.width / 2, swPoint = new L.Point(point.x - halfWidth, point.y), nePoint = new L.Point(point.x + halfWidth, point.y - this.options.maxHeight), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
+        var map = this._map, point = map.project(this._latlng), halfWidth = this.options.width / 2, swPoint = new L.Point(point.x - halfWidth, point.y), nePoint = new L.Point(point.x + halfWidth, point.y - this.options.maxHeight), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
         return new L.LatLngBounds(sw, ne);
     },
     getLatLng: function() {
-        return this._centerLatlng;
+        return this._latlng;
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "crispEdges");
@@ -1426,15 +1426,15 @@ L.ChartMarker = L.FeatureGroup.extend({
     initialize: function(centerLatLng, options) {
         L.Util.setOptions(this, options);
         this._layers = {};
-        this._centerLatLng = centerLatLng;
+        this._latlng = centerLatLng;
         this._loadBars();
     },
     setLatLng: function(latlng) {
-        this._centerLatLng = latlng;
+        this._latlng = latlng;
         return this.redraw();
     },
     getLatLng: function() {
-        return this._centerLatlng;
+        return this._latlng;
     },
     _loadBars: function() {},
     _highlight: function(options) {
@@ -1478,11 +1478,11 @@ L.ChartMarker = L.FeatureGroup.extend({
                 iconSize: tooltipOptions ? tooltipOptions.iconSize : iconSize,
                 iconAnchor: newPoint
             });
-            currentOptions.marker = new L.Marker(self._centerLatLng, {
+            currentOptions.marker = new L.Marker(self._latlng, {
                 icon: icon
             });
             currentOptions = self._highlight(currentOptions);
-            this.initialize(self._centerLatLng, currentOptions);
+            this.initialize(self._latlng, currentOptions);
             this.redraw();
             this.setStyle(currentOptions);
             self.addLayer(currentOptions.marker);
@@ -1490,7 +1490,7 @@ L.ChartMarker = L.FeatureGroup.extend({
         chartElement.on("mouseout", function(e) {
             var currentOptions = this.options;
             currentOptions = self._unhighlight(currentOptions);
-            this.initialize(self._centerLatLng, currentOptions);
+            this.initialize(self._latlng, currentOptions);
             this.redraw();
             this.setStyle(currentOptions);
             self.removeLayer(currentOptions.marker);
@@ -1500,6 +1500,22 @@ L.ChartMarker = L.FeatureGroup.extend({
         this.eachLayer(function(layer) {
             layer.bindPopup(content, options);
         });
+    },
+    openPopup: function(latlng) {
+        for (var i in this._layers) {
+            var layer = this._layers[i];
+            latlng = latlng || this._latlng;
+            layer.openPopup(latlng);
+            break;
+        }
+    },
+    closePopup: function() {
+        for (var i in this._layers) {
+            var layer = this._layers[i];
+            latlng = latlng || this._latlng;
+            layer.closePopup();
+            break;
+        }
     }
 });
 
@@ -1566,7 +1582,7 @@ L.BarChartMarker = L.ChartMarker.extend({
             options.weight = this.options.weight || 1;
             options.color = chartOption.color || this.options.color;
             options.displayText = chartOption.displayText;
-            bar = new L.BarMarker(this._centerLatLng, options);
+            bar = new L.BarMarker(this._latlng, options);
             this._bindMouseEvents(bar);
             this.addLayer(bar);
             x += width + offset;
@@ -1577,7 +1593,7 @@ L.BarChartMarker = L.ChartMarker.extend({
 L.RadialBarMarker = L.Path.extend({
     initialize: function(centerLatLng, options) {
         L.Path.prototype.initialize.call(this, options);
-        this._centerLatLng = centerLatLng;
+        this._latlng = centerLatLng;
     },
     options: {
         fill: true,
@@ -1592,19 +1608,19 @@ L.RadialBarMarker = L.Path.extend({
         dropShadow: false
     },
     setLatLng: function(latlng) {
-        this._centerLatLng = latlng;
+        this._latlng = latlng;
         return this.redraw();
     },
     projectLatlngs: function() {
-        this._point = this._map.latLngToLayerPoint(this._centerLatLng);
+        this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
     },
     getBounds: function() {
-        var map = this._map, radiusX = this.options.radiusX || this.options.radius, radiusY = this.options.radiusY || this.options.radius, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._centerLatLng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
+        var map = this._map, radiusX = this.options.radiusX || this.options.radius, radiusY = this.options.radiusY || this.options.radius, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._latlng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
         return new L.LatLngBounds(sw, ne);
     },
     getLatLng: function() {
-        return this._centerLatlng;
+        return this._latlng;
     },
     getPathString: function() {
         var angle = this.options.endAngle - this.options.startAngle;
@@ -1734,7 +1750,7 @@ L.PieChartMarker = L.ChartMarker.extend({
                 options.value = value;
                 options.displayName = chartOption.displayName;
                 options.displayText = chartOption.displayText;
-                bar = new L.RadialBarMarker(this._centerLatLng, options);
+                bar = new L.RadialBarMarker(this._latlng, options);
                 this._bindMouseEvents(bar);
                 lastAngle = options.endAngle;
                 this.addLayer(bar);
@@ -1800,7 +1816,7 @@ L.CoxcombChartMarker = L.PieChartMarker.extend({
             options.value = value;
             options.displayName = chartOption.displayName;
             options.displayText = chartOption.displayText;
-            bar = new L.RadialBarMarker(this._centerLatLng, options);
+            bar = new L.RadialBarMarker(this._latlng, options);
             this._bindMouseEvents(bar);
             lastAngle = options.endAngle;
             this.addLayer(bar);
@@ -1865,7 +1881,7 @@ L.RadialBarChartMarker = L.ChartMarker.extend({
             options.displayName = chartOption.displayName;
             options.displayText = chartOption.displayText;
             options.weight = this.options.weight || 1;
-            bar = new L.RadialBarMarker(this._centerLatLng, options);
+            bar = new L.RadialBarMarker(this._latlng, options);
             this._bindMouseEvents(bar);
             this.addLayer(bar);
             lastRadiusX += barThickness + offset;
@@ -1925,7 +1941,7 @@ L.StackedRegularPolygonMarker = L.ChartMarker.extend({
             options.weight = this.options.weight || 1;
             options.color = chartOption.color || this.options.color;
             options.displayText = chartOption.displayText;
-            bar = new L.RegularPolygonMarker(this._centerLatLng, options);
+            bar = new L.RegularPolygonMarker(this._latlng, options);
             this._bindMouseEvents(bar);
             lastRadiusX = options.radiusX;
             lastRadiusY = options.radiusY;
@@ -1999,7 +2015,7 @@ L.RadialMeterMarker = L.ChartMarker.extend({
                 for (var displayKey in displayOptions) {
                     options[displayKey] = displayOptions[displayKey].evaluate ? displayOptions[displayKey].evaluate(evalValue) : displayOptions[displayKey];
                 }
-                bar = new L.RadialBarMarker(this._centerLatLng, options);
+                bar = new L.RadialBarMarker(this._latlng, options);
                 this._bindMouseEvents(bar);
                 this.addLayer(bar);
                 lastAngle += delta;

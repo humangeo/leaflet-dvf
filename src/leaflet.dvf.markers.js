@@ -152,7 +152,7 @@ L.MapMarker = L.Path.extend({
 	initialize: function (centerLatLng, options) {
 		L.Path.prototype.initialize.call(this, options);
 		
-		this._centerLatLng = centerLatLng;
+		this._latlng = centerLatLng;
 	},
 
 	options: {
@@ -175,12 +175,12 @@ L.MapMarker = L.Path.extend({
 	},
 
 	setLatLng: function (latlng) {
-		this._centerLatLng = latlng;
+		this._latlng = latlng;
 		return this.redraw();
 	},
 	
 	projectLatlngs: function () {
-		this._point = this._map.latLngToLayerPoint(this._centerLatLng);
+		this._point = this._map.latLngToLayerPoint(this._latlng);
 		this._points = this._getPoints();
 		
 		if (this.options.innerRadius) {
@@ -191,7 +191,7 @@ L.MapMarker = L.Path.extend({
 	getBounds: function () {
 		var map = this._map,
 			height = this.options.radius * 3,
-			point = map.project(this._centerLatLng),
+			point = map.project(this._latlng),
 			swPoint = new L.Point(point.x - this.options.radius, point.y),
 			nePoint = new L.Point(point.x + this.options.radius, point.y - height),
 			sw = map.unproject(swPoint),
@@ -201,7 +201,7 @@ L.MapMarker = L.Path.extend({
 	},
 
 	getLatLng: function () {
-		return this._centerLatLng;
+		return this._latlng;
 	},
 
 	getPathString: function () {
@@ -272,7 +272,7 @@ L.RegularPolygonMarker = L.Path.extend({
 	initialize: function (centerLatLng, options) {
 		L.Path.prototype.initialize.call(this, options);
 		
-		this._centerLatLng = centerLatLng;
+		this._latlng = centerLatLng;
 
 		this.options.numberOfSides = Math.max(this.options.numberOfSides, 3);
 		
@@ -294,12 +294,12 @@ L.RegularPolygonMarker = L.Path.extend({
 	},
 
 	setLatLng: function (latlng) {
-		this._centerLatLng = latlng;
+		this._latlng = latlng;
 		return this.redraw();
 	},
 	
 	projectLatlngs: function () {
-		this._point = this._map.latLngToLayerPoint(this._centerLatLng);
+		this._point = this._map.latLngToLayerPoint(this._latlng);
 		this._points = this._getPoints();
 		
 		if (this.options.innerRadius || (this.options.innerRadiusX && this.options.innerRadiusY)) {
@@ -313,7 +313,7 @@ L.RegularPolygonMarker = L.Path.extend({
 			radiusY = this.options.radius || this.options.radiusY,
 			deltaX = radiusX * Math.cos(Math.PI / 4),
 			deltaY = radiusY * Math.sin(Math.PI / 4),
-			point = map.project(this._centerLatLng),
+			point = map.project(this._latlng),
 			swPoint = new L.Point(point.x - deltaX, point.y + deltaY),
 			nePoint = new L.Point(point.x + deltaX, point.y - deltaY),
 			sw = map.unproject(swPoint),
@@ -323,7 +323,7 @@ L.RegularPolygonMarker = L.Path.extend({
 	},
 
 	getLatLng: function () {
-		return this._centerLatLng;
+		return this._latlng;
 	},
 
 	getPathString: function () {

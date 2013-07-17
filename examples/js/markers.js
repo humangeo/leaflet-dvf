@@ -353,6 +353,9 @@ $(document).ready(function() {
 		options.chartOptions['dataPoint3'].fillColor = '#66C2A4';
 		options.chartOptions['dataPoint4'].fillColor = '#238B45';
 		
+		options.radiusX = options.radius;
+		options.radiusY = options.radius;
+		
 		var coxcombChartMarker = new L.CoxcombChartMarker(centerLatLng,options);
 		
 		coxcombChartLayer.addLayer(coxcombChartMarker);

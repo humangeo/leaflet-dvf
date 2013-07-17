@@ -159,3 +159,40 @@ div.leaflet-div-icon div div.key {
 	background-image: none;
 	vertical-align: text-bottom;
 }
+
+.photo {
+	width: 100%;
+	height: 100%;
+	padding: 2px;
+	background-color: white;
+	box-shadow: 2px 2px 3px rgba(100, 100, 100, 0.5);
+	opacity: 0;
+	-moz-transition: opacity 1s; /* Firefox 4 */
+	-webkit-transition: opacity 1s; /* Safari and Chrome */
+	-o-transition: opacity 1s;
+	transition: opacity 1s;
+}
+
+.photo-info {
+	background-color: rgba(0, 0, 0, 0.6);
+	padding: 10px;
+	position: absolute;
+	top: 0px;
+	color: white;
+	margin: 2px;
+}
+
+.photo-link {
+	float: right;
+	height: 14px;
+}
+
+.author-link {
+	margin-left: 2px;
+	width: 400px;
+	display: block;
+	font-style: italic;
+	font-weight: bold;
+	
+}
+

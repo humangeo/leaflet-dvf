@@ -240,11 +240,6 @@ L.GeometryUtils = {
 			console.log('Error loading centroid for ' + JSON.stringify(geoJSON));
 		}
 		
-		// Fallback to the center of the layer bounds
-		if (!center) {
-			center = geoJSONLayer.getBounds().getCenter();
-		}
-		
 		return {
 			location: geoJSONLayer,
 			text: locationTextField ? L.Util.getFieldValue(record, locationTextField) : null,
@@ -364,8 +359,11 @@ L.GeometryUtils = {
 		var centroid;
 		var x,y;
 		
-		if (jsts) {
-		
+		if (feature.geometry && feature.geometry.type === 'Point') {
+			centroidLatLng = new L.LatLng(feature.geometry.coordinates[1], feature.geometry.coordinates[0]);
+		}
+		else if (typeof jsts !== 'undefined') {
+			
 			var parser = new jsts.io.GeoJSONParser();
 			var jstsFeature = parser.read(feature);
 		
@@ -709,7 +707,7 @@ L.ColorUtils = {
 		var hexValues = []
 		
 		for (var index = 0; index < rgbArray.length; ++index) {
-			var hexValue = rgbArray[index].toString(16);
+			var hexValue = Math.round(rgbArray[index]).toString(16);
 			
 			if (hexValue.length === 1) {
 				hexValue = '0' + hexValue;

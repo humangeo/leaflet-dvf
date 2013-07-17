@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Examples - Earthquakes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
+    <link rel="stylesheet" href="../lib/leaflet/leaflet.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
+</head>
+
+<body>
+	<div class="navbar navbar-inverse">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">Earthquakes</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li class="active"><a href="../../index.html">Home</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+    	<div class="row-fluid">
+			<div id="map"></div>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../lib/leaflet/leaflet.js"></script>
+	<script type="text/javascript" src="../lib/date.format.js"></script>
+	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+	<script type="text/javascript">
+var map;
+var lastLayer;
+var legendControl;
+
+// JSONP callback function for displaying the latest earthquake data
+var eqfeed_callback = function (data) {
+	
+	var now = Math.round((new Date()).getTime());
+	var start = now - 86400000;
+
+	// Setup a new data layer
+	var dataLayer = new L.BarChartDataLayer(data,{
+		recordsField: 'features',
+		geoJSONField: null,
+		locationMode: L.LocationModes.GEOJSON,
+		chartOptions: {
+			'properties.mag':{
+				color: 'orangered',
+				fillColor: 'orange',
+				minValue: 0,
+				maxValue: 10,
+				minHeight: 4,
+				maxHeight: 40,
+				displayName: 'Magnitude'
+			},
+			'properties.time':{
+				color: 'goldenrod',
+				fillColor: 'yellow',
+				minValue: start,
+				maxValue: now,
+				minHeight: 0,
+				maxHeight: 10,
+				displayName: 'Time'
+			}
+		},
+		layerOptions: {
+			fillOpacity: 0.9,
+			opacity: 1,
+			weight: 1,
+			width: 8,
+			gradient: true,
+			dropShadow: true
+		},
+		tooltipOptions: {
+			iconSize: new L.Point(90,76),
+			iconAnchor: new L.Point(-4,76)
+		},
+		onEachRecord: function (layer,record) {
+			var $html = L.HTMLUtils.buildTable(record);
+			
+			layer.bindPopup($html.wrap('<div/>').parent().html(),{
+				minWidth: 400,
+				maxWidth: 400
+			});
+		}
+	});
+	
+	// Add the data layer to the map
+	map.addLayer(dataLayer);
+	
+	lastLayer = dataLayer;
+};
+
+$(document).ready(function() {
+
+	// Function for resizing the map to fill the available space on the screen
+	var resize = function () {
+		var $map = $('#map');
+		
+		$map.height($(window).height() - $('div.navbar').outerHeight());
+		
+		if (map) {
+			map.invalidateSize();
+		}
+	};
+	
+	// Resize the map element on window resize
+	$(window).on('resize', function () {
+		resize();
+	});
+	
+	// Resize the map element
+	resize();
+	
+	// Initialize the map
+	map = L.map('map').setView([0.0, 0.0], 2);
+	
+	// Add a CloudMade tile layer with style #999
+	var baseLayer = L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
+	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery ?<a href="http://cloudmade.com">CloudMade</a>'
+	});
+	
+	baseLayer.addTo(map);
+	
+	var prccEarthquakesLayer = L.tileLayer('http://{s}.tiles.mapbox.com/v3/bclc-apec.map-rslgvy56/{z}/{x}/{y}.png', {
+		attribution: 'Map &copy; Pacific Rim Coordination Center (PRCC).  Certain data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
+	});
+	
+	// Initialize the legend control and add it to the map
+	var legendControl = new L.Control.Legend();
+	
+	legendControl.addTo(map);
+	
+	var layerControl = new L.Control.Layers({
+		'Cloudmade': baseLayer,
+		'PRCC Earthquake Risk Zones': prccEarthquakesLayer 
+	});
+	
+	layerControl.addTo(map);
+	
+	// Function for requesting the latest earthquakes from USGS
+	var getData = function () {
+		
+		if (lastLayer) {
+			map.removeLayer(lastLayer);
+		}
+		
+		$.ajax({
+			url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
+			type: 'GET',
+			dataType: 'jsonp'
+		});
+	};
+	
+	// Get the latest earthquake data
+	getData();
+	
+	// Periodically request the latest data
+	setInterval(getData,300000);
+});
+	</script>
+</body>
+</html>

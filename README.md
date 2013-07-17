@@ -507,6 +507,19 @@ Option | Type | Default | Description
 Option | Type | Default | Description
 --- | --- | --- | ---
 
+### L.PanoramioLayer
+
+> Display Panoramio images on the map.  Shows the top 50 most popular images for the current map view.
+
+#### Usage
+`L.PanoramioLayer(<PanoramioLayer options> options?);`
+
+#### Options (in addition to the *L.DataLayer* style options)
+Option | Type | Default | Description
+updateInterval | Number | 300000 | The number of milliseconds to wait before updating the current view
+size | String | square | The marker image size ("square" or "mini_square")
+refreshEvents | String | moveend | The Leaflet events that will trigger a refresh of photos (separate with spaces)
+
 ## Legends
 
 > Useful for visually informing users about the dynamic styles associated with your L.DataLayer instances

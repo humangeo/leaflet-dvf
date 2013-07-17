@@ -533,6 +533,13 @@ L.pieChartMarker = function (centerLatLng, options) {
  * 
  */
 L.CoxcombChartMarker = L.PieChartMarker.extend({
+	statics: {
+		SIZE_MODE_RADIUS: 'radius',
+		SIZE_MODE_AREA: 'area'
+	}
+});
+
+L.CoxcombChartMarker = L.CoxcombChartMarker.extend({
 	initialize: function (centerLatLng, options) {
 		L.Util.setOptions(this, options);
 
@@ -549,7 +556,8 @@ L.CoxcombChartMarker = L.PieChartMarker.extend({
 		numberOfSides: 50,
 		mouseOverExaggeration: 1.2,
 		maxDegrees: 360.0,
-		iconSize: new L.Point(50, 40)
+		iconSize: new L.Point(50, 40),
+		sizeMode: L.CoxcombChartMarker.SIZE_MODE_AREA
 	},
 
 	_loadBars: function () {
@@ -580,15 +588,32 @@ L.CoxcombChartMarker = L.PieChartMarker.extend({
 			var minValue = chartOption.minValue || 0;
 			var maxValue = chartOption.maxValue;
 			
-			var evalFunctionX = new L.LinearFunction(new L.Point(minValue, 0), new L.Point(maxValue, radiusX));
-			var evalFunctionY = new L.LinearFunction(new L.Point(minValue, 0), new L.Point(maxValue, radiusY)); 
-
+			// If the size mode is radius, then we'll just vary the radius proportionally to the value
+			if (this.options.sizeMode === L.CoxcombChartMarker.SIZE_MODE_RADIUS) {
+				var evalFunctionX = new L.LinearFunction(new L.Point(minValue, 0), new L.Point(maxValue, radiusX));
+				var evalFunctionY = new L.LinearFunction(new L.Point(minValue, 0), new L.Point(maxValue, radiusY)); 
+				options.radiusX = evalFunctionX.evaluate(value);
+				options.radiusY = evalFunctionY.evaluate(value);
+			}
+			else {
+				// Otherwise, we'll vary the area proportionally to the value and calculate the radius from the area value
+				var radius = Math.max(radiusX, radiusY);
+				var maxArea = (Math.PI * Math.pow(radius, 2)) / count;
+				
+				var evalFunctionArea = new L.LinearFunction(new L.Point(minValue, 0), new L.Point(maxValue, maxArea), {
+					postProcess: function (value) {
+						return Math.sqrt(count * value / Math.PI);
+					}
+				});
+				
+				options.radiusX = evalFunctionArea.evaluate(value);
+				options.radiusY = options.radiusX;
+			}
+			
 			options.startAngle = lastAngle;
 			options.endAngle = lastAngle + angle;
 			options.fillColor = chartOption.fillColor;
 			options.color = chartOption.color || '#000';
-			options.radiusX = evalFunctionX.evaluate(value);
-			options.radiusY = evalFunctionY.evaluate(value);
 			options.rotation = 0;
 			
 			// Set the key and value for use later

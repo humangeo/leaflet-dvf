@@ -122,7 +122,12 @@ L.LocationModes = {
 		var location = null;
 		
 		if (geoJSON) {
-			location = L.GeometryUtils.getGeoJSONLocation(geoJSON, record, this.options.locationTextField, this.recordToLayer);	
+			var me = this;
+			var recordToLayer = function (location, record) {
+				return me.recordToLayer(location, record);
+			};
+			
+			location = L.GeometryUtils.getGeoJSONLocation(geoJSON, record, this.options.locationTextField, recordToLayer);	
 		}
 		
 		return location;
@@ -136,7 +141,12 @@ L.LocationModes = {
 		var location = null;
 		
 		if (geoJSON) {
-			location = L.GeometryUtils.getGeoJSONLocation(geoJSON, record, this.options.locationTextField, this.recordToLayer);
+			var me = this;
+			var recordToLayer = function (location, record) {
+				return me.recordToLayer(location, record);
+			};
+			
+			location = L.GeometryUtils.getGeoJSONLocation(geoJSON, record, this.options.locationTextField, recordToLayer);
 		}	
 		
 		return location;
@@ -170,6 +180,8 @@ L.DataLayer = L.LayerGroup.extend({
 		L.Util.setOptions(this, options);
 
 		L.LayerGroup.prototype.initialize.call(this, options);
+		
+		data = data || {};
 		
 		this.addData(data);
 	},
@@ -515,70 +527,13 @@ L.DataLayer = L.LayerGroup.extend({
 				}
 				
 				if (this.options.onEachRecord) {
-					this.options.onEachRecord(layer, record, this);
+					this.options.onEachRecord.call(this, layer, record, this);
 				}
 			}
 		}
 		
 		return layer;
 	},
-	
-	setCSSProperty: function ($element, key, value) {
-		var keyMap = {
-				fillColor: {
-					property: ['background-color'],
-					valueFunction: function (value) {
-						return value;
-					}
-				},
-				color: {
-					property: ['border-color'], 
-					valueFunction: function (value) {
-						return value; 
-					}
-				},
-				weight: {
-					property: ['border'],
-					valueFunction: function (value) {
-						return 'solid ' + value + 'px';
-					}
-				},
-				dashArray: {
-					property: ['border-style'],
-					valueFunction: function (value) {
-						var style = 'solid';
-						
-						if (value) {
-							style = 'dashed';
-						}
-						
-						return style;
-					}
-				},
-				radius: {
-					property: ['height'],
-					valueFunction: function (value) {
-						return 2 * value + 'px';
-					}
-				},
-				fillOpacity: {
-					property: ['opacity'],
-					valueFunction: function (value) {
-						return value;
-					}
-				}
-			};
-		var cssProperty = keyMap[key];
-		
-		if (cssProperty) {
-			var propertyKey = cssProperty.property;
-			for (var propertyIndex in propertyKey) {
-				$element.css(propertyKey[propertyIndex], cssProperty.valueFunction(value));
-			}
-		}
-		
-		return $element;
-	},	
 	
 	getLegend: function (legendOptions) {
 		
@@ -747,12 +702,13 @@ L.MarkerDataLayer = L.DataLayer.extend({
 		longitudeField: 'longitude',
 		layerOptions: {
 			icon: null
-		}
+		},
+		showLegendTooltips: false
 	},
 
 	_getMarker: function (latLng, layerOptions, record) {
 		if (this.options.setIcon) {
-			layerOptions.icon = this.options.setIcon(this, record, layerOptions);
+			layerOptions.icon = this.options.setIcon.call(this, record, layerOptions);
 		}
 		
 		return new L.Marker(latLng, layerOptions);
@@ -761,6 +717,217 @@ L.MarkerDataLayer = L.DataLayer.extend({
 	getLegend: function (options) {
 		// TODO:  Implement this.  Get the correct icon for each marker based on iterating over a range
 		// of values
+		return '<span>No legend available</span>';
+	}
+});
+
+
+/*
+ *
+ */
+
+L.PanoramioLayer = L.MarkerDataLayer.extend({
+	statics: {
+		UPLOAD_DATE_FORMAT: 'DD MMM YYYY',
+		SIZE_BY_DATE: 'date',
+		SIZE_BY_POPULARITY: 'popularity',
+		SIZE_BY_NONE: 'none',
+		SIZES: {
+			'square': [60, 60],
+			'mini_square': [32, 32]
+		}
+	}
+});
+
+L.PanoramioLayer = L.PanoramioLayer.extend({	
+	initialize: function (options) {
+		L.MarkerDataLayer.prototype.initialize.call(this, {}, options);
+	},
+	
+	options: {
+		recordsField: 'photos',
+		latitudeField: 'latitude',
+		longitudeField: 'longitude',
+		locationMode: L.LocationModes.LATLNG,
+		showLegendTooltips: false,
+		sizeBy: L.PanoramioLayer.SIZE_BY_DATE,
+		layerOptions: {
+			opacity: 1.0
+		},
+		onEachRecord: function (layer, record) {
+			var $html = L.HTMLUtils.buildTable(record);
+			var photoUrl = record['photo_file_url'];
+			var title = record['photo_title'];
+			var me = this;
+			var width = record['width'];
+			var height = record['height'];
+			var offset = 20000;
+
+			layer.on('click', function (e) {
+				var $html = $('<div><img class="photo" onload="this.style.opacity=1" src="' + photoUrl + '"/><div class="photo-info"><span>' + title + '</span><a class="photo-link" target="_blank" href="' + record['photo_url'] + '"><img src="http://www.panoramio.com/img/glass/components/logo_bar/panoramio.png" style="height: 14px;"/></a></div><a class="author-link" target="_blank" href="' + record['owner_url'] +'">by ' + record['owner_name'] + '</a></div>');
+
+				$html.find('.photo').width(width);
+				$html.find('.photo-info').width(width - 20);
+				
+				var icon = new L.DivIcon({
+					className: 'photo-details',
+					html: $html.wrap('<div/>').parent().html(),
+					iconAnchor: [width/2, height/2]
+				});
+
+				var marker = new L.Marker(e.target._latlng, {
+					icon: icon,
+					zIndexOffset: offset
+				});
+
+				marker.on('click', function (e) {
+					me.removeLayer(e.target);
+				});
+				
+				me.addLayer(marker);
+			});
+
+		},
+		setIcon: function (record, options) {
+			var title = L.Util.getFieldValue(record, 'photo_title');
+			
+			var size = null;
+			
+			if (this._sizeFunction) {
+				size = this._sizeFunction.evaluate(record.index);	
+			}
+			
+			var iconSize = size ? new L.Point(size, size) : L.PanoramioLayer.SIZES[this.options.size];
+			var url = record['photo_file_url'].replace('/medium/', '/' + this.options.size + '/');
+			var icon = new L.DivIcon({
+				iconSize: iconSize,
+				className: '',
+				html: '<img class="photo" onload="this.style.opacity=1" title="' + title + '" src="' + url + '"/>'
+			});
+			
+			return icon;
+		},
+		updateInterval: 300000,
+		size: 'square',
+		attributionText: 'Photos provided by <a href="http://www.panoramio.com"><img src="http://www.panoramio.com/img/glass/components/logo_bar/panoramio.png" style="height: 10px;"/></a>.  Photos provided by <a href="http://www.panoramio.com"><img src="http://www.panoramio.com/img/glass/components/logo_bar/panoramio.png" style="height: 10px;"/></a> are under the copyright of their owners',
+		refreshEvents: 'moveend',
+		photoSet: 'public'
+	},
+	
+	includes: L.Mixin.Events,
+	
+	onAdd: function (map) {
+		L.DataLayer.prototype.onAdd.call(this, map);
+		
+		if (map.attributionControl) {
+			map.attributionControl.addAttribution(this.options.attributionText);
+		}
+		
+		var me = this;
+		var resetFunction = function (e) {
+			me.fire('requestingPhotos');
+			me.requestPhotos();
+		};
+		
+		this.requestPhotos();
+		
+		this._interval = setInterval(resetFunction, this.options.updateInterval);
+		
+		this._resetFunction = resetFunction;
+		
+		map.on(this.options.refreshEvents, resetFunction);
+	},
+	
+	onRemove: function (map) {
+		L.DataLayer.prototype.onRemove.call(this, map);
+		
+		if (map.attributionControl) {
+			map.attributionControl.removeAttribution(this.options.attributionText);
+		}
+		
+		if (this._interval) {
+			clearInterval(this._interval);
+			this._interval = null;
+		}
+		
+		map.off(this.options.refreshEvents, this._resetFunction);
+	},
+	
+	calculateSizeByDate: function (data) {
+		var photos = data.photos;
+		var timestamps = [];
+		
+		// Iterate through the photos and calculate the timestamp of the upload date using
+		// moment js
+		for (var i = 0; i < photos.length; ++i) {
+			var photo = photos[i];
+			var timestamp = moment(photo['upload_date'], L.PanoramioLayer.UPLOAD_DATE_FORMAT);
+			
+			timestamps.push(timestamp);
+			
+			photos[i].index = timestamp;
+		}
+		
+		timestamps.sort(function (t1, t2) {
+			return t1 - t2;
+		});
+		
+		var size = L.PanoramioLayer.SIZES[this.options.size][0];
+		
+		this._sizeFunction = new L.LinearFunction([timestamps[0], size/2], [timestamps[timestamps.length - 1], size]);
+		
+		return data;
+	},
+	
+	calculateSizeByPopularity: function (data) {
+		var photos = data.photos;
+		
+		for (var i = 0; i < photos.length; ++i) {
+			photos[i].index = i;	
+		}
+		
+		var size = L.PanoramioLayer.SIZES[this.options.size][0];
+		
+		this._sizeFunction = new L.LinearFunction([0, size/2], [photos.length, size]);
+		
+		return data;
+	},
+	
+	requestPhotos: function () {
+		
+		var me = this;
+		var bounds = this._map.getBounds();
+		var southWest = bounds.getSouthWest();
+		var northEast = bounds.getNorthEast();
+		
+		$.ajax({
+			url: 'http://www.panoramio.com/map/get_panoramas.php',
+			data: {
+				set: this.options.photoSet,
+				from: 0,
+				to: 50,
+				minx: southWest.lng,
+				miny: southWest.lat,
+				maxx: northEast.lng,
+				maxy: northEast.lat,
+				size: 'medium',
+				mapfilter: 'true'
+			},
+			type: 'GET',
+			dataType: 'jsonp',
+			success: function (data) {
+				
+				if (moment && me.options.sizeBy === 'date') {
+					data = me.calculateSizeByDate(data);
+				}
+				else if (me.options.sizeBy === 'popularity') {
+					data = me.calculateSizeByPopularity(data);
+				}
+				
+				me.clearLayers();
+				me.addData(data);
+			}
+		});
 	}
 });
 

@@ -204,7 +204,9 @@ $(document).ready(function() {
 			opacity: 1,
 			weight: 1,
 			color: 'hsl(220,100%,25%)',
-			numberOfSides: 40
+			numberOfSides: 40,
+			dropShadow: true,
+			gradient: true
 		},
 		tooltipOptions: {
 			iconSize: new L.Point(100,65),

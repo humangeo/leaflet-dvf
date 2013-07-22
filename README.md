@@ -516,6 +516,7 @@ Option | Type | Default | Description
 
 #### Options (in addition to the *L.DataLayer* style options)
 Option | Type | Default | Description
+--- | --- | --- | ---
 updateInterval | Number | 300000 | The number of milliseconds to wait before updating the current view
 size | String | square | The marker image size ("square" or "mini_square")
 refreshEvents | String | moveend | The Leaflet events that will trigger a refresh of photos (separate with spaces)

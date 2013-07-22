@@ -1,48 +1,4 @@
 var map;
-var lastLayer;
-var legendControl;
-
-// JSONP callback function for displaying the latest earthquake data
-var panoramio_callback = function (data) {
-
-	if (lastLayer) {
-		map.removeLayer(lastLayer);
-	}
-	
-	// Setup a new data layer
-	var dataLayer = new L.MarkerDataLayer(data,{
-		recordsField: 'photos',
-		latitudeField: 'latitude',
-		longitudeField: 'longitude',
-		locationMode: L.LocationModes.LATLNG,
-		showLegendTooltips: false,
-		layerOptions: {
-			opacity: 1.0
-		},
-		onEachRecord: function (layer,record) {
-			var $html = L.HTMLUtils.buildTable(record);
-			
-			layer.bindPopup($html.wrap('<div/>').parent().html(),{
-				minWidth: 400,
-				maxWidth: 400
-			});
-		},
-		setIcon: function (context, record, options) {			
-			var icon = new L.DivIcon({
-				iconSize: new L.Point(L.Util.getFieldValue(record, 'width'), L.Util.getFieldValue(record, 'height')),
-				className: 'photo',
-				html: '<img src="' + L.Util.getFieldValue(record, 'photo_file_url') + '"/>'
-			});
-			
-			return icon;
-		}
-	});
-	
-	// Add the data layer to the map
-	map.addLayer(dataLayer);
-	
-	lastLayer = dataLayer;
-};
 
 $(document).ready(function() {
 
@@ -82,38 +38,5 @@ $(document).ready(function() {
 	var panoramioLayer = new L.PanoramioLayer();
 	
 	map.addLayer(panoramioLayer);
-	// Function for requesting the latest photos from Panoramio
-	// var getData = function () {
-// 		
-// 		var bounds = map.getBounds();
-// 		var southWest = bounds.getSouthWest();
-// 		var northEast = bounds.getNorthEast();
-// 		
-// 		$.ajax({
-// 			url: 'http://www.panoramio.com/map/get_panoramas.php',
-// 			data: {
-// 				set: 'public',
-// 				from: 0,
-// 				to: 49,
-// 				minx: southWest.lng,
-// 				miny: southWest.lat,
-// 				maxx: northEast.lng,
-// 				maxy: northEast.lat,
-// 				size: 'square',
-// 				mapfilter: 'true'
-// 			},
-// 			type: 'GET',
-// 			dataType: 'jsonp',
-// 			success: function (data) {
-// 				panoramio_callback(data);
-// 			}
-// 		});
-// 	};
-// 	
-// 	// Get the latest earthquake data
-// 	getData();
-// 	
-// 	// Periodically request the latest data
-// 	setInterval(getData,300000);
-// 	map.on('viewreset', getData);
+
 });

@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Leaflet-dvf : Leaflet Data Visualization Framework" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Leaflet-dvf</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/humangeo/leaflet-dvf">View on GitHub</a>
+
+          <h1 id="project_title">Leaflet-dvf</h1>
+          <h2 id="project_tagline">Leaflet Data Visualization Framework</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/humangeo/leaflet-dvf/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/humangeo/leaflet-dvf/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="leaflet-data-visualization-framework-dvf" class="anchor" href="#leaflet-data-visualization-framework-dvf"><span class="octicon octicon-link"></span></a>Leaflet Data Visualization Framework (DVF)</h1>
+
+<h2>
+<a name="overview" class="anchor" href="#overview"><span class="octicon octicon-link"></span></a>Overview</h2>
+
+<p>The Leaflet DVF is an extension to <a href="http://www.cloudmade.com">CloudMade</a>'s <a href="http://leafletjs.com">Leaflet</a> JavaScript mapping library.
+The primary goal of the framework is to simplify data visualization and thematic mapping.</p>
+
+<p><img src="http://humangeo.github.com/leaflet-dvf/images/markers.png" alt="Markers" title="Markers"><img src="http://humangeo.github.com/leaflet-dvf/images/electionmapping.png" alt="Election Mapping" title="Election Mapping"><img src="http://humangeo.github.com/leaflet-dvf/images/countrydata.png" alt="Country Data" title="Country Data"></p>
+
+<p>It includes:</p>
+
+<p>New marker types (see the markers example below):</p>
+
+<ul>
+<li>MapMarker - create an SVG-based map marker similar to Leaflet's image-based marker, but fully customizable via L.Path style properties</li>
+<li>RegularPolygonMarker - create N-sided shapes like triangles, squares, hexagons, etc.</li>
+<li>StarMarker - create stars with N points</li>
+<li>ChartMarkers - useful for displaying multiple data properties at each location:
+
+<ul>
+<li>BarChartMarker</li>
+<li>PieChartMarker</li>
+<li>RadialBarChartMarker</li>
+<li>CoxcombChartMarker</li>
+<li>RadialMeterMarker</li>
+<li>StackedRegularPolygonMarker - a variation on the bar chart</li>
+</ul>
+</li>
+</ul><p>Functions for easily mapping data properties to Leaflet style values:</p>
+
+<ul>
+<li>LinearFunction</li>
+<li>Color functions:
+
+<ul>
+<li>HSLHueFunction - vary the output hue based on a data property</li>
+<li>HSLSaturationFunction - vary the output saturation based on a data property</li>
+<li>HSLLuminosityFunction - vary the output lightness/luminosity based on a data property</li>
+<li>Various RGB functions</li>
+</ul>
+</li>
+<li>PiecewiseFunction - use multiple LinearFunction classes in sequence (e.g. vary a color from white to yellow, yellow to red)</li>
+</ul><p>New layer types that simplify reading and visualizing any JSON-based data structure:</p>
+
+<ul>
+<li>DataLayer</li>
+<li>ChartDataLayer</li>
+<li>ChoroplethDataLayer</li>
+<li>Others</li>
+</ul><p>GeoJSON polygons for countries and US states to support Choropleth mapping.  Countries are generated from:  <a href="https://github.com/johan/world.geo.json">https://github.com/johan/world.geo.json</a>.
+Just include these JavaScript files if you plan to build a country or US state choropleth.<br>
+Polygons are indexed via a state or country code and lookups are created to map various state/country code formats to the default index format.</p>
+
+<p>Automatic legend generation and a simple legend control.
+To generate a legend, just call getLegend on any DataLayer, or use the provided legend control and the legend will be displayed automatically.</p>
+
+<p>Support for gradient fills and drop shadows.</p>
+
+<p><em>NOTE:  The dist folder includes a minified version of the full framework as well as a minified version of the code required to use the new markers</em>
+<em>Use leaflet-dvf.markers.min.js if you want to use the new markers without the rest of the framework</em></p>
+
+<h2>
+<a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h2>
+
+<p><em>NOTE:  Most of these examples have multiple layers; use the layers control to see all of the layers</em></p>
+
+<p>New Marker Types:</p>
+
+<ul>
+<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/markers.html">Markers</a></li>
+</ul><p>Proportional Symbol:</p>
+
+<ul>
+<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/earthquakes.html">USGS Earthquakes</a></li>
+<li>
+<a href="http://humangeo.github.com/leaflet-dvf/examples/html/meetups.html">Meetup Finder</a> - zoom to an area of interest, put in a Meetup topic, and click the search button</li>
+<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/weather.html">Weather</a></li>
+</ul><p>Choropleth Mapping:</p>
+
+<ul>
+<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/colors.html">Color Functions</a></li>
+<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/geohashes.html">Geohashes</a></li>
+</ul><p>Mix:</p>
+
+<ul>
+<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/incomelevels.html">WorldBank and UN Data</a></li>
+<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/election2012.html">Election 2012 Polling</a></li>
+<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/election2012results.html">2008 vs 2012 Election Results</a></li>
+<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/uselectiondata.html">2008 Election Results</a></li>
+<li>
+<a href="http://humangeo.github.com/leaflet-dvf/examples/html/nlzip.html">Netherlands Population by ZIP 2</a> ** Thanks to Steven De Schrijver of <a href="http://www.conundra.eu">Conundra</a> for providing the example use case **</li>
+</ul><p>Tutorials coming soon to <a href="http://www.thehumangeo.com/">HumanGeo</a>'s <a href="http://blog.thehumangeo.com">blog</a></p>
+
+<h1>
+<a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h1>
+
+<blockquote>
+<p>A work in progress ...</p>
+</blockquote>
+
+<h2>
+<a name="basic-enhancements-new" class="anchor" href="#basic-enhancements-new"><span class="octicon octicon-link"></span></a>Basic Enhancements (New)</h2>
+
+<blockquote>
+<p>Two new optional properties have been added to the basic L.Path properties to enable for a gradient fill and drop shadow.  For now, these properties are boolean values, but in the future, support might be added for fine-grained control over the appearance of gradients/drop shadows.</p>
+</blockquote>
+
+<h4>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">layer</span> <span class="o">=</span> <span class="k">new</span> <span class="o">&lt;</span><span class="nx">Leaflet</span> <span class="nx">Path</span><span class="o">-</span><span class="nx">based</span> <span class="nx">Layer</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">g</span><span class="p">.</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Polygon</span><span class="p">)</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Constructor</span> <span class="nx">inputs</span><span class="o">&gt;</span><span class="p">,</span> <span class="p">{</span>
+    <span class="c1">// L.Path style options</span>
+    <span class="p">...</span>
+    <span class="nx">gradient</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nx">dropShadow</span><span class="o">:</span> <span class="kc">true</span>
+<span class="p">});</span>
+</pre></div>
+
+<h4>
+<a name="options" class="anchor" href="#options"><span class="octicon octicon-link"></span></a>Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>gradient</td>
+<td>Boolean</td>
+<td>differs depending on the layer class (most new marker types use a gradient by default)</td>
+<td>Specifying a value of true will fill the path with a gradient from white to the specified fillColor (top left - bottom right)</td>
+</tr>
+<tr>
+<td>dropShadow</td>
+<td>Boolean</td>
+<td>false</td>
+<td>Specifying a value of true will add a dropShadow to the path</td>
+</tr>
+</tbody>
+</table><h2>
+<a name="markers" class="anchor" href="#markers"><span class="octicon octicon-link"></span></a>Markers</h2>
+
+<blockquote>
+<p>The framework adds several new marker types geared towards dynamic data visualization.  See the <a href="http://humangeo.github.com/leaflet-dvf/examples/html/markers.html">Markers</a> example for an illustration of each of these markers.</p>
+</blockquote>
+
+<h3>
+<a name="lmapmarker" class="anchor" href="#lmapmarker"><span class="octicon octicon-link"></span></a>L.MapMarker</h3>
+
+<blockquote>
+<p>Creates an SVG-based map marker, similar to the default Leaflet image-based marker but fully customizable using the basic L.Path properties</p>
+</blockquote>
+
+<h4>
+<a name="usage-1" class="anchor" href="#usage-1"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.MapMarker(&lt;LatLng&gt; LatLng, &lt;Marker options&gt; options?);</code></p>
+
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">marker</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">MapMarker</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LatLng</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">{</span>
+    <span class="nx">radius</span><span class="o">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="c1">// L.Path style options</span>
+    <span class="p">...</span>
+<span class="p">});</span>
+
+<span class="nx">map</span><span class="p">.</span><span class="nx">addLayer</span><span class="p">(</span><span class="nx">marker</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="options-1" class="anchor" href="#options-1"><span class="octicon octicon-link"></span></a>Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>numberOfSides</td>
+<td>Number</td>
+<td>3</td>
+<td>If an inner radius is specified, then the marker will have a hole in center.  This property determines the shape of the hole.</td>
+</tr>
+<tr>
+<td>rotation</td>
+<td>Number</td>
+<td>0</td>
+<td>If an inner radius is specified, this controls the rotation of the hole in the center.</td>
+</tr>
+<tr>
+<td>radius OR radiusX, radiusY</td>
+<td>Number</td>
+<td>10</td>
+<td>The radius of the circular part of the marker, also adjusts the height of the marker</td>
+</tr>
+<tr>
+<td>innerRadius OR innerRadiusX, innerRadiusY</td>
+<td>Number</td>
+<td>null</td>
+<td>The inner radius of the marker hole in pixels.</td>
+</tr>
+</tbody>
+</table><h3>
+<a name="lregularpolygonmarker" class="anchor" href="#lregularpolygonmarker"><span class="octicon octicon-link"></span></a>L.RegularPolygonMarker</h3>
+
+<p><img alt="Bar Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/regularpolygonmarkers.png" width="290" height="72"></p>
+
+<blockquote>
+<p>Creates an N-sided marker</p>
+</blockquote>
+
+<h4>
+<a name="usage-2" class="anchor" href="#usage-2"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.RegularPolygonMarker(&lt;LatLng&gt; LatLng, &lt;Marker options&gt; options?);</code></p>
+
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">marker</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">RegularPolygonMarker</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LatLng</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">{</span>
+    <span class="nx">numberOfSides</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="nx">rotation</span><span class="o">:</span> <span class="mf">60.0</span><span class="p">,</span>
+    <span class="nx">radius</span><span class="o">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="c1">// L.Path style options</span>
+    <span class="p">...</span>
+<span class="p">});</span>
+
+<span class="nx">map</span><span class="p">.</span><span class="nx">addLayer</span><span class="p">(</span><span class="nx">marker</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="options-2" class="anchor" href="#options-2"><span class="octicon octicon-link"></span></a>Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>numberOfSides</td>
+<td>Number</td>
+<td>3</td>
+<td>The number of sides the marker should have</td>
+</tr>
+<tr>
+<td>rotation</td>
+<td>Number</td>
+<td>0.0</td>
+<td>The angle in degrees that the marker should be rotated</td>
+</tr>
+<tr>
+<td>radius OR radiusX, radiusY</td>
+<td>Number</td>
+<td>10</td>
+<td>The radius of the marker in pixels</td>
+</tr>
+<tr>
+<td>innerRadius OR innerRadiusX, innerRadiusY</td>
+<td>Number</td>
+<td>null</td>
+<td>The inner radius of the marker in pixels.  Specifying an innerRadius will produce a regular polygon with a hole in the middle.</td>
+</tr>
+</tbody>
+</table><h3>
+<a name="lstarmarker" class="anchor" href="#lstarmarker"><span class="octicon octicon-link"></span></a>L.StarMarker</h3>
+
+<p><img alt="Star Marker" src="http://humangeo.github.com/leaflet-dvf/images/stars.png" width="83" height="87"></p>
+
+<blockquote>
+<p>Creates a star-shaped marker with N-points</p>
+</blockquote>
+
+<h4>
+<a name="usage-3" class="anchor" href="#usage-3"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.StarMarker(&lt;LatLng&gt; LatLng, &lt;StarMarker options&gt; options?);</code></p>
+
+<h4>
+<a name="options-in-addition-to-the-lregularpolygonmarker-options-defined-above" class="anchor" href="#options-in-addition-to-the-lregularpolygonmarker-options-defined-above"><span class="octicon octicon-link"></span></a>Options (in addition to the L.RegularPolygonMarker options defined above)</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody><tr>
+<td>numberOfPoints</td>
+<td>Number</td>
+<td>5</td>
+<td>The number of points the star should have</td>
+</tr></tbody>
+</table><h3>
+<a name="chartmarkers" class="anchor" href="#chartmarkers"><span class="octicon octicon-link"></span></a>ChartMarkers</h3>
+
+<p><img alt="Bar Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/barchartmarker.png" width="83" height="87"><img alt="Radial Bar Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/radialbarchartmarker.png" width="83" height="87"><img alt="Pie Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/piechartmarker.png" width="83" height="87"><img alt="Coxcomb Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/coxcombchartmarker.png" width="83" height="87"><img alt="Stacked Regular Polygon Marker" src="http://humangeo.github.com/leaflet-dvf/images/stackedregularpolygon.png" width="83" height="87"><img alt="Radial Meter Marker" src="http://humangeo.github.com/leaflet-dvf/images/radialmetermarker.png" width="83" height="87"></p>
+
+<blockquote>
+<p>Display dynamic charts (bar chart, radial bar chart, pie chart, coxcomb chart, etc.) as markers</p>
+</blockquote>
+
+<h4>
+<a name="usage-4" class="anchor" href="#usage-4"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.BarChartMarker(&lt;LatLng&gt; LatLng, &lt;Chart options&gt; options?);</code>
+<code>L.RadialBarChartMarker(&lt;LatLng&gt; LatLng, &lt;Chart options&gt; options?);</code>
+<code>L.PieChartMarker(&lt;LatLng&gt; LatLng, &lt;Chart options&gt; options?);</code>
+<code>L.CoxcombChartMarker(&lt;LatLng&gt; LatLng, &lt;Chart options&gt; options?);</code>
+<code>L.StackedRegularPolygonMarker(&lt;LatLng&gt; LatLng, &lt;Chart options&gt; options?);</code>
+<code>L.RadialMeterMarker(&lt;LatLng&gt; LatLng, &lt;Chart options&gt; options?);</code></p>
+
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">data</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s1">'dataPoint1'</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="s1">'dataPoint2'</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="s1">'dataPoint3'</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="s1">'dataPoint4'</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">20</span>
+    <span class="p">},</span>
+    <span class="nx">chartOptions</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s1">'dataPoint1'</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">fillColor</span><span class="o">:</span> <span class="s1">'#FEE5D9'</span><span class="p">,</span>
+            <span class="nx">minValue</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">maxValue</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="nx">maxHeight</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="nx">displayText</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">value</span><span class="p">.</span><span class="nx">toFixed</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="s1">'dataPoint2'</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">fillColor</span><span class="o">:</span> <span class="s1">'#FCAE91'</span><span class="p">,</span>
+            <span class="nx">minValue</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">maxValue</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="nx">maxHeight</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="nx">displayText</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">value</span><span class="p">.</span><span class="nx">toFixed</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="s1">'dataPoint3'</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">fillColor</span><span class="o">:</span> <span class="s1">'#FB6A4A'</span><span class="p">,</span>
+            <span class="nx">minValue</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">maxValue</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="nx">maxHeight</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="nx">displayText</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">value</span><span class="p">.</span><span class="nx">toFixed</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="s1">'dataPoint4'</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">fillColor</span><span class="o">:</span> <span class="s1">'#CB181D'</span><span class="p">,</span>
+            <span class="nx">minValue</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">maxValue</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="nx">maxHeight</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="nx">displayText</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">value</span><span class="p">.</span><span class="nx">toFixed</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nx">weight</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="nx">color</span><span class="o">:</span> <span class="s1">'#000000'</span><span class="p">,</span>
+    <span class="p">...</span> <span class="c1">// Other L.Path style options</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">barChartMarker</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">BarChartMarker</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LatLng</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nx">options</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="options-in-addition-to-the-lpath-style-options" class="anchor" href="#options-in-addition-to-the-lpath-style-options"><span class="octicon octicon-link"></span></a>Options (in addition to the <em>L.Path</em> style options)</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>data</td>
+<td>Object</td>
+<td>null</td>
+<td>A set of key/value pairs that provides a data value for each property displayed by the marker</td>
+</tr>
+<tr>
+<td>chartOptions</td>
+<td>Object</td>
+<td>null</td>
+<td>A set of key/value pairs that defines the options associated with each data property displayed by the marker.</td>
+</tr>
+</tbody>
+</table><h2>
+<a name="utility-functions" class="anchor" href="#utility-functions"><span class="octicon octicon-link"></span></a>Utility Functions</h2>
+
+<blockquote>
+<p>Classes for mapping data properties to Leaflet style values</p>
+</blockquote>
+
+<h3>
+<a name="llinearfunction" class="anchor" href="#llinearfunction"><span class="octicon octicon-link"></span></a>L.LinearFunction</h3>
+
+<blockquote>
+<p>Used to map a data property from one scale to another</p>
+</blockquote>
+
+<h4>
+<a name="usage-5" class="anchor" href="#usage-5"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.LinearFunction(&lt;Number[]|Point&gt; minPoint, &lt;Number[]|Point&gt; maxPoint, &lt;LinearFunction options&gt; options?);</code></p>
+
+<div class="highlight"><pre><span class="c1">// Map a data property that ranges from 0 to 100 to a value between 5 and 20 (e.g. marker radius)</span>
+<span class="kd">var</span> <span class="nx">linearFunction</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LinearFunction</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+
+<span class="c1">// OR - In addition to L.Point objects, you can also use arrays</span>
+<span class="kd">var</span> <span class="nx">linearFunction</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LinearFunction</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">20</span><span class="p">]);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">linearFunction</span><span class="p">.</span><span class="nx">evaluate</span><span class="p">(</span><span class="mi">10</span><span class="p">));</span>  <span class="c1">// prints 6.5</span>
+</pre></div>
+
+<h4>
+<a name="options-3" class="anchor" href="#options-3"><span class="octicon octicon-link"></span></a>Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>preProcess</td>
+<td>Function</td>
+<td>null</td>
+<td>A function for pre-processing an input value</td>
+</tr>
+<tr>
+<td>postProcess</td>
+<td>Function</td>
+<td>null</td>
+<td>A function for post-processing an output value</td>
+</tr>
+</tbody>
+</table><h4>
+<a name="key-methods" class="anchor" href="#key-methods"><span class="octicon octicon-link"></span></a>Key Methods</h4>
+
+<table>
+<thead><tr>
+<th>Method</th>
+<th>Usage</th>
+<th>Description</th>
+</tr></thead>
+<tbody><tr>
+<td>evaluate</td>
+<td><code>linearFunction.evaluate(&lt;value&gt;);</code></td>
+<td>Interpolates an output value based on the passed in input value</td>
+</tr></tbody>
+</table><h3>
+<a name="color-functions" class="anchor" href="#color-functions"><span class="octicon octicon-link"></span></a>Color Functions</h3>
+
+<blockquote>
+<p>Used to map a data property to a color.  The framework includes tools for mapping color using Hue, Saturation, and Lightness/Luminosity (HSL) or Red, Green, Blue (RGB) color.  See the <a href="http://humangeo.github.com/leaflet-dvf/examples/html/colors.html">Colors</a> example.</p>
+</blockquote>
+
+<h4>
+<a name="usage-6" class="anchor" href="#usage-6"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<blockquote>
+<p>Change the output hue dynamically based on the input data property<br><em>Useful for producing colors along a rainbow scale (or subset)</em>
+<code>L.HSLHueFunction(&lt;Number[]|Point&gt; minPoint, &lt;Number[]|Point&gt; maxPoint, &lt;HSL options&gt; options?);</code></p>
+
+<p>Change the output saturation dynamically based on the input data property<br><em>Useful for varying between a color and gray</em>
+<code>L.HSLSaturationFunction(&lt;Number[]|Point&gt; minPoint, &lt;Number[]|Point&gt; maxPoint, &lt;HSL options&gt; options?);</code></p>
+
+<p>Change the output luminosity dynamically based on the input data property<br><em>Useful for varying between a color and white</em>
+<code>L.HSLLuminosityFunction(&lt;Number[]|Point&gt; minPoint, &lt;Number[]|Point&gt; maxPoint, &lt;HSL options&gt; options?);</code></p>
+
+<p>Change the output red value dynamically based on the input data property
+<code>L.RGBRedFunction(&lt;Number[]|Point&gt; minPoint, &lt;Number[]|Point&gt; maxPoint, &lt;RGB options&gt; options?);</code></p>
+
+<p>Change the output blue value dynamically based on the input data property
+<code>L.RGBBlueFunction(&lt;Number[]|Point&gt; minPoint, &lt;Number[]|Point&gt; maxPoint, &lt;RGB options&gt; options?);</code></p>
+
+<p>Change the output green value dynamically based on the input data property
+<code>L.RGBGreenFunction(&lt;Number[]|Point&gt; minPoint, &lt;Number[]|Point&gt; maxPoint, &lt;RGB options&gt; options?);</code></p>
+
+<p>Vary the output color dynamically between two RGB colors
+<code>L.RGBColorBlendFunction(&lt;Number&gt; minX, &lt;Number&gt;&gt; maxX, &lt;RGB array&gt; minColor, &lt;RGB array&gt; maxColor);</code></p>
+</blockquote>
+
+<div class="highlight"><pre><span class="c1">// Map a data property that ranges from 0 to 100 to a color between green (hue of 120) and red (hue of 0)</span>
+<span class="kd">var</span> <span class="nx">colorFunction</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">HSLHueFunction</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">120</span><span class="p">),</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
+
+<span class="nx">colorFunction</span><span class="p">.</span><span class="nx">evaluate</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span> <span class="c1">// prints 'hsl(110.00, 100%, 50%)'</span>
+</pre></div>
+
+<h4>
+<a name="options-4" class="anchor" href="#options-4"><span class="octicon octicon-link"></span></a>Options</h4>
+
+<h5>
+<a name="hsl-options" class="anchor" href="#hsl-options"><span class="octicon octicon-link"></span></a>HSL Options</h5>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>outputHue</td>
+<td>Number</td>
+<td>0</td>
+<td>The desired output hue <em>NOTE: use with L.HSLSaturationFunction and L.HSLLuminosityFunction</em>
+</td>
+</tr>
+<tr>
+<td>outputSaturation</td>
+<td>String</td>
+<td>'100%'</td>
+<td>The desired output saturation <em>NOTE: use with L.HSLHueFunction and L.HSLLuminosityFunction</em>
+</td>
+</tr>
+<tr>
+<td>outputLuminosity</td>
+<td>String</td>
+<td>'50%'</td>
+<td>The desired width of the legend element <em>NOTE: use with L.HSLHueFunction and L.HSLSaturationFunction</em>
+</td>
+</tr>
+</tbody>
+</table><h5>
+<a name="rgb-options" class="anchor" href="#rgb-options"><span class="octicon octicon-link"></span></a>RGB Options</h5>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>outputRed</td>
+<td>Number (0..255)</td>
+<td>null</td>
+<td>The desired output red value <em>NOTE: use with L.RGBGreenFunction and L.RGBBlueFunction</em>
+</td>
+</tr>
+<tr>
+<td>outputGreen</td>
+<td>Number</td>
+<td>(0..255)</td>
+<td>The desired output green value <em>NOTE: use with L.RGBRedFunction and L.RGBBlueFunction</em>
+</td>
+</tr>
+<tr>
+<td>outputBlue</td>
+<td>Number</td>
+<td>(0..255)</td>
+<td>The desired output blue value <em>NOTE: use with L.RGBRedFunction and L.RGBGreenFunction</em>
+</td>
+</tr>
+</tbody>
+</table><h3>
+<a name="lpiecewisefunction" class="anchor" href="#lpiecewisefunction"><span class="octicon octicon-link"></span></a>L.PiecewiseFunction</h3>
+
+<blockquote>
+<p>Used to combine L.LinearFunction instances for cases where one instance won't suffice</p>
+</blockquote>
+
+<h4>
+<a name="usage-7" class="anchor" href="#usage-7"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.PiecewiseFunction(&lt;LinearFunction[]&gt; functions, &lt;LinearFunction options&gt; options?);</code></p>
+
+<div class="highlight"><pre><span class="c1">// Map a data property that ranges from 0 to 100 to a color that ranges from white to yellow, yellow to red</span>
+<span class="c1">// To vary a color between white and that color, use an HSLLuminosityFunction.  In this case we'll vary</span>
+<span class="c1">// the color from white to yellow until the value reaches 50</span>
+<span class="kd">var</span> <span class="nx">whiteToYellow</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">HSLLuminosityFunction</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">{</span>
+    <span class="nx">outputHue</span><span class="o">:</span> <span class="mi">60</span>
+<span class="p">});</span>
+
+<span class="c1">// We'll then vary the color from yellow to red from 50 to 100</span>
+<span class="kd">var</span> <span class="nx">yellowToRed</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">HSLHueFunction</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">));</span>
+
+<span class="c1">// Create a new PiecewiseFunction and use this as you would any other LinearFunction</span>
+<span class="kd">var</span> <span class="nx">colorFunction</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">PiecewiseFunction</span><span class="p">([</span><span class="nx">whiteToYellow</span><span class="p">,</span> <span class="nx">yellowToRed</span><span class="p">]);</span>
+
+<span class="p">...</span>
+</pre></div>
+
+<h2>
+<a name="datalayer-classes" class="anchor" href="#datalayer-classes"><span class="octicon octicon-link"></span></a>DataLayer Classes</h2>
+
+<blockquote>
+<p>Support loading and displaying data from any JSON-based object/collection</p>
+</blockquote>
+
+<h3>
+<a name="ldatalayer" class="anchor" href="#ldatalayer"><span class="octicon octicon-link"></span></a>L.DataLayer</h3>
+
+<blockquote>
+<p>Display data values using L.RegularPolygonMarker instances.  In thematic mapping, this class displays data using proportional symbols.  </p>
+
+<p><em>NOTE:  If the location features are lines/polygons (e.g. GeoJSON), this class will use the centroid of each line/polygon to place each marker.  When dealing with line/polygon features, you must include a reference to the <a href="https://github.com/bjornharrtell/jsts/tree/master/lib">JavaScript Topology Suite (JSTS) JS files</a>.  These files are used to calculate centroids.  If these files are not included, the DataLayer class will fallback to using the center of the bounds of the layer's geometry.</em></p>
+</blockquote>
+
+<h4>
+<a name="usage-8" class="anchor" href="#usage-8"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.DataLayer(&lt;Object&gt; data, &lt;DataLayer options&gt; options?);</code></p>
+
+<h4>
+<a name="options-5" class="anchor" href="#options-5"><span class="octicon octicon-link"></span></a>Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>recordsField</td>
+<td>String</td>
+<td>'features'</td>
+<td>A pointer to the field in the input data that contains the records to be visualized.  Use null when the data being passed in is the set of records to be visualized.  Use dot notation to specify child properties (e.g. data.election.resultsByState), see note below.</td>
+</tr>
+<tr>
+<td>locationMode</td>
+<td>String</td>
+<td>'latlng' OR L.LocationModes.LATLNG</td>
+<td>The mode used to determine a location for each record.  Use a string or the <em>L.LocationModes</em> constant values</td>
+</tr>
+<tr>
+<td>latitudeField</td>
+<td>String</td>
+<td>'coordinates.1'</td>
+<td>The property of each record that contains the latitude <em>NOTE: Use with 'latlng' locationMode</em>
+</td>
+</tr>
+<tr>
+<td>longitudeField</td>
+<td>String</td>
+<td>'coordinates.0'</td>
+<td>The property of each record that contains the longitude <em>NOTE: Use with 'latlng' locationMode</em>
+</td>
+</tr>
+<tr>
+<td>codeField</td>
+<td>String</td>
+<td>null</td>
+<td>The property of each record that contains the code used to lookup a location <em>NOTE: Use with 'state', 'country', or 'lookup' locationMode values</em>
+</td>
+</tr>
+<tr>
+<td>geohashField</td>
+<td>String</td>
+<td>null</td>
+<td>The property of each record that contains the geohash used to determine a location <em>NOTE: Use with 'geohash' locationMode values</em>
+</td>
+</tr>
+<tr>
+<td>layerOptions</td>
+<td>Object</td>
+<td>null</td>
+<td>Default style - An object containing Leaflet L.Path style properties that will be used as the default style for DataLayer markers/polygons.  These properties will be overridden by the displayOptions.</td>
+</tr>
+<tr>
+<td>displayOptions</td>
+<td>Object</td>
+<td>null</td>
+<td>Dynamic styles - An object containing pointers to one or property values of each record with associated L.Path style properties and LinearFunction objects</td>
+</tr>
+<tr>
+<td>tooltipOptions</td>
+<td>Object</td>
+<td>null</td>
+<td>Options used to configure the tooltips that are displayed on mouseover (iconSize and iconAnchor)</td>
+</tr>
+<tr>
+<td>onEachRecord</td>
+<td>Function</td>
+<td>null</td>
+<td>A function that performs additional operations (e.g. binding a popup) on a created layer based on the record associated with that layer (similar to the L.GeoJSON onEachFeature method</td>
+</tr>
+<tr>
+<td>includeLayer</td>
+<td>Function</td>
+<td>null</td>
+<td>A function for determining whether or not the layer for a given record should be added to the map.</td>
+</tr>
+<tr>
+<td>getLocation</td>
+<td>Function</td>
+<td>null</td>
+<td>A function for getting a custom location from a record (e.g. looking up an address) <em>NOTE: Use with 'custom' locationMode value</em>
+</td>
+</tr>
+<tr>
+<td>locationLookup</td>
+<td>Object (GeoJSON FeatureCollection)</td>
+<td>null</td>
+<td>A GeoJSON FeatureCollection that will be used to lookup the location associated with a given record. This is useful when you have some data that maps to political/statistical boundaries other than US states or countries.  <em>NOTE: Use with 'lookup locationMode</em>
+</td>
+</tr>
+<tr>
+<td>includeBoundary</td>
+<td>Boolean</td>
+<td>null</td>
+<td>true/false - whether or not the boundary polygon should be displayed when displaying proportional symbols.  This is useful for identifying the boundary associated with each symbol.</td>
+</tr>
+</tbody>
+</table><h4>
+<a name="referencing-data-properties" class="anchor" href="#referencing-data-properties"><span class="octicon octicon-link"></span></a>Referencing Data Properties</h4>
+
+<p>Use dot notation to reference items in the passed in data object.  This applies to all field options (e.g. recordsField) as well as displayOptions.</p>
+
+<p>Given an object like:</p>
+
+<div class="highlight"><pre><span class="p">{</span>
+    <span class="nx">data</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">values</span><span class="o">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="nx">property1</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="nx">property2</span><span class="o">:</span> <span class="s1">'akdfljlkfds'</span><span class="p">,</span>
+                <span class="nx">property3</span><span class="o">:</span> <span class="mi">234</span><span class="p">,</span>
+                <span class="nx">location</span><span class="o">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.234324</span><span class="p">,</span> <span class="mf">13.123213</span><span class="p">],</span>
+                <span class="nx">additional</span><span class="o">:</span> <span class="p">{</span>
+                    <span class="nx">property1</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span>
+                    <span class="nx">property2</span><span class="o">:</span> <span class="mi">56</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="p">...</span>
+            <span class="p">{</span>
+                <span class="nx">property1</span><span class="o">:</span> <span class="mi">34</span><span class="p">,</span>
+                <span class="nx">property2</span><span class="o">:</span> <span class="s1">'werewrwer'</span><span class="p">,</span>
+                <span class="nx">property3</span><span class="o">:</span> <span class="mi">56</span><span class="p">,</span>
+                <span class="nx">location</span><span class="o">:</span> <span class="p">[</span><span class="mf">5.435444</span><span class="p">,</span> <span class="mf">8.999345</span><span class="p">],</span>
+                <span class="nx">additional</span><span class="o">:</span> <span class="p">{</span>
+                    <span class="nx">property1</span><span class="o">:</span> <span class="mi">88</span><span class="p">,</span>
+                    <span class="nx">property2</span><span class="o">:</span> <span class="mi">3</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>You might specify the following options:</p>
+
+<div class="highlight"><pre><span class="p">{</span>
+    <span class="nx">recordsField</span><span class="o">:</span> <span class="s1">'data.values'</span><span class="p">,</span>
+    <span class="nx">locationMode</span><span class="o">:</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LocationModes</span><span class="p">.</span><span class="nx">LATLNG</span><span class="p">,</span>
+    <span class="nx">latitudeField</span><span class="o">:</span> <span class="s1">'location.1'</span>  <span class="c1">// Points to the second item in the location array</span>
+    <span class="nx">longitudeField</span><span class="o">:</span> <span class="s1">'location.0'</span> <span class="c1">// Points to the first item in the location array,</span>
+    <span class="nx">displayOptions</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s1">'additional.property1'</span><span class="o">:</span> <span class="p">{</span>
+            <span class="p">...</span> <span class="c1">// See displayOptions below</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<h4>
+<a name="displayoptions" class="anchor" href="#displayoptions"><span class="octicon octicon-link"></span></a>displayOptions</h4>
+
+<blockquote>
+<p>The <em>displayOptions</em> option is used to define how data properties are dynamically mapped to display styles. It's a JavaScript object of key/value pairs that follows the pattern:</p>
+</blockquote>
+
+<div class="highlight"><pre><span class="p">{</span>
+    <span class="o">&lt;</span><span class="nx">reference</span> <span class="nx">to</span> <span class="nx">data</span> <span class="nx">property</span> <span class="mi">1</span><span class="o">&gt;:</span> <span class="p">{</span>
+        <span class="nx">displayName</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">Human</span><span class="o">-</span><span class="nx">readable</span> <span class="nx">text</span> <span class="nx">describing</span> <span class="k">this</span> <span class="nx">property</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="nx">displayText</span><span class="o">:</span> <span class="o">&lt;</span><span class="nb">Function</span> <span class="k">for</span> <span class="nx">converting</span> <span class="nx">the</span> <span class="nx">value</span> <span class="nx">of</span> <span class="k">this</span> <span class="nx">property</span> <span class="nx">to</span> <span class="nx">a</span> <span class="nx">human</span><span class="o">-</span><span class="nx">readable</span> <span class="nx">value</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="c1">// Leaflet L.Path style properties with static values or L.LinearFunction instances</span>
+        <span class="c1">// or just functions for dynamic mapping</span>
+        <span class="nx">color</span><span class="o">:</span>  <span class="o">&lt;</span><span class="nx">Color</span> <span class="kd">function</span> <span class="nx">or</span> <span class="nx">basic</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">g</span><span class="p">.</span> <span class="nx">L</span><span class="p">.</span><span class="nx">HSLHueFunction</span><span class="p">)</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="nx">fillColor</span><span class="o">:</span>  <span class="o">&lt;</span><span class="nx">Color</span> <span class="kd">function</span> <span class="nx">or</span> <span class="nx">basic</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">g</span><span class="p">.</span> <span class="nx">L</span><span class="p">.</span><span class="nx">HSLHueFunction</span><span class="p">)</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="p">...</span>
+    <span class="p">},</span>
+    <span class="o">&lt;</span><span class="nx">reference</span> <span class="nx">to</span> <span class="nx">data</span> <span class="nx">property</span> <span class="mi">2</span><span class="o">&gt;:</span> <span class="p">{</span>
+        <span class="nx">displayName</span><span class="o">:</span> <span class="p">...,</span>
+        <span class="nx">displayText</span><span class="o">:</span> <span class="p">...,</span>
+        <span class="p">...</span>
+    <span class="p">},</span>
+    <span class="p">...</span>
+    <span class="o">&lt;</span><span class="nx">reference</span> <span class="nx">to</span> <span class="nx">data</span> <span class="nx">property</span> <span class="nx">X</span><span class="o">&gt;:</span> <span class="p">{</span>
+        <span class="nx">displayName</span><span class="o">:</span> <span class="p">...,</span>
+        <span class="nx">displayText</span><span class="o">:</span> <span class="p">...,</span>
+        <span class="p">...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<h3>
+<a name="chartdatalayers" class="anchor" href="#chartdatalayers"><span class="octicon octicon-link"></span></a>ChartDataLayers</h3>
+
+<blockquote>
+<p>Display data values using ChartMarker instances (inherits from L.DataLayer)</p>
+</blockquote>
+
+<h4>
+<a name="usage-9" class="anchor" href="#usage-9"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.BarChartDataLayer(&lt;Object&gt; data, &lt;ChartDataLayer options&gt; options?);</code>
+<code>L.RadialBarChartDataLayer(&lt;Object&gt; data, &lt;ChartDataLayer options&gt; options?);</code>
+<code>L.PieChartDataLayer(&lt;Object&gt; data, &lt;ChartDataLayer options&gt; options?);</code>
+<code>L.CoxcombChartDataLayer(&lt;Object&gt; data, &lt;ChartDataLayer options&gt; options?);</code>
+<code>L.StackedRegularPolygonDataLayer(&lt;Object&gt; data, &lt;ChartDataLayer options&gt; options?);</code></p>
+
+<h4>
+<a name="options-6" class="anchor" href="#options-6"><span class="octicon octicon-link"></span></a>Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody></tbody>
+</table><h3>
+<a name="lchoroplethdatalayer" class="anchor" href="#lchoroplethdatalayer"><span class="octicon octicon-link"></span></a>L.ChoroplethDataLayer</h3>
+
+<blockquote>
+<p>Display data values using dynamically styled points, lines, and polygons (inherits from L.DataLayer)</p>
+</blockquote>
+
+<h4>
+<a name="usage-10" class="anchor" href="#usage-10"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.ChoroplethDataLayer(&lt;Object&gt; data, &lt;DataLayer options&gt; options?);</code></p>
+
+<h4>
+<a name="options-7" class="anchor" href="#options-7"><span class="octicon octicon-link"></span></a>Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody></tbody>
+</table><h3>
+<a name="lmarkerdatalayer" class="anchor" href="#lmarkerdatalayer"><span class="octicon octicon-link"></span></a>L.MarkerDataLayer</h3>
+
+<blockquote>
+<p>Display data values using markers based on L.Icon or L.DivIcon icons (inherits from L.DataLayer)</p>
+</blockquote>
+
+<h4>
+<a name="usage-11" class="anchor" href="#usage-11"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.MarkerDataLayer(&lt;Object&gt; data, &lt;MarkerDataLayer options&gt; options?);</code></p>
+
+<h4>
+<a name="options-8" class="anchor" href="#options-8"><span class="octicon octicon-link"></span></a>Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody></tbody>
+</table><h3>
+<a name="lpanoramiolayer" class="anchor" href="#lpanoramiolayer"><span class="octicon octicon-link"></span></a>L.PanoramioLayer</h3>
+
+<blockquote>
+<p>Display Panoramio images on the map.  Shows the top 50 most popular images for the current map view.</p>
+</blockquote>
+
+<h4>
+<a name="usage-12" class="anchor" href="#usage-12"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.PanoramioLayer(&lt;PanoramioLayer options&gt; options?);</code></p>
+
+<h4>
+<a name="options-in-addition-to-the-ldatalayer-style-options" class="anchor" href="#options-in-addition-to-the-ldatalayer-style-options"><span class="octicon octicon-link"></span></a>Options (in addition to the <em>L.DataLayer</em> style options)</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>updateInterval</td>
+<td>Number</td>
+<td>300000</td>
+<td>The number of milliseconds to wait before updating the current view</td>
+</tr>
+<tr>
+<td>size</td>
+<td>String</td>
+<td>square</td>
+<td>The marker image size ("square" or "mini_square")</td>
+</tr>
+<tr>
+<td>refreshEvents</td>
+<td>String</td>
+<td>moveend</td>
+<td>The Leaflet events that will trigger a refresh of photos (separate with spaces)</td>
+</tr>
+</tbody>
+</table><h2>
+<a name="legends" class="anchor" href="#legends"><span class="octicon octicon-link"></span></a>Legends</h2>
+
+<blockquote>
+<p>Useful for visually informing users about the dynamic styles associated with your L.DataLayer instances</p>
+</blockquote>
+
+<h3>
+<a name="lcontrollegend" class="anchor" href="#lcontrollegend"><span class="octicon octicon-link"></span></a>L.Control.Legend</h3>
+
+<blockquote>
+<p>Add this control to your map to automatically display a dynamic legend for any L.DataLayer based instance that you add to your map</p>
+</blockquote>
+
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">legendControl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Control</span><span class="p">.</span><span class="nx">Legend</span><span class="p">();</span>
+
+<span class="nx">legendControl</span><span class="p">.</span><span class="nx">addTo</span><span class="p">(</span><span class="nx">map</span><span class="p">);</span>
+</pre></div>
+
+<h3>
+<a name="ldatalayer---getlegend" class="anchor" href="#ldatalayer---getlegend"><span class="octicon octicon-link"></span></a>L.DataLayer - <em>getLegend()</em>
+</h3>
+
+<blockquote>
+<p>Call <em>getLegend</em> on any L.DataLayer instance to get an HTML element that can be added to your page</p>
+</blockquote>
+
+<h4>
+<a name="usage-13" class="anchor" href="#usage-13"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>layer.getLegend(&lt;Legend options&gt; options?);</code></p>
+
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">layer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">DataLayer</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="p">{...});</span>
+
+<span class="nx">layer</span><span class="p">.</span><span class="nx">getLegend</span><span class="p">();</span> <span class="c1">// Returns HTML</span>
+</pre></div>
+
+<h4>
+<a name="options-9" class="anchor" href="#options-9"><span class="octicon octicon-link"></span></a>Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>className</td>
+<td>String</td>
+<td>null</td>
+<td>A class name that will be added to the legend element, useful for adding custom CSS styles</td>
+</tr>
+<tr>
+<td>numSegments</td>
+<td>Number</td>
+<td>10</td>
+<td>The number of segments/bars to include in the legend element</td>
+</tr>
+<tr>
+<td>width</td>
+<td>Number</td>
+<td>100</td>
+<td>The desired width of the legend element</td>
+</tr>
+</tbody>
+</table>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Leaflet-dvf maintained by <a href="https://github.com/humangeo">humangeo</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

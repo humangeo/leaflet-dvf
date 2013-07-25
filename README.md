@@ -113,6 +113,8 @@ dropShadow | Boolean | false | Specifying a value of true will add a dropShadow 
 
 > Creates an SVG-based map marker, similar to the default Leaflet image-based marker but fully customizable using the basic L.Path properties
 
+<img alt="Map Marker" src="http://humangeo.github.com/leaflet-dvf/images/mapmarker.png"/>
+
 #### Usage
 `L.MapMarker(<LatLng> LatLng, <Marker options> options?);`
 
@@ -136,7 +138,7 @@ innerRadius OR innerRadiusX, innerRadiusY | Number | null | The inner radius of 
 
 ### L.RegularPolygonMarker
 
-<img alt="Regular Polygons" src="http://humangeo.github.com/leaflet-dvf/images/regularpolygonmarker.png"/>
+<img alt="Regular Polygons" src="http://humangeo.github.io/leaflet-dvf/images/regularpolygonmarker.png"/>
 
 > Creates an N-sided marker
 
@@ -491,6 +493,9 @@ Option | Type | Default | Description
 ### L.ChoroplethDataLayer
 
 > Display data values using dynamically styled points, lines, and polygons (inherits from L.DataLayer)
+
+<img alt="Choropleth Data Layer" src="http://humangeo.github.com/leaflet-dvf/images/choropleth.png"/>
+<img alt="Choropleth Data Layer" src="http://humangeo.github.com/leaflet-dvf/images/choropleth1.png"/>
 
 #### Usage
 `L.ChoroplethDataLayer(<Object> data, <DataLayer options> options?);`

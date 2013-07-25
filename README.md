@@ -138,9 +138,9 @@ innerRadius OR innerRadiusX, innerRadiusY | Number | null | The inner radius of 
 
 ### L.RegularPolygonMarker
 
-<img alt="Regular Polygons" src="http://humangeo.github.io/leaflet-dvf/images/regularpolygonmarker.png"/>
-
 > Creates an N-sided marker
+
+<img alt="Regular Polygons" src="http://humangeo.github.io/leaflet-dvf/images/regularpolygon.png"/>
 
 #### Usage
 `L.RegularPolygonMarker(<LatLng> LatLng, <Marker options> options?);`

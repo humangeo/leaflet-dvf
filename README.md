@@ -76,6 +76,9 @@ Mix:
 * [2008 Election Results](http://humangeo.github.com/leaflet-dvf/examples/html/uselectiondata.html)
 * [Netherlands Population by ZIP 2](http://humangeo.github.com/leaflet-dvf/examples/html/nlzip.html) ** Thanks to Steven De Schrijver of [Conundra](http://www.conundra.eu) for providing the example use case **
 
+Images:
+* [Panoramio Layer](http://humangeo.github.com/leaflet-dvf/examples/html/panoramio.html)
+
 Tutorials coming soon to [HumanGeo](http://www.thehumangeo.com/)'s [blog](http://blog.thehumangeo.com)
 
 # Documentation
@@ -133,7 +136,7 @@ innerRadius OR innerRadiusX, innerRadiusY | Number | null | The inner radius of 
 
 ### L.RegularPolygonMarker
 
-<img alt="Bar Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/regularpolygonmarkers.png" width="290" height="72" style="width: 290px; height: 72px;"/>
+<img alt="Regular Polygons" src="http://humangeo.github.com/leaflet-dvf/images/regularpolygonmarker.png"/>
 
 > Creates an N-sided marker
 
@@ -162,7 +165,7 @@ innerRadius OR innerRadiusX, innerRadiusY | Number | null | The inner radius of 
 
 ### L.StarMarker
 
-<img alt="Star Marker" src="http://humangeo.github.com/leaflet-dvf/images/stars.png" width="83" height="87" style="width: 83px; height: 87px;"/>
+<img alt="Star Marker" src="http://humangeo.github.com/leaflet-dvf/images/stars.png"/>
 
 > Creates a star-shaped marker with N-points
 
@@ -176,7 +179,7 @@ numberOfPoints | Number | 5 | The number of points the star should have
 
 ### ChartMarkers
 
-<img alt="Bar Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/barchartmarker.png" width="83" height="87" style="width: 83px; height: 87px;"/><img alt="Radial Bar Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/radialbarchartmarker.png" width="83" height="87" style="width: 83px; height: 87px;"/><img alt="Pie Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/piechartmarker.png" width="83" height="87" style="width: 83px; height: 87px;"/><img alt="Coxcomb Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/coxcombchartmarker.png" width="83" height="87" style="width: 83px; height: 87px;"/><img alt="Stacked Regular Polygon Marker" src="http://humangeo.github.com/leaflet-dvf/images/stackedregularpolygon.png" width="83" height="87" style="width: 83px; height: 87px;"/><img alt="Radial Meter Marker" src="http://humangeo.github.com/leaflet-dvf/images/radialmetermarker.png" width="83" height="87" style="width: 83px; height: 87px;"/>
+<img alt="Bar Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/barchartmarker.png"/><img alt="Radial Bar Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/radialbarchartmarker.png"/><img alt="Pie Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/piechartmarker.png"/><img alt="Coxcomb Chart Marker" src="http://humangeo.github.com/leaflet-dvf/images/coxcombchartmarker.png"/><img alt="Stacked Regular Polygon Marker" src="http://humangeo.github.com/leaflet-dvf/images/stackedregularpolygon.png"/><img alt="Radial Meter Marker" src="http://humangeo.github.com/leaflet-dvf/images/radialmetermarker.png"/>
 
 > Display dynamic charts (bar chart, radial bar chart, pie chart, coxcomb chart, etc.) as markers
 
@@ -510,6 +513,8 @@ Option | Type | Default | Description
 ### L.PanoramioLayer
 
 > Display Panoramio images on the map.  Shows the top 50 most popular images for the current map view.
+
+<img alt="Panoramio Layer" src="http://humangeo.github.com/leaflet-dvf/images/panoramiolayer.png"/>
 
 #### Usage
 `L.PanoramioLayer(<PanoramioLayer options> options?);`

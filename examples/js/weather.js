@@ -5,8 +5,8 @@ var lastWeatherLayer;
  * JSONP callback function for displaying weather data
  */
 var weatherfeed_callback = function (data) {
-	var tempColorFunction = new L.PiecewiseFunction([new L.HSLHueFunction(new L.Point(100,270), new L.Point(230,270), {outputLuminosity: '25%'}), new L.HSLHueFunction(new L.Point(230,270), new L.Point(320,0), {outputLuminosity: '25%'})]);
-	var tempFillColorFunction = new L.PiecewiseFunction([new L.HSLHueFunction(new L.Point(100,270), new L.Point(230,270), {outputLuminosity: '50%'}), new L.HSLHueFunction(new L.Point(230,270), new L.Point(320,0), {outputLuminosity: '50%'})]);
+	var tempColorFunction = new L.PiecewiseFunction([new L.HSLHueFunction(new L.Point(100,270), new L.Point(210,270), {outputLuminosity: '25%'}), new L.HSLHueFunction(new L.Point(210,270), new L.Point(320,0), {outputLuminosity: '25%'})]);
+	var tempFillColorFunction = new L.PiecewiseFunction([new L.HSLHueFunction(new L.Point(100,270), new L.Point(210,270), {outputLuminosity: '50%'}), new L.HSLHueFunction(new L.Point(210,270), new L.Point(320,0), {outputLuminosity: '50%'})]);
 	var radiusFunction = new L.LinearFunction(new L.Point(272,5), new L.Point(320,15));
 	var K_TO_C = 273.15;
 	var convert = function (value) {
@@ -28,7 +28,7 @@ var weatherfeed_callback = function (data) {
 				displayName: 'Temperature',
 				color: tempColorFunction,
 				fillColor: tempFillColorFunction,
-				//radius: radiusFunction,
+				radius: radiusFunction,
 				displayText: function (value) {
 					var values = convert(value);
 					
@@ -42,23 +42,7 @@ var weatherfeed_callback = function (data) {
 			iconSize: new L.Point(60,40),
 			fillOpacity: 0.8,
 			opacity: 1.0,
-			rotation: 30.0,
-			numberOfSides: 3,
 			radius: 6
-		},
-		setIcon: function (context, record, layerOptions) {
-			var markup = '<div class="weather-data">' + convert(context._getFieldValue(record, 'main.temp')).f.toFixed(0) + '</div>';
-			var $markup = $(markup);
-			
-			L.StyleConverter.applySVGStyle($markup, layerOptions);
-			
-			$markup.height(25);
-			
-			return new L.DivIcon({
-				html: $markup.wrap('<div/>').parent().html(),
-				className: 'weather-icon',
-				iconSize: new L.Point(25,25)
-			});
 		},
 		tooltipOptions: {
 			iconSize: new L.Point(100,55),
@@ -79,7 +63,7 @@ var weatherfeed_callback = function (data) {
 		}
 	};
 	
-	var weatherLayer = new L.MarkerDataLayer(data, options); //new L.DataLayer(data,options);
+	var weatherLayer = new L.MapMarkerDataLayer(data, options);
 
 	map.addLayer(weatherLayer);
 	

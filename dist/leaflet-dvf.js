@@ -1134,15 +1134,21 @@ var PathFunctions = {
         this.__updateStyle.call(this);
         if (this.options.gradient) {
             if (!this._gradient) {
+                this._path_setAttribute("dvf_fill_backup", this._path.getAttribute("fill"));
                 this._createGradient();
             }
             this._path.setAttribute("fill", "url(#" + this._gradient.getAttribute("id") + ")");
+        } else if (this._gradient) {
+            this._path.setAttribute("fill", this._path.getAttribute("dvf_fill_backup"));
         }
         if (this.options.dropShadow) {
             if (!this._dropShadow) {
+               	this._path.setAttribute("dvf_filter_backup", this._path.getAttribute("filter"));
                 this._createDropShadow();
             }
             this._path.setAttribute("filter", "url(#" + this._dropShadow.getAttribute("id") + ")");
+        } else if (this._dropShadow) {
+           	this._path.setAttribute("filter", this._path.getAttribute("dvf_filter_backup"));
         }
     }
 };

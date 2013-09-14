@@ -1,5 +1,3 @@
-var L = L || {};
-
 /*
  * Class for a drawing a bar marker on the map.  This is the basis for the BarChartMarker
  */
@@ -22,7 +20,9 @@ L.BarMarker = L.Path.extend({
 		color: '#000',
 		opacity: 1.0,
 		gradient: true,
-		dropShadow: false
+		dropShadow: false,
+		lineCap: 'square',
+		lineJoin: 'miter'
 	},
 
 	setLatLng: function (latlng) {
@@ -73,7 +73,7 @@ L.BarMarker = L.Path.extend({
 		points = [sePoint, nePoint, nwPoint, swPoint];
 		
 		return points;
-	},
+	}
 
 });
 
@@ -91,7 +91,7 @@ L.ChartMarker = L.FeatureGroup.extend({
 		this._layers = {};
 		this._latlng = centerLatLng;
 		
-		this._loadBars();
+		this._loadComponents();
 	},
 	
 	setLatLng: function (latlng) {
@@ -103,7 +103,7 @@ L.ChartMarker = L.FeatureGroup.extend({
 		return this._latlng;
 	},
 
-	_loadBars: function () {
+	_loadComponents: function () {
 		// TODO: Override this in subclasses
 	},
 	
@@ -234,7 +234,7 @@ L.BarChartMarker = L.ChartMarker.extend({
 		iconSize: new L.Point(50, 40)
 	},
 
-	_loadBars: function () {
+	_loadComponents: function () {
 		var value, minValue, maxValue;
 		var angle = this.options.rotation;
 		var percentage = 0.0;
@@ -367,6 +367,10 @@ L.RadialBarMarker = L.Path.extend({
 			path = path + this._point.x.toFixed(2) + ',' + this._point.y.toFixed(2) + 'z';
 		}
 		
+		if (L.Browser.vml) {
+			path = Core.SVG.path(path);
+		}
+		
 		this._path.setAttribute('shape-rendering', 'geometricPrecision');
 		
 		return path;
@@ -461,7 +465,7 @@ L.PieChartMarker = L.ChartMarker.extend({
 		return options;
 	},
 	
-	_loadBars: function () {
+	_loadComponents: function () {
 		var value;
 		var sum = 0;
 		var angle = 0;
@@ -560,7 +564,7 @@ L.CoxcombChartMarker = L.CoxcombChartMarker.extend({
 		sizeMode: L.CoxcombChartMarker.SIZE_MODE_AREA
 	},
 
-	_loadBars: function () {
+	_loadComponents: function () {
 		var value, minValue, maxValue;
 		var sum = 0;
 		var angle = 0;
@@ -661,7 +665,7 @@ L.RadialBarChartMarker = L.ChartMarker.extend({
 		iconSize: new L.Point(50, 40)
 	},
 
-	_loadBars: function() {
+	_loadComponents: function() {
 		var value, minValue, maxValue;
 		var angle = this.options.rotation;
 		var percentage = 0.0;
@@ -731,17 +735,12 @@ L.StackedRegularPolygonMarker = L.ChartMarker.extend({
 		L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
 	},
 	
-	_loadBars: function () {
+	_loadComponents: function () {
 		var value;
-		var sum = 0;
-		var angle = 0;
-		var percentage = 0.0;
-		var maxDegrees = this.options.maxDegrees || 360.0;
 		var lastRadiusX = 0;
 		var lastRadiusY = 0;
 		var bar;
 		var options = this.options;
-		var dataPoint;
 		var data = this.options.data;
 		var chartOptions = this.options.chartOptions;
 		var chartOption;
@@ -817,22 +816,18 @@ L.RadialMeterMarker = L.ChartMarker.extend({
 		iconSize: new L.Point(50, 40)
 	},
 
-	_loadBars: function() {
+	_loadComponents: function() {
 		var value, minValue, maxValue;
 		var startAngle = this.options.rotation;
-		var percentage = 0.0;
 		var maxDegrees = this.options.maxDegrees || 360.0;
 		var bar;
 		var options = this.options;
-		var dataPoint;
-		var count = 0;
 		var radiusX = this.options.radiusX || this.options.radius;
 		var radiusY = this.options.radiusY || this.options.radius;
 		var data = this.options.data;
 		var chartOptions = this.options.chartOptions;
 		var chartOption;
 		var barThickness = this.options.barThickness || 4;
-		var offset = this.options.offset || 2;
 		var lastAngle = startAngle;
 		var numSegments = this.options.numSegments || 10;
 		var angleDelta = maxDegrees / numSegments;

@@ -370,6 +370,7 @@ $(document).ready(function() {
 		options.chartOptions['dataPoint3'].fillColor = '#74A9CF';
 		options.chartOptions['dataPoint4'].fillColor = '#0570B0';
 		
+		options.displayOptions
 		var pieChartMarker = new L.PieChartMarker(centerLatLng,options);
 		
 		pieChartMarker.bindPopup('<h1>Test</h1>');
@@ -391,5 +392,24 @@ $(document).ready(function() {
 		
 		barChartLayer.addLayer(barChartMarker);
 		
+		var test = new L.Callout(centerLatLng, {
+			direction: L.CalloutLine.DIRECTION.NE,
+			lineStyle: L.CalloutLine.LINESTYLE.ARC,
+			numberOfSides: 3,
+			arrow: true,
+			color: '#C0C0C0',
+			fillColor: '#C0C0C0',
+			position: new L.Point(0, -30),
+			size: new L.Point(40, 40),
+			icon: new L.DivIcon({
+				iconSize: new L.Point(50, 34),
+				html: 'Bar Chart',
+				className: 'callout-text'
+			})
+		});
+		
+		map.addLayer(test);
 	}
+	
+	
 });

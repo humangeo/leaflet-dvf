@@ -40,8 +40,6 @@ if (!Object.keys) {
 	})();
 }
 
-var L = L || {};
-
 L.Util.guid = function () {
 	var s4 = function() {
 	  return Math.floor((1 + Math.random()) * 0x10000)
@@ -420,22 +418,38 @@ L.SVGPathBuilder = L.Class.extend({
 		L.Util.setOptions(this, options);
 	},
 	
+	options: {
+		closePath: true
+	},
+	
 	_getPathString: function (points, digits) {
 		var pathString = '';
 		
 		if (points.length > 0) {
 			
 			var point = points[0];
-			var digits = digits || 2;
+			var digits = digits !== null ? digits : 2;
+			var startChar = 'M';
+			var lineToChar = 'L';
+			var closePath = 'Z';
 			
-			pathString = 'M' + point.x.toFixed(digits) + ',' + point.y.toFixed(digits);
+			if (L.Browser.vml) {
+				digits = 0;
+				startChar = 'm';
+				lineToChar = '|';
+				closePath = 'xe';
+			}
+			 
+			pathString = startChar + point.x.toFixed(digits) + ',' + point.y.toFixed(digits);
 			
 			for (var index = 1;index < points.length;index++) {
 				point = points[index];
-				pathString += 'L' + point.x.toFixed(digits) + ',' + point.y.toFixed(digits);
+				pathString += lineToChar + point.x.toFixed(digits) + ',' + point.y.toFixed(digits);
 			}
 			
-			pathString += 'Z';
+			if (this.options.closePath) {
+				pathString += closePath;
+			}
 
 		}
 		
@@ -468,15 +482,15 @@ L.StyleConverter = {
 			}
 		},
 		color: {
-			property: ['border-color'], //border
+			property: ['border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color'], //border
 			valueFunction: function (value) {
-				return value;  //solid 1px
+				return value;
 			}
 		},
 		weight: {
 			property: ['border-width'],
 			valueFunction: function (value) {
-				return value + 'px';
+				return Math.ceil(value) + 'px';
 			}
 		},
 		stroke: {
@@ -699,6 +713,15 @@ L.AnimationUtils = {
  * These functions will be used to provide backwards compatibility with browsers that don't support hsl 
  */
 L.ColorUtils = {
+	hslStringToRgbString: function (hslString) {
+		var parts = hslString.replace('hsl(','').replace(')','').split(',');
+		var h = Number(parts[0])/360;
+		var s = Number(parts[1].replace('%',''))/100;
+		var l = Number(parts[2].replace('%',''))/100;
+		
+		return hslToRgbString(h, s, l);
+	},
+	
 	hslToRgbString: function (h, s, l) {
 		return L.ColorUtils.rgbArrayToString(L.ColorUtils.hslToRgb(h, s, l));
 	},

@@ -13,9 +13,14 @@
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
+      
+      .callout-text {
+      	color: white;
+      	padding-left: 4px;
+      }
     </style>
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="../lib/leaflet/leaflet.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
@@ -33,7 +38,7 @@
           <a class="brand" href="#">Markers</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
-              <li class="active"><a href="../../index.html">Home</a></li>
+              <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div>
@@ -48,9 +53,13 @@
 	
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="../lib/leaflet/leaflet-src.js"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
-	<script type="text/javascript" src="../../src/leaflet.dvf.chartmarkers.js"></script>
+	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.1.0/moment.min.js"></script>
+	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+	<script type="text/javascript" src="../../src/leaflet.dvf.utils.js"></script>
+	<script type="text/javascript" src="../../src/leaflet.dvf.markers.js"></script>
+	<script type="text/javascript" src="../../src/leaflet.dvf.datalayer.js"></script>
+	<script type="text/javascript" src="../../src/leaflet.dvf.lines.js"></script>
 	<script type="text/javascript" src="../js/markers.js"></script>
 </body>
 </html>

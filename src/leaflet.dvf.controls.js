@@ -1,6 +1,7 @@
 L.Control.Legend = L.Control.extend({
 	options: {
-		position: 'bottomright'
+		position: 'bottomright',
+		autoAdd: true
 	},
 	
 	onAdd: function (map) {
@@ -9,23 +10,19 @@ L.Control.Legend = L.Control.extend({
 		
 		var self = this;
 		
-		map.on('layeradd', function (e) {
-			var layer = e.layer;
-			var id = L.Util.stamp(layer);
+		if (this.options.autoAdd) {
+			map.on('layeradd', function (e) {
+				var layer = e.layer;
 			
-			if (layer.getLegend) {				
-				self.addLegend(id, layer.getLegend());
-			}
-		});
+				self.addLayer(layer);
+			});
 		
-		map.on('layerremove', function (e) {
-			var layer = e.layer;
-			var id = L.Util.stamp(layer);
+			map.on('layerremove', function (e) {
+				var layer = e.layer;
 			
-			if (layer.getLegend) {
-				$(self._container).find('#' + id).remove();
-			}
-		});
+				self.removeLayer(layer);
+			});
+		}
 		
 		$(container).on('mouseover mouseout', function (e) {
 			$(this).toggleClass('larger');
@@ -46,6 +43,22 @@ L.Control.Legend = L.Control.extend({
 		$(this._container).toggleClass('larger', 'slow');
 	},
 	
+	addLayer: function (layer) {
+		var id = L.Util.stamp(layer);
+			
+		if (layer.getLegend) {				
+			this.addLegend(id, layer.getLegend());
+		}
+	},
+	
+	removeLayer: function (layer) {
+		var id = L.Util.stamp(layer);
+			
+		if (layer.getLegend) {
+			$(this._container).find('#' + id).remove();
+		}
+	},
+	
 	addLegend: function (id, html) {
 		var $container = $(this._container);
 		var $html = $(html);
@@ -59,3 +72,7 @@ L.Control.Legend = L.Control.extend({
 		}
 	}
 });
+
+L.control.legend = function (options) {
+	return new L.Control.Legend(options);
+};

@@ -1,7 +1,4 @@
-var L = L || {};
-
 /*
-
  * Class for interpolating values along a line using a linear equation
  */
 L.LinearFunction = L.Class.extend({
@@ -119,6 +116,23 @@ L.LinearFunction = L.Class.extend({
 		}
 		
 		return yValues;
+	},
+	
+	samplePoints: function (count) {
+		count = Math.max(count, 2);
+		
+		var segmentCount = count - 1;
+		var segmentSize = this._xRange / segmentCount;
+		var x = this._minPoint.x;
+		var points = []
+		
+		while (x <= this._maxPoint.x) {
+			points.push(new L.Point(x, this.evaluate(x)));
+			
+			x += segmentSize;	
+		}
+		
+		return points;
 	}
 });
 
@@ -165,7 +179,7 @@ L.ColorFunction = L.LinearFunction.extend({
 		this._getColorString = function (y) {		
 			y = this._formatOutput(y);
 		
-			this.options[this.	_dynamicPart] = y;
+			this.options[this._dynamicPart] = y;
 		
 			var parts = this._mapOutput(this.options);
 		
@@ -185,7 +199,13 @@ L.ColorFunction = L.LinearFunction.extend({
 				y = options.postProcess.call(this, y);
 			}
 			
-			return this._getColorString(y);
+			var colorString = this._getColorString(y);
+			
+			if ((L.Browser.ie6 || L.Browser.ie7) && colorString.indexOf('hsl') > -1) {
+				colorString = L.ColorUtils.hslStringToRgbString(colorString);
+			}
+			
+			return colorString;
 		};
 		
 		L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
@@ -198,7 +218,7 @@ L.ColorFunction = L.LinearFunction.extend({
 L.HSLColorFunction = L.ColorFunction.extend({
 	initialize: function (minPoint, maxPoint, options) {
 		L.ColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-		
+
 		this._parts = ['outputHue', 'outputSaturation', 'outputLuminosity'];
 		this._prefix = 'hsl';
 		this._outputPrecision = 2;
@@ -208,7 +228,7 @@ L.HSLColorFunction = L.ColorFunction.extend({
 L.RGBColorFunction = L.ColorFunction.extend({
 	initialize: function (minPoint, maxPoint, options) {
 		L.ColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-	
+		
 		this._parts = ['outputRed', 'outputBlue', 'outputGreen'];
 		this._prefix = 'rgb';
 		this._outputPrecision = 0;
@@ -224,7 +244,7 @@ L.RGBRedFunction = L.LinearFunction.extend({
 	
 	initialize: function (minPoint, maxPoint, options) {
 		L.RGBColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-				
+		
 		this._dynamicPart = 'outputRed';
 	}
 });
@@ -241,7 +261,7 @@ L.RGBBlueFunction = L.LinearFunction.extend({
 	
 	initialize: function (minPoint, maxPoint, options) {
 		L.RGBColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-				
+		
 		this._dynamicPart = 'outputBlue';
 	}
 });
@@ -258,7 +278,7 @@ L.RGBGreenFunction = L.LinearFunction.extend({
 	
 	initialize: function (minPoint, maxPoint, options) {
 		L.RGBColorFunction.prototype.initialize.call(this, minPoint, maxPoint, options);
-				
+		
 		this._dynamicPart = 'outputGreen';
 	}
 });

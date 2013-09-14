@@ -1,6 +1,4 @@
-var L = L || {};
-
-var PathFunctions = {
+var PathFunctions = PathFunctions || {
 	__updateStyle: L.Path.prototype._updateStyle,
 	
 	_createDefs: function () {
@@ -121,12 +119,25 @@ var PathFunctions = {
 	_updateStyle: function () {
 		this.__updateStyle.call(this);
 		
+		if (this.options.stroke) {
+			if (this.options.lineCap) {
+				this._path.setAttribute('stroke-linecap', this.options.lineCap);
+			}
+		
+			if (this.options.lineJoin) {
+				this._path.setAttribute('stroke-linejoin', this.options.lineJoin);
+			}
+		}
+		
 		if (this.options.gradient) {
 			if (!this._gradient) {
 				this._createGradient();
 			}
 			
 			this._path.setAttribute('fill', 'url(#' + this._gradient.getAttribute('id') + ')');
+		}
+		else if (!this.options.fill) {
+			this._path.setAttribute('fill', 'none');
 		}
 		
 		if (this.options.dropShadow) {
@@ -135,6 +146,9 @@ var PathFunctions = {
 			}
 
 			this._path.setAttribute('filter', 'url(#' + this._dropShadow.getAttribute('id') + ')');
+		}
+		else {
+			this._path.removeAttribute('filter');
 		}
 	}
 

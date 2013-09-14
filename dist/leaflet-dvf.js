@@ -1,10 +1,7 @@
 /*
- Leaflet Data Visualization Framework, a JavaScript library for creating thematic maps using Leaflet
+ @preserve Leaflet Data Visualization Framework, a JavaScript library for creating thematic maps using Leaflet
  (c) 2013, Scott Fairgrieve, HumanGeo
 */
-
-var L = L || {};
-
 L.LinearFunction = L.Class.extend({
     initialize: function(minPoint, maxPoint, options) {
         this.setOptions(options);
@@ -88,6 +85,18 @@ L.LinearFunction = L.Class.extend({
             x += segmentSize;
         }
         return yValues;
+    },
+    samplePoints: function(count) {
+        count = Math.max(count, 2);
+        var segmentCount = count - 1;
+        var segmentSize = this._xRange / segmentCount;
+        var x = this._minPoint.x;
+        var points = [];
+        while (x <= this._maxPoint.x) {
+            points.push(new L.Point(x, this.evaluate(x)));
+            x += segmentSize;
+        }
+        return points;
     }
 });
 
@@ -131,7 +140,11 @@ L.ColorFunction = L.LinearFunction.extend({
             if (options && options.postProcess) {
                 y = options.postProcess.call(this, y);
             }
-            return this._getColorString(y);
+            var colorString = this._getColorString(y);
+            if ((L.Browser.ie6 || L.Browser.ie7) && colorString.indexOf("hsl") > -1) {
+                colorString = L.ColorUtils.hslStringToRgbString(colorString);
+            }
+            return colorString;
         };
         L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
             preProcess: this.options.preProcess,
@@ -643,17 +656,31 @@ L.SVGPathBuilder = L.Class.extend({
         this._innerPoints = innerPoints || [];
         L.Util.setOptions(this, options);
     },
+    options: {
+        closePath: true
+    },
     _getPathString: function(points, digits) {
         var pathString = "";
         if (points.length > 0) {
             var point = points[0];
-            var digits = digits || 2;
-            pathString = "M" + point.x.toFixed(digits) + "," + point.y.toFixed(digits);
+            var digits = digits !== null ? digits : 2;
+            var startChar = "M";
+            var lineToChar = "L";
+            var closePath = "Z";
+            if (L.Browser.vml) {
+                digits = 0;
+                startChar = "m";
+                lineToChar = "|";
+                closePath = "xe";
+            }
+            pathString = startChar + point.x.toFixed(digits) + "," + point.y.toFixed(digits);
             for (var index = 1; index < points.length; index++) {
                 point = points[index];
-                pathString += "L" + point.x.toFixed(digits) + "," + point.y.toFixed(digits);
+                pathString += lineToChar + point.x.toFixed(digits) + "," + point.y.toFixed(digits);
             }
-            pathString += "Z";
+            if (this.options.closePath) {
+                pathString += closePath;
+            }
         }
         return pathString;
     },
@@ -679,7 +706,7 @@ L.StyleConverter = {
             }
         },
         color: {
-            property: [ "border-color" ],
+            property: [ "border-top-color", "border-right-color", "border-bottom-color", "border-left-color" ],
             valueFunction: function(value) {
                 return value;
             }
@@ -687,7 +714,7 @@ L.StyleConverter = {
         weight: {
             property: [ "border-width" ],
             valueFunction: function(value) {
-                return value + "px";
+                return Math.ceil(value) + "px";
             }
         },
         stroke: {
@@ -857,6 +884,13 @@ L.AnimationUtils = {
 };
 
 L.ColorUtils = {
+    hslStringToRgbString: function(hslString) {
+        var parts = hslString.replace("hsl(", "").replace(")", "").split(",");
+        var h = Number(parts[0]) / 360;
+        var s = Number(parts[1].replace("%", "")) / 100;
+        var l = Number(parts[2].replace("%", "")) / 100;
+        return hslToRgbString(h, s, l);
+    },
     hslToRgbString: function(h, s, l) {
         return L.ColorUtils.rgbArrayToString(L.ColorUtils.hslToRgb(h, s, l));
     },
@@ -980,6 +1014,8 @@ L.ColorUtils = {
     }
 };
 
+var L = L || {};
+
 L.RegularPolygon = L.Polygon.extend({
     initialize: function(centerLatLng, options) {
         this._centerLatLng = centerLatLng;
@@ -1042,7 +1078,7 @@ L.regularPolygon = function(centerLatLng, options) {
     return new L.RegularPolygon(centerLatLng, options);
 };
 
-var PathFunctions = {
+var PathFunctions = PathFunctions || {
     __updateStyle: L.Path.prototype._updateStyle,
     _createDefs: function() {
         this._defs = this._createElement("defs");
@@ -1132,17 +1168,419 @@ var PathFunctions = {
     },
     _updateStyle: function() {
         this.__updateStyle.call(this);
+        if (this.options.stroke) {
+            if (this.options.lineCap) {
+                this._path.setAttribute("stroke-linecap", this.options.lineCap);
+            }
+            if (this.options.lineJoin) {
+                this._path.setAttribute("stroke-linejoin", this.options.lineJoin);
+            }
+        }
         if (this.options.gradient) {
             if (!this._gradient) {
                 this._createGradient();
             }
             this._path.setAttribute("fill", "url(#" + this._gradient.getAttribute("id") + ")");
+        } else if (!this.options.fill) {
+            this._path.setAttribute("fill", "none");
         }
         if (this.options.dropShadow) {
             if (!this._dropShadow) {
                 this._createDropShadow();
             }
             this._path.setAttribute("filter", "url(#" + this._dropShadow.getAttribute("id") + ")");
+        } else {
+            this._path.removeAttribute("filter");
+        }
+    }
+};
+
+L.Path.include(PathFunctions);
+
+L.Polygon.include(PathFunctions);
+
+L.Polyline.include(PathFunctions);
+
+L.CircleMarker.include(PathFunctions);
+
+L.MapMarker = L.Path.extend({
+    initialize: function(centerLatLng, options) {
+        L.Path.prototype.initialize.call(this, options);
+        this._latlng = centerLatLng;
+    },
+    options: {
+        fill: true,
+        fillOpacity: 1,
+        opacity: 1,
+        radius: 15,
+        innerRadius: 5,
+        position: {
+            x: 0,
+            y: 0
+        },
+        rotation: 0,
+        numberOfSides: 50,
+        color: "#000000",
+        fillColor: "#0000FF",
+        weight: 1,
+        gradient: true,
+        dropShadow: true
+    },
+    setLatLng: function(latlng) {
+        this._latlng = latlng;
+        return this.redraw();
+    },
+    projectLatlngs: function() {
+        this._point = this._map.latLngToLayerPoint(this._latlng);
+        this._points = this._getPoints();
+        if (this.options.innerRadius) {
+            this._innerPoints = this._getPoints(true).reverse();
+        }
+    },
+    getBounds: function() {
+        var map = this._map, height = this.options.radius * 3, point = map.project(this._latlng), swPoint = new L.Point(point.x - this.options.radius, point.y), nePoint = new L.Point(point.x + this.options.radius, point.y - height), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
+        return new L.LatLngBounds(sw, ne);
+    },
+    getLatLng: function() {
+        return this._latlng;
+    },
+    getPathString: function() {
+        this._path.setAttribute("shape-rendering", "geometricPrecision");
+        return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+    },
+    _getPoints: function(inner) {
+        var maxDegrees = !inner ? 210 : 360;
+        var angleSize = !inner ? maxDegrees / 50 : maxDegrees / Math.max(this.options.numberOfSides, 3);
+        var degrees = !inner ? maxDegrees : maxDegrees + this.options.rotation;
+        var angle = !inner ? -30 : this.options.rotation;
+        var points = [];
+        var newPoint;
+        var angleRadians;
+        var radius = this.options.radius;
+        var toRad = function(number) {
+            return number * Math.PI / 180;
+        };
+        var startPoint = this._point;
+        if (!inner) {
+            points.push(startPoint);
+            points.push(new L.Point(startPoint.x + Math.sqrt(.75) * radius, startPoint.y - 1.5 * radius));
+        }
+        while (angle < degrees) {
+            angleRadians = toRad(angle);
+            newPoint = this._getPoint(angleRadians, radius, inner);
+            points.push(newPoint);
+            angle += angleSize;
+        }
+        if (!inner) {
+            points.push(new L.Point(startPoint.x - Math.sqrt(.75) * radius, startPoint.y - 1.5 * radius));
+        }
+        return points;
+    },
+    _getPoint: function(angle, radius, inner) {
+        var markerRadius = radius;
+        radius = !inner ? radius : this.options.innerRadius;
+        return new L.Point(this._point.x + this.options.position.x + radius * Math.cos(angle), this._point.y - 2 * markerRadius + this.options.position.y - radius * Math.sin(angle));
+    }
+});
+
+L.mapMarker = function(centerLatLng, options) {
+    return new L.MapMarker(centerLatLng, options);
+};
+
+L.RegularPolygonMarker = L.Path.extend({
+    initialize: function(centerLatLng, options) {
+        L.Path.prototype.initialize.call(this, options);
+        this._latlng = centerLatLng;
+        this.options.numberOfSides = Math.max(this.options.numberOfSides, 3);
+    },
+    options: {
+        fill: true,
+        radiusX: 10,
+        radiusY: 10,
+        rotation: 0,
+        numberOfSides: 3,
+        position: {
+            x: 0,
+            y: 0
+        },
+        maxDegrees: 360,
+        gradient: true,
+        dropShadow: false
+    },
+    setLatLng: function(latlng) {
+        this._latlng = latlng;
+        return this.redraw();
+    },
+    projectLatlngs: function() {
+        this._point = this._map.latLngToLayerPoint(this._latlng);
+        this._points = this._getPoints();
+        if (this.options.innerRadius || this.options.innerRadiusX && this.options.innerRadiusY) {
+            this._innerPoints = this._getPoints(true).reverse();
+        }
+    },
+    getBounds: function() {
+        var map = this._map, radiusX = this.options.radius || this.options.radiusX, radiusY = this.options.radius || this.options.radiusY, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._latlng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
+        return new L.LatLngBounds(sw, ne);
+    },
+    getLatLng: function() {
+        return this._latlng;
+    },
+    getPathString: function() {
+        this._path.setAttribute("shape-rendering", "geometricPrecision");
+        return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+    },
+    _getPoints: function(inner) {
+        var maxDegrees = this.options.maxDegrees || 360;
+        var angleSize = maxDegrees / Math.max(this.options.numberOfSides, 3);
+        var degrees = maxDegrees + this.options.rotation;
+        var angle = this.options.rotation;
+        var points = [];
+        var newPoint;
+        var angleRadians;
+        var radiusX = !inner ? this.options.radius || this.options.radiusX : this.options.innerRadius || this.options.innerRadiusX;
+        var radiusY = !inner ? this.options.radius || this.options.radiusY : this.options.innerRadius || this.options.innerRadiusY;
+        var toRad = function(number) {
+            return number * Math.PI / 180;
+        };
+        while (angle < degrees) {
+            angleRadians = toRad(angle);
+            newPoint = this._getPoint(angleRadians, radiusX, radiusY);
+            points.push(newPoint);
+            angle += angleSize;
+        }
+        return points;
+    },
+    _getPoint: function(angle, radiusX, radiusY) {
+        return new L.Point(this._point.x + this.options.position.x + radiusX * Math.cos(angle), this._point.y + this.options.position.y + radiusY * Math.sin(angle));
+    }
+});
+
+L.regularPolygonMarker = function(centerLatLng, options) {
+    return new L.RegularPolygonMarker(centerLatLng, options);
+};
+
+L.StarMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfPoints: 5,
+        rotation: -15,
+        maxDegrees: 360,
+        gradient: true,
+        dropShadow: true
+    },
+    _getPoints: function(inner) {
+        var maxDegrees = this.options.maxDegrees || 360;
+        var angleSize = maxDegrees / this.options.numberOfPoints;
+        var degrees = maxDegrees + this.options.rotation;
+        var angle = this.options.rotation;
+        var points = [];
+        var newPoint, newPointInner;
+        var angleRadians;
+        var radiusX = !inner ? this.options.radius || this.options.radiusX : this.options.innerRadius || this.options.innerRadiusX;
+        var radiusY = !inner ? this.options.radius || this.options.radiusY : this.options.innerRadius || this.options.innerRadiusY;
+        var toRad = function(number) {
+            return number * Math.PI / 180;
+        };
+        while (angle < degrees) {
+            angleRadians = toRad(angle);
+            newPoint = this._getPoint(angleRadians, radiusX, radiusY);
+            newPointInner = this._getPoint(angleRadians + toRad(angleSize) / 2, radiusX / 2, radiusY / 2);
+            points.push(newPoint);
+            points.push(newPointInner);
+            angle += angleSize;
+        }
+        return points;
+    }
+});
+
+L.starMarker = function(centerLatLng, options) {
+    return new L.StarMarker(centerLatLng, options);
+};
+
+L.TriangleMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfSides: 3,
+        rotation: 30,
+        radius: 5
+    }
+});
+
+L.triangleMarker = function(centerLatLng, options) {
+    return new L.TriangleMarker(centerLatLng, options);
+};
+
+L.DiamondMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfSides: 4,
+        radiusX: 5,
+        radiusY: 10
+    }
+});
+
+L.diamondMarker = function(centerLatLng, options) {
+    return new L.DiamondMarker(centerLatLng, options);
+};
+
+L.SquareMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfSides: 4,
+        rotation: 45,
+        radius: 5
+    }
+});
+
+L.squareMarker = function(centerLatLng, options) {
+    return new L.SquareMarker(centerLatLng, options);
+};
+
+L.PentagonMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfSides: 5,
+        rotation: -18,
+        radius: 5
+    }
+});
+
+L.pentagonMarker = function(centerLatLng, options) {
+    return new L.PentagonMarker(centerLatLng, options);
+};
+
+L.HexagonMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfSides: 6,
+        rotation: 30,
+        radius: 5
+    }
+});
+
+L.hexagonMarker = function(centerLatLng, options) {
+    return new L.HexagonMarker(centerLatLng, options);
+};
+
+L.OctagonMarker = L.RegularPolygonMarker.extend({
+    options: {
+        numberOfSides: 8,
+        rotation: 22.5,
+        radius: 5
+    }
+});
+
+L.octagonMarker = function(centerLatLng, options) {
+    return new L.OctagonMarker(centerLatLng, options);
+};
+
+var PathFunctions = PathFunctions || {
+    __updateStyle: L.Path.prototype._updateStyle,
+    _createDefs: function() {
+        this._defs = this._createElement("defs");
+        this._container.appendChild(this._defs);
+    },
+    _createGradient: function(options) {
+        if (!this._defs) {
+            this._createDefs();
+        }
+        var gradient = this._createElement("linearGradient");
+        var gradientGuid = L.Util.guid();
+        options = options || {
+            x1: "0%",
+            x2: "100%",
+            y1: "0%",
+            y2: "100%"
+        };
+        options.id = "grad" + gradientGuid;
+        var stops = [ {
+            offset: "0%",
+            style: "stop-color:rgb(255, 255, 255);stop-opacity:1"
+        }, {
+            offset: "60%",
+            style: "stop-color:" + (this.options.fillColor || this.options.color) + ";stop-opacity:1"
+        } ];
+        for (var key in options) {
+            gradient.setAttribute(key, options[key]);
+        }
+        for (var i = 0; i < stops.length; ++i) {
+            var stop = stops[i];
+            var stopElement = this._createElement("stop");
+            for (var key in stop) {
+                stopElement.setAttribute(key, stop[key]);
+            }
+            gradient.appendChild(stopElement);
+        }
+        this._gradient = gradient;
+        this._defs.appendChild(gradient);
+    },
+    _createDropShadow: function(options) {
+        if (!this._defs) {
+            this._createDefs();
+        }
+        var filterGuid = L.Util.guid();
+        var filter = this._createElement("filter");
+        var feOffset = this._createElement("feOffset");
+        var feGaussianBlur = this._createElement("feGaussianBlur");
+        var feBlend = this._createElement("feBlend");
+        options = options || {
+            width: "200%",
+            height: "200%"
+        };
+        options.id = "filter" + filterGuid;
+        for (var key in options) {
+            filter.setAttribute(key, options[key]);
+        }
+        var offsetOptions = {
+            result: "offOut",
+            "in": "SourceAlpha",
+            dx: "2",
+            dy: "2"
+        };
+        var blurOptions = {
+            result: "blurOut",
+            "in": "offOut",
+            stdDeviation: "2"
+        };
+        var blendOptions = {
+            "in": "SourceGraphic",
+            in2: "blurOut",
+            mode: "lighten"
+        };
+        for (var key in offsetOptions) {
+            feOffset.setAttribute(key, offsetOptions[key]);
+        }
+        for (var key in blurOptions) {
+            feGaussianBlur.setAttribute(key, blurOptions[key]);
+        }
+        for (var key in blendOptions) {
+            feBlend.setAttribute(key, blendOptions[key]);
+        }
+        filter.appendChild(feOffset);
+        filter.appendChild(feGaussianBlur);
+        filter.appendChild(feBlend);
+        this._dropShadow = filter;
+        this._defs.appendChild(filter);
+    },
+    _updateStyle: function() {
+        this.__updateStyle.call(this);
+        if (this.options.stroke) {
+            if (this.options.lineCap) {
+                this._path.setAttribute("stroke-linecap", this.options.lineCap);
+            }
+            if (this.options.lineJoin) {
+                this._path.setAttribute("stroke-linejoin", this.options.lineJoin);
+            }
+        }
+        if (this.options.gradient) {
+            if (!this._gradient) {
+                this._createGradient();
+            }
+            this._path.setAttribute("fill", "url(#" + this._gradient.getAttribute("id") + ")");
+        } else if (!this.options.fill) {
+            this._path.setAttribute("fill", "none");
+        }
+        if (this.options.dropShadow) {
+            if (!this._dropShadow) {
+                this._createDropShadow();
+            }
+            this._path.setAttribute("filter", "url(#" + this._dropShadow.getAttribute("id") + ")");
+        } else {
+            this._path.removeAttribute("filter");
         }
     }
 };
@@ -1437,7 +1875,9 @@ L.BarMarker = L.Path.extend({
         color: "#000",
         opacity: 1,
         gradient: true,
-        dropShadow: false
+        dropShadow: false,
+        lineCap: "square",
+        lineJoin: "miter"
     },
     setLatLng: function(latlng) {
         this._latlng = latlng;
@@ -1483,7 +1923,7 @@ L.ChartMarker = L.FeatureGroup.extend({
         L.Util.setOptions(this, options);
         this._layers = {};
         this._latlng = centerLatLng;
-        this._loadBars();
+        this._loadComponents();
     },
     setLatLng: function(latlng) {
         this._latlng = latlng;
@@ -1492,7 +1932,7 @@ L.ChartMarker = L.FeatureGroup.extend({
     getLatLng: function() {
         return this._latlng;
     },
-    _loadBars: function() {},
+    _loadComponents: function() {},
     _highlight: function(options) {
         if (options.weight) {
             options.weight *= 2;
@@ -1593,7 +2033,7 @@ L.BarChartMarker = L.ChartMarker.extend({
         offset: 0,
         iconSize: new L.Point(50, 40)
     },
-    _loadBars: function() {
+    _loadComponents: function() {
         var value, minValue, maxValue;
         var angle = this.options.rotation;
         var percentage = 0;
@@ -1690,6 +2130,9 @@ L.RadialBarMarker = L.Path.extend({
         } else {
             path = path + this._point.x.toFixed(2) + "," + this._point.y.toFixed(2) + "z";
         }
+        if (L.Browser.vml) {
+            path = Core.SVG.path(path);
+        }
         this._path.setAttribute("shape-rendering", "geometricPrecision");
         return path;
     },
@@ -1764,7 +2207,7 @@ L.PieChartMarker = L.ChartMarker.extend({
         options.barThickness = options.oldBarThickness;
         return options;
     },
-    _loadBars: function() {
+    _loadComponents: function() {
         var value;
         var sum = 0;
         var angle = 0;
@@ -1844,7 +2287,7 @@ L.CoxcombChartMarker = L.CoxcombChartMarker.extend({
         iconSize: new L.Point(50, 40),
         sizeMode: L.CoxcombChartMarker.SIZE_MODE_AREA
     },
-    _loadBars: function() {
+    _loadComponents: function() {
         var value, minValue, maxValue;
         var sum = 0;
         var angle = 0;
@@ -1922,7 +2365,7 @@ L.RadialBarChartMarker = L.ChartMarker.extend({
         maxDegrees: 360,
         iconSize: new L.Point(50, 40)
     },
-    _loadBars: function() {
+    _loadComponents: function() {
         var value, minValue, maxValue;
         var angle = this.options.rotation;
         var percentage = 0;
@@ -1978,17 +2421,12 @@ L.StackedRegularPolygonMarker = L.ChartMarker.extend({
         L.Util.setOptions(this, options);
         L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
     },
-    _loadBars: function() {
+    _loadComponents: function() {
         var value;
-        var sum = 0;
-        var angle = 0;
-        var percentage = 0;
-        var maxDegrees = this.options.maxDegrees || 360;
         var lastRadiusX = 0;
         var lastRadiusY = 0;
         var bar;
         var options = this.options;
-        var dataPoint;
         var data = this.options.data;
         var chartOptions = this.options.chartOptions;
         var chartOption;
@@ -2044,22 +2482,18 @@ L.RadialMeterMarker = L.ChartMarker.extend({
         maxDegrees: 180,
         iconSize: new L.Point(50, 40)
     },
-    _loadBars: function() {
+    _loadComponents: function() {
         var value, minValue, maxValue;
         var startAngle = this.options.rotation;
-        var percentage = 0;
         var maxDegrees = this.options.maxDegrees || 360;
         var bar;
         var options = this.options;
-        var dataPoint;
-        var count = 0;
         var radiusX = this.options.radiusX || this.options.radius;
         var radiusY = this.options.radiusY || this.options.radius;
         var data = this.options.data;
         var chartOptions = this.options.chartOptions;
         var chartOption;
         var barThickness = this.options.barThickness || 4;
-        var offset = this.options.offset || 2;
         var lastAngle = startAngle;
         var numSegments = this.options.numSegments || 10;
         var angleDelta = maxDegrees / numSegments;
@@ -2323,15 +2757,24 @@ L.DataLayer = L.LayerGroup.extend({
         var processedLocation = location.center;
         return processedLocation;
     },
-    _getLayer: function(location, options, record) {
-        if (this.options.includeBoundary && location.location.setStyle) {
-            var style = this.options.boundaryStyle || $.extend(true, {}, options, {
-                fillOpacity: .2,
-                clickable: false
-            });
-            location.location.setStyle(style);
-            this.addLayer(location.location);
+    _addBoundary: function(location, options) {
+        var layer = location.location;
+        if (this.options.includeBoundary) {
+            if (layer instanceof L.LatLngBounds) {
+                layer = new L.Rectangle(layer);
+            }
+            if (layer.setStyle) {
+                var style = this.options.boundaryStyle || $.extend(true, {}, options, {
+                    fillOpacity: .2,
+                    clickable: false
+                });
+                layer.setStyle(style);
+            }
+            this.addLayer(layer);
         }
+    },
+    _getLayer: function(location, options, record) {
+        this._addBoundary(location, options);
         location = this._processLocation(location);
         return this._getMarker(location, options, record);
     },
@@ -2346,8 +2789,12 @@ L.DataLayer = L.LayerGroup.extend({
         }
         return marker;
     },
+    _preProcessRecords: function(records) {
+        return records;
+    },
     _loadRecords: function(records) {
         var location;
+        records = this._preProcessRecords(records);
         for (var recordIndex in records) {
             if (records.hasOwnProperty(recordIndex)) {
                 var record = records[recordIndex];
@@ -2461,9 +2908,8 @@ L.DataLayer = L.LayerGroup.extend({
         };
         bindEvents(layer);
     },
-    recordToLayer: function(location, record) {
+    _getDynamicOptions: function(record) {
         var layerOptions = L.Util.extend({}, this.options.layerOptions);
-        var layer;
         var displayOptions = this.options.displayOptions;
         var legendDetails = {};
         if (displayOptions) {
@@ -2487,19 +2933,49 @@ L.DataLayer = L.LayerGroup.extend({
                 }
             }
         }
+        return layerOptions;
+    },
+    recordToLayer: function(location, record) {
+        var layerOptions = L.Util.extend({}, this.options.layerOptions);
+        var layer;
+        var displayOptions = this.options.displayOptions;
+        var legendDetails = {};
         var includeLayer = true;
         if (this.options.includeLayer) {
             includeLayer = this.options.includeLayer(record);
         }
-        if (location && layerOptions && includeLayer) {
-            layerOptions.title = location.text;
-            layer = this._getLayer(location, layerOptions, record);
-            if (layer) {
-                if (this.options.showLegendTooltips) {
-                    this._bindMouseEvents(layer, layerOptions, legendDetails);
+        if (includeLayer) {
+            if (displayOptions) {
+                for (var property in displayOptions) {
+                    var propertyOptions = displayOptions[property];
+                    var fieldValue = L.Util.getFieldValue(record, property);
+                    var valueFunction;
+                    var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
+                    legendDetails[property] = {
+                        name: propertyOptions.displayName,
+                        value: displayText
+                    };
+                    if (propertyOptions.styles) {
+                        layerOptions = L.Util.extend(layerOptions, propertyOptions.styles[fieldValue]);
+                        propertyOptions.styles[fieldValue] = layerOptions;
+                    } else {
+                        for (var layerProperty in propertyOptions) {
+                            valueFunction = propertyOptions[layerProperty];
+                            layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : valueFunction;
+                        }
+                    }
                 }
-                if (this.options.onEachRecord) {
-                    this.options.onEachRecord.call(this, layer, record, this);
+            }
+            if (location && layerOptions) {
+                layerOptions.title = location.text;
+                layer = this._getLayer(location, layerOptions, record);
+                if (layer) {
+                    if (this.options.showLegendTooltips) {
+                        this._bindMouseEvents(layer, layerOptions, legendDetails);
+                    }
+                    if (this.options.onEachRecord) {
+                        this.options.onEachRecord.call(this, layer, record, this);
+                    }
                 }
             }
         }
@@ -2587,6 +3063,18 @@ L.DataLayer = L.LayerGroup.extend({
                                     $i.css("background-image", "-moz-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
                                     $i.css("background-image", "-webkit-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
                                 }
+                                if (property === "color") {
+                                    $i.css("border-top-color", value);
+                                    $i.css("border-bottom-color", nextValue);
+                                    $i.css("border-left-color", value);
+                                    $i.css("border-right-color", nextValue);
+                                }
+                                if (property === "weight") {
+                                    $i.css("border-top-width", value);
+                                    $i.css("border-bottom-width", nextValue);
+                                    $i.css("border-left-width", value);
+                                    $i.css("border-right-width", nextValue);
+                                }
                                 var min = segmentSize * index + minX;
                                 var max = min + segmentSize;
                                 if (displayTextFunction && valueFunction) {
@@ -2607,11 +3095,19 @@ L.DataLayer = L.LayerGroup.extend({
     }
 });
 
+L.dataLayer = function(data, options) {
+    return new L.DataLayer(data, options);
+};
+
 L.MapMarkerDataLayer = L.DataLayer.extend({
     _getMarker: function(latLng, layerOptions, record) {
         return new L.MapMarker(latLng, layerOptions);
     }
 });
+
+L.mapMarkerDataLayer = function(data, options) {
+    return new L.MapMarkerDataLayer(data, options);
+};
 
 L.MarkerDataLayer = L.DataLayer.extend({
     initialize: function(data, options) {
@@ -2638,6 +3134,10 @@ L.MarkerDataLayer = L.DataLayer.extend({
     }
 });
 
+L.markerDataLayer = function(data, options) {
+    return new L.MarkerDataLayer(data, options);
+};
+
 L.PanoramioLayer = L.MarkerDataLayer.extend({
     statics: {
         UPLOAD_DATE_FORMAT: "DD MMM YYYY",
@@ -2647,13 +3147,17 @@ L.PanoramioLayer = L.MarkerDataLayer.extend({
         SIZES: {
             square: [ 60, 60 ],
             mini_square: [ 32, 32 ]
-        }
+        },
+        NUM_PHOTOS: 50
     }
 });
 
 L.PanoramioLayer = L.PanoramioLayer.extend({
     initialize: function(options) {
         L.MarkerDataLayer.prototype.initialize.call(this, {}, options);
+        this._from = 0;
+        this._to = L.PanoramioLayer.NUM_PHOTOS;
+        this._calls = [];
     },
     options: {
         recordsField: "photos",
@@ -2689,8 +3193,13 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
                 marker.on("click", function(e) {
                     me.removeLayer(e.target);
                 });
+                layer.viewedImage = marker;
+                me.viewedImage = marker;
                 me.addLayer(marker);
             });
+            if (this.options.onEachPhoto) {
+                this.options.onEachPhoto.call(this, layer, record);
+            }
         },
         setIcon: function(record, options) {
             var title = L.Util.getFieldValue(record, "photo_title");
@@ -2721,8 +3230,16 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
         }
         var me = this;
         var resetFunction = function(e) {
+            me._from = 0;
+            me._to = L.PanoramioLayer.NUM_PHOTOS;
             me.fire("requestingPhotos");
-            me.requestPhotos();
+            if (me._call) {
+                clearTimeout(me._call);
+            }
+            var request = function() {
+                me.requestPhotos();
+            };
+            me._call = setTimeout(request, 1e3);
         };
         this.requestPhotos();
         this._interval = setInterval(resetFunction, this.options.updateInterval);
@@ -2765,17 +3282,30 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
         this._sizeFunction = new L.LinearFunction([ 0, size / 2 ], [ photos.length, size ]);
         return data;
     },
+    next: function() {
+        this._from = this._to;
+        this._to = this._from + L.PanoramioLayer.NUM_PHOTOS;
+        this.requestPhotos();
+    },
+    previous: function() {
+        this._to = this._from;
+        this._from = this._from - L.PanoramioLayer.NUM_PHOTOS;
+        this.requestPhotos();
+    },
     requestPhotos: function() {
         var me = this;
         var bounds = this._map.getBounds();
         var southWest = bounds.getSouthWest();
         var northEast = bounds.getNorthEast();
-        $.ajax({
+        while (me._calls.length > 0) {
+            me._calls.pop().abort();
+        }
+        var request = $.ajax({
             url: "http://www.panoramio.com/map/get_panoramas.php",
             data: {
                 set: this.options.photoSet,
-                from: 0,
-                to: 50,
+                from: me._from,
+                to: me._to,
                 minx: southWest.lng,
                 miny: southWest.lat,
                 maxx: northEast.lng,
@@ -2786,17 +3316,24 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
             type: "GET",
             dataType: "jsonp",
             success: function(data) {
-                if (moment && me.options.sizeBy === "date") {
+                me._count = data.count;
+                if (moment && me.options.sizeBy === L.PanoramioLayer.SIZE_BY_DATE) {
                     data = me.calculateSizeByDate(data);
-                } else if (me.options.sizeBy === "popularity") {
+                } else if (me.options.sizeBy === L.PanoramioLayer.SIZE_BY_POPULARITY) {
                     data = me.calculateSizeByPopularity(data);
                 }
+                me.fire("photosAvailable", data);
                 me.clearLayers();
                 me.addData(data);
             }
         });
+        me._calls.push(request);
     }
 });
+
+L.panoramioLayer = function(options) {
+    return new L.PanoramioLayer(options);
+};
 
 L.GeohashDataLayer = L.DataLayer.extend({
     initialize: function(data, options) {
@@ -2817,6 +3354,10 @@ L.GeohashDataLayer = L.DataLayer.extend({
         return new L.Rectangle(geohash.location, layerOptions);
     }
 });
+
+L.geohashDataLayer = function(data, options) {
+    return new L.GeohashDataLayer(data, options);
+};
 
 L.ChoroplethDataLayer = L.DataLayer.extend({
     initialize: function(data, options) {
@@ -2846,6 +3387,10 @@ L.ChoroplethDataLayer = L.DataLayer.extend({
     }
 });
 
+L.choroplethDataLayer = function(data, options) {
+    return new L.ChoroplethDataLayer(data, options);
+};
+
 L.ChartDataLayer = L.DataLayer.extend({
     options: {
         showLegendTooltips: false
@@ -2854,6 +3399,7 @@ L.ChartDataLayer = L.DataLayer.extend({
         L.DataLayer.prototype.initialize.call(this, data, options);
     },
     _getLayer: function(latLng, layerOptions, record) {
+        this._addBoundary(latLng, layerOptions);
         latLng = this._processLocation(latLng);
         var chartOptions = this.options.chartOptions;
         var tooltipOptions = this.options.tooltipOptions;
@@ -2890,6 +3436,10 @@ L.BarChartDataLayer = L.ChartDataLayer.extend({
     }
 });
 
+L.barChartDataLayer = function(data, options) {
+    return new L.BarChartDataLayer(data, options);
+};
+
 L.RadialBarChartDataLayer = L.ChartDataLayer.extend({
     initialize: function(data, options) {
         L.ChartDataLayer.prototype.initialize.call(this, data, options);
@@ -2898,6 +3448,10 @@ L.RadialBarChartDataLayer = L.ChartDataLayer.extend({
         return new L.RadialBarChartMarker(latLng, options);
     }
 });
+
+L.radialBarChartDataLayer = function(data, options) {
+    return new L.RadialBarChartDataLayer(data, options);
+};
 
 L.PieChartDataLayer = L.ChartDataLayer.extend({
     initialize: function(data, options) {
@@ -2908,6 +3462,10 @@ L.PieChartDataLayer = L.ChartDataLayer.extend({
     }
 });
 
+L.pieChartDataLayer = function(data, options) {
+    return new L.PieChartDataLayer(data, options);
+};
+
 L.CoxcombChartDataLayer = L.ChartDataLayer.extend({
     initialize: function(data, options) {
         L.ChartDataLayer.prototype.initialize.call(this, data, options);
@@ -2916,6 +3474,10 @@ L.CoxcombChartDataLayer = L.ChartDataLayer.extend({
         return new L.CoxcombChartMarker(latLng, options);
     }
 });
+
+L.coxcombChartDataLayer = function(data, options) {
+    return new L.CoxcombChartDataLayer(data, options);
+};
 
 L.StackedRegularPolygonDataLayer = L.ChartDataLayer.extend({
     initialize: function(data, options) {
@@ -2926,27 +3488,382 @@ L.StackedRegularPolygonDataLayer = L.ChartDataLayer.extend({
     }
 });
 
+L.stackedRegularPolygonDataLayer = function(data, options) {
+    return new L.StackedRegularPolygonDataLayer(data, options);
+};
+
+L.CalloutLine = L.Path.extend({
+    statics: {
+        LINESTYLE: {
+            ARC: "arc",
+            ANGLE: "angle",
+            STRAIGHT: "straight"
+        },
+        DIRECTION: {
+            NE: "ne",
+            NW: "nw",
+            SE: "se",
+            SW: "sw"
+        }
+    }
+});
+
+L.CalloutLine = L.CalloutLine.extend({
+    initialize: function(latlng, options) {
+        L.Util.setOptions(this, options);
+        L.Path.prototype.initialize.call(this, options);
+        this._latlng = latlng;
+    },
+    options: {
+        size: new L.Point(60, 30),
+        position: new L.Point(0, 0),
+        color: "#FFFFFF",
+        opacity: 1,
+        weight: 2,
+        fillColor: "#000000",
+        fill: false,
+        gradient: false,
+        dropShadow: true,
+        direction: L.CalloutLine.DIRECTION.NE,
+        lineStyle: L.CalloutLine.LINESTYLE.ANGLE,
+        lineCap: "butt",
+        lineJoin: "miter",
+        arrow: false
+    },
+    projectLatlngs: function() {
+        this._point = this._map.latLngToLayerPoint(this._latlng);
+        this._points = this._getPoints();
+    },
+    getEndPoint: function() {
+        this.projectLatlngs();
+        return this._points[this._points.length - 1];
+    },
+    _getPathAngle: function() {
+        return new L.SVGPathBuilder(this._points, [], {
+            closePath: false
+        }).toString(6);
+    },
+    _getPathArc: function() {
+        var direction = (this.options.direction || L.CalloutLine.DIRECTION.NE).toLowerCase();
+        var xDirection = direction[1];
+        var yDirection = direction[0];
+        var xMultiplier = xDirection === "w" ? -1 : 1;
+        var yMultiplier = yDirection === "n" ? -1 : 1;
+        var point1 = this._points[0];
+        var point2 = this._points[this._points.length - 1];
+        var parts = [ "M", point1.x, ",", point1.y, " Q", point1.x, ",", point1.y + yMultiplier * this.options.size.y, " ", point2.x, ",", point2.y ];
+        return parts.join(" ");
+    },
+    _getPoints: function() {
+        var x = this._point.x + this.options.position.x;
+        var y = this._point.y + this.options.position.y;
+        var width = this.options.size.x;
+        var height = this.options.size.y;
+        var direction = (this.options.direction || L.CalloutLine.DIRECTION.NE).toLowerCase();
+        var points = [];
+        var xDirection = direction[1];
+        var yDirection = direction[0];
+        var xMultiplier = xDirection === "w" ? -1 : 1;
+        var yMultiplier = yDirection === "n" ? -1 : 1;
+        points.push(new L.Point(x, y));
+        var yEnd = y + yMultiplier * height;
+        var halfWidth = width / 2;
+        var angle = Math.atan(height / halfWidth);
+        if (this.options.lineStyle === L.CalloutLine.LINESTYLE.ARC) {
+            angle = Math.atan(Math.pow(height, 2) / halfWidth);
+        } else if (this.options.lineStyle === L.CalloutLine.LINESTYLE.STRAIGHT) {
+            angle = Math.atan(height / width);
+        }
+        this._angle = angle;
+        if (this.options.lineStyle !== L.CalloutLine.LINESTYLE.STRAIGHT) {
+            var elbowPoint = new L.Point(x + xMultiplier * halfWidth, yEnd);
+            points.push(elbowPoint);
+        }
+        var endPoint = new L.Point(x + xMultiplier * width, yEnd);
+        points.push(endPoint);
+        return points;
+    },
+    getBounds: function() {
+        var map = this._map, point = map.project(this._latlng), swPoint = new L.Point(point.x + this.options.position.x, point.y + this.options.position.y), nePoint = new L.Point(swPoint.x + this.options.size.x, swPoint.y - this.options.size.y), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
+        return new L.LatLngBounds(sw, ne);
+    },
+    setLatLng: function(latlng) {
+        this._latlng = latlng;
+        this.redraw();
+    },
+    getLatLng: function() {
+        return this._latlng;
+    },
+    getPathString: function() {
+        this._path.setAttribute("shape-rendering", "geometricPrecision");
+        var lineStyle = this.options.lineStyle || L.CalloutLine.LINESTYLE.ANGLE;
+        var path = "";
+        if (lineStyle === L.CalloutLine.LINESTYLE.ANGLE || lineStyle === L.CalloutLine.LINESTYLE.STRAIGHT) {
+            path += this._getPathAngle();
+        } else {
+            path += this._getPathArc();
+        }
+        return path;
+    }
+});
+
+L.calloutLine = function(latlng, options) {
+    return new L.CalloutLine(latlng, options);
+};
+
+L.Callout = L.LayerGroup.extend({
+    options: {
+        color: "#FFFFFF",
+        fillColor: "#FFFFFF"
+    },
+    initialize: function(latlng, options) {
+        L.Util.setOptions(this, options);
+        L.LayerGroup.prototype.initialize.call(this, options);
+        this._latlng = latlng;
+    },
+    onAdd: function(map) {
+        L.LayerGroup.prototype.onAdd.call(this, map);
+        this.addLayers();
+    },
+    addArrow: function(angle, direction, position) {
+        if (this.options.arrow) {
+            var angle = L.LatLng.RAD_TO_DEG * angle;
+            var numberOfSides = this.options.numberOfSides || 3;
+            var radius = this.options.radius || 6;
+            var startRotation = 180 / numberOfSides;
+            var offsets = {
+                se: startRotation + angle,
+                sw: 180 + startRotation - angle,
+                nw: 180 + startRotation + angle,
+                ne: startRotation - angle
+            };
+            var rotation = offsets[direction];
+            var arrow = new L.RegularPolygonMarker(this._latlng, {
+                position: position,
+                numberOfSides: numberOfSides,
+                rotation: rotation,
+                fillColor: this.options.fillColor,
+                color: this.options.color,
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 1,
+                radius: radius,
+                lineCap: "butt",
+                lineJoin: "miter"
+            });
+            this.addLayer(arrow);
+        }
+    },
+    addLine: function() {
+        var lineOptions = {};
+        for (var key in this.options) {
+            if (key !== "icon") {
+                lineOptions[key] = this.options[key];
+            }
+        }
+        var calloutLine = new L.CalloutLine(this._latlng, lineOptions);
+        this.addLayer(calloutLine);
+        return calloutLine;
+    },
+    addIcon: function(direction, position) {
+        var size = this.options.size;
+        var icon = this.options.icon;
+        var iconAnchor = icon.options.iconAnchor;
+        var iconSize = icon.options.iconSize;
+        var yDirection = direction[0];
+        var xDirection = direction[1];
+        var xAnchor = xDirection === "w" ? icon.options.iconSize.x + size.x - position.x : -1 * (size.x + position.x);
+        var yAnchor = yDirection === "n" ? icon.options.iconSize.y / 2 + size.y - position.y : -1 * (size.y / 2 + position.y);
+        icon.options.iconAnchor = new L.Point(xAnchor, yAnchor);
+        var iconMarker = new L.Marker(this._latlng, {
+            icon: icon
+        });
+        this.addLayer(iconMarker);
+    },
+    addLayers: function() {
+        var direction = (this.options.direction || "ne").toLowerCase();
+        var position = this.options.position || new L.Point(0, 0);
+        var calloutLine;
+        calloutLine = this.addLine();
+        this.addIcon(direction, position);
+        this.addArrow(calloutLine._angle, direction, position);
+    }
+});
+
+L.callout = function(latlng, options) {
+    return new L.Callout(latlng, options);
+};
+
+L.FlowLine = L.DataLayer.extend({
+    statics: {
+        LINE_FUNCTION: function(latlng1, latlng2, options) {
+            return new L.Polyline([ latlng1, latlng2 ], options);
+        },
+        LINE_FUNCTION_INTERPOLATED: function(latlng1, latlng2, options) {
+            var point1 = this._map.latlngToLayerPoint(latlng1);
+            var point2 = this._map.latlngToLayerPoint(latlng2);
+            var lineFunction = new L.LinearFunction(point1, point2);
+            var numPoints = Math.ceil(point1.distanceTo(point2) / options.interpolationOptions.segmentLength);
+            var points = lineFunction.samplePoints(numPoints);
+        }
+    }
+});
+
+L.FlowLine = L.FlowLine.extend({
+    initialize: function(data, options) {
+        L.Util.setOptions(this, options);
+        L.DataLayer.prototype.initialize.call(this, data, options);
+    },
+    options: {
+        getLine: L.FlowLine.LINE_FUNCTION
+    },
+    onEachSegment: function(record1, record2, line) {
+        var deltas = {};
+        for (var key in this.options.displayOptions) {
+            var value1 = L.Util.getFieldValue(record1, key);
+            var value2 = L.Util.getFieldValue(record2, key);
+            var change = value2 - value1;
+            var percentChange = change / value1 * 100;
+            deltas[key] = {
+                from: value1,
+                to: value2,
+                change: change,
+                percentChange: percentChange
+            };
+        }
+        var latlngs = line.getLatLngs();
+        var distance = latlngs[0].distanceTo(latlngs[1]);
+        if (this.options.onEachSegment) {
+            this.options.onEachSegment.call(this, record1, record2, line, deltas, distance);
+        }
+    },
+    _loadRecords: function(records) {
+        var location;
+        var options = this.options.layerOptions;
+        var markers = [];
+        for (var recordIndex in records) {
+            if (records.hasOwnProperty(recordIndex)) {
+                var record = records[recordIndex];
+                location = this._getLocation(record, recordIndex);
+                if (location) {
+                    var marker = this._getLayer(location, options, record);
+                    var line;
+                    var includeLayer = true;
+                    if (this.options.includeLayer) {
+                        includeLayer = this.options.includeLayer(record);
+                    }
+                    if (this._lastRecord && includeLayer) {
+                        var options = this._getDynamicOptions(this._lastRecord);
+                        line = this.options.getLine.call(this, this._lastMarker.getLatLng(), marker.getLatLng(), options);
+                        this.addLayer(line);
+                        this.onEachSegment(this._lastRecord, record, line);
+                    }
+                    if (includeLayer) {
+                        this._lastRecord = record;
+                        this._lastMarker = marker;
+                    }
+                }
+            }
+        }
+        while (markers.length > 0) {
+            this.addLayer(markers.pop());
+        }
+    }
+});
+
+L.flowLine = function(data, options) {
+    return new L.FlowLine(data, options);
+};
+
+L.ArcedFlowLine = L.FlowLine.extend({
+    options: {
+        getLine: function(latlng1, latlng2, options) {
+            return new L.ArcedPolyline([ latlng1, latlng2 ], options);
+        }
+    },
+    initialize: function(data, options) {
+        L.FlowLine.prototype.initialize.call(this, data, options);
+    }
+});
+
+L.arcedFlowLine = function(data, options) {
+    return new L.ArcedFlowLine(data, options);
+};
+
+L.ArcedPolyline = L.Path.extend({
+    initialize: function(latlngs, options) {
+        L.Path.prototype.initialize.call(this, options);
+        this._distanceToHeight = new L.LinearFunction([ 0, 5 ], [ 1e3, 200 ]);
+        this._latlngs = latlngs;
+    },
+    options: {
+        size: new L.Point(60, 30),
+        offset: new L.Point(20, -20),
+        color: "#FFFFFF",
+        opacity: 1,
+        weight: 1,
+        fillColor: "#000000",
+        fill: false,
+        gradient: false,
+        dropShadow: false
+    },
+    projectLatlngs: function() {
+        this._points = [];
+        for (var i = 0; i < this._latlngs.length; ++i) {
+            this._points.push(this._map.latLngToLayerPoint(this._latlngs[i]));
+        }
+    },
+    getBounds: function() {
+        var map = this._map, point = map.project(this._latlngs[0]), swPoint = new L.Point(point.x + this.options.offset.x, point.y + this.options.offset.y), nePoint = new L.Point(swPoint.x + this.options.size.x, swPoint.y - this.options.size.y), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
+        return new L.LatLngBounds(sw, ne);
+    },
+    setLatLngs: function(latlngs) {
+        this._latlngs = latlngs;
+        this.redraw();
+    },
+    getLatLngs: function() {
+        return this._latlngs;
+    },
+    drawSegment: function(point1, point2) {
+        var distance = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
+        var heightOffset = this._distanceToHeight.evaluate(distance);
+        var directionX = point1.x - point2.x;
+        var multiplierX = directionX / Math.abs(directionX);
+        var parts = [ "M", point1.x, ",", point1.y, " C", point1.x, ",", point1.y - heightOffset, " ", point2.x, ",", point2.y - heightOffset, " ", point2.x, ",", point2.y ];
+        return parts.join(" ");
+    },
+    getPathString: function() {
+        this._path.setAttribute("shape-rendering", "optimizeSpeed");
+        var parts = [];
+        for (var i = 0; i < this._points.length - 1; ++i) {
+            parts.push(this.drawSegment(this._points[i], this._points[i + 1]));
+        }
+        return parts.join("");
+    }
+});
+
+L.arcedPolyline = function(latlngs, options) {
+    return new L.ArcedPolyline(latlngs, options);
+};
+
 L.Control.Legend = L.Control.extend({
     options: {
-        position: "bottomright"
+        position: "bottomright",
+        autoAdd: true
     },
     onAdd: function(map) {
         var className = "leaflet-control-legend", container = L.DomUtil.create("div", className);
         var self = this;
-        map.on("layeradd", function(e) {
-            var layer = e.layer;
-            var id = L.Util.stamp(layer);
-            if (layer.getLegend) {
-                self.addLegend(id, layer.getLegend());
-            }
-        });
-        map.on("layerremove", function(e) {
-            var layer = e.layer;
-            var id = L.Util.stamp(layer);
-            if (layer.getLegend) {
-                $(self._container).find("#" + id).remove();
-            }
-        });
+        if (this.options.autoAdd) {
+            map.on("layeradd", function(e) {
+                var layer = e.layer;
+                self.addLayer(layer);
+            });
+            map.on("layerremove", function(e) {
+                var layer = e.layer;
+                self.removeLayer(layer);
+            });
+        }
         $(container).on("mouseover mouseout", function(e) {
             $(this).toggleClass("larger");
         });
@@ -2959,6 +3876,18 @@ L.Control.Legend = L.Control.extend({
     toggleSize: function() {
         $(this._container).toggleClass("larger", "slow");
     },
+    addLayer: function(layer) {
+        var id = L.Util.stamp(layer);
+        if (layer.getLegend) {
+            this.addLegend(id, layer.getLegend());
+        }
+    },
+    removeLayer: function(layer) {
+        var id = L.Util.stamp(layer);
+        if (layer.getLegend) {
+            $(this._container).find("#" + id).remove();
+        }
+    },
     addLegend: function(id, html) {
         var $container = $(this._container);
         var $html = $(html);
@@ -2970,3 +3899,7 @@ L.Control.Legend = L.Control.extend({
         }
     }
 });
+
+L.control.legend = function(options) {
+    return new L.Control.Legend(options);
+};

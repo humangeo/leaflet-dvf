@@ -1,9 +1,6 @@
-var L = L || {};
-
 /*
  * 
  */
-
 L.LocationModes = {
 	LATLNG: function (record, index) {
 		var latitude = L.Util.getFieldValue(record, this.options.latitudeField);
@@ -293,18 +290,29 @@ L.DataLayer = L.LayerGroup.extend({
 		return processedLocation;
 	},
 	
-	_getLayer: function (location, options, record) {
-	
-		if (this.options.includeBoundary && location.location.setStyle) {
-			var style = this.options.boundaryStyle || $.extend(true, {}, options, {
-				fillOpacity: 0.2,
-				clickable: false
-			});
-			
-			location.location.setStyle(style);
+	_addBoundary: function (location, options) {
+		var layer = location.location;
 		
-			this.addLayer(location.location);
+		if (this.options.includeBoundary) {
+			if (layer instanceof L.LatLngBounds) {
+				layer = new L.Rectangle(layer);
+			}
+			
+			if (layer.setStyle) {
+				var style = this.options.boundaryStyle || $.extend(true, {}, options, {
+					fillOpacity: 0.2,
+					clickable: false
+				});
+			
+				layer.setStyle(style);
+			}
+		
+			this.addLayer(layer);
 		}
+	},
+	
+	_getLayer: function (location, options, record) {
+		this._addBoundary(location, options);
 				
 		location = this._processLocation(location);
 		
@@ -326,8 +334,15 @@ L.DataLayer = L.LayerGroup.extend({
 		return marker;
 	},
 	
+	_preProcessRecords: function (records) {
+		// Implement any necessary preprocessing in inheriting classes
+		return records;
+	},
+	
 	_loadRecords: function (records) {
 		var location;
+		
+		records = this._preProcessRecords(records);
 		
 		for (var recordIndex in records) {
 			if (records.hasOwnProperty(recordIndex)) {
@@ -477,9 +492,8 @@ L.DataLayer = L.LayerGroup.extend({
 		
 	},
 	
-	recordToLayer: function (location, record) {
+	_getDynamicOptions: function (record) {
 		var layerOptions = L.Util.extend({},this.options.layerOptions);
-		var layer;
 		var displayOptions = this.options.displayOptions;
 		var legendDetails = {};
 		
@@ -510,28 +524,64 @@ L.DataLayer = L.LayerGroup.extend({
 			}
 		}
 		
+		return layerOptions;
+	},
+	
+	recordToLayer: function (location, record) {
+		var layerOptions = L.Util.extend({},this.options.layerOptions);
+		var layer;
+		var displayOptions = this.options.displayOptions;
+		var legendDetails = {};
 		var includeLayer = true;
 		
 		if (this.options.includeLayer) {
 			includeLayer = this.options.includeLayer(record);
 		}
 		
-		if (location && layerOptions && includeLayer) {
-			layerOptions.title = location.text;
-			
-			layer = this._getLayer(location, layerOptions, record);
-			
-			if (layer) {
-				if (this.options.showLegendTooltips) {
-					this._bindMouseEvents(layer, layerOptions, legendDetails);
-				}
+		if (includeLayer) {
+			if (displayOptions) {
+				for (var property in displayOptions) {
 				
-				if (this.options.onEachRecord) {
-					this.options.onEachRecord.call(this, layer, record, this);
+					var propertyOptions = displayOptions[property];
+					var fieldValue = L.Util.getFieldValue(record, property);
+					var valueFunction;
+					var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
+				
+					legendDetails[property] = {
+						name: propertyOptions.displayName,
+						value: displayText
+					};
+				
+					if (propertyOptions.styles) {
+						layerOptions = L.Util.extend(layerOptions, propertyOptions.styles[fieldValue]);
+						propertyOptions.styles[fieldValue] = layerOptions;
+					}
+					else {
+						for (var layerProperty in propertyOptions) {
+							valueFunction = propertyOptions[layerProperty];
+						
+							layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : valueFunction;
+						}
+					}
+				}
+			}
+
+			if (location && layerOptions) {
+				layerOptions.title = location.text;
+			
+				layer = this._getLayer(location, layerOptions, record);
+			
+				if (layer) {
+					if (this.options.showLegendTooltips) {
+						this._bindMouseEvents(layer, layerOptions, legendDetails);
+					}
+				
+					if (this.options.onEachRecord) {
+						this.options.onEachRecord.call(this, layer, record, this);
+					}
 				}
 			}
 		}
-		
 		return layer;
 	},
 	
@@ -601,7 +651,7 @@ L.DataLayer = L.LayerGroup.extend({
 				var $maxValue = $legendItems.find('.max-value');
 				var $scaleBars = $legendItems.find('.scale-bars');
 				var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
-				
+
 				for (var index = 0; index < numSegments; ++index) {
 
 					var $i = $('<i></i>');
@@ -651,6 +701,20 @@ L.DataLayer = L.LayerGroup.extend({
 									$i.css('background-image', '-webkit-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
 								}
 								
+								if (property === 'color') {
+									$i.css('border-top-color', value);
+									$i.css('border-bottom-color', nextValue);
+									$i.css('border-left-color', value);
+									$i.css('border-right-color', nextValue);
+								}
+								
+								if (property === 'weight') {
+									$i.css('border-top-width', value);
+									$i.css('border-bottom-width', nextValue);
+									$i.css('border-left-width', value);
+									$i.css('border-right-width', nextValue);
+								}
+								
 								var min = (segmentSize * index) + minX;
 								var max = min + segmentSize;
 								
@@ -665,7 +729,7 @@ L.DataLayer = L.LayerGroup.extend({
 						}
 						
 					}
-					
+
 					$i.width(segmentWidth);
 					$scaleBars.append($i);
 
@@ -680,12 +744,22 @@ L.DataLayer = L.LayerGroup.extend({
 	}
 });
 
+L.dataLayer = function (data, options) {
+	return new L.DataLayer(data, options);
+};
+
+/*
+ *
+ */
 L.MapMarkerDataLayer = L.DataLayer.extend({	
 	_getMarker: function (latLng, layerOptions, record) {
 		return new L.MapMarker(latLng, layerOptions);
 	}
 });
 
+L.mapMarkerDataLayer = function (data, options) {
+	return new L.MapMarkerDataLayer(data, options);
+};
 
 /*
  * 
@@ -721,6 +795,9 @@ L.MarkerDataLayer = L.DataLayer.extend({
 	}
 });
 
+L.markerDataLayer = function (data, options) {
+	return new L.MarkerDataLayer(data, options);
+};
 
 /*
  *
@@ -735,13 +812,18 @@ L.PanoramioLayer = L.MarkerDataLayer.extend({
 		SIZES: {
 			'square': [60, 60],
 			'mini_square': [32, 32]
-		}
+		},
+		NUM_PHOTOS: 50
 	}
 });
 
 L.PanoramioLayer = L.PanoramioLayer.extend({	
 	initialize: function (options) {
 		L.MarkerDataLayer.prototype.initialize.call(this, {}, options);
+		
+		this._from = 0;
+		this._to = L.PanoramioLayer.NUM_PHOTOS;
+		this._calls = [];
 	},
 	
 	options: {
@@ -784,8 +866,15 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 					me.removeLayer(e.target);
 				});
 				
+				layer.viewedImage = marker;
+				me.viewedImage = marker;
+				
 				me.addLayer(marker);
 			});
+			
+			if (this.options.onEachPhoto) {
+				this.options.onEachPhoto.call(this, layer, record);
+			}
 
 		},
 		setIcon: function (record, options) {
@@ -825,8 +914,21 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 		
 		var me = this;
 		var resetFunction = function (e) {
+			
+			me._from = 0;
+			me._to = L.PanoramioLayer.NUM_PHOTOS;
+			
 			me.fire('requestingPhotos');
-			me.requestPhotos();
+			
+			if (me._call) {
+				clearTimeout(me._call);
+			}
+			
+			var request = function () {
+				me.requestPhotos();
+			}
+			
+			me._call = setTimeout(request, 1000);
 		};
 		
 		this.requestPhotos();
@@ -893,6 +995,18 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 		return data;
 	},
 	
+	next: function () {
+		this._from = this._to;
+		this._to = this._from + L.PanoramioLayer.NUM_PHOTOS;
+		this.requestPhotos();
+	},
+	
+	previous: function () {
+		this._to = this._from;
+		this._from = this._from - L.PanoramioLayer.NUM_PHOTOS;
+		this.requestPhotos();
+	},
+	
 	requestPhotos: function () {
 		
 		var me = this;
@@ -900,12 +1014,16 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 		var southWest = bounds.getSouthWest();
 		var northEast = bounds.getNorthEast();
 		
-		$.ajax({
+		while (me._calls.length > 0) {
+			me._calls.pop().abort();
+		}
+		
+		var request = $.ajax({
 			url: 'http://www.panoramio.com/map/get_panoramas.php',
 			data: {
 				set: this.options.photoSet,
-				from: 0,
-				to: 50,
+				from: me._from,
+				to: me._to,
 				minx: southWest.lng,
 				miny: southWest.lat,
 				maxx: northEast.lng,
@@ -917,19 +1035,28 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 			dataType: 'jsonp',
 			success: function (data) {
 				
-				if (moment && me.options.sizeBy === 'date') {
+				me._count = data.count;
+				
+				if (moment && me.options.sizeBy === L.PanoramioLayer.SIZE_BY_DATE) {
 					data = me.calculateSizeByDate(data);
 				}
-				else if (me.options.sizeBy === 'popularity') {
+				else if (me.options.sizeBy === L.PanoramioLayer.SIZE_BY_POPULARITY) {
 					data = me.calculateSizeByPopularity(data);
 				}
 				
+				me.fire('photosAvailable', data);
 				me.clearLayers();
 				me.addData(data);
 			}
 		});
+		
+		me._calls.push(request);
 	}
 });
+
+L.panoramioLayer = function (options) {
+	return new L.PanoramioLayer(options);
+};
 
 /**
  * 
@@ -955,6 +1082,10 @@ L.GeohashDataLayer = L.DataLayer.extend({
 		return new L.Rectangle(geohash.location, layerOptions);
 	}
 });
+
+L.geohashDataLayer = function (data, options) {
+	return new L.GeohashDataLayer(data, options);
+};
 
 /*
  * 
@@ -993,6 +1124,10 @@ L.ChoroplethDataLayer = L.DataLayer.extend({
 	}
 });
 
+L.choroplethDataLayer = function (data, options) {
+	return new L.ChoroplethDataLayer(data, options);
+};
+
 /*
  * 
  */
@@ -1006,6 +1141,8 @@ L.ChartDataLayer = L.DataLayer.extend({
 	},
 	
 	_getLayer: function (latLng, layerOptions, record) {
+		this._addBoundary(latLng, layerOptions);
+		
 		latLng = this._processLocation(latLng);
 		
 		var chartOptions = this.options.chartOptions;
@@ -1016,6 +1153,7 @@ L.ChartDataLayer = L.DataLayer.extend({
 		options.data = {};
 		options.chartOptions = chartOptions;
 		
+		// Set data property value to the associated value from the record
 		for (var key in this.options.chartOptions) {
 			options.data[key] = L.Util.getFieldValue(record, key);			
 		} 
@@ -1059,6 +1197,10 @@ L.BarChartDataLayer = L.ChartDataLayer.extend({
 	}
 });
 
+L.barChartDataLayer = function (data, options) {
+	return new L.BarChartDataLayer(data, options);
+};
+
 /*
  * 
  */
@@ -1071,6 +1213,10 @@ L.RadialBarChartDataLayer = L.ChartDataLayer.extend({
 		return new L.RadialBarChartMarker(latLng, options);
 	}
 });
+
+L.radialBarChartDataLayer = function (data, options) {
+	return new L.RadialBarChartDataLayer(data, options);
+};
 
 /*
  * 
@@ -1085,6 +1231,10 @@ L.PieChartDataLayer = L.ChartDataLayer.extend({
 	}
 });
 
+L.pieChartDataLayer = function (data, options) {
+	return new L.PieChartDataLayer(data, options);
+};
+
 /*
  * 
  */
@@ -1098,6 +1248,10 @@ L.CoxcombChartDataLayer = L.ChartDataLayer.extend({
 	}
 });
 
+L.coxcombChartDataLayer = function (data, options) {
+	return new L.CoxcombChartDataLayer(data, options);
+};
+
 /*
  *
  */
@@ -1110,3 +1264,7 @@ L.StackedRegularPolygonDataLayer = L.ChartDataLayer.extend({
 		return new L.StackedRegularPolygonMarker(latLng, options);
 	}
 });
+
+L.stackedRegularPolygonDataLayer = function (data, options) {
+	return new L.StackedRegularPolygonDataLayer(data, options);
+};

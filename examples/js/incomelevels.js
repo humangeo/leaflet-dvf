@@ -17,7 +17,7 @@ $(document).ready(function() {
 		layers: [minimal]
 	}).setView([0.0, 0.0], 2);
 	
-	var incomeLevelTypes = ['OEC', 'NOC', 'UMC', 'MIC', 'LMC', 'LIC', 'HPC']; //, 'INX']; //['INX','HPC','LIC','LMC','MIC','UMC','NOC','OEC'];
+	var incomeLevelTypes = ['OEC', 'NOC', 'UMC', 'MIC', 'LMC', 'LIC', 'HPC'];
 	var valueArray = [{"id":"HIC","value":"High income"},{"id":"HPC","value":"Heavily indebted poor countries (HIPC)"},{"id":"INX","value":"Not classified"},{"id":"LIC","value":"Low income"},{"id":"LMC","value":"Lower middle income"},{"id":"LMY","value":"Low & middle income"},{"id":"MIC","value":"Middle income"},{"id":"NOC","value":"High income: nonOECD"},{"id":"OEC","value":"High income: OECD"},{"id":"UMC","value":"Upper middle income"}];
 	var getMap = function (valueArray) {
 		var map = {};
@@ -43,16 +43,6 @@ $(document).ready(function() {
 	
 	var colorFunction1 = new L.HSLLuminosityFunction(new L.Point(0, 0.5), new L.Point(incomeLevelTypes.length - 1, 0.1), {outputHue: 27, outputLuminosity: '100%'});
 	var fillColorFunction1 = new L.HSLLuminosityFunction(new L.Point(0, 0.5), new L.Point(incomeLevelTypes.length - 1, 0.2), {outputHue: 27, outputLuminosity: '100%'});
-//	var paletteBuilder = new L.PaletteBuilder({
-//		weight: 1,
-//		fillOpacity: 0.7,
-//		color: colorFunction1,
-//		fillColor: fillColorFunction1
-//	});
-//	
-//	$('body').append(paletteBuilder.generate({
-//		count: incomeLevelTypes.length
-//	}));
 	
 	var styles = new L.StylesBuilder(incomeLevelTypes, {
 		displayName: incomeLevelToText,
@@ -98,7 +88,6 @@ $(document).ready(function() {
 		className: 'well'
 	}));
 
-
 	var colorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(300000000,0), {outputSaturation: '100%', outputLuminosity: '30%'});
 	var fillColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(300000000,0));
 	
@@ -137,8 +126,6 @@ $(document).ready(function() {
 	$('#legend').append(telephoneLinesLayer.getLegend({
 		className: 'well'
 	}));
-	
-	
 	
 	var categories = ['1995','2000','2005','2010'];
 	var fillColorFunctionBars = new L.HSLLuminosityFunction(new L.Point(0,0.5), new L.Point(categories.length - 1,1), {outputHue: 0, outputSaturation: '100%'});

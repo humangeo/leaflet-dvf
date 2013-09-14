@@ -44,6 +44,19 @@ $(document).ready(function() {
 				tooltipOptions: {
 					iconSize: new L.Point(80,55),
 					iconAnchor: new L.Point(-5,55)
+				},
+				setHighlight: function (layerStyle) {
+					layerStyle.gradient = true;
+					layerStyle.dropShadow = true;
+					layerStyle.weight *= 2;
+					return layerStyle;
+				},
+				
+				unsetHighlight: function (layerStyle) {
+					layerStyle.gradient = false;
+					layerStyle.dropShadow = false;
+					layerStyle.weight /= 2;
+					return layerStyle;
 				}
 			};
 			
@@ -59,7 +72,7 @@ $(document).ready(function() {
 			
 			// Remove the US results
 			delete data[0];
-			
+
 			var currentElectionOptions = {
 				recordsField: null,
 				locationMode: L.LocationModes.STATE,
@@ -104,8 +117,17 @@ $(document).ready(function() {
 					width: 5,
 					barThickness: 5
 				},
+				// Use displayOptions to dynamically size the radius and barThickness according to the number of
+				// polling results
+				displayOptions: {
+					'poll_count': {
+						radius: new L.LinearFunction(new L.Point(0, 10), new L.Point(1000, 100)),
+						barThickness: new L.LinearFunction(new L.Point(0, 4), new L.Point(1000, 80))
+					}
+				},
 				tooltipOptions: {
-					iconSize: new L.Point (50,50)
+					iconSize: new L.Point(80,55),
+					iconAnchor: new L.Point(-5,55)
 				},
 				onEachRecord: function (layer,record) {
 					var $html = L.HTMLUtils.buildTable(record);

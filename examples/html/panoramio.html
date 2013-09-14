@@ -7,16 +7,87 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
-    <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
-    </style>
+    <link rel="stylesheet" type="text/css" href="../lib/timeline/timeline.css">
+
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="../lib/leaflet/leaflet.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
+	<style>   
+		body {
+			overflow-x: hidden;
+		}   
+		
+		#gallery-wrapper {
+			position: absolute;
+			top: 52px;
+			right: 10px;
+			width: 400px;
+			height: 400px;
+			overflow-y: scroll;
+			overflow-x: hidden;
+			z-index: 20000;
+			border: solid 1px rgba(0, 0, 0, 0.7);
+			border-right-width: 10px;
+			border-left-width: 10px;
+			border-radius: 10px;
+			background-color: rgba(0, 0, 0, 0.5);
+			box-shadow: 2px 2px 3px rgba(100, 100, 100, 0.5);
+		}
+		#gallery {
+			width: 400px;
+			height: 400px;
+			z-index: 20000;
+		}
+		
+		#gallery img {
+			vertical-align: middle;
+			cursor: pointer;
+		}
+		
+		#timeline {
+			height: 200px;
+			width: 99.99%;
+			padding: 0px;
+			margin: 0px;
+		}
+      
+      	#timeline img.photo {
+      		height: 40px !important;
+      		width: auto !important;
+			opacity: 0;
+			box-shadow: none;
+			-moz-transition: opacity 0.5s; /* Firefox 4 */
+			-webkit-transition: opacity 0.5s; /* Safari and Chrome */
+			-o-transition: opacity 0.5s;
+			transition: opacity 0.5s;
+			padding: 0px;
+			margin: 0px;
+		}
+		
+		div.timeline-event-box {
+			padding: 0px !important;
+			margin: 0px !important;
+			box-shadow: 2px 2px 3px rgba(100, 100, 100, 0.4);
+			border: solid 1px rgba(150, 150, 150, 0.2);
+			background-color: white;
+			border-radius: 0px;
+		}
+		
+		div.timeline-event-content {
+			margin: 2px;
+		}
+		
+		div.container-fluid {
+			margin: 0px;
+			padding: 0px;
+		}
+		
+		.search-query {
+			width: 400px;
+		}
+    </style>
 </head>
 
 <body>
@@ -31,25 +102,42 @@
           <a class="brand" href="#">Panoramio Browser</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
-              <li class="active"><a href="../../index.html">Home</a></li>
+              <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
             </ul>
           </div><!--/.nav-collapse -->
+          <form class="navbar-search pull-right">
+			  <input type="text" class="search-query" placeholder="Search">
+			</form>
         </div>
       </div>
     </div>
 
     <div class="container-fluid">
-    	<div class="row-fluid">
-			<div id="map"></div>
-		</div>
+    	<div id="gallery-wrapper" class="photo-item">
+    		<div id="gallery"></div>
+    	</div>
+		<div id="map"></div>
+		<div id="timeline"></div>
 	</div>
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
 
+	  ga('create', 'UA-42733116-1', 'humangeo.github.io');
+	  ga('send', 'pageview');
+	</script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
+	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+	<script type="text/javascript" src="../lib/timeline/timeline.js"></script>
 	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="../lib/leaflet/leaflet.js"></script>
+	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
 	<script type="text/javascript" src="../lib/date.format.js"></script>
 	<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
+	<script type="text/javascript" src="../../src/leaflet.dvf.datalayer.js"></script>
+	<script type="text/javascript" src="../js/chromaticgallery.js"></script>
 	<script type="text/javascript" src="../js/panoramio.js"></script>
 </body>
 </html>

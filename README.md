@@ -23,6 +23,7 @@ New marker types (see the markers example below):
 	* CoxcombChartMarker
 	* RadialMeterMarker
 	* StackedRegularPolygonMarker - a variation on the bar chart
+	* SparklineMarker - graph-based markers for illustrating time series and other x, y data in a geospatial context (Coming soon)
 
 Functions for easily mapping data properties to Leaflet style values:
 
@@ -37,7 +38,7 @@ Functions for easily mapping data properties to Leaflet style values:
 New layer types that simplify reading and visualizing any JSON-based data structure:
 
 * DataLayer
-* ChartDataLayer
+* ChartDataLayer and corresponding DataLayer instances for various chart types
 * ChoroplethDataLayer
 * Others
 
@@ -50,8 +51,29 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 
 Support for gradient fills and drop shadows.
 
+**NEW** Callouts for annotating map data.  Use the L.Callout class to add individual callouts to your map.  See the [Markers](http://humangeo.github.com/leaflet-dvf/examples/html/markers.html) example for an illustration of callouts. **Documentation coming soon**
+
 *NOTE:  The dist folder includes a minified version of the full framework as well as a minified version of the code required to use the new markers*
 *Use leaflet-dvf.markers.min.js if you want to use the new markers without the rest of the framework*
+
+## Pre-requisites
+
+Required:
+* [jQuery](http://jquery.com/)
+
+Optional - required for particular classes to work:
+* [Underscore JS](http://underscorejs.org/)
+* [Moment JS](http://momentjs.com/)
+* [geohash.js](https://github.com/davetroy/geohash-js)
+* [JavaScript Topology Suite (JSTS)](https://github.com/bjornharrtell/jsts)
+* [Core Framework SVG Utilities](https://code.google.com/p/core-framework/source/browse/trunk/plugins/svg.js) *Required for full functionality in archaic browsers (see note below)*
+
+Using the framework in IE8 and below:
+
+** Special thanks to Keith Chew of [e3solutions](www.e3solutions.net) for testing and getting things working in IE8 and below.  This is still an on-going effort, so additional bug fixes may be forthcoming.  The examples provided here may need some tweaking to work in IE8 and below**
+
+As you may or may not be aware, IE8 and below do not support SVG.  Leaflet and most SVG frameworks mitigate this problem by using Vector Markup Language (VML) instead of SVG when rendering custom shapes and paths.
+With the latest version of the framework, most of the components will work without requiring any extra dependencies.  However, L.RadialBarChartMarker and L.PieChartMarker will require including the [Core Framework SVG Utilities](https://code.google.com/p/core-framework/source/browse/trunk/plugins/svg.js).  These utilities can convert more complex SVG shapes into corresponding VML shapes.
 
 ## Examples
 
@@ -62,7 +84,7 @@ New Marker Types:
 
 Proportional Symbol:
 * [USGS Earthquakes](http://humangeo.github.com/leaflet-dvf/examples/html/earthquakes.html)
-* [Meetup Finder](http://humangeo.github.com/leaflet-dvf/examples/html/meetups.html) - zoom to an area of interest, put in a Meetup topic, and click the search button
+* [Meetup Finder](http://humangeo.github.com/leaflet-dvf/examples/html/meetups.html) *Zoom to an area of interest, put in a Meetup topic, and click the search button*
 * [Weather](http://humangeo.github.com/leaflet-dvf/examples/html/weather.html)
 
 Choropleth Mapping:
@@ -71,13 +93,19 @@ Choropleth Mapping:
 
 Mix:
 * [WorldBank and UN Data](http://humangeo.github.com/leaflet-dvf/examples/html/incomelevels.html)
-* [Election 2012 Polling](http://humangeo.github.com/leaflet-dvf/examples/html/election2012.html)
+* [Election 2012 Polling](http://humangeo.github.com/leaflet-dvf/examples/html/election2012.html) *Illustrates sizing pie charts by a data value*
 * [2008 vs 2012 Election Results](http://humangeo.github.com/leaflet-dvf/examples/html/election2012results.html)
 * [2008 Election Results](http://humangeo.github.com/leaflet-dvf/examples/html/uselectiondata.html)
-* [Netherlands Population by ZIP 2](http://humangeo.github.com/leaflet-dvf/examples/html/nlzip.html) ** Thanks to Steven De Schrijver of [Conundra](http://www.conundra.eu) for providing the example use case **
+* [Netherlands Population by ZIP 2](http://humangeo.github.com/leaflet-dvf/examples/html/nlzip.html) **Thanks to Steven De Schrijver of [Conundra](http://www.conundra.eu) for providing the example use case**
 
 Images:
-* [Panoramio Layer](http://humangeo.github.com/leaflet-dvf/examples/html/panoramio.html)
+* [Panoramio Browser](http://humangeo.github.com/leaflet-dvf/examples/html/panoramio.html) *NOTE:  This is a work in progress but is mostly complete*
+
+Lines:
+* [Napoleon's March](http://humangeo.github.com/leaflet-dvf/examples/html/minard.html) *Yet another variation of Charle's Minard's famous visualization that illustrates the use of the FlowLine class*
+
+In Progress:
+* [Sparklines](http://humangeo.github.com/leaflet-dvf/examples/html/sparklines.html) *NOTE:  This is a work in progress.  The code is incomplete and can be found in src/leaflet.dvf.experimental.js*
 
 Tutorials coming soon to [HumanGeo](http://www.thehumangeo.com/)'s [blog](http://blog.thehumangeo.com)
 
@@ -490,6 +518,8 @@ You might specify the following options:
 Option | Type | Default | Description
 --- | --- | --- | ---
 
+> NOTE:  You can use the displayOptions option to size ChartMarker instances dynamically by some property of each record.  See the DataLayer options above for more information about displayOptions.
+
 ### L.ChoroplethDataLayer
 
 > Display data values using dynamically styled points, lines, and polygons (inherits from L.DataLayer)
@@ -518,7 +548,8 @@ Option | Type | Default | Description
 ### L.PanoramioLayer
 
 > Display Panoramio images on the map.  Shows the top 50 most popular images for the current map view.
-
+> NOTE:  Requires ![Moment.js](http://momentjs.com)
+> Check out [Panoramio Browser](http://humangeo.github.com/leaflet-dvf/examples/html/panoramio.html) for an example of using this layer.
 <img alt="Panoramio Layer" src="http://humangeo.github.com/leaflet-dvf/images/panoramiolayer.png"/>
 
 #### Usage
@@ -527,9 +558,11 @@ Option | Type | Default | Description
 #### Options (in addition to the *L.DataLayer* style options)
 Option | Type | Default | Description
 --- | --- | --- | ---
+photoSet | String | public | The Panoramio API photo set to use for retrieving images.  Can be one of 'public' - the most popular photos, 'full' - all photos, or a specific author id
 updateInterval | Number | 300000 | The number of milliseconds to wait before updating the current view
 size | String | square | The marker image size ("square" or "mini_square")
 refreshEvents | String | moveend | The Leaflet events that will trigger a refresh of photos (separate with spaces)
+onEachPhoto | Function | null | A function that will be called for each photo in the collection of retrieved photos.  This is similar to the onEachRecord function of a DataLayer.
 
 ## Legends
 

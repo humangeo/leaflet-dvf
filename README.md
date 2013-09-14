@@ -548,7 +548,7 @@ Option | Type | Default | Description
 ### L.PanoramioLayer
 
 > Display Panoramio images on the map.  Shows the top 50 most popular images for the current map view.
-> NOTE:  Requires ![Moment.js](http://momentjs.com)
+> NOTE:  Requires [Moment.js](http://momentjs.com)
 > Check out [Panoramio Browser](http://humangeo.github.com/leaflet-dvf/examples/html/panoramio.html) for an example of using this layer.
 <img alt="Panoramio Layer" src="http://humangeo.github.com/leaflet-dvf/images/panoramiolayer.png"/>
 

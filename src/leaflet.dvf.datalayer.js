@@ -162,7 +162,7 @@ L.LocationModes = {
 				self.locationToLayer(location, context[key]);
 			};
 			
-			options.getLocation(context, locationField, [fieldValue], callback);
+			this.options.getLocation(context, locationField, [fieldValue], callback);
 		}
 	}
 };

@@ -103,7 +103,7 @@ Images:
 
 Lines:
 * [Napoleon's March](http://humangeo.github.com/leaflet-dvf/examples/html/minard.html) *Yet another variation of Charle's Minard's famous visualization that illustrates the use of the FlowLine class*
-* [US Airports and Flight Data](http://humangeo.github.com/leaflet-dvf/examples/html/airports.html) * Illustrates using the L.Graph class for visualize flights between airports
+* [US Airports and Flight Data](http://humangeo.github.com/leaflet-dvf/examples/html/airports.html) *Illustrates using the L.Graph class for visualize flights between airports*
 
 In Progress:
 * [Sparklines](http://humangeo.github.com/leaflet-dvf/examples/html/sparklines.html) *NOTE:  This is a work in progress.  The code is incomplete and can be found in src/leaflet.dvf.experimental.js*
@@ -282,6 +282,7 @@ Option | Type | Default | Description
 --- | --- | --- | ---
 data | Object | null | A set of key/value pairs that provides a data value for each property displayed by the marker 
 chartOptions | Object | null | A set of key/value pairs that defines the options associated with each data property displayed by the marker.
+backgroundStyle (L.RadialMeterMarker) | Object | L.Path object with a semi-transparent gray fill and stroke | An object of L.Path style options that will be used to style the background area of the chart.  Set this to null or false to prevent a background from being displayed.
 
 ### L.Callout
 

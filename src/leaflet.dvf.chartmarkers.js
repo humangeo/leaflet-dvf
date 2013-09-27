@@ -450,8 +450,11 @@ L.PieChartMarker = L.ChartMarker.extend({
 
 	_highlight: function (options) {
 		var oldRadiusX = options.radiusX;
+        var oldRadiusY = options.radiusY;
 		var oldBarThickness = options.barThickness;
 		options.oldBarThickness = oldBarThickness;
+		options.oldRadiusX = oldRadiusX;
+		options.oldRadiusY = oldRadiusY;
 		options.radiusX *= options.mouseOverExaggeration;
 		options.radiusY *= options.mouseOverExaggeration;
 		options.barThickness = options.radiusX - oldRadiusX + oldBarThickness;
@@ -459,8 +462,8 @@ L.PieChartMarker = L.ChartMarker.extend({
 	},
 	
 	_unhighlight: function (options) {
-		options.radiusX /= options.mouseOverExaggeration;
-		options.radiusY /= options.mouseOverExaggeration;
+		options.radiusX = options.oldRadiusX;
+		options.radiusY = options.oldRadiusY;
 		options.barThickness = options.oldBarThickness;
 		return options;
 	},
@@ -813,7 +816,14 @@ L.RadialMeterMarker = L.ChartMarker.extend({
 		offset: 2,
 		barThickness: 5,
 		maxDegrees: 180.0,
-		iconSize: new L.Point(50, 40)
+		iconSize: new L.Point(50, 40),
+		backgroundStyle: {
+			fill: true,
+			fillColor: '#707070',
+			fillOpacity: 0.2,
+			opacity: 0.8,
+			color: '#505050'
+		}
 	},
 
 	_loadComponents: function() {
@@ -847,8 +857,9 @@ L.RadialMeterMarker = L.ChartMarker.extend({
 			var angle = (maxDegrees / range) * (value - minValue);
 			
 			var endAngle = startAngle + angle;
+			var maxAngle = startAngle + maxDegrees;
 			
-			var evalFunction = new L.LinearFunction(new L.Point(startAngle, minValue), new L.Point(startAngle + maxDegrees, maxValue));
+			var evalFunction = new L.LinearFunction(new L.Point(startAngle, minValue), new L.Point(maxAngle, maxValue));
 			
 			while (lastAngle < endAngle) {
 				options.startAngle = lastAngle;
@@ -881,7 +892,36 @@ L.RadialMeterMarker = L.ChartMarker.extend({
 				lastAngle += delta;
 			}
 			
-			
+			// Add a background
+			if (this.options.backgroundStyle) {
+				if (lastAngle < maxAngle) {
+					var delta = maxAngle - lastAngle;
+				
+					options.endAngle = lastAngle + delta;
+					options.radiusX = radiusX;
+					options.radiusY = radiusY;
+					options.barThickness = barThickness;
+					options.rotation = 0;
+					options.key = key;
+					options.value = value;
+					options.displayName = chartOption.displayName;
+					options.displayText = chartOption.displayText;
+					
+					options.fillColor = null;
+					options.fill = false;
+					options.gradient = false;
+					
+					for (var property in this.options.backgroundStyle) {
+						options[property] = this.options.backgroundStyle[property];
+					}
+					
+					var evalValue = evalFunction.evaluate(lastAngle + delta);
+				
+					bar = new L.RadialBarMarker(this._latlng, options);
+
+					this.addLayer(bar);
+				}
+			}
 		}
 	}
 });

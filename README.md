@@ -70,7 +70,7 @@ Optional - required for particular classes to work:
 
 Using the framework in IE8 and below:
 
-** Special thanks to Keith Chew of [e3solutions](www.e3solutions.net) for testing and getting things working in IE8 and below.  This is still an on-going effort, so additional bug fixes may be forthcoming.  The examples provided here may need some tweaking to work in IE8 and below**
+**Special thanks to Keith Chew of [e3solutions](http://www.e3solutions.net) for testing and getting things working in IE8 and below.  This is still an on-going effort, so additional bug fixes may be forthcoming.  The examples provided here may need some tweaking to work in IE8 and below**
 
 As you may or may not be aware, IE8 and below do not support SVG.  Leaflet and most SVG frameworks mitigate this problem by using Vector Markup Language (VML) instead of SVG when rendering custom shapes and paths.
 With the latest version of the framework, most of the components will work without requiring any extra dependencies.  However, L.RadialBarChartMarker and L.PieChartMarker will require including the [Core Framework SVG Utilities](https://code.google.com/p/core-framework/source/browse/trunk/plugins/svg.js).  These utilities can convert more complex SVG shapes into corresponding VML shapes.
@@ -103,6 +103,7 @@ Images:
 
 Lines:
 * [Napoleon's March](http://humangeo.github.com/leaflet-dvf/examples/html/minard.html) *Yet another variation of Charle's Minard's famous visualization that illustrates the use of the FlowLine class*
+* [US Airports and Flight Data](http://humangeo.github.com/leaflet-dvf/examples/html/airports.html) * Illustrates using the L.Graph class for visualize flights between airports
 
 In Progress:
 * [Sparklines](http://humangeo.github.com/leaflet-dvf/examples/html/sparklines.html) *NOTE:  This is a work in progress.  The code is incomplete and can be found in src/leaflet.dvf.experimental.js*
@@ -282,6 +283,68 @@ Option | Type | Default | Description
 data | Object | null | A set of key/value pairs that provides a data value for each property displayed by the marker 
 chartOptions | Object | null | A set of key/value pairs that defines the options associated with each data property displayed by the marker.
 
+### L.Callout
+
+> Used for annotating markers, lines, and polygons.  Callouts include a line and associated icon (L.Icon or L.DivIcon).
+
+#### Usage
+`L.Callout(<LatLng> latlng, <Callout options> options?);`
+
+```javascript
+var callout = new L.Callout(new L.LatLng(0.0, 0.0), {
+	arrow: true,
+	numberOfSides: 3,
+	radius: 8,
+	icon: new L.DivIcon(...),
+	direction: L.CalloutLine.DIRECTION.NE,
+	lineStyle: L.CalloutLine.LINESTYLE.ARC,
+	size: new L.Point(50, 50),
+	weight: 2,
+	fillOpacity: 1.0,
+	color: '#FFFFFF',
+	fillColor: '#FFFFFF'
+});
+
+map.addLayer(callout);
+```
+
+#### Options (in addition to L.Path style options)
+Option | Type | Default | Description
+--- | --- | --- | ---
+arrow | Boolean | true | true/false - whether or not an arrow should be added to the end of the callout line
+numberOfSides | Number | 3 | The number of sides the arrow at the end of the callout line will have.
+radius | Number | 6 | The radius of the arrow that will be displayed at the end of the callout line
+icon | Object| null | An L.Icon or L.DivIcon object that will be displayed at the end of the callout line
+direction | String | 'ne' | The quadrant in which the callout will be placed: 'ne', 'se', 'sw', 'nw'.  Use L.CalloutLine.DIRECTION properties (NE, SE, SW, NW) to specify this
+lineStyle | String | 'angle' | The style of the associated callout line: 'arc', 'angle', 'straight'.  Use L.CalloutLine.LINESTYLE properties (ARC, ANGLE, STRAIGHT) to specify this.  'arc' displays a curved line, 'angle' displays an angled line, and 'straight' displays a straight line from the annotation point to the associated icon.
+size | Object | L.Point(60, 30) | The bounds of the callout line
+
+Include L.Path options to style the callout line associated with the callout object (e.g. color, fillColor, weight, etc.)
+
+## Lines
+
+### L.ArcedPolyline
+
+> Draws an arced polyline.  Rather than drawing a straight line from latlng1 to latlng2, this class draws an arced line from latlng1 to latlng2.  The height of the arc is proportional to the distance between latlng1 and latlng2 and defined by a customizable L.LinearFunction instance.  This is useful for illustrating spatial relationships, flight paths, etc.
+
+#### Usage
+`L.ArcedPolyline(<LatLng[]> latlngs, <ArcedPolyline options> options?);`
+
+```javascript
+var arcedPolyline = new L.ArcedPolyline([...], {
+	distanceToHeight: new L.LinearFunction([0, 0], [4000, 400]),
+	color: '#FF00000',
+	weight: 4
+});
+
+map.addLayer(arcedPolyline);
+```
+
+#### Options (in addition to L.Path style options)
+Option | Type | Default | Description
+--- | --- | --- | ---
+distanceToHeight | L.LinearFunction | new L.LinearFunction([0, 5], [1000, 200]) | An L.LinearFunction instance that maps the distance between two points to an arc height in pixels
+
 ## Utility Functions
 
 > Classes for mapping data properties to Leaflet style values
@@ -417,10 +480,11 @@ layerOptions | Object | null | Default style - An object containing Leaflet L.Pa
 displayOptions | Object | null | Dynamic styles - An object containing pointers to one or property values of each record with associated L.Path style properties and LinearFunction objects
 tooltipOptions | Object | null | Options used to configure the tooltips that are displayed on mouseover (iconSize and iconAnchor)
 onEachRecord | Function | null | A function that performs additional operations (e.g. binding a popup) on a created layer based on the record associated with that layer (similar to the L.GeoJSON onEachFeature method
-includeLayer | Function | null | A function for determining whether or not the layer for a given record should be added to the map.
+includeLayer OR filter | Function | null | A function for determining whether or not the layer for a given record should be added to the map.
 getLocation | Function | null | A function for getting a custom location from a record (e.g. looking up an address) *NOTE: Use with 'custom' locationMode value*
 locationLookup | Object (GeoJSON FeatureCollection) | null | A GeoJSON FeatureCollection that will be used to lookup the location associated with a given record. This is useful when you have some data that maps to political/statistical boundaries other than US states or countries.  *NOTE: Use with 'lookup locationMode*
 includeBoundary | Boolean | null | true/false - whether or not the boundary polygon should be displayed when displaying proportional symbols.  This is useful for identifying the boundary associated with each symbol.
+boundaryStyle | Object | null | Path style options used for specifying how the boundary associated with the point will be displayed
 
 #### Referencing Data Properties
 

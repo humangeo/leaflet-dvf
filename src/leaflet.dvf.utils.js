@@ -460,7 +460,7 @@ L.SVGPathBuilder = L.Class.extend({
 		inner ? this._innerPoints.push(point) : this._points.push(point);
 	},
 
-	toString: function (digits) {
+	build: function (digits) {
 		digits = digits || this.options.digits;
 		
 		var pathString = this._getPathString(this._points, digits);
@@ -482,7 +482,7 @@ L.StyleConverter = {
 			}
 		},
 		color: {
-			property: ['border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color'], //border
+			property: ['color', 'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color'], //border
 			valueFunction: function (value) {
 				return value;
 			}

@@ -53,7 +53,7 @@ L.BarMarker = L.Path.extend({
 
 	getPathString: function () {
 		this._path.setAttribute('shape-rendering', 'crispEdges');
-		return new L.SVGPathBuilder(this._points).toString();
+		return new L.SVGPathBuilder(this._points).build();
 	},
 
 	_getPoints: function () {

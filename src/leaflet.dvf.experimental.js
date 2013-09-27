@@ -1,25 +1,6 @@
 /*
  *
  */
-L.WordCloudMarker = L.ChartMarker.extend({
-	initialize: function (centerLatLng, options) {
-		L.Util.setOptions(this, options);
-		
-		L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
-	},
-	
-	options: {
-
-	},
-	
-	_loadComponents: function () {
-		// Add an L.DivIcon for each term, sized by count, and colored by count or by word
-	}
-});
-
-/*
- *
- */
 L.SeriesMarker = L.Path.extend({
 	initialize: function (centerLatLng, options) {
 		L.Path.prototype.initialize.call(this, options);
@@ -69,7 +50,7 @@ L.SeriesMarker = L.Path.extend({
 	getPathString: function () {
 		return new L.SVGPathBuilder(this._points, null, {
 			closePath: this.options.fill
-		}).toString(6);
+		}).build(6);
 	},
 	
 	getDataPoint: function (x) {
@@ -237,7 +218,7 @@ L.Line = L.Path.extend({
 	getPathString: function () {
 		var path = new L.SVGPathBuilder(this._points, null, {
 			closePath: false
-		}).toString(6);
+		}).build(6);
 		
 		console.log(path);
 		
@@ -539,6 +520,32 @@ L.sparklineDataLayer = function (data, options) {
 	return new L.SparklineDataLayer(data, options);
 };
 
+/*
+ *
+ */
+L.WordCloudMarker = L.ChartMarker.extend({
+	initialize: function (centerLatLng, options) {
+		L.Util.setOptions(this, options);
+		
+		L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
+	},
+	
+	options: {
+
+	},
+	
+	_loadComponents: function () {
+		// Add an L.DivIcon for each term, sized by count, and colored by count or by word
+	}
+});
+
+L.wordCloudMarker = function (centerLatLng, options) {
+	return new L.WordCloudMarker(centerLatLng, options);
+};
+
+/*
+ *
+ */
 L.WordCloudDataLayer = L.ChartDataLayer.extend({
 	initialize: function (data, options) {
 		L.ChartDataLayer.prototype.initialize.call(this, data, options);
@@ -557,3 +564,59 @@ L.WordCloudDataLayer = L.ChartDataLayer.extend({
 L.wordCloudDataLayer = function (data, options) {
 	return new L.WordCloudDataDataLayer(data, options);
 };
+
+/*
+ * A DataLayer for visualizing data as a graph of edges, where the vertices are locations
+ */
+L.Graph = L.DataLayer.extend({
+	statics: {
+		EDGESTYLE: {
+			STRAIGHT: function (latlng1, latlng2) {
+				return new L.Polyline([latlng1, latlng2]);
+			},
+			ARC: function (latlng1, latlng2) {
+				return new L.ArcedPolyline([latlng1, latlng2]);
+			}
+		}
+	}
+});
+
+L.Graph = L.Graph.extend({
+	options: {
+		getEdge: L.Graph.EDGESTYLE.STRAIGHT
+	},
+	_getLayer: function (location, layerOptions, record) {
+		location.location.setStyle(layerOptions);
+		return location.location;
+	},
+	_getLocation: function (record, index) {
+		var fromField = this.options.fromField;
+		var toField = this.options.toField;
+		var location;
+		
+		var fromValue = L.Util.getFieldValue(record, fromField);
+		var toValue = L.Util.getFieldValue(record, toField);
+		
+		var fromLocation = this.options.locationMode.call(this, fromValue, index);
+		var toLocation = this.options.locationMode.call(this, toValue, index);
+		
+		// Get from location
+		// Get to location
+		// Create a line (arced or straight) connecting the two locations
+		if (fromLocation && toLocation) {
+			var latlng1 = fromLocation.center;
+			var latlng2 = toLocation.center;
+			
+			var line = this.options.getEdge.call(this, latlng1, latlng2);
+			var bounds = new L.LatLngBounds(new L.LatLng(Math.min(latlng1.lat, latlng2.lat), Math.min(latlng1.lng, latlng2.lng)), new L.LatLng(Math.max(latlng1.lat, latlng2.lat), Math.max(latlng1.lng, latlng2.lng)));
+			
+			location = {
+				center: bounds.getCenter(),
+				location: line,
+				text: fromValue + ' - ' + toValue
+			};
+		}
+		
+		return location;
+	}
+});

@@ -152,6 +152,7 @@ L.LocationModes = {
 		var locationField = this.options.codeField;
 		var fieldValue = L.Util.getFieldValue(record, locationField);
 		var context = {};
+		var location;
 		
 		context[fieldValue] = record;
 		
@@ -162,11 +163,12 @@ L.LocationModes = {
 				self.locationToLayer(location, context[key]);
 			};
 			
-			options.getLocation(context, locationField, [fieldValue], callback);
+			location = this.options.getLocation(context, locationField, [fieldValue], callback);
 		}
+		
+		return location;
 	}
 };
-
 
 /*
  * 
@@ -380,6 +382,56 @@ L.DataLayer = L.LayerGroup.extend({
 		}
 	},
 	
+	setDisplayOptions: function (displayOptions) {
+		this.options.displayOptions = displayOptions;
+		
+		// Re-load data
+		this.reloadData();
+		
+		return this;
+	},
+	
+	setDisplayOption: function (key, options) {
+		this.options.displayOptions = this.options.displayOptions || {};
+		
+		if (key in this.options.displayOptions) {
+			var existingOption = this.options.displayOptions[key];
+			this.options.displayOptions[key] = $.extend({}, existingOption, options);
+		}
+		else {
+			this.options.displayOptions[key] = options;
+		}
+		
+		// Re-load data	
+		this.reloadData();
+		
+		return this;
+	},
+	
+	setFilter: function (filterFunction) {
+		this.options.filter = filterFunction;
+		
+		// Re-load data
+		this.reloadData()
+		
+		return this;
+	},
+	
+	setData: function (data) {
+		this._data = data;
+		this.reloadData();
+	},
+	
+	reloadData: function () {
+		this.clearLayers();
+		
+		if (this._data) {
+			this.addData(this._data);
+		}
+		
+		return this;
+	},
+	
 	addData: function (data) {
 		var records = this.options.recordsField !== null && this.options.recordsField.length > 0 ? L.Util.getFieldValue(data, this.options.recordsField) : data;
 		var layer;
@@ -391,6 +443,8 @@ L.DataLayer = L.LayerGroup.extend({
 		else {
 			this._loadRecords(records);
 		}
+		
+		this._data = data;
 	},
 	
 	locationToLayer: function (location, record) {
@@ -518,13 +572,16 @@ L.DataLayer = L.LayerGroup.extend({
 					for (var layerProperty in propertyOptions) {
 						valueFunction = propertyOptions[layerProperty];
 						
-						layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : valueFunction;
+						layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : (valueFunction.call ? valueFunction.call(fieldValue) : valueFunction);
 					}
 				}
 			}
 		}
 		
-		return layerOptions;
+		return {
+			layerOptions: layerOptions,
+			legendDetails: legendDetails
+		};
 	},
 	
 	recordToLayer: function (location, record) {
@@ -533,39 +590,18 @@ L.DataLayer = L.LayerGroup.extend({
 		var displayOptions = this.options.displayOptions;
 		var legendDetails = {};
 		var includeLayer = true;
+		var includeFunction = this.options.filter || this.options.includeLayer;
 		
-		if (this.options.includeLayer) {
-			includeLayer = this.options.includeLayer(record);
+		if (includeFunction) {
+			includeLayer = includeFunction.call(this, record);
 		}
 		
 		if (includeLayer) {
-			if (displayOptions) {
-				for (var property in displayOptions) {
-				
-					var propertyOptions = displayOptions[property];
-					var fieldValue = L.Util.getFieldValue(record, property);
-					var valueFunction;
-					var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
-				
-					legendDetails[property] = {
-						name: propertyOptions.displayName,
-						value: displayText
-					};
-				
-					if (propertyOptions.styles) {
-						layerOptions = L.Util.extend(layerOptions, propertyOptions.styles[fieldValue]);
-						propertyOptions.styles[fieldValue] = layerOptions;
-					}
-					else {
-						for (var layerProperty in propertyOptions) {
-							valueFunction = propertyOptions[layerProperty];
-						
-							layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : valueFunction;
-						}
-					}
-				}
-			}
-
+			var dynamicOptions = this._getDynamicOptions(record);
+			
+			layerOptions = dynamicOptions.layerOptions;
+			legendDetails = dynamicOptions.legendDetails;
+			
 			if (location && layerOptions) {
 				layerOptions.title = location.text;
 			
@@ -582,10 +618,109 @@ L.DataLayer = L.LayerGroup.extend({
 				}
 			}
 		}
+		
 		return layer;
 	},
 	
 	getLegend: function (legendOptions) {
+		return this.options.getLegend ? this.options.getLegend.call(this, legendOptions) : this._getLegend(legendOptions);
+	},
+	
+	_getLegendElement: function (params) {
+		var displayMin;
+		var displayMax;
+		var $i = $('<i></i>');
+		
+		var displayProperties = params.displayProperties;
+		var layerOptions = params.layerOptions; 
+		var ignoreProperties = params.ignoreProperties;
+		var displayTextFunction = params.displayTextFunction;
+		var index = params.index;
+		var numSegments = params.numSegments;
+		var segmentWidth = params.segmentWidth;
+		var $minValue = params.$minValue;
+		var $maxValue = params.$maxValue;
+				
+		L.StyleConverter.applySVGStyle($i, layerOptions);
+		
+		for (var property in displayProperties) {
+
+			if (ignoreProperties.indexOf(property) === -1) {
+				
+				valueFunction = displayProperties[property];
+				
+				if (valueFunction && (valueFunction.getBounds || (displayProperties.minValue && displayProperties.maxValue))) {
+					var bounds = valueFunction.getBounds ? valueFunction.getBounds() : null;
+					var minX = bounds ? bounds[0].x : displayProperties.minValue;
+					var maxX = bounds ? bounds[1].x : displayProperties.maxValue;
+
+					var binFunction = new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
+					
+					displayMin = minX;
+					displayMax = maxX;
+					
+					if (displayTextFunction) {
+						displayMin = displayTextFunction(minX);
+						displayMax = displayTextFunction(maxX);
+					}
+					
+					if (index === 0) {
+						$minValue.html(displayMin);
+						$maxValue.html(displayMax);
+					}
+					
+					var segmentSize = (maxX - minX) / numSegments;
+					var x = binFunction.evaluate(index);
+					var nextX = binFunction.evaluate(index + 1);
+					var value = valueFunction.evaluate ? valueFunction.evaluate(x) : valueFunction(x);
+					var nextValue = valueFunction.evaluate ? valueFunction.evaluate(nextX) : valueFunction(nextX);
+					
+					L.StyleConverter.setCSSProperty($i, property, value);
+					
+					// If this is the fillColor property then setup the legend so that the background is a left-right gradient
+					// moving from the lowest value of the range to the highest value of the range
+					if (property === 'fillColor') {
+						$i.css('background-image', 'linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
+						$i.css('background-image', '-ms-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
+						$i.css('background-image', '-moz-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
+						$i.css('background-image', '-webkit-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
+					}
+					
+					if (property === 'color') {
+						$i.css('border-top-color', value);
+						$i.css('border-bottom-color', nextValue);
+						$i.css('border-left-color', value);
+						$i.css('border-right-color', nextValue);
+					}
+					
+					if (property === 'weight') {
+						$i.css('border-top-width', value);
+						$i.css('border-bottom-width', nextValue);
+						$i.css('border-left-width', value);
+						$i.css('border-right-width', nextValue);
+					}
+					
+					var min = (segmentSize * index) + minX;
+					var max = min + segmentSize;
+					
+					if (displayTextFunction && valueFunction) {
+						min = displayTextFunction(min);
+						max = displayTextFunction(max);
+					}
+					
+					$i.attr('title', min + ' - ' + max);
+				}
+			
+			}
+			
+		}
+
+		$i.width(segmentWidth);
+		
+		return $i;
+	},
+	
+	_getLegend: function (legendOptions) {
 		
 		legendOptions = legendOptions || this.options.legendOptions || {};
 		
@@ -617,7 +752,7 @@ L.DataLayer = L.LayerGroup.extend({
 		}
 		
 		if (legendOptions.title) {
-			$legendElement.append('<legend>' + legendOptions.title	 + '</legend>');
+			$legendElement.append('<legend>' + legendOptions.title + '</legend>');
 		}
 		
 		var defaultFunction = function (value) {
@@ -653,85 +788,21 @@ L.DataLayer = L.LayerGroup.extend({
 				var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
 
 				for (var index = 0; index < numSegments; ++index) {
-
-					var $i = $('<i></i>');
+					var legendParams = {
+						displayProperties: displayProperties,
+						layerOptions: layerOptions, 
+						ignoreProperties: ignoreProperties, 
+						displayTextFunction: displayTextFunction, 
+						index: index, 
+						numSegments: numSegments, 
+						segmentWidth: segmentWidth, 
+						$minValue: $minValue,
+						$maxValue: $maxValue
+					};
 					
-					L.StyleConverter.applySVGStyle($i, layerOptions);
+					var $element = this._getLegendElement(legendParams);
 					
-					for (var property in displayProperties) {
-
-						if (ignoreProperties.indexOf(property) === -1) {
-							
-							valueFunction = displayProperties[property];
-							
-							if (valueFunction && (valueFunction.getBounds || (displayProperties.minValue && displayProperties.maxValue))) {
-								var bounds = valueFunction.getBounds ? valueFunction.getBounds() : null;
-								var minX = bounds ? bounds[0].x : displayProperties.minValue;
-								var maxX = bounds ? bounds[1].x : displayProperties.maxValue;
-
-								var binFunction = new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
-								
-								displayMin = minX;
-								displayMax = maxX;
-								
-								if (displayTextFunction) {
-									displayMin = displayTextFunction(minX);
-									displayMax = displayTextFunction(maxX);
-								}
-								
-								if (index === 0) {
-									$minValue.html(displayMin);
-									$maxValue.html(displayMax);
-								}
-								
-								var segmentSize = (maxX - minX) / numSegments;
-								var x = binFunction.evaluate(index);
-								var nextX = binFunction.evaluate(index + 1);
-								var value = valueFunction.evaluate ? valueFunction.evaluate(x) : valueFunction(x);
-								var nextValue = valueFunction.evaluate ? valueFunction.evaluate(nextX) : valueFunction(nextX);
-								
-								L.StyleConverter.setCSSProperty($i, property, value);
-								
-								// If this is the fillColor property then setup the legend so that the background is a left-right gradient
-								// moving from the lowest value of the range to the highest value of the range
-								if (property === 'fillColor') {
-									$i.css('background-image', 'linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
-									$i.css('background-image', '-ms-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
-									$i.css('background-image', '-moz-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
-									$i.css('background-image', '-webkit-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%)');
-								}
-								
-								if (property === 'color') {
-									$i.css('border-top-color', value);
-									$i.css('border-bottom-color', nextValue);
-									$i.css('border-left-color', value);
-									$i.css('border-right-color', nextValue);
-								}
-								
-								if (property === 'weight') {
-									$i.css('border-top-width', value);
-									$i.css('border-bottom-width', nextValue);
-									$i.css('border-left-width', value);
-									$i.css('border-right-width', nextValue);
-								}
-								
-								var min = (segmentSize * index) + minX;
-								var max = min + segmentSize;
-								
-								if (displayTextFunction && valueFunction) {
-									min = displayTextFunction(min);
-									max = displayTextFunction(max);
-								}
-								
-								$i.attr('title', min + ' - ' + max);
-							}
-						
-						}
-						
-					}
-
-					$i.width(segmentWidth);
-					$scaleBars.append($i);
+					$scaleBars.append($element);
 
 				}
 			}
@@ -766,6 +837,7 @@ L.mapMarkerDataLayer = function (data, options) {
  */
 L.MarkerDataLayer = L.DataLayer.extend({
 	initialize: function (data, options) {
+		this._markerMap = {};
 		L.DataLayer.prototype.initialize.call(this, data, options);
 	},
 	
@@ -788,9 +860,17 @@ L.MarkerDataLayer = L.DataLayer.extend({
 		return new L.Marker(latLng, layerOptions);
 	},
 	
-	getLegend: function (options) {
+	_getLegendElement: function (params) {
+		// Call setIcon
+		// var icon = this.options.setIcon.call(this, record);
+		// Get the icon's html
+		// var html = icon.options.iconUrl ? '<img src="' + icon.options.iconUrl + '"/>' : icon.options.html;
+		// return $(html);
+	},
+	
+	_getLegend: function (options) {
 		// TODO:  Implement this.  Get the correct icon for each marker based on iterating over a range
-		// of values
+		// of values.  Remove this and override the _getLegendElement method
 		return '<span>No legend available</span>';
 	}
 });
@@ -1175,7 +1255,7 @@ L.ChartDataLayer = L.DataLayer.extend({
 		// Override this in inheriting classes
 	},
 	
-	getLegend: function (legendOptions) {
+	_getLegend: function (legendOptions) {
 		var legend = new L.CategoryLegend(this.options.chartOptions);
 		
 		legendOptions = legendOptions || this.options.legendOptions;

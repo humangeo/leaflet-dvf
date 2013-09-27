@@ -687,7 +687,7 @@ L.SVGPathBuilder = L.Class.extend({
     addPoint: function(point, inner) {
         inner ? this._innerPoints.push(point) : this._points.push(point);
     },
-    toString: function(digits) {
+    build: function(digits) {
         digits = digits || this.options.digits;
         var pathString = this._getPathString(this._points, digits);
         if (this._innerPoints) {
@@ -706,7 +706,7 @@ L.StyleConverter = {
             }
         },
         color: {
-            property: [ "border-top-color", "border-right-color", "border-bottom-color", "border-left-color" ],
+            property: [ "color", "border-top-color", "border-right-color", "border-bottom-color", "border-left-color" ],
             valueFunction: function(value) {
                 return value;
             }
@@ -1014,9 +1014,11 @@ L.ColorUtils = {
     }
 };
 
-var L = L || {};
-
 L.RegularPolygon = L.Polygon.extend({
+    statics: {
+        R: 6378.137,
+        M_PER_KM: 1e3
+    },
     initialize: function(centerLatLng, options) {
         this._centerLatLng = centerLatLng;
         L.Util.setOptions(this, options);
@@ -1055,15 +1057,13 @@ L.RegularPolygon = L.Polygon.extend({
     },
     _getPoint: function(angle) {
         var toRad = function(number) {
-            return number * Math.PI / 180;
+            return number * L.LatLng.DEG_TO_RAD;
         };
         var toDeg = function(number) {
-            return number * 180 / Math.PI;
+            return number * L.LatLng.RAD_TO_DEG;
         };
         var angleRadians = toRad(angle);
-        var R = 6371;
-        var M_PER_KM = 1e3;
-        var angularDistance = this.options.radius / M_PER_KM / R;
+        var angularDistance = this.options.radius / L.RegularPolygon.M_PER_KM / L.RegularPolygon.R;
         var lat1 = toRad(this._centerLatLng.lat);
         var lon1 = toRad(this._centerLatLng.lng);
         var lat2 = Math.asin(Math.sin(lat1) * Math.cos(angularDistance) + Math.cos(lat1) * Math.sin(angularDistance) * Math.cos(angleRadians));
@@ -1246,7 +1246,7 @@ L.MapMarker = L.Path.extend({
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "geometricPrecision");
-        return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+        return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
     _getPoints: function(inner) {
         var maxDegrees = !inner ? 210 : 360;
@@ -1327,7 +1327,7 @@ L.RegularPolygonMarker = L.Path.extend({
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "geometricPrecision");
-        return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+        return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
     _getPoints: function(inner) {
         var maxDegrees = this.options.maxDegrees || 360;
@@ -1636,7 +1636,7 @@ L.MapMarker = L.Path.extend({
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "geometricPrecision");
-        return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+        return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
     _getPoints: function(inner) {
         var maxDegrees = !inner ? 210 : 360;
@@ -1717,7 +1717,7 @@ L.RegularPolygonMarker = L.Path.extend({
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "geometricPrecision");
-        return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+        return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
     _getPoints: function(inner) {
         var maxDegrees = this.options.maxDegrees || 360;
@@ -1896,7 +1896,7 @@ L.BarMarker = L.Path.extend({
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "crispEdges");
-        return new L.SVGPathBuilder(this._points).toString();
+        return new L.SVGPathBuilder(this._points).build();
     },
     _getPoints: function() {
         var points = [];
@@ -2655,14 +2655,16 @@ L.LocationModes = {
         var locationField = this.options.codeField;
         var fieldValue = L.Util.getFieldValue(record, locationField);
         var context = {};
+        var location;
         context[fieldValue] = record;
         if (this.options.getLocation) {
             var self = this;
             var callback = function(key, location) {
                 self.locationToLayer(location, context[key]);
             };
-            options.getLocation(context, locationField, [ fieldValue ], callback);
+            location = this.options.getLocation(context, locationField, [ fieldValue ], callback);
         }
+        return location;
     }
 };
 
@@ -2823,6 +2825,38 @@ L.DataLayer = L.LayerGroup.extend({
             this.options.getLocation(indexedRecords, locationField, locationValues, callback);
         }
     },
+    setDisplayOptions: function(displayOptions) {
+        this.options.displayOptions = displayOptions;
+        this.reloadData();
+        return this;
+    },
+    setDisplayOption: function(key, options) {
+        this.options.displayOptions = this.options.displayOptions || {};
+        if (key in this.options.displayOptions) {
+            var existingOption = this.options.displayOptions[key];
+            this.options.displayOptions[key] = $.extend({}, existingOption, options);
+        } else {
+            this.options.displayOptions[key] = options;
+        }
+        this.reloadData();
+        return this;
+    },
+    setFilter: function(filterFunction) {
+        this.options.filter = filterFunction;
+        this.reloadData();
+        return this;
+    },
+    setData: function(data) {
+        this._data = data;
+        this.reloadData();
+    },
+    reloadData: function() {
+        this.clearLayers();
+        if (this._data) {
+            this.addData(this._data);
+        }
+        return this;
+    },
     addData: function(data) {
         var records = this.options.recordsField !== null && this.options.recordsField.length > 0 ? L.Util.getFieldValue(data, this.options.recordsField) : data;
         var layer;
@@ -2832,6 +2866,7 @@ L.DataLayer = L.LayerGroup.extend({
         } else {
             this._loadRecords(records);
         }
+        this._data = data;
     },
     locationToLayer: function(location, record) {
         var layer;
@@ -2928,12 +2963,15 @@ L.DataLayer = L.LayerGroup.extend({
                 } else {
                     for (var layerProperty in propertyOptions) {
                         valueFunction = propertyOptions[layerProperty];
-                        layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : valueFunction;
+                        layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : valueFunction.call ? valueFunction.call(fieldValue) : valueFunction;
                     }
                 }
             }
         }
-        return layerOptions;
+        return {
+            layerOptions: layerOptions,
+            legendDetails: legendDetails
+        };
     },
     recordToLayer: function(location, record) {
         var layerOptions = L.Util.extend({}, this.options.layerOptions);
@@ -2941,31 +2979,14 @@ L.DataLayer = L.LayerGroup.extend({
         var displayOptions = this.options.displayOptions;
         var legendDetails = {};
         var includeLayer = true;
-        if (this.options.includeLayer) {
-            includeLayer = this.options.includeLayer(record);
+        var includeFunction = this.options.filter || this.options.includeLayer;
+        if (includeFunction) {
+            includeLayer = includeFunction.call(this, record);
         }
         if (includeLayer) {
-            if (displayOptions) {
-                for (var property in displayOptions) {
-                    var propertyOptions = displayOptions[property];
-                    var fieldValue = L.Util.getFieldValue(record, property);
-                    var valueFunction;
-                    var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
-                    legendDetails[property] = {
-                        name: propertyOptions.displayName,
-                        value: displayText
-                    };
-                    if (propertyOptions.styles) {
-                        layerOptions = L.Util.extend(layerOptions, propertyOptions.styles[fieldValue]);
-                        propertyOptions.styles[fieldValue] = layerOptions;
-                    } else {
-                        for (var layerProperty in propertyOptions) {
-                            valueFunction = propertyOptions[layerProperty];
-                            layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : valueFunction;
-                        }
-                    }
-                }
-            }
+            var dynamicOptions = this._getDynamicOptions(record);
+            layerOptions = dynamicOptions.layerOptions;
+            legendDetails = dynamicOptions.legendDetails;
             if (location && layerOptions) {
                 layerOptions.title = location.text;
                 layer = this._getLayer(location, layerOptions, record);
@@ -2982,6 +3003,78 @@ L.DataLayer = L.LayerGroup.extend({
         return layer;
     },
     getLegend: function(legendOptions) {
+        return this.options.getLegend ? this.options.getLegend.call(this, legendOptions) : this._getLegend(legendOptions);
+    },
+    _getLegendElement: function(params) {
+        var displayMin;
+        var displayMax;
+        var $i = $("<i></i>");
+        var displayProperties = params.displayProperties;
+        var layerOptions = params.layerOptions;
+        var ignoreProperties = params.ignoreProperties;
+        var displayTextFunction = params.displayTextFunction;
+        var index = params.index;
+        var numSegments = params.numSegments;
+        var segmentWidth = params.segmentWidth;
+        var $minValue = params.$minValue;
+        var $maxValue = params.$maxValue;
+        L.StyleConverter.applySVGStyle($i, layerOptions);
+        for (var property in displayProperties) {
+            if (ignoreProperties.indexOf(property) === -1) {
+                valueFunction = displayProperties[property];
+                if (valueFunction && (valueFunction.getBounds || displayProperties.minValue && displayProperties.maxValue)) {
+                    var bounds = valueFunction.getBounds ? valueFunction.getBounds() : null;
+                    var minX = bounds ? bounds[0].x : displayProperties.minValue;
+                    var maxX = bounds ? bounds[1].x : displayProperties.maxValue;
+                    var binFunction = new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
+                    displayMin = minX;
+                    displayMax = maxX;
+                    if (displayTextFunction) {
+                        displayMin = displayTextFunction(minX);
+                        displayMax = displayTextFunction(maxX);
+                    }
+                    if (index === 0) {
+                        $minValue.html(displayMin);
+                        $maxValue.html(displayMax);
+                    }
+                    var segmentSize = (maxX - minX) / numSegments;
+                    var x = binFunction.evaluate(index);
+                    var nextX = binFunction.evaluate(index + 1);
+                    var value = valueFunction.evaluate ? valueFunction.evaluate(x) : valueFunction(x);
+                    var nextValue = valueFunction.evaluate ? valueFunction.evaluate(nextX) : valueFunction(nextX);
+                    L.StyleConverter.setCSSProperty($i, property, value);
+                    if (property === "fillColor") {
+                        $i.css("background-image", "linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
+                        $i.css("background-image", "-ms-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
+                        $i.css("background-image", "-moz-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
+                        $i.css("background-image", "-webkit-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
+                    }
+                    if (property === "color") {
+                        $i.css("border-top-color", value);
+                        $i.css("border-bottom-color", nextValue);
+                        $i.css("border-left-color", value);
+                        $i.css("border-right-color", nextValue);
+                    }
+                    if (property === "weight") {
+                        $i.css("border-top-width", value);
+                        $i.css("border-bottom-width", nextValue);
+                        $i.css("border-left-width", value);
+                        $i.css("border-right-width", nextValue);
+                    }
+                    var min = segmentSize * index + minX;
+                    var max = min + segmentSize;
+                    if (displayTextFunction && valueFunction) {
+                        min = displayTextFunction(min);
+                        max = displayTextFunction(max);
+                    }
+                    $i.attr("title", min + " - " + max);
+                }
+            }
+        }
+        $i.width(segmentWidth);
+        return $i;
+    },
+    _getLegend: function(legendOptions) {
         legendOptions = legendOptions || this.options.legendOptions || {};
         var className = legendOptions.className;
         var legendElement = '<div class="legend"></div>';
@@ -3031,62 +3124,19 @@ L.DataLayer = L.LayerGroup.extend({
                 var $scaleBars = $legendItems.find(".scale-bars");
                 var ignoreProperties = [ "displayName", "displayText", "minValue", "maxValue" ];
                 for (var index = 0; index < numSegments; ++index) {
-                    var $i = $("<i></i>");
-                    L.StyleConverter.applySVGStyle($i, layerOptions);
-                    for (var property in displayProperties) {
-                        if (ignoreProperties.indexOf(property) === -1) {
-                            valueFunction = displayProperties[property];
-                            if (valueFunction && (valueFunction.getBounds || displayProperties.minValue && displayProperties.maxValue)) {
-                                var bounds = valueFunction.getBounds ? valueFunction.getBounds() : null;
-                                var minX = bounds ? bounds[0].x : displayProperties.minValue;
-                                var maxX = bounds ? bounds[1].x : displayProperties.maxValue;
-                                var binFunction = new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
-                                displayMin = minX;
-                                displayMax = maxX;
-                                if (displayTextFunction) {
-                                    displayMin = displayTextFunction(minX);
-                                    displayMax = displayTextFunction(maxX);
-                                }
-                                if (index === 0) {
-                                    $minValue.html(displayMin);
-                                    $maxValue.html(displayMax);
-                                }
-                                var segmentSize = (maxX - minX) / numSegments;
-                                var x = binFunction.evaluate(index);
-                                var nextX = binFunction.evaluate(index + 1);
-                                var value = valueFunction.evaluate ? valueFunction.evaluate(x) : valueFunction(x);
-                                var nextValue = valueFunction.evaluate ? valueFunction.evaluate(nextX) : valueFunction(nextX);
-                                L.StyleConverter.setCSSProperty($i, property, value);
-                                if (property === "fillColor") {
-                                    $i.css("background-image", "linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
-                                    $i.css("background-image", "-ms-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
-                                    $i.css("background-image", "-moz-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
-                                    $i.css("background-image", "-webkit-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
-                                }
-                                if (property === "color") {
-                                    $i.css("border-top-color", value);
-                                    $i.css("border-bottom-color", nextValue);
-                                    $i.css("border-left-color", value);
-                                    $i.css("border-right-color", nextValue);
-                                }
-                                if (property === "weight") {
-                                    $i.css("border-top-width", value);
-                                    $i.css("border-bottom-width", nextValue);
-                                    $i.css("border-left-width", value);
-                                    $i.css("border-right-width", nextValue);
-                                }
-                                var min = segmentSize * index + minX;
-                                var max = min + segmentSize;
-                                if (displayTextFunction && valueFunction) {
-                                    min = displayTextFunction(min);
-                                    max = displayTextFunction(max);
-                                }
-                                $i.attr("title", min + " - " + max);
-                            }
-                        }
-                    }
-                    $i.width(segmentWidth);
-                    $scaleBars.append($i);
+                    var legendParams = {
+                        displayProperties: displayProperties,
+                        layerOptions: layerOptions,
+                        ignoreProperties: ignoreProperties,
+                        displayTextFunction: displayTextFunction,
+                        index: index,
+                        numSegments: numSegments,
+                        segmentWidth: segmentWidth,
+                        $minValue: $minValue,
+                        $maxValue: $maxValue
+                    };
+                    var $element = this._getLegendElement(legendParams);
+                    $scaleBars.append($element);
                 }
             }
             $legendElement.append($legendItems);
@@ -3111,6 +3161,7 @@ L.mapMarkerDataLayer = function(data, options) {
 
 L.MarkerDataLayer = L.DataLayer.extend({
     initialize: function(data, options) {
+        this._markerMap = {};
         L.DataLayer.prototype.initialize.call(this, data, options);
     },
     options: {
@@ -3129,7 +3180,8 @@ L.MarkerDataLayer = L.DataLayer.extend({
         }
         return new L.Marker(latLng, layerOptions);
     },
-    getLegend: function(options) {
+    _getLegendElement: function(params) {},
+    _getLegend: function(options) {
         return "<span>No legend available</span>";
     }
 });
@@ -3420,7 +3472,7 @@ L.ChartDataLayer = L.DataLayer.extend({
         return marker;
     },
     _getMarker: function(latLng, options) {},
-    getLegend: function(legendOptions) {
+    _getLegend: function(legendOptions) {
         var legend = new L.CategoryLegend(this.options.chartOptions);
         legendOptions = legendOptions || this.options.legendOptions;
         return legend.generate(legendOptions);
@@ -3541,7 +3593,7 @@ L.CalloutLine = L.CalloutLine.extend({
     _getPathAngle: function() {
         return new L.SVGPathBuilder(this._points, [], {
             closePath: false
-        }).toString(6);
+        }).build(6);
     },
     _getPathArc: function() {
         var direction = (this.options.direction || L.CalloutLine.DIRECTION.NE).toLowerCase();
@@ -3754,7 +3806,7 @@ L.FlowLine = L.FlowLine.extend({
                     }
                     if (this._lastRecord && includeLayer) {
                         var options = this._getDynamicOptions(this._lastRecord);
-                        line = this.options.getLine.call(this, this._lastMarker.getLatLng(), marker.getLatLng(), options);
+                        line = this.options.getLine.call(this, this._lastMarker.getLatLng(), marker.getLatLng(), options.layerOptions);
                         this.addLayer(line);
                         this.onEachSegment(this._lastRecord, record, line);
                     }
@@ -3793,19 +3845,18 @@ L.arcedFlowLine = function(data, options) {
 L.ArcedPolyline = L.Path.extend({
     initialize: function(latlngs, options) {
         L.Path.prototype.initialize.call(this, options);
-        this._distanceToHeight = new L.LinearFunction([ 0, 5 ], [ 1e3, 200 ]);
         this._latlngs = latlngs;
     },
     options: {
-        size: new L.Point(60, 30),
-        offset: new L.Point(20, -20),
+        distanceToHeight: new L.LinearFunction([ 0, 5 ], [ 1e3, 200 ]),
         color: "#FFFFFF",
         opacity: 1,
         weight: 1,
         fillColor: "#000000",
         fill: false,
         gradient: false,
-        dropShadow: false
+        dropShadow: false,
+        optimizeSpeed: false
     },
     projectLatlngs: function() {
         this._points = [];
@@ -3826,14 +3877,16 @@ L.ArcedPolyline = L.Path.extend({
     },
     drawSegment: function(point1, point2) {
         var distance = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
-        var heightOffset = this._distanceToHeight.evaluate(distance);
+        var heightOffset = this.options.distanceToHeight.evaluate(distance);
         var directionX = point1.x - point2.x;
         var multiplierX = directionX / Math.abs(directionX);
         var parts = [ "M", point1.x, ",", point1.y, " C", point1.x, ",", point1.y - heightOffset, " ", point2.x, ",", point2.y - heightOffset, " ", point2.x, ",", point2.y ];
         return parts.join(" ");
     },
     getPathString: function() {
-        this._path.setAttribute("shape-rendering", "optimizeSpeed");
+        if (this.options.optimizeSpeed) {
+            this._path.setAttribute("shape-rendering", "optimizeSpeed");
+        }
         var parts = [];
         for (var i = 0; i < this._points.length - 1; ++i) {
             parts.push(this.drawSegment(this._points[i], this._points[i + 1]));

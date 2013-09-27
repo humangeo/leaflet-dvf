@@ -220,7 +220,7 @@ L.MapMarker = L.Path.extend({
 
 	getPathString: function () {
 		this._path.setAttribute('shape-rendering', 'geometricPrecision');
-		return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+		return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
 	},
 
 	_getPoints: function (inner) {
@@ -342,7 +342,7 @@ L.RegularPolygonMarker = L.Path.extend({
 
 	getPathString: function () {
 		this._path.setAttribute('shape-rendering', 'geometricPrecision');
-		return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+		return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
 	},
 
 	_getPoints: function (inner) {

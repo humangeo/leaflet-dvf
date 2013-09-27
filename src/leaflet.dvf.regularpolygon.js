@@ -1,9 +1,12 @@
-var L = L || {};
-
 /*
  * Draws a regular polygon on the map given a radius in meters
  */
 L.RegularPolygon = L.Polygon.extend({
+	statics: {
+		R: 6378.137,
+		M_PER_KM: 1000
+	},
+	
 	initialize: function (centerLatLng, options) {
 		this._centerLatLng = centerLatLng;
 
@@ -60,19 +63,15 @@ L.RegularPolygon = L.Polygon.extend({
 	_getPoint: function (angle) {
 		
 		var toRad = function (number) {
-			return number * Math.PI / 180;
+			return number * L.LatLng.DEG_TO_RAD;
 		};
 		
 		var toDeg = function (number) {
-			return number * 180 / Math.PI;
+			return number * L.LatLng.RAD_TO_DEG;
 		};
 		
 		var angleRadians = toRad(angle);
-		
-		// Radius of the earth in km
-		var R = 6371;
-		var M_PER_KM = 1000;
-		var angularDistance = this.options.radius / M_PER_KM / R;
+		var angularDistance = this.options.radius / L.RegularPolygon.M_PER_KM / L.RegularPolygon.R;
 		var lat1 = toRad(this._centerLatLng.lat);
 		var lon1 = toRad(this._centerLatLng.lng);
 		var lat2 = Math.asin(Math.sin(lat1) * Math.cos(angularDistance) + Math.cos(lat1) * Math.sin(angularDistance) * Math.cos(angleRadians));

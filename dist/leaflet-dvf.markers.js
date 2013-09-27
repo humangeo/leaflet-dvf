@@ -687,7 +687,7 @@ L.SVGPathBuilder = L.Class.extend({
     addPoint: function(point, inner) {
         inner ? this._innerPoints.push(point) : this._points.push(point);
     },
-    toString: function(digits) {
+    build: function(digits) {
         digits = digits || this.options.digits;
         var pathString = this._getPathString(this._points, digits);
         if (this._innerPoints) {
@@ -706,7 +706,7 @@ L.StyleConverter = {
             }
         },
         color: {
-            property: [ "border-top-color", "border-right-color", "border-bottom-color", "border-left-color" ],
+            property: [ "color", "border-top-color", "border-right-color", "border-bottom-color", "border-left-color" ],
             valueFunction: function(value) {
                 return value;
             }
@@ -1182,7 +1182,7 @@ L.MapMarker = L.Path.extend({
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "geometricPrecision");
-        return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+        return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
     _getPoints: function(inner) {
         var maxDegrees = !inner ? 210 : 360;
@@ -1263,7 +1263,7 @@ L.RegularPolygonMarker = L.Path.extend({
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "geometricPrecision");
-        return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+        return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
     _getPoints: function(inner) {
         var maxDegrees = this.options.maxDegrees || 360;
@@ -1572,7 +1572,7 @@ L.MapMarker = L.Path.extend({
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "geometricPrecision");
-        return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+        return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
     _getPoints: function(inner) {
         var maxDegrees = !inner ? 210 : 360;
@@ -1653,7 +1653,7 @@ L.RegularPolygonMarker = L.Path.extend({
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "geometricPrecision");
-        return new L.SVGPathBuilder(this._points, this._innerPoints).toString(6);
+        return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
     _getPoints: function(inner) {
         var maxDegrees = this.options.maxDegrees || 360;
@@ -1832,7 +1832,7 @@ L.BarMarker = L.Path.extend({
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "crispEdges");
-        return new L.SVGPathBuilder(this._points).toString();
+        return new L.SVGPathBuilder(this._points).build();
     },
     _getPoints: function() {
         var points = [];

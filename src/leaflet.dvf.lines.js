@@ -55,7 +55,7 @@ L.CalloutLine = L.CalloutLine.extend({
 	_getPathAngle: function () {
 		return new L.SVGPathBuilder(this._points, [], {
 			closePath: false
-		}).toString(6);
+		}).build(6);
 	},
 	
 	_getPathArc: function () {
@@ -354,7 +354,7 @@ L.FlowLine = L.FlowLine.extend({
 						
 						var options = this._getDynamicOptions(this._lastRecord);
 						
-						line = this.options.getLine.call(this, this._lastMarker.getLatLng(), marker.getLatLng(), options);
+						line = this.options.getLine.call(this, this._lastMarker.getLatLng(), marker.getLatLng(), options.layerOptions);
 					
 						this.addLayer(line);
 						
@@ -405,20 +405,19 @@ L.arcedFlowLine = function (data, options) {
 L.ArcedPolyline = L.Path.extend({
 	initialize: function (latlngs, options) {
 		L.Path.prototype.initialize.call(this, options);
-		this._distanceToHeight = new L.LinearFunction([0, 5], [1000, 200]);
 		this._latlngs = latlngs;
 	},
 	
 	options: {
-		size: new L.Point(60, 30),
-		offset: new L.Point(20, -20),
+		distanceToHeight: new L.LinearFunction([0, 5], [1000, 200]),
 		color: '#FFFFFF',
 		opacity: 1,
 		weight: 1,
 		fillColor: '#000000',
 		fill: false,
 		gradient: false,
-		dropShadow: false
+		dropShadow: false,
+		optimizeSpeed: false
 	},
 	
 	projectLatlngs: function () {
@@ -452,7 +451,7 @@ L.ArcedPolyline = L.Path.extend({
 
 	drawSegment: function (point1, point2) {
 		var distance = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
-		var heightOffset = this._distanceToHeight.evaluate(distance);
+		var heightOffset = this.options.distanceToHeight.evaluate(distance);
 		var directionX = point1.x - point2.x;
 		var multiplierX = directionX / Math.abs(directionX);
 		
@@ -462,7 +461,10 @@ L.ArcedPolyline = L.Path.extend({
 	},
 	
 	getPathString: function () {
-		this._path.setAttribute('shape-rendering', 'optimizeSpeed');
+		if (this.options.optimizeSpeed) {
+			this._path.setAttribute('shape-rendering', 'optimizeSpeed');
+		}
+		
 		var parts = [];
 		
 		for (var i = 0; i < this._points.length - 1; ++i) {

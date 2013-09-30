@@ -409,7 +409,5 @@ $(document).ready(function() {
 		});
 		
 		map.addLayer(test);
-	}
-	
-	
+	}	
 });

@@ -232,16 +232,17 @@ L.MapMarker = L.Path.extend({
 		var newPoint;
 		var angleRadians;
 		var radius = this.options.radius;
+		var multiplier = Math.sqrt(0.75);
 		
 		var toRad = function (number) {
-			return number * Math.PI / 180;
+			return number * L.LatLng.DEG_TO_RAD;
 		};
 		
 		var startPoint = this._point;
 		
 		if (!inner) {
 			points.push(startPoint);
-			points.push(new L.Point(startPoint.x + Math.sqrt(0.75) * radius, startPoint.y - 1.5 * radius));
+			points.push(new L.Point(startPoint.x + multiplier * radius, startPoint.y - 1.5 * radius));
 		}
 		
 		while (angle < degrees) {
@@ -260,7 +261,7 @@ L.MapMarker = L.Path.extend({
 		}
 		
 		if (!inner) {
-			points.push(new L.Point(startPoint.x - Math.sqrt(0.75) * radius, startPoint.y - 1.5 * radius));
+			points.push(new L.Point(startPoint.x - multiplier * radius, startPoint.y - 1.5 * radius));
 		}
 		
 		return points;
@@ -357,7 +358,7 @@ L.RegularPolygonMarker = L.Path.extend({
 		var radiusY = !inner ? this.options.radius || this.options.radiusY : this.options.innerRadius || this.options.innerRadiusY;
 		
 		var toRad = function (number) {
-			return number * Math.PI / 180;
+			return number * L.LatLng.DEG_TO_RAD;
 		};
 		
 		while (angle < degrees) {
@@ -409,7 +410,7 @@ L.StarMarker = L.RegularPolygonMarker.extend({
 		var radiusY = !inner ? this.options.radius || this.options.radiusY : this.options.innerRadius || this.options.innerRadiusY;
 		
 		var toRad = function (number) {
-			return number * Math.PI / 180;
+			return number * L.LatLng.DEG_TO_RAD;
 		};
 
 		while (angle < degrees) {

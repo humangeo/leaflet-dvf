@@ -712,20 +712,7 @@ L.AnimationUtils = {
  * Adapted from:  http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
  * These functions will be used to provide backwards compatibility with browsers that don't support hsl 
  */
-L.ColorUtils = {
-	hslStringToRgbString: function (hslString) {
-		var parts = hslString.replace('hsl(','').replace(')','').split(',');
-		var h = Number(parts[0])/360;
-		var s = Number(parts[1].replace('%',''))/100;
-		var l = Number(parts[2].replace('%',''))/100;
-		
-		return hslToRgbString(h, s, l);
-	},
-	
-	hslToRgbString: function (h, s, l) {
-		return L.ColorUtils.rgbArrayToString(L.ColorUtils.hslToRgb(h, s, l));
-	},
-	
+L.ColorUtils = {	
 	rgbArrayToString: function (rgbArray) {
 		var hexValues = []
 		
@@ -874,4 +861,17 @@ L.ColorUtils = {
 
 	    return [r * 255, g * 255, b * 255];
 	}
+};
+
+L.ColorUtils.hslToRgbString = function (h, s, l) {
+	return L.ColorUtils.rgbArrayToString(L.ColorUtils.hslToRgb(h, s, l));
+};
+
+L.ColorUtils.hslStringToRgbString = function (hslString) {
+	var parts = hslString.replace('hsl(','').replace(')','').split(',');
+	var h = Number(parts[0])/360;
+	var s = Number(parts[1].replace('%',''))/100;
+	var l = Number(parts[2].replace('%',''))/100;
+	
+	return L.ColorUtils.hslToRgbString(h, s, l);
 };

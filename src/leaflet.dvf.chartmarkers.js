@@ -390,7 +390,7 @@ L.RadialBarMarker = L.Path.extend({
 		var radiusX = 'radiusX' in this.options ? this.options.radiusX : this.options.radius; 
 		var radiusY = 'radiusY' in this.options ? this.options.radiusY : this.options.radius;
 		var toRad = function (number) {
-			return number * Math.PI / 180;
+			return number * L.LatLng.DEG_TO_RAD;
 		};
 
 		if (angleDelta === 360.0) {

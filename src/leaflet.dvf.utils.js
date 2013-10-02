@@ -511,6 +511,12 @@ L.StyleConverter = {
 				return style;
 			}
 		},
+		barThickness: {
+			property: ['height'],
+			valueFunction: function (value) {
+				return value + 'px';
+			}
+		},
 		radius: {
 			property: ['height'],
 			valueFunction: function (value) {

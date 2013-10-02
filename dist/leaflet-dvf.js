@@ -733,6 +733,12 @@ L.StyleConverter = {
                 return style;
             }
         },
+        barThickness: {
+            property: [ "height" ],
+            valueFunction: function(value) {
+                return value + "px";
+            }
+        },
         radius: {
             property: [ "height" ],
             valueFunction: function(value) {
@@ -1316,6 +1322,7 @@ L.RegularPolygonMarker = L.Path.extend({
     },
     projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
+        this._textPoint = this._point;
         this._points = this._getPoints();
         if (this.options.innerRadius || this.options.innerRadiusX && this.options.innerRadiusY) {
             this._innerPoints = this._getPoints(true).reverse();
@@ -2232,10 +2239,12 @@ L.LocationModes = {
         var codeLookup = L.codeLookup || {};
         var alpha2Lookup = L.alpha2Lookup || {};
         var fips2Lookup = L.fips2Lookup || {};
+        var gwNoLookup = L.gwNoLookup || {};
         var countries = L.countries || {};
         var countryCentroids = L.countryCentroids || {};
         var originalCode = code.toUpperCase();
         code = originalCode;
+        code = gwNoLookup[originalCode] || code;
         if (code.length === 2) {
             code = alpha2Lookup[originalCode] || fips2Lookup[originalCode];
         } else if (code.length === 3) {
@@ -3189,6 +3198,45 @@ L.StackedRegularPolygonDataLayer = L.ChartDataLayer.extend({
 
 L.stackedRegularPolygonDataLayer = function(data, options) {
     return new L.StackedRegularPolygonDataLayer(data, options);
+};
+
+L.RadialMeterMarkerDataLayer = L.DataLayer.extend({
+    options: {
+        showLegendTooltips: false
+    },
+    initialize: function(data, options) {
+        L.DataLayer.prototype.initialize.call(this, data, options);
+    },
+    _getLayer: function(latLng, layerOptions, record) {
+        this._addBoundary(latLng, layerOptions);
+        latLng = this._processLocation(latLng);
+        var chartOptions = this.options.chartOptions;
+        var tooltipOptions = this.options.tooltipOptions;
+        var displayOptions = this.options.displayOptions;
+        var options = {};
+        options = layerOptions;
+        options.data = {};
+        options.chartOptions = chartOptions;
+        options.displayOptions = displayOptions;
+        for (var key in this.options.chartOptions) {
+            options.data[key] = L.Util.getFieldValue(record, key);
+        }
+        for (var key in this.options.tooltipOptions) {
+            options[key] = this.options.tooltipOptions[key];
+        }
+        var marker;
+        if (latLng) {
+            marker = this._getMarker(latLng, options);
+        }
+        return marker;
+    },
+    _getMarker: function(latLng, options) {
+        return new L.RadialMeterMarker(latLng, options);
+    }
+});
+
+L.radialMeterMarkerDataLayer = function(data, options) {
+    return new L.RadialMeterMarkerDataLayer(data, options);
 };
 
 L.CalloutLine = L.Path.extend({

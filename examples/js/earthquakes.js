@@ -49,7 +49,7 @@ var eqfeed_callback = function (data) {
 				opacity: timeOpacityFunction,
 				fillOpacity: timeOpacityFunction,
 				displayText: function (value) {
-					return dateFormat(new Date(Number(value)),'mm/dd/yy HH:MM');
+					return moment.unix(value/1000).format('MM/DD/YY HH:mm');
 				}
 			}
 		},

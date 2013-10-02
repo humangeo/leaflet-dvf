@@ -1,5 +1,1520 @@
 var L = L || {};
 
+L.gwLookup = [
+	{
+		"gw": "2",
+		"iso3": "USA",
+		"name": "United States of America",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "20",
+		"iso3": "CAN",
+		"name": "Canada",
+		"field1": "0.068136574",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "31",
+		"iso3": "BHM",
+		"name": "Bahamas",
+		"field1": "0.444363426",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "40",
+		"iso3": "CUB",
+		"name": "Cuba",
+		"field1": "0.858819444",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "41",
+		"iso3": "HAI",
+		"name": "Haiti",
+		"field1": "0.06337963",
+		"field2": "0.19369213"
+	},
+	{
+		"gw": "41",
+		"iso3": "HAI",
+		"name": "Haiti",
+		"field1": "0.652939815",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "42",
+		"iso3": "DOM",
+		"name": "Dominican Republic",
+		"field1": "27:02:1844",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "51",
+		"iso3": "JAM",
+		"name": "Jamaica",
+		"field1": "0.278263889",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "52",
+		"iso3": "TRI",
+		"name": "Trinidad and Tobago",
+		"field1": "31:08:1962",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "53",
+		"iso3": "BAR",
+		"name": "Barbados",
+		"field1": "30:11:1966",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "70",
+		"iso3": "MEX",
+		"name": "Mexico",
+		"field1": "0.067604167",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "80",
+		"iso3": "BLZ",
+		"name": "Belize",
+		"field1": "0.904178241",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "89",
+		"iso3": "UPC",
+		"name": "United Provinces of Central America",
+		"field1": "0.067627315",
+		"field2": "31:12:1839"
+	},
+	{
+		"gw": "90",
+		"iso3": "GUA",
+		"name": "Guatemala",
+		"field1": "0.063657407",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "91",
+		"iso3": "HON",
+		"name": "Honduras",
+		"field1": "0.063657407",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "92",
+		"iso3": "SAL",
+		"name": "El Salvador",
+		"field1": "0.063657407",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "93",
+		"iso3": "NIC",
+		"name": "Nicaragua",
+		"field1": "0.063657407",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "94",
+		"iso3": "COS",
+		"name": "Costa Rica",
+		"field1": "0.063657407",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "95",
+		"iso3": "PAN",
+		"name": "Panama",
+		"field1": "0.154664352",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "99",
+		"iso3": "GCL",
+		"name": "Great Colombia",
+		"field1": "30:08:1821",
+		"field2": "0.944097222"
+	},
+	{
+		"gw": "100",
+		"iso3": "COL",
+		"name": "Colombia",
+		"field1": "0.985763889",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "101",
+		"iso3": "VEN",
+		"name": "Venezuela",
+		"field1": "0.063530093",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "110",
+		"iso3": "GUY",
+		"name": "Guyana",
+		"field1": "26:05:1966",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "115",
+		"iso3": "SUR",
+		"name": "Surinam",
+		"field1": "25:11:1975",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "130",
+		"iso3": "ECU",
+		"name": "Ecuador",
+		"field1": "0.566319444",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "135",
+		"iso3": "PER",
+		"name": "Peru",
+		"field1": "0.404444444",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "140",
+		"iso3": "BRA",
+		"name": "Brazil",
+		"field1": "0.31900463",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "145",
+		"iso3": "BOL",
+		"name": "Bolivia",
+		"field1": "0.276678241",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "150",
+		"iso3": "PAR",
+		"name": "Paraguay",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "155",
+		"iso3": "CHL",
+		"name": "Chile",
+		"field1": "0.065486111",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "160",
+		"iso3": "ARG",
+		"name": "Argentina",
+		"field1": "0.40087963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "165",
+		"iso3": "URU",
+		"name": "Uruguay",
+		"field1": "26:05:1830",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "200",
+		"iso3": "UKG",
+		"name": "United Kingdom",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "205",
+		"iso3": "IRE",
+		"name": "Ireland",
+		"field1": "0.28056713",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "210",
+		"iso3": "NTH",
+		"name": "Netherlands",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "211",
+		"iso3": "BEL",
+		"name": "Belgium",
+		"field1": "0.194791667",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "212",
+		"iso3": "LUX",
+		"name": "Luxembourg",
+		"field1": "0.483414352",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "220",
+		"iso3": "FRN",
+		"name": "France",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "225",
+		"iso3": "SWZ",
+		"name": "Switzerland",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "230",
+		"iso3": "SPN",
+		"name": "Spain",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "235",
+		"iso3": "POR",
+		"name": "Portugal",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "240",
+		"iso3": "HAN",
+		"name": "Hanover",
+		"field1": "0.06337963",
+		"field2": "0.73068287"
+	},
+	{
+		"gw": "245",
+		"iso3": "BAV",
+		"name": "Bavaria",
+		"field1": "0.06337963",
+		"field2": "0.73068287"
+	},
+	{
+		"gw": "255",
+		"iso3": "GMY",
+		"name": "Germany (Prussia)",
+		"field1": "0.06337963",
+		"field2": "0.317650463"
+	},
+	{
+		"gw": "260",
+		"iso3": "GFR",
+		"name": "German Federal Republic",
+		"field1": "0.90380787",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "265",
+		"iso3": "GDR",
+		"name": "German Democratic Republic",
+		"field1": "0.237835648",
+		"field2": "0.113310185"
+	},
+	{
+		"gw": "267",
+		"iso3": "BAD",
+		"name": "Baden",
+		"field1": "0.06337963",
+		"field2": "0.73068287"
+	},
+	{
+		"gw": "269",
+		"iso3": "SAX",
+		"name": "Saxony",
+		"field1": "0.06337963",
+		"field2": "0.73068287"
+	},
+	{
+		"gw": "271",
+		"iso3": "WRT",
+		"name": "W¸rttemberg",
+		"field1": "0.06337963",
+		"field2": "0.73068287"
+	},
+	{
+		"gw": "273",
+		"iso3": "HSE",
+		"name": "Hesse-Kassel (Electoral)",
+		"field1": "0.06337963",
+		"field2": "0.73068287"
+	},
+	{
+		"gw": "275",
+		"iso3": "HSD",
+		"name": "Hesse-Darmstadt (Ducal)",
+		"field1": "0.06337963",
+		"field2": "0.73068287"
+	},
+	{
+		"gw": "280",
+		"iso3": "MEC",
+		"name": "Mecklenburg-Schwerin",
+		"field1": "0.06337963",
+		"field2": "0.73068287"
+	},
+	{
+		"gw": "290",
+		"iso3": "POL",
+		"name": "Poland",
+		"field1": "0.488171296",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "300",
+		"iso3": "AUH",
+		"name": "Austria-Hungary",
+		"field1": "0.06337963",
+		"field2": "0.57150463"
+	},
+	{
+		"gw": "305",
+		"iso3": "AUS",
+		"name": "Austria",
+		"field1": "0.613171296",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "310",
+		"iso3": "HUN",
+		"name": "Hungary",
+		"field1": "0.154837963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "315",
+		"iso3": "CZE",
+		"name": "Czechoslovakia",
+		"field1": "0.064571759",
+		"field2": "31:12:1992"
+	},
+	{
+		"gw": "316",
+		"iso3": "CZR",
+		"name": "Czech Republic",
+		"field1": "0.065428241",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "317",
+		"iso3": "SLO",
+		"name": "Slovakia",
+		"field1": "0.065428241",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "325",
+		"iso3": "ITA",
+		"name": "Italy/Sardinia",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "327",
+		"iso3": "PAP",
+		"name": "Papal States",
+		"field1": "0.06337963",
+		"field2": "0.944560185"
+	},
+	{
+		"gw": "329",
+		"iso3": "SIC",
+		"name": "Two Sicilies",
+		"field1": "0.06337963",
+		"field2": "0.690289352"
+	},
+	{
+		"gw": "332",
+		"iso3": "MOD",
+		"name": "Modena",
+		"field1": "0.06337963",
+		"field2": "0.690289352"
+	},
+	{
+		"gw": "335",
+		"iso3": "PMA",
+		"name": "Parma",
+		"field1": "0.06337963",
+		"field2": "0.690289352"
+	},
+	{
+		"gw": "337",
+		"iso3": "TUS",
+		"name": "Tuscany",
+		"field1": "0.06337963",
+		"field2": "0.690289352"
+	},
+	{
+		"gw": "338",
+		"iso3": "MLT",
+		"name": "Malta",
+		"field1": "0.903981481",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "339",
+		"iso3": "ALB",
+		"name": "Albania",
+		"field1": "0.064502315",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "341",
+		"iso3": "MNG",
+		"name": "Montenegro",
+		"field1": "0.063981481",
+		"field2": "0.06869213"
+	},
+	{
+		"gw": "341",
+		"iso3": "MNG",
+		"name": "Montenegro",
+		"field1": "0.152384259",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "343",
+		"iso3": "MAC",
+		"name": "Macedonia (Former Yugoslav Republic of)",
+		"field1": "0.864016204",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "344",
+		"iso3": "CRO",
+		"name": "Croatia",
+		"field1": "25:06:1991",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "340",
+		"iso3": "SER",
+		"name": "Serbia",
+		"field1": "0.568263889",
+		"field2": "0.070775463"
+	},
+	{
+		"gw": "340",
+		"iso3": "SER",
+		"name": "Serbia",
+		"field1": "0.235717593",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "345",
+		"iso3": "YUG",
+		"name": "Yugoslavia",
+		"field1": "0.072199074",
+		"field2": "0.194050926"
+	},
+	{
+		"gw": "346",
+		"iso3": "BOS",
+		"name": "Bosnia-Herzegovina",
+		"field1": "27:04:1992",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "347",
+		"iso3": "KOS",
+		"name": "Kosovo",
+		"field1": "0.732962963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "349",
+		"iso3": "SLV",
+		"name": "Slovenia",
+		"field1": "27:04:1992",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "350",
+		"iso3": "GRC",
+		"name": "Greece",
+		"field1": "25:04:1828",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "352",
+		"iso3": "CYP",
+		"name": "Cyprus",
+		"field1": "0.694907407",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "355",
+		"iso3": "BUL",
+		"name": "Bulgaria",
+		"field1": "0.148819444",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "359",
+		"iso3": "MLD",
+		"name": "Moldova",
+		"field1": "27:08:1991",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "360",
+		"iso3": "RUM",
+		"name": "Rumania",
+		"field1": "0.568263889",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "365",
+		"iso3": "RUS",
+		"name": "Russia (Soviet Union)",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "366",
+		"iso3": "EST",
+		"name": "Estonia",
+		"field1": "0.488171296",
+		"field2": "0.068287037"
+	},
+	{
+		"gw": "366",
+		"iso3": "EST",
+		"name": "Estonia",
+		"field1": "0.279293981",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "367",
+		"iso3": "LAT",
+		"name": "Latvia",
+		"field1": "0.07150463",
+		"field2": "0.068287037"
+	},
+	{
+		"gw": "367",
+		"iso3": "LAT",
+		"name": "Latvia",
+		"field1": "0.279293981",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "368",
+		"iso3": "LIT",
+		"name": "Lithuania",
+		"field1": "0.69025463",
+		"field2": "0.068287037"
+	},
+	{
+		"gw": "368",
+		"iso3": "LIT",
+		"name": "Lithuania",
+		"field1": "0.279293981",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "369",
+		"iso3": "UKR",
+		"name": "Ukraine",
+		"field1": "0.073043981",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "370",
+		"iso3": "BLR",
+		"name": "Belarus (Byelorussia)",
+		"field1": "25:08:1991",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "371",
+		"iso3": "ARM",
+		"name": "Armenia",
+		"field1": "0.906377315",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "372",
+		"iso3": "GRG",
+		"name": "Georgia",
+		"field1": "0.279293981",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "373",
+		"iso3": "AZE",
+		"name": "Azerbaijan",
+		"field1": "0.906377315",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "375",
+		"iso3": "FIN",
+		"name": "Finland",
+		"field1": "0.280520833",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "380",
+		"iso3": "SWD",
+		"name": "Sweden",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "385",
+		"iso3": "NOR",
+		"name": "Norway",
+		"field1": "26:08:1905",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "390",
+		"iso3": "DEN",
+		"name": "Denmark",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "395",
+		"iso3": "ICE",
+		"name": "Iceland",
+		"field1": "0.735",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "402",
+		"iso3": "CAP",
+		"name": "Cape Verde",
+		"field1": "0.236053241",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "404",
+		"iso3": "GNB",
+		"name": "Guinea-Bissau",
+		"field1": "0.445763889",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "411",
+		"iso3": "EQG",
+		"name": "Equatorial Guinea",
+		"field1": "0.529722222",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "420",
+		"iso3": "GAM",
+		"name": "Gambia",
+		"field1": "0.774131944",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "432",
+		"iso3": "MLI",
+		"name": "Mali",
+		"field1": "0.945601852",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "433",
+		"iso3": "SEN",
+		"name": "Senegal",
+		"field1": "0.19212963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "434",
+		"iso3": "BEN",
+		"name": "Benin",
+		"field1": "0.069907407",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "435",
+		"iso3": "MAA",
+		"name": "Mauritania",
+		"field1": "28:11:1960",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "436",
+		"iso3": "NIR",
+		"name": "Niger",
+		"field1": "0.153240741",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "437",
+		"iso3": "CDI",
+		"name": "Cote DíIvoire",
+		"field1": "0.319907407",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "438",
+		"iso3": "GUI",
+		"name": "Guinea",
+		"field1": "0.112939815",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "439",
+		"iso3": "BFO",
+		"name": "Burkina Faso (Upper Volta)",
+		"field1": "0.236574074",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "450",
+		"iso3": "LBR",
+		"name": "Liberia",
+		"field1": "26:07:1847",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "451",
+		"iso3": "SIE",
+		"name": "Sierra Leone",
+		"field1": "27:04:1961",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "452",
+		"iso3": "GHA",
+		"name": "Ghana",
+		"field1": "0.274733796",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "461",
+		"iso3": "TOG",
+		"name": "Togo",
+		"field1": "27:04:1960",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "471",
+		"iso3": "CAO",
+		"name": "Cameroon",
+		"field1": "0.065046296",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "475",
+		"iso3": "NIG",
+		"name": "Nigeria",
+		"field1": "0.071296296",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "481",
+		"iso3": "GAB",
+		"name": "Gabon",
+		"field1": "0.736574074",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "482",
+		"iso3": "CEN",
+		"name": "Central African Republic",
+		"field1": "0.569907407",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "483",
+		"iso3": "CHA",
+		"name": "Chad",
+		"field1": "0.486574074",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "484",
+		"iso3": "CON",
+		"name": "Congo",
+		"field1": "0.653240741",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "490",
+		"iso3": "DRC",
+		"name": "Congo, Democratic Republic of (Zaire)",
+		"field1": "30:06:1960",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "500",
+		"iso3": "UGA",
+		"name": "Uganda",
+		"field1": "0.404652778",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "501",
+		"iso3": "KEN",
+		"name": "Kenya",
+		"field1": "0.531053241",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "510",
+		"iso3": "TAZ",
+		"name": "Tanzania/Tanganyika",
+		"field1": "0.406030093",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "511",
+		"iso3": "ZAN",
+		"name": "Zanzibar",
+		"field1": "0.822719907",
+		"field2": "26:04:1964"
+	},
+	{
+		"gw": "516",
+		"iso3": "BUI",
+		"name": "Burundi",
+		"field1": "0.069236111",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "517",
+		"iso3": "RWA",
+		"name": "Rwanda",
+		"field1": "0.315069444",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "520",
+		"iso3": "SOM",
+		"name": "Somalia",
+		"field1": "0.069212963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "522",
+		"iso3": "DJI",
+		"name": "Djibouti",
+		"field1": "27:06:1977",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "530",
+		"iso3": "ETH",
+		"name": "Ethiopia",
+		"field1": "0.48119213",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "531",
+		"iso3": "ERI",
+		"name": "Eritrea",
+		"field1": "24:05:1993",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "540",
+		"iso3": "ANG",
+		"name": "Angola",
+		"field1": "0.488831019",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "541",
+		"iso3": "MZM",
+		"name": "Mozambique",
+		"field1": "25:06:1975",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "551",
+		"iso3": "ZAM",
+		"name": "Zambia",
+		"field1": "24:10:1964",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "552",
+		"iso3": "ZIM",
+		"name": "Zimbabwe (Rhodesia)",
+		"field1": "0.488715278",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "553",
+		"iso3": "MAW",
+		"name": "Malawi",
+		"field1": "0.277592593",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "560",
+		"iso3": "SAF",
+		"name": "South Africa",
+		"field1": "31:05:1910",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "563",
+		"iso3": "TRA",
+		"name": "Transvaal",
+		"field1": "0.063796296",
+		"field2": "30:05:1910"
+	},
+	{
+		"gw": "564",
+		"iso3": "OFS",
+		"name": "Orange Free State",
+		"field1": "28:03:1854",
+		"field2": "30:05:1910"
+	},
+	{
+		"gw": "565",
+		"iso3": "NAM",
+		"name": "Namibia",
+		"field1": "0.900115741",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "570",
+		"iso3": "LES",
+		"name": "Lesotho",
+		"field1": "0.196365741",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "571",
+		"iso3": "BOT",
+		"name": "Botswana",
+		"field1": "30:09:1966",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "572",
+		"iso3": "SWA",
+		"name": "Swaziland",
+		"field1": "0.279027778",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "580",
+		"iso3": "MAG",
+		"name": "Madagascar (Malagasy)",
+		"field1": "0.06337963",
+		"field2": "0.235833333"
+	},
+	{
+		"gw": "580",
+		"iso3": "MAG",
+		"name": "Madagascar",
+		"field1": "26:06:1960",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "581",
+		"iso3": "COM",
+		"name": "Comoros",
+		"field1": "0.277719907",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "590",
+		"iso3": "MAS",
+		"name": "Mauritius",
+		"field1": "0.524861111",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "600",
+		"iso3": "MOR",
+		"name": "Morocco",
+		"field1": "0.06337963",
+		"field2": "0.064398148"
+	},
+	{
+		"gw": "600",
+		"iso3": "MOR",
+		"name": "Morocco",
+		"field1": "0.108055556",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "615",
+		"iso3": "ALG",
+		"name": "Algeria",
+		"field1": "0.06337963",
+		"field2": "0.234375"
+	},
+	{
+		"gw": "615",
+		"iso3": "ALG",
+		"name": "Algeria",
+		"field1": "0.235902778",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "616",
+		"iso3": "TUN",
+		"name": "Tunisia",
+		"field1": "0.06337963",
+		"field2": "0.525243056"
+	},
+	{
+		"gw": "616",
+		"iso3": "TUN",
+		"name": "Tunisia",
+		"field1": "0.065",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "620",
+		"iso3": "LIB",
+		"name": "Libya",
+		"field1": "0.06337963",
+		"field2": "31:12:1834"
+	},
+	{
+		"gw": "620",
+		"iso3": "LIB",
+		"name": "Libya",
+		"field1": "24:12:1951",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "625",
+		"iso3": "SUD",
+		"name": "Sudan",
+		"field1": "0.065",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "626",
+		"iso3": "SSD",
+		"name": "South Sudan",
+		"field1": "0.403136574",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "630",
+		"iso3": "IRN",
+		"name": "Iran (Persia)",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "640",
+		"iso3": "TUR",
+		"name": "Turkey (Ottoman Empire)",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "645",
+		"iso3": "IRQ",
+		"name": "Iraq",
+		"field1": "0.154305556",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "651",
+		"iso3": "EGY",
+		"name": "Egypt",
+		"field1": "0.063506944",
+		"field2": "31:12:1855"
+	},
+	{
+		"gw": "651",
+		"iso3": "EGY",
+		"name": "Egypt",
+		"field1": "28:02:1922",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "652",
+		"iso3": "SYR",
+		"name": "Syria",
+		"field1": "0.064884259",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "660",
+		"iso3": "LEB",
+		"name": "Lebanon",
+		"field1": "0.946805556",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "663",
+		"iso3": "JOR",
+		"name": "Jordan",
+		"field1": "25:05:1946",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "666",
+		"iso3": "ISR",
+		"name": "Israel",
+		"field1": "0.609351852",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "670",
+		"iso3": "SAU",
+		"name": "Saudi Arabia",
+		"field1": "0.986944444",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "678",
+		"iso3": "YEM",
+		"name": "Yemen (Arab Republic of Yemen)",
+		"field1": "30:10:1918",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "680",
+		"iso3": "YPR",
+		"name": "Yemen, People's Republic of",
+		"field1": "30:11:1967",
+		"field2": "0.90150463"
+	},
+	{
+		"gw": "690",
+		"iso3": "KUW",
+		"name": "Kuwait",
+		"field1": "0.818530093",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "692",
+		"iso3": "BAH",
+		"name": "Bahrain",
+		"field1": "0.653368056",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "694",
+		"iso3": "QAT",
+		"name": "Qatar",
+		"field1": "0.1540625",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "696",
+		"iso3": "UAE",
+		"name": "United Arab Emirates",
+		"field1": "0.114479167",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "698",
+		"iso3": "OMA",
+		"name": "Oman",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "700",
+		"iso3": "AFG",
+		"name": "Afghanistan",
+		"field1": "0.06337963",
+		"field2": "30:12:1888"
+	},
+	{
+		"gw": "700",
+		"iso3": "AFG",
+		"name": "Afghanistan",
+		"field1": "0.067349537",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "701",
+		"iso3": "TKM",
+		"name": "Turkmenistan",
+		"field1": "27:10:1991",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "702",
+		"iso3": "TAJ",
+		"name": "Tajikistan",
+		"field1": "0.404293981",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "703",
+		"iso3": "KYR",
+		"name": "Kyrgyz Republic",
+		"field1": "31:08:1991",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "704",
+		"iso3": "UZB",
+		"name": "Uzbekistan",
+		"field1": "31:08:1991",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "705",
+		"iso3": "KZK",
+		"name": "Kazakhstan",
+		"field1": "0.698043981",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "710",
+		"iso3": "CHN",
+		"name": "China",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "711",
+		"iso3": "TBT",
+		"name": "Tibet",
+		"field1": "0.064502315",
+		"field2": "0.071180556"
+	},
+	{
+		"gw": "712",
+		"iso3": "MON",
+		"name": "Mongolia",
+		"field1": "0.565983796",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "713",
+		"iso3": "TAW",
+		"name": "Taiwan",
+		"field1": "0.364224537",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "730",
+		"iso3": "KOR",
+		"name": "Korea",
+		"field1": "0.06337963",
+		"field2": "0.944328704"
+	},
+	{
+		"gw": "731",
+		"iso3": "PRK",
+		"name": "Korea, People's Republic of",
+		"field1": "0.403796296",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "732",
+		"iso3": "ROK",
+		"name": "Korea, Republic of",
+		"field1": "0.653101852",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "740",
+		"iso3": "JPN",
+		"name": "Japan",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "750",
+		"iso3": "IND",
+		"name": "India",
+		"field1": "0.653090278",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "760",
+		"iso3": "BHU",
+		"name": "Bhutan",
+		"field1": "0.064918981",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "770",
+		"iso3": "PAK",
+		"name": "Pakistan",
+		"field1": "0.611423611",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "771",
+		"iso3": "BNG",
+		"name": "Bangladesh",
+		"field1": "0.6978125",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "775",
+		"iso3": "MYA",
+		"name": "Myanmar (Burma)",
+		"field1": "0.06337963",
+		"field2": "31:12:1885"
+	},
+	{
+		"gw": "775",
+		"iso3": "MYA",
+		"name": "Myanmar (Burma)",
+		"field1": "0.189907407",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "780",
+		"iso3": "SRI",
+		"name": "Sri Lanka (Ceylon)",
+		"field1": "0.190601852",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "781",
+		"iso3": "MAD",
+		"name": "Maldives",
+		"field1": "26:05:1965",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "790",
+		"iso3": "NEP",
+		"name": "Nepal",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "800",
+		"iso3": "THI",
+		"name": "Thailand",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "811",
+		"iso3": "CAM",
+		"name": "Cambodia (Kampuchea)",
+		"field1": "0.405243056",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "812",
+		"iso3": "LAO",
+		"name": "Laos",
+		"field1": "0.06775463",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "815",
+		"iso3": "VNM",
+		"name": "Vietnam (Annam/Cochin China/Tonkin)",
+		"field1": "0.06337963",
+		"field2": "0.064270833"
+	},
+	{
+		"gw": "816",
+		"iso3": "DRV",
+		"name": "Vietnam, Democratic Republic of",
+		"field1": "0.06775463",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "817",
+		"iso3": "RVN",
+		"name": "Vietnam, Republic of",
+		"field1": "0.06775463",
+		"field2": "30:04:1975"
+	},
+	{
+		"gw": "820",
+		"iso3": "MAL",
+		"name": "Malaysia",
+		"field1": "31:08:1957",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "830",
+		"iso3": "SIN",
+		"name": "Singapore",
+		"field1": "0.403298611",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "835",
+		"iso3": "BRU",
+		"name": "Brunei",
+		"field1": "0.065324074",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "840",
+		"iso3": "PHI",
+		"name": "Philippines",
+		"field1": "0.194050926",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "850",
+		"iso3": "INS",
+		"name": "Indonesia",
+		"field1": "0.736400463",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "860",
+		"iso3": "ETM",
+		"name": "East Timor",
+		"field1": "0.859976852",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "900",
+		"iso3": "AUL",
+		"name": "Australia",
+		"field1": "0.064363426",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "910",
+		"iso3": "PNG",
+		"name": "Papua New Guinea",
+		"field1": "0.695775463",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "920",
+		"iso3": "NEW",
+		"name": "New Zealand",
+		"field1": "0.069988426",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "940",
+		"iso3": "SOL",
+		"name": "Solomon Islands",
+		"field1": "0.319421296",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "950",
+		"iso3": "FJI",
+		"name": "Fiji",
+		"field1": "0.446412037",
+		"field2": "31:12:2012"
+	}
+];
+
 L.countryLookup = [
                      {
                  	    "name": "Afghanistan",
@@ -3453,6 +4968,7 @@ L.fipsLookup = [
                 	  }
                 	];
 L.fips2Lookup = L.GeometryUtils.arrayToMap(L.fipsLookup, 'FIPS', 'ISO 3');
+L.gwNoLookup = L.GeometryUtils.arrayToMap(L.gwLookup, 'gw', 'iso3');
 
 var lookups = L.GeometryUtils.arrayToMaps(L.countryLookup, [{
 	from: 'alpha-2',

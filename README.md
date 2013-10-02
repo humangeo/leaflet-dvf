@@ -103,7 +103,7 @@ Images:
 
 Lines:
 * [Napoleon's March](http://humangeo.github.com/leaflet-dvf/examples/html/minard.html) *Yet another variation of Charle's Minard's famous visualization that illustrates the use of the FlowLine class*
-* [US Airports and Flight Data](http://humangeo.github.com/leaflet-dvf/examples/html/airports.html) *Illustrates using the L.Graph class for visualize flights between airports*
+* [US Airports and Flight Data](http://humangeo.github.com/leaflet-dvf/examples/html/airports.html) *Illustrates using the L.Graph class for visualizing flights between airports*
 
 In Progress:
 * [Sparklines](http://humangeo.github.com/leaflet-dvf/examples/html/sparklines.html) *NOTE:  This is a work in progress.  The code is incomplete and can be found in src/leaflet.dvf.experimental.js*

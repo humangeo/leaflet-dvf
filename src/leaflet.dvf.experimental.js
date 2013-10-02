@@ -597,8 +597,8 @@ L.Graph = L.Graph.extend({
 		var fromValue = L.Util.getFieldValue(record, fromField);
 		var toValue = L.Util.getFieldValue(record, toField);
 		
-		var fromLocation = this.options.locationMode.call(this, fromValue, index);
-		var toLocation = this.options.locationMode.call(this, toValue, index);
+		var fromLocation = this.options.locationMode.call(this, fromValue, fromValue);
+		var toLocation = this.options.locationMode.call(this, toValue, toValue);
 		
 		// Get from location
 		// Get to location
@@ -607,14 +607,16 @@ L.Graph = L.Graph.extend({
 			var latlng1 = fromLocation.center;
 			var latlng2 = toLocation.center;
 			
-			var line = this.options.getEdge.call(this, latlng1, latlng2);
-			var bounds = new L.LatLngBounds(new L.LatLng(Math.min(latlng1.lat, latlng2.lat), Math.min(latlng1.lng, latlng2.lng)), new L.LatLng(Math.max(latlng1.lat, latlng2.lat), Math.max(latlng1.lng, latlng2.lng)));
+			if (latlng1 && latlng2) {
+				var line = this.options.getEdge.call(this, latlng1, latlng2);
+				var bounds = new L.LatLngBounds(new L.LatLng(Math.min(latlng1.lat, latlng2.lat), Math.min(latlng1.lng, latlng2.lng)), new L.LatLng(Math.max(latlng1.lat, latlng2.lat), Math.max(latlng1.lng, latlng2.lng)));
 			
-			location = {
-				center: bounds.getCenter(),
-				location: line,
-				text: fromValue + ' - ' + toValue
-			};
+				location = {
+					center: bounds.getCenter(),
+					location: line,
+					text: fromValue + ' - ' + toValue
+				};
+			}
 		}
 		
 		return location;

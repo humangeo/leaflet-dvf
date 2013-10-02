@@ -733,6 +733,12 @@ L.StyleConverter = {
                 return style;
             }
         },
+        barThickness: {
+            property: [ "height" ],
+            valueFunction: function(value) {
+                return value + "px";
+            }
+        },
         radius: {
             property: [ "height" ],
             valueFunction: function(value) {
@@ -1252,6 +1258,7 @@ L.RegularPolygonMarker = L.Path.extend({
     },
     projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
+        this._textPoint = this._point;
         this._points = this._getPoints();
         if (this.options.innerRadius || this.options.innerRadiusX && this.options.innerRadiusY) {
             this._innerPoints = this._getPoints(true).reverse();

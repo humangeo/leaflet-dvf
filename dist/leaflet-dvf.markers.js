@@ -390,6 +390,18 @@ L.Util.getProperty = function(obj, property, defaultValue) {
     return property in obj ? obj[property] : defaultValue;
 };
 
+L.Util.setFieldValue = function(record, fieldName, value) {
+    var keyParts = fieldName.split(".");
+    var pointer = record;
+    var part;
+    for (var i = 0; i < keyParts.length - 1; ++i) {
+        part = keyParts[i];
+        pointer[part] = pointer[part] || {};
+        pointer = pointer[part];
+    }
+    pointer[keyParts[keyParts.length - 1]] = value;
+};
+
 L.Util.getFieldValue = function(record, fieldName) {
     var value = null;
     if (fieldName) {
@@ -1032,30 +1044,52 @@ var PathFunctions = PathFunctions || {
         if (!this._defs) {
             this._createDefs();
         }
+        if (this._gradient) {
+            this._defs.removeChild(this._gradient);
+        }
         var gradient = this._createElement("linearGradient");
         var gradientGuid = L.Util.guid();
-        options = options || {
-            x1: "0%",
-            x2: "100%",
-            y1: "0%",
-            y2: "100%"
+        options = options !== true ? $.extend(true, {}, options) : {};
+        var vector = options.vector || [ [ "0%", "0%" ], [ "100%", "100%" ] ];
+        var vectorOptions = {
+            x1: vector[0][0],
+            x2: vector[1][0],
+            y1: vector[0][1],
+            y2: vector[1][1]
         };
-        options.id = "grad" + gradientGuid;
-        var stops = [ {
+        vectorOptions.id = "grad" + gradientGuid;
+        var stops = options.stops || [ {
             offset: "0%",
-            style: "stop-color:rgb(255, 255, 255);stop-opacity:1"
+            style: {
+                color: "rgb(255, 255, 255)",
+                opacity: 1
+            }
         }, {
             offset: "60%",
-            style: "stop-color:" + (this.options.fillColor || this.options.color) + ";stop-opacity:1"
+            style: {
+                color: this.options.fillColor || this.options.color,
+                opacity: 1
+            }
         } ];
-        for (var key in options) {
-            gradient.setAttribute(key, options[key]);
+        for (var key in vectorOptions) {
+            gradient.setAttribute(key, vectorOptions[key]);
         }
         for (var i = 0; i < stops.length; ++i) {
             var stop = stops[i];
             var stopElement = this._createElement("stop");
+            stop.style = stop.style || {};
             for (var key in stop) {
-                stopElement.setAttribute(key, stop[key]);
+                var stopProperty = stop[key];
+                if (key === "style") {
+                    var styleProperty = "";
+                    stopProperty.color = stopProperty.color || this.options.fillColor || this.options.color;
+                    stopProperty.opacity = typeof stopProperty.opacity === "undefined" ? 1 : stopProperty.opacity;
+                    for (var propKey in stopProperty) {
+                        styleProperty += "stop-" + propKey + ":" + stopProperty[propKey] + ";";
+                    }
+                    stopProperty = styleProperty;
+                }
+                stopElement.setAttribute(key, stopProperty);
             }
             gradient.appendChild(stopElement);
         }
@@ -1065,6 +1099,9 @@ var PathFunctions = PathFunctions || {
     _createDropShadow: function(options) {
         if (!this._defs) {
             this._createDefs();
+        }
+        if (this._dropShadow) {
+            this._defs.removeChild(this._dropShadow);
         }
         var filterGuid = L.Util.guid();
         var filter = this._createElement("filter");
@@ -1121,17 +1158,13 @@ var PathFunctions = PathFunctions || {
             }
         }
         if (this.options.gradient) {
-            if (!this._gradient) {
-                this._createGradient();
-            }
+            this._createGradient(this.options.gradient);
             this._path.setAttribute("fill", "url(#" + this._gradient.getAttribute("id") + ")");
         } else if (!this.options.fill) {
             this._path.setAttribute("fill", "none");
         }
         if (this.options.dropShadow) {
-            if (!this._dropShadow) {
-                this._createDropShadow();
-            }
+            this._createDropShadow();
             this._path.setAttribute("filter", "url(#" + this._dropShadow.getAttribute("id") + ")");
         } else {
             this._path.removeAttribute("filter");

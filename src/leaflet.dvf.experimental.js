@@ -219,9 +219,7 @@ L.Line = L.Path.extend({
 		var path = new L.SVGPathBuilder(this._points, null, {
 			closePath: false
 		}).build(6);
-		
-		console.log(path);
-		
+
 		return path;
 	}
 });
@@ -415,90 +413,98 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 		var seriesObjects = [];
 		var xField = this.options.xField || 'x';
 		var yField = this.options.yField || 'y';
+		var includeFunction = this.options.filter || this.options.includeLayer;
 		
 		for (var index in records) {
 			if (records.hasOwnProperty(index)) {
+				
 				record = records[index];
 				
-				for (var key in this.options.chartOptions) {
-					series = L.Util.getFieldValue(record, key);
-					
-					if (_.isObject(series)) {
-						series = _.pairs(series);
-					}
-					
-					var seriesPoint;
-					var points = {};
-					
-					// Need to sort x's numerically before plotting
-					for (var pointIndex in series) {
-						if (series.hasOwnProperty(pointIndex)) {
-							seriesPoint = series[pointIndex];
-			
-							x = L.Util.getFieldValue(seriesPoint, xField);
-							y = L.Util.getFieldValue(seriesPoint, yField);
+				var includeLayer = includeFunction ? includeFunction.call(this, record) : true;
 				
-							if (seriesPoint.x) {
-								x = seriesPoint.x;
-								y = seriesPoint.y;		
-							}	
-							else if (_.isArray(seriesPoint)) {
-								x = seriesPoint[0];
-								y = seriesPoint[1];
-							}
-							else {
-								x = index;
-								y = seriesPoint;
-							}
-			
-							// If x is a date string, then parse it
-							if (isNaN(x)) {
-								x = moment(x).unix();
-							}
-							
-							x = Number(x);
-							
-							xValues[x] = x;
-							xRange[0] = Math.min(xRange[0], x);
-							xRange[1] = Math.max(xRange[1], x);
-							yRange[0] = Math.min(yRange[0], y);
-							yRange[1] = Math.max(yRange[1], y);
-							
-							points[x] = y;
-						}
-					}		
-
-					seriesObjects[index] = seriesObjects[index] || {};
+				if (includeLayer) {
+					for (var key in this.options.chartOptions) {
+						series = L.Util.getFieldValue(record, key);
 					
-					seriesObjects[index][key] = points;
+						if (_.isObject(series)) {
+							series = _.pairs(series);
+						}
+					
+						var seriesPoint;
+						var points = {};
+					
+						// Need to sort x's numerically before plotting
+						for (var pointIndex in series) {
+							if (series.hasOwnProperty(pointIndex)) {
+								seriesPoint = series[pointIndex];
+			
+								x = L.Util.getFieldValue(seriesPoint, xField);
+								y = L.Util.getFieldValue(seriesPoint, yField);
+				
+								if (seriesPoint.x) {
+									x = seriesPoint.x;
+									y = seriesPoint.y;		
+								}	
+								else if (_.isArray(seriesPoint)) {
+									x = seriesPoint[0];
+									y = seriesPoint[1];
+								}
+								else {
+									x = index;
+									y = seriesPoint;
+								}
+			
+								// If x is a date string, then parse it
+								if (isNaN(x)) {
+									x = moment(x).unix();
+								}
+							
+								x = Number(x);
+							
+								xValues[x] = x;
+								xRange[0] = Math.min(xRange[0], x);
+								xRange[1] = Math.max(xRange[1], x);
+								yRange[0] = Math.min(yRange[0], y);
+								yRange[1] = Math.max(yRange[1], y);
+							
+								points[x] = y;
+							}
+						}		
+
+						seriesObjects[index] = seriesObjects[index] || record;
+					
+						L.Util.setFieldValue(seriesObjects[index], key, points);
+					}
 				}
 			}
 		}
-		
+
 		xValues = _.sortBy(_.keys(xValues), function (value) {
 			return value;
 		});
 		
 		for (var index in seriesObjects) {
+
 			var seriesObject = seriesObjects[index];
-			
-			for (var key in seriesObject) {
-				if (seriesObject.hasOwnProperty(key)) {
-					var seriesData = seriesObject[key];
-			
-					for (var j = 0; j < xValues.length; ++j) {
-						var x = xValues[j];
-				
-						if (!(x in seriesData)) {
-							seriesData[x] = 0;
-						}
+		
+			for (var key in this.options.chartOptions) {
+
+				var seriesData = L.Util.getFieldValue(seriesObject, key);
+		
+				for (var j = 0; j < xValues.length; ++j) {
+					var x = xValues[j];
+		
+					if (!(x in seriesData)) {
+						seriesData[x] = 0;
 					}
-			
-					seriesObject[key] = _.chain(seriesData).pairs().sortBy(function(value) { 
-						return value 
-					}).value();
 				}
+				
+				L.Util.setFieldValue(seriesObjects[index], key, _.chain(seriesData).pairs().sortBy(function(value) { 
+					return value 
+				}).value());
+
 			}
+			
 		}
 		
 		this.options.layerOptions.minX = xRange[0];
@@ -507,7 +513,7 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 		this.options.layerOptions.maxY = yRange[1];
 		this.options.xField = "0";
 		this.options.yField = "1";
-		
+
 		return seriesObjects;
 	},
 	
@@ -622,3 +628,242 @@ L.Graph = L.Graph.extend({
 		return location;
 	}
 });
+
+/*
+ *	Completely incomplete.  A WORK IN PROGRESS
+ */	
+L.WeightedLineSegment = L.Path.extend({
+	initialize: function (weightedPoint1, weightedPoint2, options) {
+		L.Path.prototype.initialize.call(this, options);
+		
+		L.Util.setOptions(this, options);
+
+		this._weightedPoint1 = weightedPoint1;
+		this._weightedPoint2 = weightedPoint2;
+	},
+	
+	projectLatlngs: function () {
+		this._points = this._getPoints();
+		this._setGradient();
+	},
+	
+	_setGradient: function () {
+		if (this.options.weightToColor) {
+			var p1 = this._points[1];
+			var p2 = this._points[4];
+			
+			var deltaX = p2.x - p1.x;
+			var deltaY = p2.y - p1.y;
+			var angle = Math.atan(deltaY/deltaX);
+			var directionX = deltaX/Math.abs(deltaX);
+			var directionY = deltaY/Math.abs(deltaY);
+			
+			var p1 = new L.Point(50 + 50 * Math.cos(angle + Math.PI), 50 + 50 * Math.sin(angle + Math.PI));
+			var p2 = new L.Point(50 + 50 * Math.cos(angle), 50 + 50 * Math.sin(angle));
+			
+			if (directionX < 0) {
+				var temp = p1;
+				p1 = p2;
+				p2 = temp;	
+			}
+			
+			var color1 = this.options.weightToColor.evaluate(this._weightedPoint1.weight);
+			var color2 = this.options.weightToColor.evaluate(this._weightedPoint2.weight);
+
+			this.options.gradient = {
+				vector: [[p1.x.toFixed(2) + '%', p1.y.toFixed(2) + '%'],[p2.x.toFixed(2) + '%', p2.y.toFixed(2) + '%']],
+				stops: [
+					{
+						offset: '0%',
+						style: {
+							color: color1,
+							opacity: 1
+						}
+					},
+					{
+						offset: '100%',
+						style: {
+							color: color2,
+							opacity: 1
+						}
+					}
+				]
+			}
+			
+			this.setStyle(this.options);
+
+		}
+	},
+	
+	_weightedPointToPoint: function (weightedPoint) {
+		var point1 = this._map.latLngToLayerPoint(weightedPoint.latlng);
+		var weight = weightedPoint.weight;
+		var angle1 = weightedPoint.angle;
+		var angle2 = angle1 + Math.PI;
+		var coord1 = new L.Point(point1.x + Math.cos(angle1) * weight, point1.y + Math.sin(angle1) * weight);
+		var coord2 = new L.Point(point1.x + Math.cos(angle2) * weight, point1.y + Math.sin(angle2) * weight);
+		
+		return [coord1, point1, coord2];
+	},
+	
+	_getPoints: function () {
+		var points = [];
+		var points1 = this._weightedPointToPoint(this._weightedPoint1);
+		var points2 = this._weightedPointToPoint(this._weightedPoint2).reverse();
+		
+		points = points.concat(points1, points2);
+		
+		return points;
+	},
+	
+	getPathString: function () {
+		return new L.SVGPathBuilder(this._points, []).build(6);
+	}
+});
+
+/*
+ * Complete incomplete.  A WORK IN PROGRESS...needs a lot of work
+ */
+L.WeightedPolyline = L.LayerGroup.extend({
+	initialize: function (latlngs, options) {
+		L.LayerGroup.prototype.initialize.call(this, options);
+		L.Util.setOptions(this, options);
+		this._latlngs = latlngs;
+		
+	},
+	
+	onAdd: function (map) {
+		L.LayerGroup.prototype.onAdd.call(this, map);
+		this._loadComponents();
+	},
+	
+	getBounds: function () {
+		// TODO:  Update this
+		var map = this._map,
+			point = map.project(this._latlngs[0]),
+			swPoint = new L.Point(point.x + this.options.offset.x, point.y + this.options.offset.y),
+			nePoint = new L.Point(swPoint.x + this.options.size.x, swPoint.y - this.options.size.y),
+			sw = map.unproject(swPoint),
+			ne = map.unproject(nePoint);
+
+		return new L.LatLngBounds(sw, ne);
+	},
+
+	setLatLngs: function (latlngs) {
+		this._latlngs = latlngs;
+		this._loadComponents();
+		this.redraw();
+	},
+	
+	getLatLngs: function () {
+		return this._latlngs;
+	},
+
+	_getPoints: function (lastCoords, latlng1, latlng2, latlng3) {
+		var point1 = this._map.latLngToLayerPoint(latlng1);
+		var point2 = this._map.latLngToLayerPoint(latlng2);
+		var point3 = this._map.latLngToLayerPoint(latlng3);
+		var deltaX = point3.x - point1.x;
+		var deltaY = point3.y - point1.y;
+		var angleRadians = Math.atan(deltaY/deltaX);
+		var angle1 = angleRadians + Math.PI/2;
+		var angle2 = angle1 + Math.PI;
+		
+		var weight = Math.random() * 20;
+		var coord1 = new L.Point(point2.x + Math.cos(angle1) * weight, point2.y + Math.sin(angle1) * weight);
+		var coord2 = new L.Point(point2.x + Math.cos(angle2) * weight, point2.y + Math.sin(angle2) * weight);
+	},
+	
+	options: {
+		weightToColor: new L.HSLHueFunction([0, 120], [20, -30])
+	},
+	
+	_loadComponents: function () {
+		var angles = [];
+		var lastCoords = [];
+		var weights = [20, 1, 15, 2, 12];
+		var p1 = this._latlngs[0];
+		var p2 = this._latlngs[1];
+		var point1 = this._map.latLngToLayerPoint(p1);
+		var point2 = this._map.latLngToLayerPoint(p2);
+		var deltaX = point2.x - point1.x;
+		var deltaY = point2.y - point1.y;
+		var angleRadians = Math.atan(deltaY/deltaX);
+		var angle1 = angleRadians + Math.PI/2;
+		var angle2 = angle1 + Math.PI;
+		var weight = Math.random() * 20;
+		var coord1 = new L.Point(point1.x + Math.cos(angle1) * weight, point1.y + Math.sin(angle1) * weight);
+		var coord2 = new L.Point(point1.x + Math.cos(angle2) * weight, point1.y + Math.sin(angle2) * weight);
+		
+		lastCoords = [coord1, coord2];
+		lastPoint = point1;
+		
+		angles.push({
+			latlng: p1,
+			angle: angle1,
+			weight: weights[0]
+		});	
+			
+		for (var i = 1; i < this._latlngs.length - 1; ++i) {
+			p1 = this._latlngs[i];
+			p2 = this._latlngs[i + 1];
+
+			// LatLngs to layer coords
+			point1 = this._map.latLngToLayerPoint(p1);
+			point2 = this._map.latLngToLayerPoint(p2);
+
+			deltaX = point2.x - lastPoint.x;
+			deltaY = point2.y - lastPoint.y;
+			angleRadians = Math.atan(deltaY/deltaX);
+			angle1 = angleRadians + Math.PI/2;
+			angle2 = angle1 + Math.PI;
+			
+			weight = Math.random() * 20;
+			
+			angles.push({
+				latlng: p1,
+				angle: angle1,
+				weight: weights[i]
+			});		
+			
+			coord1 = new L.Point(point1.x + Math.cos(angle1) * weight, point1.y + Math.sin(angle1) * weight);
+			coord2 = new L.Point(point1.x + Math.cos(angle2) * weight, point1.y + Math.sin(angle2) * weight);
+			
+			lastCoords.push(coord1);
+			lastCoords.push(coord2);
+			this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));
+			
+			lastCoords = [coord1, coord2];
+			lastPoint = point1;
+			
+			angles = angles.slice(1);
+		}
+		
+		p1 = p2;
+		p2 = this._latlngs[this._latlngs.length - 1];
+		
+		// LatLngs to layer coords
+		point1 = this._map.latLngToLayerPoint(p1);
+		point2 = this._map.latLngToLayerPoint(p2);
+
+		deltaX = point2.x - lastPoint.x;
+		deltaY = point2.y - lastPoint.y;
+		angleRadians = Math.atan(deltaY/deltaX);
+		angle1 = angleRadians + Math.PI/2;
+		angle2 = angle1 + Math.PI;
+		
+		weight = Math.random() * 20;
+		
+		angles.push({
+			latlng: p1,
+			angle: angle1,
+			weight: weights[this._latlngs.length - 1]
+		});	
+		
+		this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));	
+	}
+});
+
+L.weightedPolyline = function (latlngs, options) {
+	return new L.WeightedPolyline(latlngs, options);
+};

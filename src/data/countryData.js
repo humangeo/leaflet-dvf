@@ -1424,7 +1424,7 @@ L.gwLookup = [
 	},
 	{
 		"gw": "816",
-		"iso3": "DRV",
+		"iso3": "VNM",
 		"name": "Vietnam, Democratic Republic of",
 		"field1": "0.06775463",
 		"field2": "31:12:2012"
@@ -1511,6 +1511,166 @@ L.gwLookup = [
 		"iso3": "FJI",
 		"name": "Fiji",
 		"field1": "0.446412037",
+		"field2": "31:12:2012"
+	},{
+		"gw": "54",
+		"iso3": "DMA",
+		"name": "Dominica",
+		"field1": "0.155532407",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "55",
+		"iso3": "GRN",
+		"name": "Grenada",
+		"field1": "0.315902778",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "56",
+		"iso3": "SLU",
+		"name": "Saint Lucia",
+		"field1": "0.940960648",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "57",
+		"iso3": "SVG",
+		"name": "Saint Vincent and the Grenadines",
+		"field1": "27:10:1979",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "58",
+		"iso3": "AAB",
+		"name": "Antigua & Barbuda",
+		"field1": "0.072233796",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "60",
+		"iso3": "SKN",
+		"name": "Saint Kitts and Nevis",
+		"field1": "0.820868056",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "221",
+		"iso3": "MNC",
+		"name": "Monaco",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "223",
+		"iso3": "LIE",
+		"name": "Liechtenstein",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "331",
+		"iso3": "SNM",
+		"name": "San Marino",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "232",
+		"iso3": "AND",
+		"name": "Andorra",
+		"field1": "0.06337963",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "396",
+		"iso3": "ABK",
+		"name": "Abkhazia",
+		"field1": "26:08:2008",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "397",
+		"iso3": "SOT",
+		"name": "South Ossetia",
+		"field1": "26:08:2008",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "403",
+		"iso3": "STP",
+		"name": "São Tomé and Principe",
+		"field1": "0.527719907",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "591",
+		"iso3": "SEY",
+		"name": "Seychelles",
+		"field1": "29:06:1976",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "935",
+		"iso3": "VAN",
+		"name": "Vanuatu",
+		"field1": "30:06:1980",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "970",
+		"iso3": "KBI",
+		"name": "Kiribati",
+		"field1": "0.527766204",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "971",
+		"iso3": "NAU",
+		"name": "Nauru",
+		"field1": "31:12:1968",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "972",
+		"iso3": "TON",
+		"name": "Tonga",
+		"field1": "0.193634259",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "973",
+		"iso3": "TUV",
+		"name": "Tuvalu",
+		"field1": "0.07150463",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "983",
+		"iso3": "MSI",
+		"name": "Marshall Islands",
+		"field1": "0.904930556",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "986",
+		"iso3": "PAL",
+		"name": "Palau",
+		"field1": "0.071689815",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "987",
+		"iso3": "FSM",
+		"name": "Federated States of Micronesia",
+		"field1": "0.155625",
+		"field2": "31:12:2012"
+	},
+	{
+		"gw": "990",
+		"iso3": "WSM",
+		"name": "Samoa/Western Samoa",
+		"field1": "0.065069444",
 		"field2": "31:12:2012"
 	}
 ];

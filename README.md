@@ -5,7 +5,6 @@
 The Leaflet DVF is an extension to [CloudMade][]'s [Leaflet][] JavaScript mapping library.
 The primary goal of the framework is to simplify data visualization and thematic mapping.
 
-![Markers](http://humangeo.github.com/leaflet-dvf/images/markers.png "Markers")
 ![Election Mapping](http://humangeo.github.com/leaflet-dvf/images/electionmapping.png "Election Mapping")
 ![Country Data](http://humangeo.github.com/leaflet-dvf/images/countrydata.png "Country Data")
 
@@ -51,7 +50,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 
 Support for gradient fills and drop shadows.
 
-**NEW** Callouts for annotating map data.  Use the L.Callout class to add individual callouts to your map.  See the [Markers](http://humangeo.github.com/leaflet-dvf/examples/html/markers.html) example for an illustration of callouts. **Documentation coming soon**
+**NEW** Callouts for annotating map data.  Use the L.Callout class to add individual callouts to your map.  See the [Markers](http://humangeo.github.com/leaflet-dvf/examples/html/markers.html) example for an illustration of callouts.
 
 *NOTE:  The dist folder includes a minified version of the full framework as well as a minified version of the code required to use the new markers*
 *Use leaflet-dvf.markers.min.js if you want to use the new markers without the rest of the framework*
@@ -81,7 +80,6 @@ With the latest version of the framework, most of the components will work witho
 
 New Marker Types:
 * [Markers](http://humangeo.github.com/leaflet-dvf/examples/html/markers.html)
-
 Proportional Symbol:
 * [USGS Earthquakes](http://humangeo.github.com/leaflet-dvf/examples/html/earthquakes.html)
 * [Meetup Finder](http://humangeo.github.com/leaflet-dvf/examples/html/meetups.html) *Zoom to an area of interest, put in a Meetup topic, and click the search button*
@@ -126,13 +124,45 @@ var layer = new <Leaflet Path-based Layer (e.g. L.Polygon)>(<Constructor inputs>
 	gradient: true,
 	dropShadow: true
 });
+
+var layer = new <Leaflet Path-based Layer (e.g. L.Polygon)>(<Constructor inputs>, {
+	gradient: {
+		vector: [['0%', '50%'], ['100%', '50%']],
+		stops: [{
+			offset: '0%',
+			style: {
+				color: '#ffffff',
+				opacity: 1
+			}
+		}, {
+			offset: '50%',
+			style: {
+				color: '#ff0000',
+				opacity: 1
+			}
+		}]
+	}
+});
+
 ```
 
 #### Options
 Option | Type | Default | Description
 --- | --- | --- | ---
-gradient | Boolean | differs depending on the layer class (most new marker types use a gradient by default) | Specifying a value of true will fill the path with a gradient from white to the specified fillColor (top left - bottom right)
+gradient | Boolean OR Object | differs depending on the layer class (most new marker types use a gradient by default) | Specifying a value of true will fill the path with a gradient from white to the specified fillColor (top left - bottom right)
 dropShadow | Boolean | false | Specifying a value of true will add a dropShadow to the path
+
+#### gradient Property Options
+Option | Type | Default | Description
+--- | --- | --- | ---
+vector | Array | [['0%', '0%'], ['100%', '100%']] | an array consisting of a start and end point that defines the direction of the gradient.  Each start and end point is an array of x and y values. Where x and y values can be percentage strings (e.g. '100%') or numbers defining an absolute position
+stops | Array | | an array of stop objects defining the colors to be used in the gradient.  Each stop object has offset and style properties.  See below.
+
+#### stop Options
+Option | Type | Default | Description
+--- | --- | --- | ---
+offset | String OR Number |  | The position along the gradient at which to apply the given color/opacity
+style | Object | { opacity: 1, color: <fillColor OR color>} | an object with color and opacity properties defining the color and opacity to be used in the given stop.  If you omit the color, the Path's fillColor or color will be used automatically.
 
 ## Markers
 
@@ -480,7 +510,7 @@ geohashField | String | null | The property of each record that contains the geo
 layerOptions | Object | null | Default style - An object containing Leaflet L.Path style properties that will be used as the default style for DataLayer markers/polygons.  These properties will be overridden by the displayOptions.
 displayOptions | Object | null | Dynamic styles - An object containing pointers to one or property values of each record with associated L.Path style properties and LinearFunction objects
 tooltipOptions | Object | null | Options used to configure the tooltips that are displayed on mouseover (iconSize and iconAnchor)
-onEachRecord | Function | null | A function that performs additional operations (e.g. binding a popup) on a created layer based on the record associated with that layer (similar to the L.GeoJSON onEachFeature method
+onEachRecord | Function | null | A function that performs additional operations (e.g. binding a popup) on a created layer based on the record associated with that layer (similar to the L.GeoJSON onEachFeature method).  Note that the parameter ordering is: layer, record.  This is slightly different from the L.GeoJSON onEachFeature method, where the ordering is:  featureData, layer.
 includeLayer OR filter | Function | null | A function for determining whether or not the layer for a given record should be added to the map.
 getLocation | Function | null | A function for getting a custom location from a record (e.g. looking up an address) *NOTE: Use with 'custom' locationMode value*
 locationLookup | Object (GeoJSON FeatureCollection) | null | A GeoJSON FeatureCollection that will be used to lookup the location associated with a given record. This is useful when you have some data that maps to political/statistical boundaries other than US states or countries.  *NOTE: Use with 'lookup locationMode*

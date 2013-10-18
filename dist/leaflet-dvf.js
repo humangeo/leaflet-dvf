@@ -390,6 +390,18 @@ L.Util.getProperty = function(obj, property, defaultValue) {
     return property in obj ? obj[property] : defaultValue;
 };
 
+L.Util.setFieldValue = function(record, fieldName, value) {
+    var keyParts = fieldName.split(".");
+    var pointer = record;
+    var part;
+    for (var i = 0; i < keyParts.length - 1; ++i) {
+        part = keyParts[i];
+        pointer[part] = pointer[part] || {};
+        pointer = pointer[part];
+    }
+    pointer[keyParts[keyParts.length - 1]] = value;
+};
+
 L.Util.getFieldValue = function(record, fieldName) {
     var value = null;
     if (fieldName) {
@@ -1096,30 +1108,52 @@ var PathFunctions = PathFunctions || {
         if (!this._defs) {
             this._createDefs();
         }
+        if (this._gradient) {
+            this._defs.removeChild(this._gradient);
+        }
         var gradient = this._createElement("linearGradient");
         var gradientGuid = L.Util.guid();
-        options = options || {
-            x1: "0%",
-            x2: "100%",
-            y1: "0%",
-            y2: "100%"
+        options = options !== true ? $.extend(true, {}, options) : {};
+        var vector = options.vector || [ [ "0%", "0%" ], [ "100%", "100%" ] ];
+        var vectorOptions = {
+            x1: vector[0][0],
+            x2: vector[1][0],
+            y1: vector[0][1],
+            y2: vector[1][1]
         };
-        options.id = "grad" + gradientGuid;
-        var stops = [ {
+        vectorOptions.id = "grad" + gradientGuid;
+        var stops = options.stops || [ {
             offset: "0%",
-            style: "stop-color:rgb(255, 255, 255);stop-opacity:1"
+            style: {
+                color: "rgb(255, 255, 255)",
+                opacity: 1
+            }
         }, {
             offset: "60%",
-            style: "stop-color:" + (this.options.fillColor || this.options.color) + ";stop-opacity:1"
+            style: {
+                color: this.options.fillColor || this.options.color,
+                opacity: 1
+            }
         } ];
-        for (var key in options) {
-            gradient.setAttribute(key, options[key]);
+        for (var key in vectorOptions) {
+            gradient.setAttribute(key, vectorOptions[key]);
         }
         for (var i = 0; i < stops.length; ++i) {
             var stop = stops[i];
             var stopElement = this._createElement("stop");
+            stop.style = stop.style || {};
             for (var key in stop) {
-                stopElement.setAttribute(key, stop[key]);
+                var stopProperty = stop[key];
+                if (key === "style") {
+                    var styleProperty = "";
+                    stopProperty.color = stopProperty.color || this.options.fillColor || this.options.color;
+                    stopProperty.opacity = typeof stopProperty.opacity === "undefined" ? 1 : stopProperty.opacity;
+                    for (var propKey in stopProperty) {
+                        styleProperty += "stop-" + propKey + ":" + stopProperty[propKey] + ";";
+                    }
+                    stopProperty = styleProperty;
+                }
+                stopElement.setAttribute(key, stopProperty);
             }
             gradient.appendChild(stopElement);
         }
@@ -1129,6 +1163,9 @@ var PathFunctions = PathFunctions || {
     _createDropShadow: function(options) {
         if (!this._defs) {
             this._createDefs();
+        }
+        if (this._dropShadow) {
+            this._defs.removeChild(this._dropShadow);
         }
         var filterGuid = L.Util.guid();
         var filter = this._createElement("filter");
@@ -1185,17 +1222,13 @@ var PathFunctions = PathFunctions || {
             }
         }
         if (this.options.gradient) {
-            if (!this._gradient) {
-                this._createGradient();
-            }
+            this._createGradient(this.options.gradient);
             this._path.setAttribute("fill", "url(#" + this._gradient.getAttribute("id") + ")");
         } else if (!this.options.fill) {
             this._path.setAttribute("fill", "none");
         }
         if (this.options.dropShadow) {
-            if (!this._dropShadow) {
-                this._createDropShadow();
-            }
+            this._createDropShadow();
             this._path.setAttribute("filter", "url(#" + this._dropShadow.getAttribute("id") + ")");
         } else {
             this._path.removeAttribute("filter");
@@ -2244,8 +2277,10 @@ L.LocationModes = {
         var countryCentroids = L.countryCentroids || {};
         var originalCode = code.toUpperCase();
         code = originalCode;
-        code = gwNoLookup[originalCode] || code;
-        if (code.length === 2) {
+        var gwNo = originalCode in gwNoLookup;
+        if (gwNo) {
+            code = gwNoLookup[originalCode] || code;
+        } else if (code.length === 2) {
             code = alpha2Lookup[originalCode] || fips2Lookup[originalCode];
         } else if (code.length === 3) {
             code = codeLookup[originalCode] || code;
@@ -2329,6 +2364,8 @@ L.DataLayer = L.LayerGroup.extend({
         L.Util.setOptions(this, options);
         L.LayerGroup.prototype.initialize.call(this, options);
         data = data || {};
+        this._boundaryLayer = new L.LayerGroup();
+        this.addLayer(this._boundaryLayer);
         this.addData(data);
     },
     _zoomFunction: function(e) {
@@ -2428,7 +2465,7 @@ L.DataLayer = L.LayerGroup.extend({
                 });
                 layer.setStyle(style);
             }
-            this.addLayer(layer);
+            this._boundaryLayer.addLayer(layer);
         }
     },
     _getLayer: function(location, options, record) {
@@ -2450,14 +2487,22 @@ L.DataLayer = L.LayerGroup.extend({
     _preProcessRecords: function(records) {
         return records;
     },
+    _shouldLoadRecord: function(record) {
+        return this._includeFunction ? this._includeFunction.call(this, record) : true;
+    },
     _loadRecords: function(records) {
         var location;
+        var includeFunction = this.options.filter || this.options.includeLayer;
+        this._includeFunction = includeFunction;
         records = this._preProcessRecords(records);
         for (var recordIndex in records) {
             if (records.hasOwnProperty(recordIndex)) {
                 var record = records[recordIndex];
-                location = this._getLocation(record, recordIndex);
-                this.locationToLayer(location, record);
+                var includeLayer = includeFunction ? includeFunction.call(this, record) : true;
+                if (includeLayer) {
+                    location = this._getLocation(record, recordIndex);
+                    this.locationToLayer(location, record);
+                }
             }
         }
     },
@@ -3420,7 +3465,7 @@ L.Callout = L.LayerGroup.extend({
         var yDirection = direction[0];
         var xDirection = direction[1];
         var xAnchor = xDirection === "w" ? icon.options.iconSize.x + size.x - position.x : -1 * (size.x + position.x);
-        var yAnchor = yDirection === "n" ? icon.options.iconSize.y / 2 + size.y - position.y : -1 * (size.y / 2 + position.y);
+        var yAnchor = yDirection === "n" ? icon.options.iconSize.y / 2 + size.y - position.y : -1 * (-icon.options.iconSize.y / 2 + size.y + position.y);
         icon.options.iconAnchor = new L.Point(xAnchor, yAnchor);
         var iconMarker = new L.Marker(this._latlng, {
             icon: icon
@@ -3466,6 +3511,15 @@ L.FlowLine = L.FlowLine.extend({
     },
     onEachSegment: function(record1, record2, line) {
         var deltas = {};
+        if (this.options.timeField) {
+            var timeValue1 = L.Util.getFieldValue(record1, this.options.timeField);
+            var timeValue2 = L.Util.getFieldValue(record2, this.options.timeField);
+            var format = this.options.timeFormat;
+            var moment1 = format ? moment(timeValue1, format) : moment(timeValue1);
+            var moment2 = format ? moment(timeValue2, format) : moment(timeValue2);
+            var deltaTime = moment2.valueOf() - moment1.valueOf();
+            deltas.time = deltaTime;
+        }
         for (var key in this.options.displayOptions) {
             var value1 = L.Util.getFieldValue(record1, key);
             var value2 = L.Util.getFieldValue(record2, key);
@@ -3475,7 +3529,8 @@ L.FlowLine = L.FlowLine.extend({
                 from: value1,
                 to: value2,
                 change: change,
-                percentChange: percentChange
+                percentChange: percentChange,
+                changeOverTime: change / deltas.time
             };
         }
         var latlngs = line.getLatLngs();

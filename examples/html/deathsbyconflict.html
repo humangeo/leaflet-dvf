@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Examples - Conflicts</title>
+    <title>Examples - Conflict Deaths</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -13,15 +13,19 @@
       }
       
       #map {
-      	background-image: url('http://subtlepatterns.com/patterns/grey_wash_wall.png');
+      	background-image: url('../img/subtlepatterns/irongrip/irongrip.png');
       }
       
       #map div.leaflet-tile-pane {
       	opacity: 0.5;
       }
       
-      .leaflet-control-layers-overlays {
+      div.leaflet-control-legend {
       	max-height: 200px;
+      }
+      
+      .leaflet-control-layers-overlays {
+      	*max-height: 200px;
       	overflow-x: scroll;
       }
     </style>
@@ -41,7 +45,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="#">Conflict Sites</a>
+          <a class="brand" href="#">Conflict Deaths</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
@@ -73,7 +77,7 @@
 	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
 	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
 	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
+	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 	<script type="text/javascript" src="../../dist/data/countryData.min.js"></script>
 	<script type="text/javascript" src="../data/battleDeaths.js"></script>
 	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
@@ -120,6 +124,40 @@ $(document).ready(function() {
 	
 	layerControl.addTo(map);
 	
+	var deathsByLocation = _.pairs(_.groupBy(battleDeaths, function (value) {
+		var gwnoa = value.gwnoa;
+		
+		if (gwnoa.length > 3) {
+			gwnoa = gwnoa.substring(0, Math.sqrt(gwnoa.length))
+		}
+		return gwnoa;
+	}));
+	
+	_.each(deathsByLocation, function (location) {
+		location[1].counts = _.countBy(location[1], function (value) {
+			return value.year
+		});
+		
+		location[1].years = _.groupBy(location[1], function (value) {
+			return value.year
+		});
+		
+		location[1].deaths = {};
+		location[1].deathsPerConflict = {};
+		
+		location[1].total = 0;
+		
+		for (var year in location[1].years) {
+			location[1].deaths[year] = Number(_.reduce(_.pluck(location[1].years[year],'bdeadhig'), function (memo, value) {
+				return Number(memo) + Number(value);
+			}));
+			
+			location[1].total = location[1].total + location[1].deaths[year];
+			
+			location[1].deathsPerConflict[year] = location[1].deaths[year]/location[1].counts[year];
+		}
+	});
+
 	var deathsByYear = _.groupBy(battleDeaths, function (value) {
 		return value.year;
 	});
@@ -127,6 +165,97 @@ $(document).ready(function() {
 	var dataLayer;
 	var linkLayer;
 	
+	var min = _.min(deathsByLocation, function (value) {
+		return value[1].total;
+	})[1].total;
+
+	var max = _.max(deathsByLocation, function (value) {
+		return value[1].total;
+	})[1].total;
+	
+	dataLayer = new L.ChoroplethDataLayer(deathsByLocation,{
+		recordsField: null,
+		locationMode: L.LocationModes.COUNTRY,
+		codeField: '0', //'gwnoa',
+		displayOptions: {
+			'1.total': {
+				displayName: 'Total Conflict Deaths',
+				fillColor: new L.HSLHueFunction([min, 60], [max, 0], {
+					outputLuminosity: '70%'
+				}),
+				color: new L.HSLHueFunction([min, 60], [max, 0], {
+					outputLuminosity: '35%'
+				})
+			}
+		},
+		layerOptions: {
+			fillOpacity: 0.7,
+			opacity: 1,
+			weight: 0.4,
+			gradient: false,
+			dropShadow: false
+		},
+		tooltipOptions: {
+			iconSize: new L.Point(100, 60),
+			iconAnchor: new L.Point(-5, 100)
+		}
+	});
+	
+	map.addLayer(dataLayer);
+	
+	var sparklines = new L.SparklineDataLayer(deathsByLocation,{
+		recordsField: null,
+		locationMode: L.LocationModes.COUNTRY,
+		codeField: '0',
+		xField: '0',
+		yField: '1',
+		includeBoundary: true,
+		boundaryStyle: {
+			fillOpacity: 0.2,
+			color: '#222222',
+			opacity: 1,
+			weight: 2,
+			gradient: true,
+			clickable: false
+		},
+		//filter: function (record) {
+		//	return record[0] !== '816' && record[0] !== '-99' && record[0] !== '560' && record[0] !== '731' && record[0] !== '710';
+		//},
+		chartOptions: {
+			'1.deaths': {
+				xField: "0",
+				yField: "1",
+				fill: true,
+				fillColor: '#FF0000',
+				color: '#000000',
+				displayName: 'Deaths by Year',
+				dropShadow: true
+			},
+			'1.deathsPerConflict': {
+				xField: "0",
+				yField: "1",
+				fill: true,
+				color: '#222222',
+				fillColor: '#ffa500',
+				displayName: 'Deaths per Conflict by Year',
+				dropShadow: true
+			}
+		},
+		layerOptions: {
+			fillOpacity: 0.9,
+			opacity: 1,
+			weight: 0.4,
+			size: new L.Point(200, 150)
+		},
+		tooltipOptions: {
+			iconSize: new L.Point(100, 60),
+			iconAnchor: new L.Point(-5, 100)
+		}
+	});
+	
+	map.addLayer(sparklines);
+	
+	/*
 	for (var key in deathsByYear) {
 		var min = Number(_.min(deathsByYear[key], function (value) {
 			return Number(value.bdeadhig);
@@ -140,7 +269,7 @@ $(document).ready(function() {
 		dataLayer = new L.ChoroplethDataLayer(deathsByYear[key],{
 			recordsField: null,
 			locationMode: L.LocationModes.COUNTRY,
-			codeField: 'gwnoloc',
+			codeField: 'gwnoa',
 			displayOptions: {
 				bdeadhig: {
 					displayName: 'Deaths (High)',
@@ -180,7 +309,7 @@ $(document).ready(function() {
 		layerControl.addOverlay(linkLayer, key + ' Links');
 		layerControl.addOverlay(dataLayer, key);
 	}
-	
+	*/
 });
 	</script>
 </body>

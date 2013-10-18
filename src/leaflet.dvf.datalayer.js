@@ -67,10 +67,12 @@ L.LocationModes = {
 		
 		code = originalCode;
 		
-		code = gwNoLookup[originalCode] || code;
+		var gwNo = originalCode in gwNoLookup;
 		
-		// Lookup 3 digit ISO code
-		if (code.length === 2) {
+		if (gwNo) {
+			code = gwNoLookup[originalCode] || code;
+		}
+		else if (code.length === 2) {
 			code = alpha2Lookup[originalCode] || fips2Lookup[originalCode];
 		}
 		else if (code.length === 3) {
@@ -184,6 +186,9 @@ L.DataLayer = L.LayerGroup.extend({
 		L.LayerGroup.prototype.initialize.call(this, options);
 		
 		data = data || {};
+		
+		this._boundaryLayer = new L.LayerGroup();
+		this.addLayer(this._boundaryLayer);
 		
 		this.addData(data);
 	},
@@ -311,8 +316,8 @@ L.DataLayer = L.LayerGroup.extend({
 			
 				layer.setStyle(style);
 			}
-		
-			this.addLayer(layer);
+
+			this._boundaryLayer.addLayer(layer);
 		}
 	},
 	
@@ -344,18 +349,29 @@ L.DataLayer = L.LayerGroup.extend({
 		return records;
 	},
 	
+	_shouldLoadRecord: function (record) {
+		return this._includeFunction ? this._includeFunction.call(this, record) : true;
+	},
+	
 	_loadRecords: function (records) {
 		var location;
+		var includeFunction = this.options.filter || this.options.includeLayer;
+		
+		this._includeFunction = includeFunction;
 		
 		records = this._preProcessRecords(records);
-		
+							
 		for (var recordIndex in records) {
 			if (records.hasOwnProperty(recordIndex)) {
 				var record = records[recordIndex];
+
+				var includeLayer = includeFunction ? includeFunction.call(this, record) : true;
 				
-				location = this._getLocation(record, recordIndex);
+				if (includeLayer) {
+					location = this._getLocation(record, recordIndex);
 			
-				this.locationToLayer(location, record);
+					this.locationToLayer(location, record);
+				}
 			}
 		}
 	},
@@ -598,7 +614,7 @@ L.DataLayer = L.LayerGroup.extend({
 		if (includeFunction) {
 			includeLayer = includeFunction.call(this, record);
 		}
-		
+
 		if (includeLayer) {
 			var dynamicOptions = this._getDynamicOptions(record);
 			

@@ -243,7 +243,7 @@ L.Callout = L.LayerGroup.extend({
 		var xDirection = direction[1];
 		
 		var xAnchor = xDirection === 'w' ? icon.options.iconSize.x + size.x - position.x : -1 * (size.x + position.x);
-		var yAnchor = yDirection === 'n' ? icon.options.iconSize.y/2 + size.y - position.y : -1 * (size.y/2 + position.y);
+		var yAnchor = yDirection === 'n' ? icon.options.iconSize.y/2 + size.y - position.y : -1 * (-icon.options.iconSize.y/2 + size.y + position.y);
 		
 		icon.options.iconAnchor = new L.Point(xAnchor, yAnchor);
 		
@@ -307,17 +307,30 @@ L.FlowLine = L.FlowLine.extend({
 	onEachSegment: function (record1, record2, line) {
 		var deltas = {};
 		
+		if (this.options.timeField) {
+			var timeValue1 = L.Util.getFieldValue(record1, this.options.timeField);
+			var timeValue2 = L.Util.getFieldValue(record2, this.options.timeField);
+			var format = this.options.timeFormat;
+			
+			var moment1 = format ? moment(timeValue1, format) : moment(timeValue1);
+			var moment2 = format ? moment(timeValue2, format) : moment(timeValue2);
+			var deltaTime = moment2.valueOf() - moment1.valueOf(); // in milliseconds
+			
+			deltas.time = deltaTime;
+		}
+			
 		for (var key in this.options.displayOptions) {
 			var value1 = L.Util.getFieldValue(record1, key);
 			var value2 = L.Util.getFieldValue(record2, key);
 			var change = value2 - value1;
 			var percentChange = (change / value1) * 100;
-
+			
 			deltas[key] = {
 				from: value1,
 				to: value2,
 				change: change,
-				percentChange: percentChange
+				percentChange: percentChange,
+				changeOverTime: change/deltas.time
 			};
 		}
 		

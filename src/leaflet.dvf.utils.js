@@ -54,6 +54,20 @@ L.Util.getProperty = function (obj, property, defaultValue) {
 	return (property in obj) ? obj[property] : defaultValue;
 };
 
+L.Util.setFieldValue = function (record, fieldName, value) {
+	var keyParts = fieldName.split('.');
+	var pointer = record;
+	var part;
+
+	for (var i = 0; i < keyParts.length - 1; ++i) {
+		part = keyParts[i];
+		pointer[part] = pointer[part] || {}; 
+		pointer = pointer[part];
+	}
+
+	pointer[keyParts[keyParts.length - 1]] = value;
+};
+
 L.Util.getFieldValue = function (record, fieldName) {
 	
 	var value = null;

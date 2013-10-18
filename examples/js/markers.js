@@ -17,7 +17,7 @@ $(document).ready(function() {
 	
 	resize();
 	
-	map = L.map('map').setView([0.0, 0.0], 2);
+	map = L.map('map').setView([-4.0, 13.0], 6);
 
 	var baseLayer = L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
 	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
@@ -32,10 +32,6 @@ $(document).ready(function() {
 	var marker;
 	var layer;
 	
-	var getCenterLatLng = function () {
-		return new L.LatLng(Math.random() * 179 - 89,Math.random() * 359 - 179);
-	};
-
 	var createLayerGroup = function (name) {
 		var layerGroup = new L.LayerGroup();
 		
@@ -45,179 +41,130 @@ $(document).ready(function() {
 		return layerGroup;
 	};
 	
-	// Create some sample basic shape markers.  There are built-in classes for constructing the common shapes:
-	// triangles, squares, pentagons, hexagons, and octagons that can be used instead of the L.RegularPolygonMarker class.
-	var triangle = new L.TriangleMarker(new L.LatLng(0,0), {
-		radius: 20,
-		weight: 1,
-		opacity: 1,
-		fillOpacity: 0.9,
-		color: '#000000',
-		fillColor: 'hsl(0, 100%, 50%)',
-		gradient: true,
-		dropShadow: true
-	});
-	
-	var square = new L.SquareMarker(new L.LatLng(0,5), {
-		radius: 20,
-		weight: 1,
-		opacity: 1,
-		fillOpacity: 0.9,
-		color: '#000000',
-		fillColor: 'hsl(30, 100%, 50%)',
-		gradient: true,
-		dropShadow: true
-	});
-	
-	var pentagon = new L.PentagonMarker(new L.LatLng(0, 10), {
-		radius: 20,
-		weight: 1,
-		opacity: 1,
-		fillOpacity: 0.9,
-		color: '#000000',
-		fillColor: 'hsl(60, 100%, 50%)',
-		gradient: true,
-		dropShadow: true
-	});
-	
-	var hexagon = new L.HexagonMarker(new L.LatLng(0,15), {
-		radius: 20,
-		weight: 1,
-		opacity: 1,
-		fillOpacity: 0.9,
-		color: '#000000',
-		fillColor: 'hsl(90, 100%, 50%)',
-		gradient: true,
-		dropShadow: true
-	});
-	
-	var octagon = new L.OctagonMarker(new L.LatLng(0,20), {
-		radius: 20,
-		weight: 1,
-		opacity: 1,
-		fillOpacity: 0.9,
-		color: '#000000',
-		fillColor: 'hsl(120, 100%, 50%)',
-		gradient: true,
-		dropShadow: true
-	});
-	
-	var regularPolygonLayer = createLayerGroup('Regular Polygons');
-	
-	regularPolygonLayer.addLayer(triangle);
-	regularPolygonLayer.addLayer(square);
-	regularPolygonLayer.addLayer(pentagon);
-	regularPolygonLayer.addLayer(hexagon);
-	regularPolygonLayer.addLayer(octagon);
-	
-	var hollowPolygonLayer = createLayerGroup('Regular Polygons (Hollow)');
-	
-	// Create two StackedRegularPolygonMarkers
-	var stackedOptions = {
-		chartOptions: {
-			'dataPoint4': {
-				fillColor: 'rgb(255, 255, 212)',
-				minValue: 0,
-				maxValue: 20,
-				maxRadius: 20,
-				displayText: function (value) {
-					return value.toFixed(2);
-				}
-			},
-			'dataPoint3': {
-				fillColor: 'rgb(254, 217, 142)',
-				minValue: 0,
-				maxValue: 20,
-				maxRadius: 20,
-				displayText: function (value) {
-					return value.toFixed(2);
-				}
-			},
-			'dataPoint2': {
-				fillColor: 'rgb(254, 153, 41)',
-				minValue: 0,
-				maxValue: 20,
-				maxRadius: 20,
-				displayText: function (value) {
-					return value.toFixed(2);
-				}
-			},
-			'dataPoint1': {
-				fillColor: 'rgb(204, 76, 2)',
-				minValue: 0,
-				maxValue: 20,
-				maxRadius: 20,
-				displayText: function (value) {
-					return value.toFixed(2);
-				}
-			}
-		},
-		data: {
-			dataPoint1: 5,
-			dataPoint2: 3,
-			dataPoint3: 8,
-			dataPoint4: 15
-		},
-		color: '#000000',
-		weight: 1,
-		numberOfSides: 6,
-		rotation: 0
-	};
-	
-	var stackedMarker = new L.StackedRegularPolygonMarker(new L.LatLng(20, 20), stackedOptions);
-	
-	stackedOptions.data = {
-		dataPoint1: 8,
-		dataPoint2: 18,
-		dataPoint3: 3,
-		dataPoint4: 10
-	};
-	
-	var stackedMarker2 = new L.StackedRegularPolygonMarker(new L.LatLng(30, 20), stackedOptions);
-	
-	var stackedLayer = createLayerGroup('Stacked Regular Polygons');
-	
-	stackedLayer.addLayer(stackedMarker);
-	stackedLayer.addLayer(stackedMarker2);
-	
-	var meterMarkerLayer = createLayerGroup('Meter Markers');
-	var starLayer = createLayerGroup('Star Markers');
-	
-	var radialBarChartLayer = createLayerGroup('Radial Bar Charts');
-	var coxcombChartLayer = createLayerGroup('Coxcomb Charts');
-	var pieChartLayer = createLayerGroup('Pie Charts');
-	var barChartLayer = createLayerGroup('Bar Charts');
-	var mapMarkerLayer = createLayerGroup('Map Markers');
-	
-	// Create 20 of each of the various new markers available through the framework
-	for (var index = 0;index < 20;++index) {
-		var centerLatLng = getCenterLatLng();
-		var numberOfSides = Math.floor((Math.random() * 5) + 3);
-		var radiusX = Math.floor(Math.random() * 20) + 5;
-		var radiusY = radiusX; //Math.floor(Math.random() * 20);
-		var colorValue = index * 3.6;
+	var addMarkers = function (layerGroupName, lat, lng, deltaLng, count, markerFunction, text) {
 		
+		var layerGroup = createLayerGroup(layerGroupName);
+		
+		var callout = new L.Callout(new L.LatLng(lat, lng), {
+			direction: L.CalloutLine.DIRECTION.NW,
+			lineStyle: L.CalloutLine.LINESTYLE.STRAIGHT,
+			numberOfSides: 3,
+			arrow: true,
+			color: '#C0C0C0',
+			fillColor: '#C0C0C0',
+			position: new L.Point(-60, 0),
+			size: new L.Point(40, 0),
+			icon: new L.DivIcon({
+				iconSize: new L.Point(80, 50),
+				html: '<div>' + layerGroupName + '</div>',
+				className: 'callout-text'
+			})
+		});
+	
+		layerGroup.addLayer(callout);
+			
+		for (var i = 0; i < count; ++i) {
+			layerGroup.addLayer(markerFunction(new L.LatLng(lat, lng + i * deltaLng), i));
+		}
+	};
+	
+	// Create some sample basic shape markers.  NOTE:  There are built-in classes for constructing the common shapes:
+	// triangles, squares, pentagons, hexagons, and octagons that can be used instead of the L.RegularPolygonMarker class.			
+	addMarkers('Regular Polygons', 0.0, 0.0, 2.0, 5, function (latlng, index) {
+		var colorValue = index * 20;
 		var options = {
 			color: '#000',
 			weight: 1,
 			fillColor: 'hsl(' + colorValue + ',100%,50%)',
-			radiusX: radiusX,
-			radiusY: radiusY,
+			radius: 20,
 			fillOpacity: 0.7,
 			rotation: 0.0,
 			position: {
 				x: 0,
 				y: 0
 			},
-			offset: 0
+			offset: 0,
+			numberOfSides: index + 3
 		};
 		
-		// Add a RadialMeterMarker
+		options.rotation = (options.numberOfSides % 2 === 0 ? 180 : 90)/options.numberOfSides;
+		
+		return new L.RegularPolygonMarker(latlng, options);
+	});
+	
+	// Create versions of the basic regular polygons with holes
+	addMarkers('Regular Polygons (Hollow)', -2.0, 0.0, 2.0, 5, function (latlng, index) {
+		var colorValue = Math.random() * 360;
+		var options = {
+			color: '#000',
+			weight: 1,
+			fillColor: 'hsl(' + colorValue + ',100%,50%)',
+			radius: Math.random() * 40 + 10,
+			fillOpacity: 0.7,
+			rotation: Math.random() * 360,
+			position: {
+				x: 0,
+				y: 0
+			},
+			offset: 0,
+			numberOfSides: index + 3
+		};
+		
+		options.innerRadius = options.radius/2;
+
+		return new L.RegularPolygonMarker(latlng, options);
+	});
+	
+	addMarkers('Stars', -4.0, 0.0, 2.0, 5, function (latlng, index) {
+		var colorValue = Math.random() * 360;
+		var options = {
+			color: '#000',
+			weight: 1,
+			fillColor: 'hsl(' + colorValue + ',100%,50%)',
+			radius: Math.random() * 40 + 10,
+			fillOpacity: 0.7,
+			rotation: 0.0,
+			position: {
+				x: 0,
+				y: 0
+			},
+			offset: 0,
+			rotation: 55,
+			numberOfPoints: index + 5
+		};
+		
+		options.innerRadius = options.radius/2;
+
+		return new L.StarMarker(latlng, options);
+	});
+	
+	addMarkers('Map Markers', -6.0, 0.0, 2.0, 5, function (latlng, index) {
+		var colorValue = Math.random() * 360;
+		var options = {
+			color: '#000',
+			weight: 1,
+			fillColor: 'hsl(' + colorValue + ',100%,50%)',
+			fillOpacity: 0.7,
+			rotation: 0.0,
+			position: {
+				x: 0,
+				y: 0
+			},
+			offset: 0,
+			radius: (Math.random() * 15) + 5
+		};
+		
+		options.innerRadius = options.radius/ ((Math.random() * 3) + 2);
+		
+		return new L.MapMarker(latlng, options);
+	});
+	
+	addMarkers('Radial Meter Markers', -8.0, 0.0, 2.0, 5, function (latlng, index) {
 		var minHue = 120;
 		var maxHue = 0;
 		var meterMarkerOptions = {
 			data: {
-				'Speed': 200
+				'Speed': Math.random() * 200
 			},
 			chartOptions: {
 				'Speed': {
@@ -246,51 +193,228 @@ $(document).ready(function() {
 			rotation: 0,
 			numSegments: 10
 		};
-		
-		meterMarkerOptions.data['Speed'] = Math.random() * 200;
-		
-		var meterMarker = new L.RadialMeterMarker(centerLatLng, meterMarkerOptions);
-		meterMarkerLayer.addLayer(meterMarker);
-		
-		// Add a map marker
-		centerLatLng = getCenterLatLng();
-		
-		options.radius = (Math.random() * 15) + 5;
-		options.innerRadius = options.radius/2;
-		
-		var mapMarker = new L.MapMarker(centerLatLng, options);
-		
-		mapMarkerLayer.addLayer(mapMarker);
-		
-		options.numberOfSides = Math.floor((Math.random() * 5) + 3);
-		
-		// Add a StarMarker
-		options.innerRadius = radiusX - 8;
-		options.rotation = 55;
-		options.numberOfPoints = Math.floor((Math.random() * 5) + 5);
-		
-		centerLatLng = getCenterLatLng();
-		
-		var starMarker = new L.StarMarker(centerLatLng,options);
-		starLayer.addLayer(starMarker);
-		
-		// Add a RegularPolygonMarker
-		centerLatLng = getCenterLatLng();
 
-		options.rotation = Math.random() * 360;
+		return new L.RadialMeterMarker(latlng, meterMarkerOptions);
+	});
+	
+	addMarkers('Bar Charts', 0.0, 14.0, 2.0, 5, function (latlng) {
+		var colorValue = Math.random() * 360;
+		var options = {
+			color: '#000',
+			weight: 1,
+			fillColor: 'hsl(' + colorValue + ',100%,50%)',
+			radius: 20,
+			fillOpacity: 0.7,
+			rotation: 0.0,
+			position: {
+				x: 0,
+				y: 0
+			},
+			offset: 0,
+			width: 8
+		};
 		
-		var marker = new L.RegularPolygonMarker(centerLatLng,options);
+		options.data = {
+			'dataPoint1': Math.random() * 20,
+			'dataPoint2': Math.random() * 20,
+			'dataPoint3': Math.random() * 20,
+			'dataPoint4': Math.random() * 20
+		};
+		
+		options.chartOptions = {
+			'dataPoint1': {
+				fillColor: '#F2F0F7',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 30,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dataPoint2': {
+				fillColor: '#CBC9E2',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 30,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dataPoint3': {
+				fillColor: '#9E9AC8',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 30,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dataPoint4': {
+				fillColor: '#6A51A3',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 30,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			}
+		};
+		
+		return new L.BarChartMarker(latlng, options);
+	});
+	
+	addMarkers('Pie Charts', -2.0, 14.0, 2.0, 5, function (latlng) {
+		var colorValue = Math.random() * 360;
+		var options = {
+			color: '#000',
+			weight: 1,
+			fillColor: 'hsl(' + colorValue + ',100%,50%)',
+			radius: 20,
+			fillOpacity: 0.7,
+			rotation: 0.0,
+			position: {
+				x: 0,
+				y: 0
+			},
+			offset: 0,
+			numberOfSides: 50,
+			barThickness: 10
+		};
 
-		hollowPolygonLayer.addLayer(marker);
+		options.data = {
+			'dataPoint1': Math.random() * 20,
+			'dataPoint2': Math.random() * 20,
+			'dataPoint3': Math.random() * 20,
+			'dataPoint4': Math.random() * 20
+		};
+		
+		options.chartOptions = {
+			'dataPoint1': {
+				fillColor: '#F1EEF6',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dataPoint2': {
+				fillColor: '#BDC9E1',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dataPoint3': {
+				fillColor: '#74A9CF',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dataPoint4': {
+				fillColor: '#0570B0',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			}
+		};
+		
+		return new L.PieChartMarker(latlng, options);
+	});
+	
+	addMarkers('Coxcomb Charts', -4.0, 14.0, 2.0, 5, function (latlng) {
+		var colorValue = Math.random() * 360;
+		var options = {
+			color: '#000',
+			weight: 1,
+			fillColor: 'hsl(' + colorValue + ',100%,50%)',
+			radius: 30,
+			fillOpacity: 0.7,
+			rotation: 0.0,
+			position: {
+				x: 0,
+				y: 0
+			},
+			offset: 0,
+			numberOfSides: 50,
+			width: 10
+		};
 
-		centerLatLng = getCenterLatLng();
+		options.data = {
+			'dataPoint1': Math.random() * 20,
+			'dataPoint2': Math.random() * 20,
+			'dataPoint3': Math.random() * 20,
+			'dataPoint4': Math.random() * 20
+		};
 		
-		options.numberOfSides = 50;
-		options.width = 10;
-		
-		options.rotation = 0;
-		
-		// Add a RadialBarChartMarker
+		options.chartOptions = {
+			'dataPoint1': {
+				fillColor: '#EDF8FB',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dataPoint2': {
+				fillColor: '#B2E2E2',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dataPoint3': {
+				fillColor: '#66C2A4',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dataPoint4': {
+				fillColor: '#238B45',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			}
+		};
+
+		return new L.CoxcombChartMarker(latlng, options);
+	});
+	
+	addMarkers('Radial Bar Charts', -6.0, 14.0, 2.0, 5, function (latlng) {
+		var colorValue = Math.random() * 360;
+		var options = {
+			color: '#000',
+			weight: 1,
+			fillColor: 'hsl(' + colorValue + ',100%,50%)',
+			radius: 20,
+			fillOpacity: 0.7,
+			rotation: 0.0,
+			position: {
+				x: 0,
+				y: 0
+			},
+			offset: 0,
+			numberOfSides: 50,
+			width: 10
+		};
+
 		options.data = {
 			'dataPoint1': Math.random() * 20,
 			'dataPoint2': Math.random() * 20,
@@ -337,77 +461,102 @@ $(document).ready(function() {
 			}
 		};
 
-		centerLatLng = getCenterLatLng();
-		
-		var radialBarMarker = new L.RadialBarChartMarker(centerLatLng,options);
-		
-		radialBarChartLayer.addLayer(radialBarMarker);
-		
-		options.radius = 20;
-		
-		// Add a CoxcombChartMarker
-		centerLatLng = getCenterLatLng();
-		
-		options.chartOptions['dataPoint1'].fillColor = '#EDF8FB';
-		options.chartOptions['dataPoint2'].fillColor = '#B2E2E2';
-		options.chartOptions['dataPoint3'].fillColor = '#66C2A4';
-		options.chartOptions['dataPoint4'].fillColor = '#238B45';
-		
-		options.radiusX = options.radius;
-		options.radiusY = options.radius;
-		
-		var coxcombChartMarker = new L.CoxcombChartMarker(centerLatLng,options);
-		
-		coxcombChartLayer.addLayer(coxcombChartMarker);
-		
-		// Add a PieChartMarker
-		centerLatLng = getCenterLatLng();
-		
-		options.barThickness = 10;
+		return new L.RadialBarChartMarker(latlng, options);
+	});
 	
-		options.chartOptions['dataPoint1'].fillColor = '#F1EEF6';
-		options.chartOptions['dataPoint2'].fillColor = '#BDC9E1';
-		options.chartOptions['dataPoint3'].fillColor = '#74A9CF';
-		options.chartOptions['dataPoint4'].fillColor = '#0570B0';
+	addMarkers('Stacked Regular Polygons', -8.0, 14.0, 2.0, 5, function (latlng, index) {
+		var stackedOptions = {
+			chartOptions: {
+				'dataPoint4': {
+					fillColor: 'rgb(255, 255, 212)',
+					minValue: 0,
+					maxValue: 20,
+					maxRadius: 20,
+					displayText: function (value) {
+						return value.toFixed(2);
+					}
+				},
+				'dataPoint3': {
+					fillColor: 'rgb(254, 217, 142)',
+					minValue: 0,
+					maxValue: 20,
+					maxRadius: 20,
+					displayText: function (value) {
+						return value.toFixed(2);
+					}
+				},
+				'dataPoint2': {
+					fillColor: 'rgb(254, 153, 41)',
+					minValue: 0,
+					maxValue: 20,
+					maxRadius: 20,
+					displayText: function (value) {
+						return value.toFixed(2);
+					}
+				},
+				'dataPoint1': {
+					fillColor: 'rgb(204, 76, 2)',
+					minValue: 0,
+					maxValue: 20,
+					maxRadius: 20,
+					displayText: function (value) {
+						return value.toFixed(2);
+					}
+				}
+			},
+			data: {
+				dataPoint1: 5,
+				dataPoint2: 3,
+				dataPoint3: 8,
+				dataPoint4: 15
+			},
+			color: '#000000',
+			weight: 1,
+			numberOfSides: 6,
+			rotation: 0
+		};
 		
-		options.displayOptions
-		var pieChartMarker = new L.PieChartMarker(centerLatLng,options);
+		stackedOptions.data = {};
 		
-		pieChartMarker.bindPopup('<h1>Test</h1>');
+		for (var i = 1; i <= 4; ++i) {
+			stackedOptions.data['dataPoint' + i] = Math.random() * 20;
+		};
 		
-		pieChartLayer.addLayer(pieChartMarker);
+		return new L.StackedRegularPolygonMarker(latlng, stackedOptions);
+	});
+
+	var directions = Object.keys(L.CalloutLine.DIRECTION);
+	
+	console.log(directions);
+	
+	var styles = Object.keys(L.CalloutLine.LINESTYLE);
+	var xOffsets = [5, -5, 5, -5];
+	var yOffsets = [-5, -5, 5, 5];
+	
+	var calloutGenerator = function (style) {
+		return function (latlng, index) {
+			var direction = directions[index % directions.length];
 		
-		// Add a BarChartMarker
-		centerLatLng = getCenterLatLng();
-		
-		options.width = 8;
-		options.weight = 1;
-		
-		options.chartOptions['dataPoint1'].fillColor = '#F2F0F7';
-		options.chartOptions['dataPoint2'].fillColor = '#CBC9E2';
-		options.chartOptions['dataPoint3'].fillColor = '#9E9AC8';
-		options.chartOptions['dataPoint4'].fillColor = '#6A51A3';
-		
-		var barChartMarker = new L.BarChartMarker(centerLatLng, options);
-		
-		barChartLayer.addLayer(barChartMarker);
-		
-		var test = new L.Callout(centerLatLng, {
-			direction: L.CalloutLine.DIRECTION.NE,
-			lineStyle: L.CalloutLine.LINESTYLE.ARC,
-			numberOfSides: 3,
-			arrow: true,
-			color: '#C0C0C0',
-			fillColor: '#C0C0C0',
-			position: new L.Point(0, -30),
-			size: new L.Point(40, 40),
-			icon: new L.DivIcon({
-				iconSize: new L.Point(50, 34),
-				html: 'Bar Chart',
-				className: 'callout-text'
-			})
-		});
-		
-		map.addLayer(test);
-	}	
+			return new L.Callout(latlng, {
+				direction: L.CalloutLine.DIRECTION[direction],
+				lineStyle: L.CalloutLine.LINESTYLE[style],
+				numberOfSides: 3,
+				arrow: true,
+				color: '#C0C0C0',
+				fillColor: '#C0C0C0',
+				position: new L.Point(xOffsets[index], yOffsets[index]),
+				size: new L.Point(40, 40),
+				icon: new L.DivIcon({
+					iconSize: new L.Point(28, 14),
+					html: direction.toUpperCase(),
+					className: 'callout-text'
+				})
+			});
+		}
+	};
+	
+	addMarkers('Callouts (Arced)', -1.0, 28.0, 0.0, 4, calloutGenerator(styles[0]));
+	addMarkers('Callouts (Angled)', -4.0, 28.0, 0.0, 4, calloutGenerator(styles[1]));
+	addMarkers('Callouts (Straight)', -7.0, 28.0, 0.0, 4, calloutGenerator(styles[2]));
+
 });

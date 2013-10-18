@@ -80,6 +80,7 @@ With the latest version of the framework, most of the components will work witho
 
 New Marker Types:
 * [Markers](http://humangeo.github.com/leaflet-dvf/examples/html/markers.html)
+
 Proportional Symbol:
 * [USGS Earthquakes](http://humangeo.github.com/leaflet-dvf/examples/html/earthquakes.html)
 * [Meetup Finder](http://humangeo.github.com/leaflet-dvf/examples/html/meetups.html) *Zoom to an area of interest, put in a Meetup topic, and click the search button*

@@ -10,3 +10,5 @@ Leaflet DVF is made possible by contributions from:
 * Glen Robertson [glenrobertson](https://github.com/glenrobertson)
 * Jelle Victoor [JelleConundra](https://github.com/JelleConundra)
 * Patrick Doody [go0ty](https://github.com/go0ty)
+* Franck Tabary [franck34] (https://github.com/franck34)
+

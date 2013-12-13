@@ -188,6 +188,7 @@ var layer = new <Leaflet Path-based Layer (e.g. L.Polygon)>(<Constructor inputs>
 		}
 	}
 });
+```
 
 #### Text Options
 Option | Type | Default | Description

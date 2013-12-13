@@ -2020,6 +2020,7 @@ var PathFunctions = PathFunctions || {
         }
         var gradient = this._createElement("linearGradient");
         var gradientGuid = L.Util.guid();
+        this._gradientGuid = gradientGuid;
         options = options !== true ? $.extend(true, {}, options) : {};
         var vector = options.vector || [ [ "0%", "0%" ], [ "100%", "100%" ] ];
         var vectorOptions = {
@@ -2118,6 +2119,33 @@ var PathFunctions = PathFunctions || {
         this._dropShadow = filter;
         this._defs.appendChild(filter);
     },
+    _createCircleImage: function(imageUrl, imageSize) {
+        var patternGuid = L.Util.guid();
+        var imgSize = this.options.radius + 12;
+        var circleSize = this.options.radius - 5;
+        var circle = this._createElement("circle");
+        circle.setAttribute("fill", "url(#" + patternGuid + ")");
+        circle.setAttribute("cx", 0);
+        circle.setAttribute("cy", 0);
+        circle.setAttribute("r", circleSize);
+        var pattern = this._createElement("pattern");
+        pattern.setAttribute("id", patternGuid);
+        pattern.setAttribute("patternUnits", "objectBoundingBox");
+        pattern.setAttribute("height", imgSize);
+        pattern.setAttribute("width", imgSize);
+        pattern.setAttribute("x", 0);
+        pattern.setAttribute("y", 0);
+        var image = this._createElement("image");
+        image.setAttribute("width", imgSize);
+        image.setAttribute("height", imgSize);
+        image.setAttribute("x", 0);
+        image.setAttribute("y", 0);
+        image.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", imageUrl);
+        pattern.appendChild(image);
+        this._defs.appendChild(pattern);
+        this._container.insertBefore(circle, this._defs);
+        this._circle = circle;
+    },
     _updateStyle: function() {
         this.__updateStyle.call(this);
         if (this.options.stroke) {
@@ -2140,8 +2168,8 @@ var PathFunctions = PathFunctions || {
         } else {
             this._path.removeAttribute("filter");
         }
-        if (this.options.transform) {
-            this._path.setAttribute("transform", this.options.transform);
+        if (this.options.imageCircleUrl) {
+            this._createCircleImage(this.options.imageCircleUrl);
         }
     }
 };
@@ -2225,6 +2253,10 @@ L.MapMarker = L.Path.extend({
         return this._latlng;
     },
     getPathString: function() {
+        if (this._circle) {
+            this._circle.setAttribute("cx", this._point.x);
+            this._circle.setAttribute("cy", this._point.y - this.options.radius * 2);
+        }
         this._path.setAttribute("shape-rendering", "geometricPrecision");
         return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },

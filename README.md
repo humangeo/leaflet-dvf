@@ -189,23 +189,20 @@ var layer = new <Leaflet Path-based Layer (e.g. L.Polygon)>(<Constructor inputs>
 	}
 });
 
-#### Options
+#### Text Options
 Option | Type | Default | Description
 --- | --- | --- | ---
-gradient | Boolean OR Object | differs depending on the layer class (most new marker types use a gradient by default) | Specifying a value of true will fill the path with a gradient from white to the specified fillColor (top left - bottom right)
-dropShadow | Boolean | false | Specifying a value of true will add a dropShadow to the path
+text | String | null | The text to display
+attr | Object| null | A set of key/value pairs that will be added as attributes to the created SVG text element (see the SVG spec for specifics)
+style | Object | null | A set of key/value pairs that will be added to the style attribute for the created SVG text element (see the SVG spec for specific styles)
+path | Object | null | This will cause the specified text to be displayed along the path (see options below)
 
-#### gradient Property Options
+#### Path Options
 Option | Type | Default | Description
 --- | --- | --- | ---
-vector | Array | [['0%', '0%'], ['100%', '100%']] | an array consisting of a start and end point that defines the direction of the gradient.  Each start and end point is an array of x and y values. Where x and y values can be percentage strings (e.g. '100%') or numbers defining an absolute position
-stops | Array | | an array of stop objects defining the colors to be used in the gradient.  Each stop object has offset and style properties.  See below.
-
-#### stop Options
-Option | Type | Default | Description
---- | --- | --- | ---
-offset | String OR Number |  | The position along the gradient at which to apply the given color/opacity
-style | Object | { opacity: 1, color: <fillColor OR color>} | an object with color and opacity properties defining the color and opacity to be used in the given stop.  If you omit the color, the Path's fillColor or color will be used automatically.
+startOffset | String | null | Percentage or absolute position along the path where text should start
+attr | Object| null | A set of key/value pairs that will be added as attributes to the created SVG textPath element (see the SVG spec for specifics)
+style | Object | null | A set of key/value pairs that will be added to the style attribute for the created SVG textPath element (see the SVG spec for specific styles)
 
 ## Markers
 
@@ -237,6 +234,7 @@ numberOfSides | Number | 3 | If an inner radius is specified, then the marker wi
 rotation | Number | 0 | If an inner radius is specified, this controls the rotation of the hole in the center.
 radius OR radiusX, radiusY | Number | 10 | The radius of the circular part of the marker, also adjusts the height of the marker
 innerRadius OR innerRadiusX, innerRadiusY | Number | null | The inner radius of the marker hole in pixels.
+imageCircleUrl | String | null | The URL of an image to display on the marker.  This will be displayed in the main circular area of the marker.
 
 ### L.RegularPolygonMarker
 

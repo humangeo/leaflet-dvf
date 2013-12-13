@@ -1,3 +1,138 @@
+var TextFunctions = TextFunctions || {
+	__updatePath: L.Path.prototype._updatePath,
+	
+	_updatePath: function () {
+		this.__updatePath.call(this);
+		
+		if (this.options.text) {
+			this._createText(this.options.text);
+		}
+	},
+	
+	_initText: function () {
+		if (this.options.text) {
+			this._createText(this.options.text);
+		}
+	},
+	
+	getTextAnchor: function () {
+		if (this._point) {
+			return this._point;
+		}
+	},
+	
+	setTextAnchor: function (anchorPoint) {
+		if (this._text) {
+			this._text.setAttribute('x', anchorPoint.x);
+			this._text.setAttribute('y', anchorPoint.y);
+		}
+	},
+	
+	_createText: function (options) {
+		if (this._text) {
+			this._container.removeChild(this._text);
+		}
+		
+		if (this._pathDef) {
+			this._defs.removeChild(this._pathDef);
+		}
+		
+		// Set element style
+		var setStyle = function (element, style) {
+			var styleString = '';
+			
+			for (var key in style) {
+				styleString += key + ': ' + style[key] + ';';
+			}
+			
+			element.setAttribute('style', styleString);
+			
+			return element;
+		};
+		
+		// Set attributes for an element
+		var setAttr = function (element, attr) {
+			for (var key in attr) {
+				element.setAttribute(key, attr[key]);
+			}
+			
+			return element;
+		};
+		
+		this._text = this._createElement('text');
+		
+		var textNode = document.createTextNode(options.text);
+		
+		// If path is true, then create a textPath element and append it
+		// to the text element; otherwise, populate the text element with a text node
+		if (options.path) {
+			
+			var pathOptions = options.path;
+			
+			// Generate and set an id for the path - the textPath element will reference this id
+			var pathID = L.Util.guid();
+
+			var clonedPath = this._createElement('path');
+			clonedPath.setAttribute('d', this._path.getAttribute('d'));
+			clonedPath.setAttribute('id', pathID);
+			
+			if (!this._defs) {
+				this._defs = this._createElement('defs');
+				this._container.appendChild(this._defs);
+			}
+			
+			this._defs.appendChild(clonedPath);
+			this._pathDef = clonedPath;
+			
+			// Create the textPath element and add attributes to reference this path
+			var textPath = this._createElement('textPath');
+			
+			if (pathOptions.startOffset) {
+				textPath.setAttribute('startOffset', pathOptions.startOffset);
+			}
+			
+			if (pathOptions.attr) {
+				setAttr(textPath, pathOptions.attr);
+			}
+			
+			if (pathOptions.style) {
+				setStyle(textPath, pathOptions.style);
+			}
+			
+			textPath.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', '#' + pathID);
+			textPath.appendChild(textNode);
+			
+			// Add the textPath element to the text element
+			this._text.appendChild(textPath); 
+		}
+		else {
+			this._text.appendChild(textNode);
+			var anchorPoint = this.getTextAnchor();
+			this.setTextAnchor(anchorPoint);
+		}
+		
+		//className
+		if (options.className) {
+			this._text.setAttribute('class', options.className);
+		}
+		else {
+			this._text.setAttribute('class', 'leaflet-svg-text');
+		}
+		
+		//attributes		
+		if (options.attr) {
+			setAttr(this._text, options.attr);
+		}
+		
+		//style
+		if (options.style) {
+			setStyle(this._text, options.style);
+		}
+		
+		this._container.appendChild(this._text);
+	}
+};
+
 var PathFunctions = PathFunctions || {
 	__updateStyle: L.Path.prototype._updateStyle,
 	
@@ -180,10 +315,49 @@ var PathFunctions = PathFunctions || {
 		else {
 			this._path.removeAttribute('filter');
 		}
-
+		
+		if (this.options.transform) {
+			this._path.setAttribute('transform', this.options.transform);
+		}
 	}
 
 };
+
+// Extend the TextFunctions above and change the __updatePath reference, since
+// _updatePath for a line/polygon is different than for a regular path
+var LineTextFunctions = $.extend(true, {}, TextFunctions);
+LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
+
+// Pulled from the Leaflet discussion here:  https://github.com/Leaflet/Leaflet/pull/1586
+LineTextFunctions.getCenter = function () {
+		var latlngs = this._latlngs,
+				len = latlngs.length,
+				i, j, p1, p2, f, center;
+
+		for (i = 0, j = len - 1, area = 0, lat = 0, lng = 0; i < len; j = i++) {
+				p1 = latlngs[i];
+				p2 = latlngs[j];
+				f = p1.lat * p2.lng - p2.lat * p1.lng;
+				lat += (p1.lat + p2.lat) * f;
+				lng += (p1.lng + p2.lng) * f;
+				area += f / 2;
+		}
+
+		center = area ? new L.LatLng(lat / (6 * area), lng / (6 * area)) : latlngs[0];
+		center.area = area;
+
+		return center;
+};
+
+// Sets the text anchor to the centroid of a line/polygon
+LineTextFunctions.getTextAnchor = function () {
+	var center = this.getCenter();
+	
+	return this._map.latLngToLayerPoint(center);
+};
+
+L.Polyline.include(LineTextFunctions);
+L.CircleMarker.include(TextFunctions);
 
 L.Path.include(PathFunctions);
 L.Polygon.include(PathFunctions);
@@ -194,6 +368,9 @@ L.CircleMarker.include(PathFunctions);
  * Draws a Leaflet map marker using SVG rather than an icon, allowing the marker to be dynamically styled
  */
 L.MapMarker = L.Path.extend({
+	
+	includes: TextFunctions,
+	
 	initialize: function (centerLatLng, options) {
 		L.Path.prototype.initialize.call(this, options);
 		
@@ -254,6 +431,10 @@ L.MapMarker = L.Path.extend({
 		return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
 	},
 
+	getTextAnchor: function () {
+		return new L.Point(this._point.x, this._point.y - 2 * this.options.radius);
+	},
+	
 	_getPoints: function (inner) {
 		var maxDegrees = !inner ? 210 : 360;
 		var angleSize = !inner ? maxDegrees / 50 : maxDegrees / Math.max(this.options.numberOfSides, 3);
@@ -315,13 +496,14 @@ L.mapMarker = function (centerLatLng, options) {
  * Draws a regular polygon marker on the map given a radius (or x and y radii) in pixels
  */
 L.RegularPolygonMarker = L.Path.extend({
+	includes: TextFunctions,
+	
 	initialize: function (centerLatLng, options) {
 		L.Path.prototype.initialize.call(this, options);
 		
 		this._latlng = centerLatLng;
 
 		this.options.numberOfSides = Math.max(this.options.numberOfSides, 3);
-		
 	},
 
 	options: {
@@ -346,7 +528,6 @@ L.RegularPolygonMarker = L.Path.extend({
 	
 	projectLatlngs: function () {
 		this._point = this._map.latLngToLayerPoint(this._latlng);
-		this._textPoint = this._point;
 		this._points = this._getPoints();
 		
 		if (this.options.innerRadius || (this.options.innerRadiusX && this.options.innerRadiusY)) {
@@ -375,6 +556,11 @@ L.RegularPolygonMarker = L.Path.extend({
 
 	getPathString: function () {
 		this._path.setAttribute('shape-rendering', 'geometricPrecision');
+		
+		//this._initText();
+		
+		//this.setTextAnchor(this._point);
+		
 		return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
 	},
 

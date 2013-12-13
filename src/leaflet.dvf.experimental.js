@@ -1,3 +1,4 @@
+
 /*
  *
  */
@@ -630,7 +631,9 @@ L.Graph = L.Graph.extend({
 });
 
 /*
- *	Completely incomplete.  A WORK IN PROGRESS
+ * Incomplete.  A WORK IN PROGRESS
+ * Needs two points with associated weights and the next point with weight in order to determine the join angles.  May need to
+ * include angles as well...
  */	
 L.WeightedLineSegment = L.Path.extend({
 	initialize: function (weightedPoint1, weightedPoint2, options) {
@@ -648,51 +651,51 @@ L.WeightedLineSegment = L.Path.extend({
 	},
 	
 	_setGradient: function () {
-		if (this.options.weightToColor) {
-			var p1 = this._points[1];
-			var p2 = this._points[4];
-			
-			var deltaX = p2.x - p1.x;
-			var deltaY = p2.y - p1.y;
-			var angle = Math.atan(deltaY/deltaX);
-			var directionX = deltaX/Math.abs(deltaX);
-			var directionY = deltaY/Math.abs(deltaY);
-			
-			var p1 = new L.Point(50 + 50 * Math.cos(angle + Math.PI), 50 + 50 * Math.sin(angle + Math.PI));
-			var p2 = new L.Point(50 + 50 * Math.cos(angle), 50 + 50 * Math.sin(angle));
-			
-			if (directionX < 0) {
-				var temp = p1;
-				p1 = p2;
-				p2 = temp;	
-			}
-			
-			var color1 = this.options.weightToColor.evaluate(this._weightedPoint1.weight);
-			var color2 = this.options.weightToColor.evaluate(this._weightedPoint2.weight);
-
-			this.options.gradient = {
-				vector: [[p1.x.toFixed(2) + '%', p1.y.toFixed(2) + '%'],[p2.x.toFixed(2) + '%', p2.y.toFixed(2) + '%']],
-				stops: [
-					{
-						offset: '0%',
-						style: {
-							color: color1,
-							opacity: 1
-						}
-					},
-					{
-						offset: '100%',
-						style: {
-							color: color2,
-							opacity: 1
-						}
-					}
-				]
-			}
-			
-			this.setStyle(this.options);
-
+		var p1 = this._points[1];
+		var p2 = this._points[4];
+		
+		var deltaX = p2.x - p1.x;
+		var deltaY = p2.y - p1.y;
+		var angle = Math.atan(deltaY/deltaX);
+		var directionX = deltaX/Math.abs(deltaX);
+		var directionY = deltaY/Math.abs(deltaY);
+		
+		var p1 = new L.Point(50 + 50 * Math.cos(angle + Math.PI), 50 + 50 * Math.sin(angle + Math.PI));
+		var p2 = new L.Point(50 + 50 * Math.cos(angle), 50 + 50 * Math.sin(angle));
+		
+		if (directionX < 0) {
+			var temp = p1;
+			p1 = p2;
+			p2 = temp;	
 		}
+		
+		var color1 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint1.weight) : null;
+		var color2 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint2.weight) : null;
+		var opacity1 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint1.weight) : 1;
+		var opacity2 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint2.weight) : 1;
+		
+		this.options.gradient = {
+			vector: [[p1.x.toFixed(2) + '%', p1.y.toFixed(2) + '%'],[p2.x.toFixed(2) + '%', p2.y.toFixed(2) + '%']],
+			stops: [
+				{
+					offset: '0%',
+					style: {
+						color: color1,
+						opacity: opacity1
+					}
+				},
+				{
+					offset: '100%',
+					style: {
+						color: color2,
+						opacity: opacity2
+					}
+				}
+			]
+		}
+		
+		this.setStyle(this.options);
+
 	},
 	
 	_weightedPointToPoint: function (weightedPoint) {
@@ -709,9 +712,92 @@ L.WeightedLineSegment = L.Path.extend({
 	_getPoints: function () {
 		var points = [];
 		var points1 = this._weightedPointToPoint(this._weightedPoint1);
-		var points2 = this._weightedPointToPoint(this._weightedPoint2).reverse();
+		var points2 = this._weightedPointToPoint(this._weightedPoint2); //.reverse();
+		var shouldReverse = false;
+		var line0 = new L.LinearFunction(points1[0], points2[0]);
+		var line1 = new L.LinearFunction(points1[1], points2[1]);
+		var line2 = new L.LinearFunction(points1[2], points2[2]);
+		
+		// TODO:  Make this an angled or curved polygon if the angle difference is greater than some value
+		// Interpolate the weight and get the mid point angle
+		
+		var intersectionPoint = line2.getIntersectionPoint(line0);
+		var bounds = new L.Bounds([].concat(points1, points2));
+		
+		if (!bounds.contains(intersectionPoint)) {
+			points2 = points2.reverse();
+		}
+		/*
+		if (intersectionPoint) {
+			var y = line1.evaluate(intersectionPoint.x);
+			
+			if (y !== intersectionPoint.y) {
+				points2 = points2.reverse();
+			}
+		}
+		*/
+		/*
+		if (line2._slope !== line0._slope) {
+			var iX = (line0._b - line2._b)/(line2._slope - line0._slope)
+			var bounds = new L.Bounds([].concat(points1, points2));
+		
+			console.log("Intersection: " + iX.toString() + "," + bounds.min.toString() + ":" + bounds.max.toString());
+			
+			var minX = bounds.min.x;
+			var maxX = bounds.max.x;
+			var iY = line1.evaluate(iX);
+			
+			var line1Bounds = line1.getBounds();
+			
+			shouldReverse = iX < minX || iX > maxX;
+			
+			console.log(shouldReverse);
+			
+			if (shouldReverse) {
+				points2 = points2.reverse();
+			}
+		}
+		*/
 		
 		points = points.concat(points1, points2);
+		
+		/*
+		var lineFunction = new L.LinearFunction(points1[1], points2[1]);
+		
+		var centerX = (points1[1].x + points[2].x)/2;
+		var center = new L.Point(centerX, lineFunction.evaluate(centerX));
+		
+		var less = function (a, b) {
+			if (a.x-center.x >= 0 && b.x-center.x < 0) {
+				return true;
+			}
+			if (a.x-center.x == 0 && b.x-center.x == 0) {
+				if (a.y-center.y >= 0 || b.y-center.y >= 0) {
+					return a.y > b.y;
+				}
+				return b.y > a.y;
+			}
+
+			// compute the cross product of vectors (center -> a) x (center -> b)
+			var det = (a.x-center.x) * (b.y-center.y) - (b.x - center.x) * (a.y - center.y);
+			if (det < 0) {
+				return true;
+			}
+			if (det > 0) {
+				return false;
+			}
+			
+			// points a and b are on the same line from the center
+			// check which point is closer to the center
+			var d1 = (a.x-center.x) * (a.x-center.x) + (a.y-center.y) * (a.y-center.y);
+			var d2 = (b.x-center.x) * (b.x-center.x) + (b.y-center.y) * (b.y-center.y);
+			return d1 > d2;
+		};
+		
+		points.sort(function (pointA, pointB) {
+			return less(pointA, pointB);
+		});
+		*/
 		
 		return points;
 	},
@@ -722,14 +808,15 @@ L.WeightedLineSegment = L.Path.extend({
 });
 
 /*
- * Complete incomplete.  A WORK IN PROGRESS...needs a lot of work
+ * Incomplete - A WORK IN PROGRESS
+ * Takes a set of weighted points as input.  Iterates through those points, creating WeightedLineSegment
+ * objects.  
  */
 L.WeightedPolyline = L.LayerGroup.extend({
 	initialize: function (latlngs, options) {
 		L.LayerGroup.prototype.initialize.call(this, options);
 		L.Util.setOptions(this, options);
 		this._latlngs = latlngs;
-		
 	},
 	
 	onAdd: function (map) {
@@ -758,109 +845,76 @@ L.WeightedPolyline = L.LayerGroup.extend({
 	getLatLngs: function () {
 		return this._latlngs;
 	},
-
-	_getPoints: function (lastCoords, latlng1, latlng2, latlng3) {
-		var point1 = this._map.latLngToLayerPoint(latlng1);
-		var point2 = this._map.latLngToLayerPoint(latlng2);
-		var point3 = this._map.latLngToLayerPoint(latlng3);
-		var deltaX = point3.x - point1.x;
-		var deltaY = point3.y - point1.y;
-		var angleRadians = Math.atan(deltaY/deltaX);
-		var angle1 = angleRadians + Math.PI/2;
-		var angle2 = angle1 + Math.PI;
-		
-		var weight = Math.random() * 20;
-		var coord1 = new L.Point(point2.x + Math.cos(angle1) * weight, point2.y + Math.sin(angle1) * weight);
-		var coord2 = new L.Point(point2.x + Math.cos(angle2) * weight, point2.y + Math.sin(angle2) * weight);
-	},
 	
 	options: {
 		weightToColor: new L.HSLHueFunction([0, 120], [20, -30])
 	},
 	
-	_loadComponents: function () {
-		var angles = [];
-		var lastCoords = [];
-		var weights = [20, 1, 15, 2, 12];
-		var p1 = this._latlngs[0];
-		var p2 = this._latlngs[1];
+	_getAngle: function (p1, p2) {
 		var point1 = this._map.latLngToLayerPoint(p1);
 		var point2 = this._map.latLngToLayerPoint(p2);
 		var deltaX = point2.x - point1.x;
 		var deltaY = point2.y - point1.y;
 		var angleRadians = Math.atan(deltaY/deltaX);
+		
+		return angleRadians;
+	},
+	
+	_getAngles: function (p1, p2) {
+		var angleRadians = this._getAngle(p1, p2);
 		var angle1 = angleRadians + Math.PI/2;
 		var angle2 = angle1 + Math.PI;
-		var weight = Math.random() * 20;
-		var coord1 = new L.Point(point1.x + Math.cos(angle1) * weight, point1.y + Math.sin(angle1) * weight);
-		var coord2 = new L.Point(point1.x + Math.cos(angle2) * weight, point1.y + Math.sin(angle2) * weight);
 		
-		lastCoords = [coord1, coord2];
-		lastPoint = point1;
+		return [angle1, angle2];
+	},
+	
+	// TODO:  Move some of these calculations to the WeightedLineSegment class - specifically angle calculation
+	_loadComponents: function () {
+		var angles = [];
+		var p1 = this._latlngs[0];
+		var p2 = this._latlngs[1];
+		var angleValues = this._getAngles(p1, p2);
 		
-		angles.push({
-			latlng: p1,
-			angle: angle1,
-			weight: weights[0]
-		});	
-			
-		for (var i = 1; i < this._latlngs.length - 1; ++i) {
-			p1 = this._latlngs[i];
-			p2 = this._latlngs[i + 1];
-
-			// LatLngs to layer coords
-			point1 = this._map.latLngToLayerPoint(p1);
-			point2 = this._map.latLngToLayerPoint(p2);
-
-			deltaX = point2.x - lastPoint.x;
-			deltaY = point2.y - lastPoint.y;
-			angleRadians = Math.atan(deltaY/deltaX);
-			angle1 = angleRadians + Math.PI/2;
-			angle2 = angle1 + Math.PI;
-			
-			weight = Math.random() * 20;
-			
+		if (angleValues.length > 0) {
 			angles.push({
 				latlng: p1,
-				angle: angle1,
-				weight: weights[i]
-			});		
+				angle: angleValues[0],
+				weight: p1.weight
+			});	
 			
-			coord1 = new L.Point(point1.x + Math.cos(angle1) * weight, point1.y + Math.sin(angle1) * weight);
-			coord2 = new L.Point(point1.x + Math.cos(angle2) * weight, point1.y + Math.sin(angle2) * weight);
-			
-			lastCoords.push(coord1);
-			lastCoords.push(coord2);
-			this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));
-			
-			lastCoords = [coord1, coord2];
-			lastPoint = point1;
-			
-			angles = angles.slice(1);
-		}
-		
-		p1 = p2;
-		p2 = this._latlngs[this._latlngs.length - 1];
-		
-		// LatLngs to layer coords
-		point1 = this._map.latLngToLayerPoint(p1);
-		point2 = this._map.latLngToLayerPoint(p2);
+			for (var i = 1; i < this._latlngs.length - 1; ++i) {
+				p1 = this._latlngs[i];
+				p2 = this._latlngs[i + 1];
 
-		deltaX = point2.x - lastPoint.x;
-		deltaY = point2.y - lastPoint.y;
-		angleRadians = Math.atan(deltaY/deltaX);
-		angle1 = angleRadians + Math.PI/2;
-		angle2 = angle1 + Math.PI;
+				// LatLngs to layer coords
+				angleValues = this._getAngles(p1, p2);
+			
+				angles.push({
+					latlng: p1,
+					angle: angleValues[0],
+					weight: p1.weight
+				});		
+			
+				console.log(angles);
+			
+				this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));
+			
+				angles = angles.slice(1);
+			}
 		
-		weight = Math.random() * 20;
+			p1 = $.extend(true, {}, p2);
+			p2 = this._latlngs[this._latlngs.length - 1];
+
+			angles.push({
+				latlng: p1,
+				angle: angles[0].angle,
+				weight: p2.weight
+			});	
 		
-		angles.push({
-			latlng: p1,
-			angle: angle1,
-			weight: weights[this._latlngs.length - 1]
-		});	
+			console.log(angles);
 		
-		this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));	
+			this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));	
+		}
 	}
 });
 

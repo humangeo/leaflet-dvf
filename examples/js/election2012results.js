@@ -1,8 +1,8 @@
-var map;
-var legendControl;
 
 $(document).ready(function() {
-	
+	var map;
+	var legendControl;
+
 	var resize = function () {
 		var $map = $('#map');
 		

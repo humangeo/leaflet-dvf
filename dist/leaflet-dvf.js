@@ -97,6 +97,15 @@ L.LinearFunction = L.Class.extend({
             x += segmentSize;
         }
         return points;
+    },
+    getIntersectionPoint: function(otherFunction) {
+        var point = null;
+        if (this._slope !== otherFunction._slope) {
+            var x = (this._b - otherFunction._b) / (otherFunction._slope - this._slope);
+            var y = this.evaluate(x);
+            point = new L.Point(x, y);
+        }
+        return point;
     }
 });
 
@@ -206,26 +215,19 @@ L.RGBGreenFunction = L.LinearFunction.extend({
 
 L.RGBColorBlendFunction = L.LinearFunction.extend({
     initialize: function(minX, maxX, rgbMinColor, rgbMaxColor) {
-        var red1 = rgbMinColor[0];
-        var red2 = rgbMaxColor[0];
-        var green1 = rgbMinColor[1];
-        var green2 = rgbMaxColor[1];
-        var blue1 = rgbMinColor[2];
-        var blue2 = rgbMaxColor[2];
-        var postProcess = function(y) {
-            return y.toFixed(0);
-        };
+        rgbMinColor = new L.RGBColor(rgbMinColor);
+        rgbMaxColor = new L.RGBColor(rgbMaxColor);
+        var red1 = rgbMinColor.r();
+        var red2 = rgbMaxColor.r();
+        var green1 = rgbMinColor.g();
+        var green2 = rgbMaxColor.g();
+        var blue1 = rgbMinColor.b();
+        var blue2 = rgbMaxColor.b();
         this._minX = minX;
         this._maxX = maxX;
-        this._redFunction = new L.LinearFunction(new L.Point(minX, red1), new L.Point(maxX, red2), {
-            postProcess: postProcess
-        });
-        this._greenFunction = new L.LinearFunction(new L.Point(minX, green1), new L.Point(maxX, green2), {
-            postProcess: postProcess
-        });
-        this._blueFunction = new L.LinearFunction(new L.Point(minX, blue1), new L.Point(maxX, blue2), {
-            postProcess: postProcess
-        });
+        this._redFunction = new L.LinearFunction(new L.Point(minX, red1), new L.Point(maxX, red2));
+        this._greenFunction = new L.LinearFunction(new L.Point(minX, green1), new L.Point(maxX, green2));
+        this._blueFunction = new L.LinearFunction(new L.Point(minX, blue1), new L.Point(maxX, blue2));
     },
     getBounds: function() {
         var redBounds = this._redFunction.getBounds();
@@ -236,7 +238,7 @@ L.RGBColorBlendFunction = L.LinearFunction.extend({
         return [ new L.Point(redBounds[0].x, minY), new L.Point(redBounds[1].x, maxY) ];
     },
     evaluate: function(x) {
-        return "rgb(" + [ this._redFunction.evaluate(x), this._greenFunction.evaluate(x), this._blueFunction.evaluate(x) ].join(",") + ")";
+        return new L.RGBColor([ this._redFunction.evaluate(x), this._greenFunction.evaluate(x), this._blueFunction.evaluate(x) ]).toRGBString();
     }
 });
 
@@ -276,6 +278,38 @@ L.HSLLuminosityFunction = L.LinearFunction.extend({
             return (y * 100).toFixed(this._outputPrecision) + "%";
         };
         this._dynamicPart = "outputLuminosity";
+    }
+});
+
+L.HSLColorBlendFunction = L.LinearFunction.extend({
+    initialize: function(minX, maxX, hslMinColor, hslMaxColor) {
+        hslMinColor = new L.HSLColor(hslMinColor);
+        hslMaxColor = new L.HSLColor(hslMaxColor);
+        var h1 = hslMinColor.h();
+        var h2 = hslMaxColor.h();
+        var s1 = hslMinColor.s();
+        var s2 = hslMaxColor.s();
+        var l1 = hslMinColor.l();
+        var l2 = hslMaxColor.l();
+        var postProcess = function(y) {
+            return y.toFixed(2);
+        };
+        this._minX = minX;
+        this._maxX = maxX;
+        this._hueFunction = new L.LinearFunction(new L.Point(minX, h1), new L.Point(maxX, h2));
+        this._saturationFunction = new L.LinearFunction(new L.Point(minX, s1), new L.Point(maxX, s2));
+        this._luminosityFunction = new L.LinearFunction(new L.Point(minX, l1), new L.Point(maxX, l2));
+    },
+    getBounds: function() {
+        var hBounds = this._hueFunction.getBounds();
+        var sBounds = this._saturationFunction.getBounds();
+        var lBounds = this._luminosityFunction.getBounds();
+        var minY = Math.min(hBounds[0].y, sBounds[0].y, lBounds[0].y);
+        var maxY = Math.max(hBounds[0].y, sBounds[0].y, lBounds[0].y);
+        return [ new L.Point(hBounds[0].x, minY), new L.Point(hBounds[1].x, maxY) ];
+    },
+    evaluate: function(x) {
+        return new L.HSLColor([ this._hueFunction.evaluate(x), this._saturationFunction.evaluate(x), this._luminosityFunction.evaluate(x) ]).toHSLString();
     }
 });
 
@@ -324,6 +358,25 @@ L.PiecewiseFunction = L.LinearFunction.extend({
             }
         }
         return y;
+    }
+});
+
+L.CustomColorFunction = L.PiecewiseFunction.extend({
+    options: {
+        interpolate: true
+    },
+    initialize: function(minX, maxX, colors, options) {
+        var range = maxX - minX;
+        var xRange = range / (colors.length - 1);
+        var functions = [];
+        var colorFunction;
+        L.Util.setOptions(this, options);
+        for (var i = 0; i < colors.length; ++i) {
+            var next = Math.min(i + 1, colors.length - 1);
+            colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+            functions.push(colorFunction);
+        }
+        L.PiecewiseFunction.prototype.initialize.call(this, functions);
     }
 });
 
@@ -901,6 +954,192 @@ L.AnimationUtils = {
     }
 };
 
+L.Color = L.Class.extend({
+    initialize: function(colorDef) {
+        this._rgb = [ 0, 0, 0 ];
+        this._hsl = [ 0, 1, .5 ];
+        this._a = 1;
+        if (colorDef) {
+            this.parseColorDef(colorDef);
+        }
+    },
+    parseColorDef: function(colorDef) {},
+    rgbToHSL: function(r, g, b) {
+        r /= 255, g /= 255, b /= 255;
+        var max = Math.max(r, g, b), min = Math.min(r, g, b);
+        var h, s, l = (max + min) / 2;
+        if (max == min) {
+            h = s = 0;
+        } else {
+            var d = max - min;
+            s = l > .5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+              case r:
+                h = (g - b) / d + (g < b ? 6 : 0);
+                break;
+
+              case g:
+                h = (b - r) / d + 2;
+                break;
+
+              case b:
+                h = (r - g) / d + 4;
+                break;
+            }
+            h /= 6;
+        }
+        return [ h, s, l ];
+    },
+    hslToRGB: function(h, s, l) {
+        var r, g, b;
+        if (s == 0) {
+            r = g = b = l;
+        } else {
+            function hue2rgb(p, q, t) {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1 / 6) return p + (q - p) * 6 * t;
+                if (t < 1 / 2) return q;
+                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                return p;
+            }
+            var q = l < .5 ? l * (1 + s) : l + s - l * s;
+            var p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1 / 3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1 / 3);
+        }
+        return [ Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255) ];
+    },
+    setRGB: function(r, g, b) {
+        this._rgb = [ r, g, b ];
+        this._hsl = this.rgbToHSL(r, g, b);
+        return this;
+    },
+    setHSL: function(h, s, l) {
+        this._hsl = [ h, s, l ];
+        this._rgb = this.hslToRGB(h, s, l);
+        return this;
+    },
+    toHSL: function() {
+        return this._hsl;
+    },
+    toHSLString: function() {
+        var prefix = "hsl";
+        if (this._a < 1) {
+            prefix += "a";
+        }
+        return prefix + "(" + (this._hsl[0] * 360).toFixed(1) + "," + (this._hsl[1] * 100).toFixed(0) + "%," + (this._hsl[2] * 100).toFixed(0) + "%)";
+    },
+    toRGB: function() {
+        return this._rgb;
+    },
+    toRGBString: function() {
+        var rgbString;
+        if (this._a < 1) {
+            rgbString = "rgba(" + this._rgb[0].toFixed(0) + "," + this._rgb[1].toFixed(0) + "," + this._rgb[2].toFixed(0) + "," + this._a.toFixed(1) + ")";
+        } else {
+            var parts = [ this._rgb[0].toString(16), this._rgb[1].toString(16), this._rgb[2].toString(16) ];
+            for (var i = 0; i < parts.length; ++i) {
+                if (parts[i].length === 1) {
+                    parts[i] = "0" + parts[i];
+                }
+            }
+            rgbString = "#" + parts.join("");
+        }
+        return rgbString;
+    },
+    r: function(newR) {
+        if (!arguments.length) return this._rgb[0];
+        this.setRGB(newR, this._rgb[1], this._rgb[2]);
+    },
+    g: function(newG) {
+        if (!arguments.length) return this._rgb[1];
+        this.setRGB(this._rgb[0], newG, this._rgb[2]);
+    },
+    b: function(newB) {
+        if (!arguments.length) return this._rgb[2];
+        this.setRGB(this._rgb[0], this._rgb[1], newB);
+    },
+    h: function(newH) {
+        if (!arguments.length) return this._hsl[0];
+        this.setHSL(newH, this._hsl[1], this._hsl[2]);
+    },
+    s: function(newS) {
+        if (!arguments.length) return this._hsl[1];
+        this.setHSL(this._hsl[0], newS, this._hsl[2]);
+    },
+    l: function(newL) {
+        if (!arguments.length) return this._hsl[2];
+        this.setHSL(this._hsl[0], this._hsl[1], newL);
+    }
+});
+
+L.RGBColor = L.Color.extend({
+    initialize: function(colorDef) {
+        L.Color.prototype.initialize.call(this, colorDef);
+    },
+    parseColorDef: function(colorDef) {
+        var isArray = colorDef instanceof Array;
+        var isHex = colorDef.indexOf("#") === 0;
+        var parts = [];
+        var rgb = [];
+        var r, g, b, a;
+        if (isArray) {
+            r = Math.floor(colorDef[0]);
+            g = Math.floor(colorDef[1]);
+            b = Math.floor(colorDef[2]);
+            a = colorDef.length === 4 ? colorDef[3] : 1;
+        } else if (isHex) {
+            colorDef = colorDef.replace("#", "");
+            r = parseInt(colorDef.substring(0, 2), 16);
+            g = parseInt(colorDef.substring(2, 4), 16);
+            b = parseInt(colorDef.substring(4, 6), 16);
+            a = colorDef.length === 8 ? parseInt(colorDef.substring(6, 8), 16) : 1;
+        } else {
+            parts = colorDef.replace("rgb", "").replace("a", "").replace(/\s+/g, "").replace("(", "").replace(")", "").split(",");
+            r = parseInt(parts[0]);
+            g = parseInt(parts[1]);
+            b = parseInt(parts[2]);
+            a = parts.length === 4 ? parseInt(parts[3]) : 1;
+        }
+        this.setRGB(r, g, b);
+        this._a = a;
+    }
+});
+
+L.rgbColor = function(colorDef) {
+    return new L.RGBColor(colorDef);
+};
+
+L.HSLColor = L.Color.extend({
+    initialize: function(colorDef) {
+        L.Color.prototype.initialize.call(this, colorDef);
+    },
+    parseColorDef: function(colorDef) {
+        var isArray = colorDef instanceof Array;
+        var h, s, l, a;
+        if (isArray) {
+            h = colorDef[0];
+            s = colorDef[1];
+            l = colorDef[2];
+            a = colorDef.length === 4 ? colorDef[3] : 1;
+        } else {
+            var parts = colorDef.replace("hsl", "").replace("a", "").replace("(", "").replace(/\s+/g, "").replace(/%/g, "").replace(")", "").split(",");
+            h = Number(parts[0]) / 360;
+            s = Number(parts[1]) / 100;
+            l = Number(parts[2]) / 100;
+            a = parts.length === 4 ? parseInt(parts[3]) : 1;
+        }
+        this.setHSL(h, s, l);
+        this._a = a;
+    }
+});
+
+L.hslColor = function(colorDef) {
+    return new L.HSLColor(colorDef);
+};
+
 L.ColorUtils = {
     rgbArrayToString: function(rgbArray) {
         var hexValues = [];
@@ -1022,6 +1261,23 @@ L.ColorUtils = {
     }
 };
 
+L.ColorUtils.rgbStringToRgb = function(rgbString) {
+    var isHex = rgbString.indexOf("#") === 0;
+    var parts = [];
+    var rgb = [];
+    if (isHex) {
+        rgbString = rgbString.replace("#", "");
+        r = rgbString.substring(0, 2);
+        g = rgbString.substring(2, 4);
+        b = rgbString.substring(4, 6);
+        rgb = [ r, g, b ];
+    } else {
+        parts = rgbString.replace("rgb(", "").replace(")", "").split(",");
+        rgb = parts;
+    }
+    return rgb;
+};
+
 L.ColorUtils.hslToRgbString = function(h, s, l) {
     return L.ColorUtils.rgbArrayToString(L.ColorUtils.hslToRgb(h, s, l));
 };
@@ -1033,6 +1289,565 @@ L.ColorUtils.hslStringToRgbString = function(hslString) {
     var l = Number(parts[2].replace("%", "")) / 100;
     return L.ColorUtils.hslToRgbString(h, s, l);
 };
+
+L.ColorBrewer = {
+    Sequential: {
+        YlGn: {
+            3: [ "#f7fcb9", "#addd8e", "#31a354" ],
+            4: [ "#ffffcc", "#c2e699", "#78c679", "#238443" ],
+            5: [ "#ffffcc", "#c2e699", "#78c679", "#31a354", "#006837" ],
+            6: [ "#ffffcc", "#d9f0a3", "#addd8e", "#78c679", "#31a354", "#006837" ],
+            7: [ "#ffffcc", "#d9f0a3", "#addd8e", "#78c679", "#41ab5d", "#238443", "#005a32" ],
+            8: [ "#ffffe5", "#f7fcb9", "#d9f0a3", "#addd8e", "#78c679", "#41ab5d", "#238443", "#005a32" ],
+            9: [ "#ffffe5", "#f7fcb9", "#d9f0a3", "#addd8e", "#78c679", "#41ab5d", "#238443", "#006837", "#004529" ]
+        },
+        YlGnBu: {
+            3: [ "#edf8b1", "#7fcdbb", "#2c7fb8" ],
+            4: [ "#ffffcc", "#a1dab4", "#41b6c4", "#225ea8" ],
+            5: [ "#ffffcc", "#a1dab4", "#41b6c4", "#2c7fb8", "#253494" ],
+            6: [ "#ffffcc", "#c7e9b4", "#7fcdbb", "#41b6c4", "#2c7fb8", "#253494" ],
+            7: [ "#ffffcc", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#0c2c84" ],
+            8: [ "#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#0c2c84" ],
+            9: [ "#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58" ]
+        },
+        GnBu: {
+            3: [ "#e0f3db", "#a8ddb5", "#43a2ca" ],
+            4: [ "#f0f9e8", "#bae4bc", "#7bccc4", "#2b8cbe" ],
+            5: [ "#f0f9e8", "#bae4bc", "#7bccc4", "#43a2ca", "#0868ac" ],
+            6: [ "#f0f9e8", "#ccebc5", "#a8ddb5", "#7bccc4", "#43a2ca", "#0868ac" ],
+            7: [ "#f0f9e8", "#ccebc5", "#a8ddb5", "#7bccc4", "#4eb3d3", "#2b8cbe", "#08589e" ],
+            8: [ "#f7fcf0", "#e0f3db", "#ccebc5", "#a8ddb5", "#7bccc4", "#4eb3d3", "#2b8cbe", "#08589e" ],
+            9: [ "#f7fcf0", "#e0f3db", "#ccebc5", "#a8ddb5", "#7bccc4", "#4eb3d3", "#2b8cbe", "#0868ac", "#084081" ]
+        },
+        BuGn: {
+            3: [ "#e5f5f9", "#99d8c9", "#2ca25f" ],
+            4: [ "#edf8fb", "#b2e2e2", "#66c2a4", "#238b45" ],
+            5: [ "#edf8fb", "#b2e2e2", "#66c2a4", "#2ca25f", "#006d2c" ],
+            6: [ "#edf8fb", "#ccece6", "#99d8c9", "#66c2a4", "#2ca25f", "#006d2c" ],
+            7: [ "#edf8fb", "#ccece6", "#99d8c9", "#66c2a4", "#41ae76", "#238b45", "#005824" ],
+            8: [ "#f7fcfd", "#e5f5f9", "#ccece6", "#99d8c9", "#66c2a4", "#41ae76", "#238b45", "#005824" ],
+            9: [ "#f7fcfd", "#e5f5f9", "#ccece6", "#99d8c9", "#66c2a4", "#41ae76", "#238b45", "#006d2c", "#00441b" ]
+        },
+        PuBuGn: {
+            3: [ "#ece2f0", "#a6bddb", "#1c9099" ],
+            4: [ "#f6eff7", "#bdc9e1", "#67a9cf", "#02818a" ],
+            5: [ "#f6eff7", "#bdc9e1", "#67a9cf", "#1c9099", "#016c59" ],
+            6: [ "#f6eff7", "#d0d1e6", "#a6bddb", "#67a9cf", "#1c9099", "#016c59" ],
+            7: [ "#f6eff7", "#d0d1e6", "#a6bddb", "#67a9cf", "#3690c0", "#02818a", "#016450" ],
+            8: [ "#fff7fb", "#ece2f0", "#d0d1e6", "#a6bddb", "#67a9cf", "#3690c0", "#02818a", "#016450" ],
+            9: [ "#fff7fb", "#ece2f0", "#d0d1e6", "#a6bddb", "#67a9cf", "#3690c0", "#02818a", "#016c59", "#014636" ]
+        },
+        PuBu: {
+            3: [ "#ece7f2", "#a6bddb", "#2b8cbe" ],
+            4: [ "#f1eef6", "#bdc9e1", "#74a9cf", "#0570b0" ],
+            5: [ "#f1eef6", "#bdc9e1", "#74a9cf", "#2b8cbe", "#045a8d" ],
+            6: [ "#f1eef6", "#d0d1e6", "#a6bddb", "#74a9cf", "#2b8cbe", "#045a8d" ],
+            7: [ "#f1eef6", "#d0d1e6", "#a6bddb", "#74a9cf", "#3690c0", "#0570b0", "#034e7b" ],
+            8: [ "#fff7fb", "#ece7f2", "#d0d1e6", "#a6bddb", "#74a9cf", "#3690c0", "#0570b0", "#034e7b" ],
+            9: [ "#fff7fb", "#ece7f2", "#d0d1e6", "#a6bddb", "#74a9cf", "#3690c0", "#0570b0", "#045a8d", "#023858" ]
+        },
+        BuPu: {
+            3: [ "#e0ecf4", "#9ebcda", "#8856a7" ],
+            4: [ "#edf8fb", "#b3cde3", "#8c96c6", "#88419d" ],
+            5: [ "#edf8fb", "#b3cde3", "#8c96c6", "#8856a7", "#810f7c" ],
+            6: [ "#edf8fb", "#bfd3e6", "#9ebcda", "#8c96c6", "#8856a7", "#810f7c" ],
+            7: [ "#edf8fb", "#bfd3e6", "#9ebcda", "#8c96c6", "#8c6bb1", "#88419d", "#6e016b" ],
+            8: [ "#f7fcfd", "#e0ecf4", "#bfd3e6", "#9ebcda", "#8c96c6", "#8c6bb1", "#88419d", "#6e016b" ],
+            9: [ "#f7fcfd", "#e0ecf4", "#bfd3e6", "#9ebcda", "#8c96c6", "#8c6bb1", "#88419d", "#810f7c", "#4d004b" ]
+        },
+        RdPu: {
+            3: [ "#fde0dd", "#fa9fb5", "#c51b8a" ],
+            4: [ "#feebe2", "#fbb4b9", "#f768a1", "#ae017e" ],
+            5: [ "#feebe2", "#fbb4b9", "#f768a1", "#c51b8a", "#7a0177" ],
+            6: [ "#feebe2", "#fcc5c0", "#fa9fb5", "#f768a1", "#c51b8a", "#7a0177" ],
+            7: [ "#feebe2", "#fcc5c0", "#fa9fb5", "#f768a1", "#dd3497", "#ae017e", "#7a0177" ],
+            8: [ "#fff7f3", "#fde0dd", "#fcc5c0", "#fa9fb5", "#f768a1", "#dd3497", "#ae017e", "#7a0177" ],
+            9: [ "#fff7f3", "#fde0dd", "#fcc5c0", "#fa9fb5", "#f768a1", "#dd3497", "#ae017e", "#7a0177", "#49006a" ]
+        },
+        PuRd: {
+            3: [ "#e7e1ef", "#c994c7", "#dd1c77" ],
+            4: [ "#f1eef6", "#d7b5d8", "#df65b0", "#ce1256" ],
+            5: [ "#f1eef6", "#d7b5d8", "#df65b0", "#dd1c77", "#980043" ],
+            6: [ "#f1eef6", "#d4b9da", "#c994c7", "#df65b0", "#dd1c77", "#980043" ],
+            7: [ "#f1eef6", "#d4b9da", "#c994c7", "#df65b0", "#e7298a", "#ce1256", "#91003f" ],
+            8: [ "#f7f4f9", "#e7e1ef", "#d4b9da", "#c994c7", "#df65b0", "#e7298a", "#ce1256", "#91003f" ],
+            9: [ "#f7f4f9", "#e7e1ef", "#d4b9da", "#c994c7", "#df65b0", "#e7298a", "#ce1256", "#980043", "#67001f" ]
+        },
+        OrRd: {
+            3: [ "#fee8c8", "#fdbb84", "#e34a33" ],
+            4: [ "#fef0d9", "#fdcc8a", "#fc8d59", "#d7301f" ],
+            5: [ "#fef0d9", "#fdcc8a", "#fc8d59", "#e34a33", "#b30000" ],
+            6: [ "#fef0d9", "#fdd49e", "#fdbb84", "#fc8d59", "#e34a33", "#b30000" ],
+            7: [ "#fef0d9", "#fdd49e", "#fdbb84", "#fc8d59", "#ef6548", "#d7301f", "#990000" ],
+            8: [ "#fff7ec", "#fee8c8", "#fdd49e", "#fdbb84", "#fc8d59", "#ef6548", "#d7301f", "#990000" ],
+            9: [ "#fff7ec", "#fee8c8", "#fdd49e", "#fdbb84", "#fc8d59", "#ef6548", "#d7301f", "#b30000", "#7f0000" ]
+        },
+        YlOrRd: {
+            3: [ "#ffeda0", "#feb24c", "#f03b20" ],
+            4: [ "#ffffb2", "#fecc5c", "#fd8d3c", "#e31a1c" ],
+            5: [ "#ffffb2", "#fecc5c", "#fd8d3c", "#f03b20", "#bd0026" ],
+            6: [ "#ffffb2", "#fed976", "#feb24c", "#fd8d3c", "#f03b20", "#bd0026" ],
+            7: [ "#ffffb2", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026" ],
+            8: [ "#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026" ],
+            9: [ "#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#bd0026", "#800026" ]
+        },
+        YlOrBr: {
+            3: [ "#fff7bc", "#fec44f", "#d95f0e" ],
+            4: [ "#ffffd4", "#fed98e", "#fe9929", "#cc4c02" ],
+            5: [ "#ffffd4", "#fed98e", "#fe9929", "#d95f0e", "#993404" ],
+            6: [ "#ffffd4", "#fee391", "#fec44f", "#fe9929", "#d95f0e", "#993404" ],
+            7: [ "#ffffd4", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#8c2d04" ],
+            8: [ "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#8c2d04" ],
+            9: [ "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506" ]
+        },
+        Purples: {
+            3: [ "#efedf5", "#bcbddc", "#756bb1" ],
+            4: [ "#f2f0f7", "#cbc9e2", "#9e9ac8", "#6a51a3" ],
+            5: [ "#f2f0f7", "#cbc9e2", "#9e9ac8", "#756bb1", "#54278f" ],
+            6: [ "#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#756bb1", "#54278f" ],
+            7: [ "#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#807dba", "#6a51a3", "#4a1486" ],
+            8: [ "#fcfbfd", "#efedf5", "#dadaeb", "#bcbddc", "#9e9ac8", "#807dba", "#6a51a3", "#4a1486" ],
+            9: [ "#fcfbfd", "#efedf5", "#dadaeb", "#bcbddc", "#9e9ac8", "#807dba", "#6a51a3", "#54278f", "#3f007d" ]
+        },
+        Blues: {
+            3: [ "#deebf7", "#9ecae1", "#3182bd" ],
+            4: [ "#eff3ff", "#bdd7e7", "#6baed6", "#2171b5" ],
+            5: [ "#eff3ff", "#bdd7e7", "#6baed6", "#3182bd", "#08519c" ],
+            6: [ "#eff3ff", "#c6dbef", "#9ecae1", "#6baed6", "#3182bd", "#08519c" ],
+            7: [ "#eff3ff", "#c6dbef", "#9ecae1", "#6baed6", "#4292c6", "#2171b5", "#084594" ],
+            8: [ "#f7fbff", "#deebf7", "#c6dbef", "#9ecae1", "#6baed6", "#4292c6", "#2171b5", "#084594" ],
+            9: [ "#f7fbff", "#deebf7", "#c6dbef", "#9ecae1", "#6baed6", "#4292c6", "#2171b5", "#08519c", "#08306b" ]
+        },
+        Greens: {
+            3: [ "#e5f5e0", "#a1d99b", "#31a354" ],
+            4: [ "#edf8e9", "#bae4b3", "#74c476", "#238b45" ],
+            5: [ "#edf8e9", "#bae4b3", "#74c476", "#31a354", "#006d2c" ],
+            6: [ "#edf8e9", "#c7e9c0", "#a1d99b", "#74c476", "#31a354", "#006d2c" ],
+            7: [ "#edf8e9", "#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#005a32" ],
+            8: [ "#f7fcf5", "#e5f5e0", "#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#005a32" ],
+            9: [ "#f7fcf5", "#e5f5e0", "#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#006d2c", "#00441b" ]
+        },
+        Oranges: {
+            3: [ "#fee6ce", "#fdae6b", "#e6550d" ],
+            4: [ "#feedde", "#fdbe85", "#fd8d3c", "#d94701" ],
+            5: [ "#feedde", "#fdbe85", "#fd8d3c", "#e6550d", "#a63603" ],
+            6: [ "#feedde", "#fdd0a2", "#fdae6b", "#fd8d3c", "#e6550d", "#a63603" ],
+            7: [ "#feedde", "#fdd0a2", "#fdae6b", "#fd8d3c", "#f16913", "#d94801", "#8c2d04" ],
+            8: [ "#fff5eb", "#fee6ce", "#fdd0a2", "#fdae6b", "#fd8d3c", "#f16913", "#d94801", "#8c2d04" ],
+            9: [ "#fff5eb", "#fee6ce", "#fdd0a2", "#fdae6b", "#fd8d3c", "#f16913", "#d94801", "#a63603", "#7f2704" ]
+        },
+        Reds: {
+            3: [ "#fee0d2", "#fc9272", "#de2d26" ],
+            4: [ "#fee5d9", "#fcae91", "#fb6a4a", "#cb181d" ],
+            5: [ "#fee5d9", "#fcae91", "#fb6a4a", "#de2d26", "#a50f15" ],
+            6: [ "#fee5d9", "#fcbba1", "#fc9272", "#fb6a4a", "#de2d26", "#a50f15" ],
+            7: [ "#fee5d9", "#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c", "#cb181d", "#99000d" ],
+            8: [ "#fff5f0", "#fee0d2", "#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c", "#cb181d", "#99000d" ],
+            9: [ "#fff5f0", "#fee0d2", "#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c", "#cb181d", "#a50f15", "#67000d" ]
+        },
+        Greys: {
+            3: [ "#f0f0f0", "#bdbdbd", "#636363" ],
+            4: [ "#f7f7f7", "#cccccc", "#969696", "#525252" ],
+            5: [ "#f7f7f7", "#cccccc", "#969696", "#636363", "#252525" ],
+            6: [ "#f7f7f7", "#d9d9d9", "#bdbdbd", "#969696", "#636363", "#252525" ],
+            7: [ "#f7f7f7", "#d9d9d9", "#bdbdbd", "#969696", "#737373", "#525252", "#252525" ],
+            8: [ "#ffffff", "#f0f0f0", "#d9d9d9", "#bdbdbd", "#969696", "#737373", "#525252", "#252525" ],
+            9: [ "#ffffff", "#f0f0f0", "#d9d9d9", "#bdbdbd", "#969696", "#737373", "#525252", "#252525", "#000000" ]
+        }
+    },
+    Diverging: {
+        PuOr: {
+            3: [ "#f1a340", "#f7f7f7", "#998ec3" ],
+            4: [ "#e66101", "#fdb863", "#b2abd2", "#5e3c99" ],
+            5: [ "#e66101", "#fdb863", "#f7f7f7", "#b2abd2", "#5e3c99" ],
+            6: [ "#b35806", "#f1a340", "#fee0b6", "#d8daeb", "#998ec3", "#542788" ],
+            7: [ "#b35806", "#f1a340", "#fee0b6", "#f7f7f7", "#d8daeb", "#998ec3", "#542788" ],
+            8: [ "#b35806", "#e08214", "#fdb863", "#fee0b6", "#d8daeb", "#b2abd2", "#8073ac", "#542788" ],
+            9: [ "#b35806", "#e08214", "#fdb863", "#fee0b6", "#f7f7f7", "#d8daeb", "#b2abd2", "#8073ac", "#542788" ],
+            10: [ "#7f3b08", "#b35806", "#e08214", "#fdb863", "#fee0b6", "#d8daeb", "#b2abd2", "#8073ac", "#542788", "#2d004b" ],
+            11: [ "#7f3b08", "#b35806", "#e08214", "#fdb863", "#fee0b6", "#f7f7f7", "#d8daeb", "#b2abd2", "#8073ac", "#542788", "#2d004b" ]
+        },
+        BrBG: {
+            3: [ "#d8b365", "#f5f5f5", "#5ab4ac" ],
+            4: [ "#a6611a", "#dfc27d", "#80cdc1", "#018571" ],
+            5: [ "#a6611a", "#dfc27d", "#f5f5f5", "#80cdc1", "#018571" ],
+            6: [ "#8c510a", "#d8b365", "#f6e8c3", "#c7eae5", "#5ab4ac", "#01665e" ],
+            7: [ "#8c510a", "#d8b365", "#f6e8c3", "#f5f5f5", "#c7eae5", "#5ab4ac", "#01665e" ],
+            8: [ "#8c510a", "#bf812d", "#dfc27d", "#f6e8c3", "#c7eae5", "#80cdc1", "#35978f", "#01665e" ],
+            9: [ "#8c510a", "#bf812d", "#dfc27d", "#f6e8c3", "#f5f5f5", "#c7eae5", "#80cdc1", "#35978f", "#01665e" ],
+            10: [ "#543005", "#8c510a", "#bf812d", "#dfc27d", "#f6e8c3", "#c7eae5", "#80cdc1", "#35978f", "#01665e", "#003c30" ],
+            11: [ "#543005", "#8c510a", "#bf812d", "#dfc27d", "#f6e8c3", "#f5f5f5", "#c7eae5", "#80cdc1", "#35978f", "#01665e", "#003c30" ]
+        },
+        PRGn: {
+            3: [ "#af8dc3", "#f7f7f7", "#7fbf7b" ],
+            4: [ "#7b3294", "#c2a5cf", "#a6dba0", "#008837" ],
+            5: [ "#7b3294", "#c2a5cf", "#f7f7f7", "#a6dba0", "#008837" ],
+            6: [ "#762a83", "#af8dc3", "#e7d4e8", "#d9f0d3", "#7fbf7b", "#1b7837" ],
+            7: [ "#762a83", "#af8dc3", "#e7d4e8", "#f7f7f7", "#d9f0d3", "#7fbf7b", "#1b7837" ],
+            8: [ "#762a83", "#9970ab", "#c2a5cf", "#e7d4e8", "#d9f0d3", "#a6dba0", "#5aae61", "#1b7837" ],
+            9: [ "#762a83", "#9970ab", "#c2a5cf", "#e7d4e8", "#f7f7f7", "#d9f0d3", "#a6dba0", "#5aae61", "#1b7837" ],
+            10: [ "#40004b", "#762a83", "#9970ab", "#c2a5cf", "#e7d4e8", "#d9f0d3", "#a6dba0", "#5aae61", "#1b7837", "#00441b" ],
+            11: [ "#40004b", "#762a83", "#9970ab", "#c2a5cf", "#e7d4e8", "#f7f7f7", "#d9f0d3", "#a6dba0", "#5aae61", "#1b7837", "#00441b" ]
+        },
+        PiYG: {
+            3: [ "#e9a3c9", "#f7f7f7", "#a1d76a" ],
+            4: [ "#d01c8b", "#f1b6da", "#b8e186", "#4dac26" ],
+            5: [ "#d01c8b", "#f1b6da", "#f7f7f7", "#b8e186", "#4dac26" ],
+            6: [ "#c51b7d", "#e9a3c9", "#fde0ef", "#e6f5d0", "#a1d76a", "#4d9221" ],
+            7: [ "#c51b7d", "#e9a3c9", "#fde0ef", "#f7f7f7", "#e6f5d0", "#a1d76a", "#4d9221" ],
+            8: [ "#c51b7d", "#de77ae", "#f1b6da", "#fde0ef", "#e6f5d0", "#b8e186", "#7fbc41", "#4d9221" ],
+            9: [ "#c51b7d", "#de77ae", "#f1b6da", "#fde0ef", "#f7f7f7", "#e6f5d0", "#b8e186", "#7fbc41", "#4d9221" ],
+            10: [ "#8e0152", "#c51b7d", "#de77ae", "#f1b6da", "#fde0ef", "#e6f5d0", "#b8e186", "#7fbc41", "#4d9221", "#276419" ],
+            11: [ "#8e0152", "#c51b7d", "#de77ae", "#f1b6da", "#fde0ef", "#f7f7f7", "#e6f5d0", "#b8e186", "#7fbc41", "#4d9221", "#276419" ]
+        },
+        RdBu: {
+            3: [ "#ef8a62", "#f7f7f7", "#67a9cf" ],
+            4: [ "#ca0020", "#f4a582", "#92c5de", "#0571b0" ],
+            5: [ "#ca0020", "#f4a582", "#f7f7f7", "#92c5de", "#0571b0" ],
+            6: [ "#b2182b", "#ef8a62", "#fddbc7", "#d1e5f0", "#67a9cf", "#2166ac" ],
+            7: [ "#b2182b", "#ef8a62", "#fddbc7", "#f7f7f7", "#d1e5f0", "#67a9cf", "#2166ac" ],
+            8: [ "#b2182b", "#d6604d", "#f4a582", "#fddbc7", "#d1e5f0", "#92c5de", "#4393c3", "#2166ac" ],
+            9: [ "#b2182b", "#d6604d", "#f4a582", "#fddbc7", "#f7f7f7", "#d1e5f0", "#92c5de", "#4393c3", "#2166ac" ],
+            10: [ "#67001f", "#b2182b", "#d6604d", "#f4a582", "#fddbc7", "#d1e5f0", "#92c5de", "#4393c3", "#2166ac", "#053061" ],
+            11: [ "#67001f", "#b2182b", "#d6604d", "#f4a582", "#fddbc7", "#f7f7f7", "#d1e5f0", "#92c5de", "#4393c3", "#2166ac", "#053061" ]
+        },
+        RdGy: {
+            3: [ "#ef8a62", "#ffffff", "#999999" ],
+            4: [ "#ca0020", "#f4a582", "#bababa", "#404040" ],
+            5: [ "#ca0020", "#f4a582", "#ffffff", "#bababa", "#404040" ],
+            6: [ "#b2182b", "#ef8a62", "#fddbc7", "#e0e0e0", "#999999", "#4d4d4d" ],
+            7: [ "#b2182b", "#ef8a62", "#fddbc7", "#ffffff", "#e0e0e0", "#999999", "#4d4d4d" ],
+            8: [ "#b2182b", "#d6604d", "#f4a582", "#fddbc7", "#e0e0e0", "#bababa", "#878787", "#4d4d4d" ],
+            9: [ "#b2182b", "#d6604d", "#f4a582", "#fddbc7", "#ffffff", "#e0e0e0", "#bababa", "#878787", "#4d4d4d" ],
+            10: [ "#67001f", "#b2182b", "#d6604d", "#f4a582", "#fddbc7", "#e0e0e0", "#bababa", "#878787", "#4d4d4d", "#1a1a1a" ],
+            11: [ "#67001f", "#b2182b", "#d6604d", "#f4a582", "#fddbc7", "#ffffff", "#e0e0e0", "#bababa", "#878787", "#4d4d4d", "#1a1a1a" ]
+        },
+        RdYlBu: {
+            3: [ "#fc8d59", "#ffffbf", "#91bfdb" ],
+            4: [ "#d7191c", "#fdae61", "#abd9e9", "#2c7bb6" ],
+            5: [ "#d7191c", "#fdae61", "#ffffbf", "#abd9e9", "#2c7bb6" ],
+            6: [ "#d73027", "#fc8d59", "#fee090", "#e0f3f8", "#91bfdb", "#4575b4" ],
+            7: [ "#d73027", "#fc8d59", "#fee090", "#ffffbf", "#e0f3f8", "#91bfdb", "#4575b4" ],
+            8: [ "#d73027", "#f46d43", "#fdae61", "#fee090", "#e0f3f8", "#abd9e9", "#74add1", "#4575b4" ],
+            9: [ "#d73027", "#f46d43", "#fdae61", "#fee090", "#ffffbf", "#e0f3f8", "#abd9e9", "#74add1", "#4575b4" ],
+            10: [ "#a50026", "#d73027", "#f46d43", "#fdae61", "#fee090", "#e0f3f8", "#abd9e9", "#74add1", "#4575b4", "#313695" ],
+            11: [ "#a50026", "#d73027", "#f46d43", "#fdae61", "#fee090", "#ffffbf", "#e0f3f8", "#abd9e9", "#74add1", "#4575b4", "#313695" ]
+        },
+        Spectral: {
+            3: [ "#fc8d59", "#ffffbf", "#99d594" ],
+            4: [ "#d7191c", "#fdae61", "#abdda4", "#2b83ba" ],
+            5: [ "#d7191c", "#fdae61", "#ffffbf", "#abdda4", "#2b83ba" ],
+            6: [ "#d53e4f", "#fc8d59", "#fee08b", "#e6f598", "#99d594", "#3288bd" ],
+            7: [ "#d53e4f", "#fc8d59", "#fee08b", "#ffffbf", "#e6f598", "#99d594", "#3288bd" ],
+            8: [ "#d53e4f", "#f46d43", "#fdae61", "#fee08b", "#e6f598", "#abdda4", "#66c2a5", "#3288bd" ],
+            9: [ "#d53e4f", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#e6f598", "#abdda4", "#66c2a5", "#3288bd" ],
+            10: [ "#9e0142", "#d53e4f", "#f46d43", "#fdae61", "#fee08b", "#e6f598", "#abdda4", "#66c2a5", "#3288bd", "#5e4fa2" ],
+            11: [ "#9e0142", "#d53e4f", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#e6f598", "#abdda4", "#66c2a5", "#3288bd", "#5e4fa2" ]
+        },
+        RdYlGn: {
+            3: [ "#fc8d59", "#ffffbf", "#91cf60" ],
+            4: [ "#d7191c", "#fdae61", "#a6d96a", "#1a9641" ],
+            5: [ "#d7191c", "#fdae61", "#ffffbf", "#a6d96a", "#1a9641" ],
+            6: [ "#d73027", "#fc8d59", "#fee08b", "#d9ef8b", "#91cf60", "#1a9850" ],
+            7: [ "#d73027", "#fc8d59", "#fee08b", "#ffffbf", "#d9ef8b", "#91cf60", "#1a9850" ],
+            8: [ "#d73027", "#f46d43", "#fdae61", "#fee08b", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850" ],
+            9: [ "#d73027", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850" ],
+            10: [ "#a50026", "#d73027", "#f46d43", "#fdae61", "#fee08b", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850", "#006837" ],
+            11: [ "#a50026", "#d73027", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850", "#006837" ]
+        }
+    },
+    Qualitative: {
+        Accent: {
+            3: [ "#7fc97f", "#beaed4", "#fdc086" ],
+            4: [ "#7fc97f", "#beaed4", "#fdc086", "#ffff99" ],
+            5: [ "#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0" ],
+            6: [ "#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f" ],
+            7: [ "#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17" ],
+            8: [ "#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#666666" ]
+        },
+        Dark2: {
+            3: [ "#1b9e77", "#d95f02", "#7570b3" ],
+            4: [ "#1b9e77", "#d95f02", "#7570b3", "#e7298a" ],
+            5: [ "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e" ],
+            6: [ "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02" ],
+            7: [ "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d" ],
+            8: [ "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666" ]
+        },
+        Paired: {
+            3: [ "#a6cee3", "#1f78b4", "#b2df8a" ],
+            4: [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c" ],
+            5: [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99" ],
+            6: [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c" ],
+            7: [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f" ],
+            8: [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00" ],
+            9: [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6" ],
+            10: [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a" ],
+            11: [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a", "#ffff99" ],
+            12: [ "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a", "#ffff99", "#b15928" ]
+        },
+        Pastel1: {
+            3: [ "#fbb4ae", "#b3cde3", "#ccebc5" ],
+            4: [ "#fbb4ae", "#b3cde3", "#ccebc5", "#decbe4" ],
+            5: [ "#fbb4ae", "#b3cde3", "#ccebc5", "#decbe4", "#fed9a6" ],
+            6: [ "#fbb4ae", "#b3cde3", "#ccebc5", "#decbe4", "#fed9a6", "#ffffcc" ],
+            7: [ "#fbb4ae", "#b3cde3", "#ccebc5", "#decbe4", "#fed9a6", "#ffffcc", "#e5d8bd" ],
+            8: [ "#fbb4ae", "#b3cde3", "#ccebc5", "#decbe4", "#fed9a6", "#ffffcc", "#e5d8bd", "#fddaec" ],
+            9: [ "#fbb4ae", "#b3cde3", "#ccebc5", "#decbe4", "#fed9a6", "#ffffcc", "#e5d8bd", "#fddaec", "#f2f2f2" ]
+        },
+        Pastel2: {
+            3: [ "#b3e2cd", "#fdcdac", "#cbd5e8" ],
+            4: [ "#b3e2cd", "#fdcdac", "#cbd5e8", "#f4cae4" ],
+            5: [ "#b3e2cd", "#fdcdac", "#cbd5e8", "#f4cae4", "#e6f5c9" ],
+            6: [ "#b3e2cd", "#fdcdac", "#cbd5e8", "#f4cae4", "#e6f5c9", "#fff2ae" ],
+            7: [ "#b3e2cd", "#fdcdac", "#cbd5e8", "#f4cae4", "#e6f5c9", "#fff2ae", "#f1e2cc" ],
+            8: [ "#b3e2cd", "#fdcdac", "#cbd5e8", "#f4cae4", "#e6f5c9", "#fff2ae", "#f1e2cc", "#cccccc" ]
+        },
+        Set1: {
+            3: [ "#e41a1c", "#377eb8", "#4daf4a" ],
+            4: [ "#e41a1c", "#377eb8", "#4daf4a", "#984ea3" ],
+            5: [ "#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00" ],
+            6: [ "#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33" ],
+            7: [ "#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628" ],
+            8: [ "#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf" ],
+            9: [ "#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf", "#999999" ]
+        },
+        Set2: {
+            3: [ "#66c2a5", "#fc8d62", "#8da0cb" ],
+            4: [ "#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3" ],
+            5: [ "#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854" ],
+            6: [ "#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f" ],
+            7: [ "#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f", "#e5c494" ],
+            8: [ "#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f", "#e5c494", "#b3b3b3" ]
+        },
+        Set3: {
+            3: [ "#8dd3c7", "#ffffb3", "#bebada" ],
+            4: [ "#8dd3c7", "#ffffb3", "#bebada", "#fb8072" ],
+            5: [ "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3" ],
+            6: [ "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462" ],
+            7: [ "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69" ],
+            8: [ "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5" ],
+            9: [ "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9" ],
+            10: [ "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd" ],
+            11: [ "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5" ],
+            12: [ "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f" ]
+        }
+    }
+};
+
+L.Palettes = {
+    huePalette: function(min, max, minH, maxH, options) {
+        return new L.HSLHueFunction(new L.Point(min, minH), new L.Point(max, maxH), options);
+    },
+    luminosityPalette: function(min, max, minL, maxL, options) {
+        return new L.HSLLuminosityFunction(new L.Point(min, minL), new L.Point(max, maxL), options);
+    },
+    saturationPalette: function(min, max, minS, maxS, options) {
+        return new L.HSLSaturationFunction(new L.Point(min, minS), new L.Point(max, maxS), options);
+    },
+    rgbBlendPalette: function(min, max, minColor, maxColor, options) {
+        return new L.RGBColorBlendFunction(min, max, minColor, maxColor, options);
+    },
+    hslBlendPalette: function(min, max, minColor, maxColor, options) {
+        return new L.HSLColorBlendFunction(min, max, minColor, maxColor, options);
+    },
+    customColorPalette: function(min, max, colors, options) {
+        return new L.CustomColorFunction(min, max, colors, options);
+    }
+};
+
+L.DynamicColorPalettes = {
+    rainbow: {
+        text: "Rainbow",
+        getPalette: function(min, max) {
+            return L.Palettes.huePalette(min, max, 0, 300);
+        }
+    },
+    greentored: {
+        text: "Green - Red",
+        getPalette: function(min, max) {
+            return L.Palettes.huePalette(min, max, 120, 0);
+        }
+    },
+    yellowtored: {
+        text: "Yellow - Red",
+        getPalette: function(min, max) {
+            return L.Palettes.huePalette(min, max, 60, 0);
+        }
+    },
+    orangetored: {
+        text: "Orange - Red",
+        getPalette: function(min, max) {
+            return L.Palettes.huePalette(min, max, 30, 0);
+        }
+    },
+    redtopurple: {
+        text: "Red - Purple",
+        getPalette: function(min, max) {
+            return L.Palettes.huePalette(min, max, 360, 270);
+        }
+    },
+    bluetored: {
+        text: "Blue - Red",
+        getPalette: function(min, max) {
+            return L.Palettes.huePalette(min, max, 210, 360);
+        }
+    },
+    bluetored2: {
+        text: "Blue - Red 2",
+        getPalette: function(min, max) {
+            return L.Palettes.huePalette(min, max, 180, 0);
+        }
+    },
+    whitetored: {
+        text: "White - Red",
+        getPalette: function(min, max) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+                outputHue: 0
+            });
+        }
+    },
+    whitetoorange: {
+        text: "White - Orange",
+        getPalette: function(min, max) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+                outputHue: 30
+            });
+        }
+    },
+    whitetoyellow: {
+        text: "White - Yellow",
+        getPalette: function(min, max) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+                outputHue: 60
+            });
+        }
+    },
+    whitetogreen: {
+        text: "White - Green",
+        getPalette: function(min, max) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+                outputHue: 120
+            });
+        }
+    },
+    whitetoltblue: {
+        text: "White - Lt. Blue",
+        getPalette: function(min, max) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+                outputHue: 180
+            });
+        }
+    },
+    whitetoblue: {
+        text: "White - Blue",
+        getPalette: function(min, max) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+                outputHue: 240
+            });
+        }
+    },
+    whitetopurple: {
+        text: "White - Purple",
+        getPalette: function(min, max) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+                outputHue: 270
+            });
+        }
+    },
+    graytored: {
+        text: "Gray - Red",
+        getPalette: function(min, max) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, {
+                outputHue: 0
+            });
+        }
+    },
+    graytoorange: {
+        text: "Gray - Orange",
+        getPalette: function(min, max) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, {
+                outputHue: 30
+            });
+        }
+    },
+    graytoyellow: {
+        text: "Gray - Yellow",
+        getPalette: function(min, max) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, {
+                outputHue: 60
+            });
+        }
+    },
+    graytogreen: {
+        text: "Gray - Green",
+        getPalette: function(min, max) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, {
+                outputHue: 120
+            });
+        }
+    },
+    graytoltblue: {
+        text: "Gray - Lt. Blue",
+        getPalette: function(min, max) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, {
+                outputHue: 180
+            });
+        }
+    },
+    graytoblue: {
+        text: "Gray - Blue",
+        getPalette: function(min, max) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, {
+                outputHue: 240
+            });
+        }
+    },
+    graytopurple: {
+        text: "Gray - Purple",
+        getPalette: function(min, max) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, {
+                outputHue: 270
+            });
+        }
+    }
+};
+
+L.DynamicPaletteElement = L.Class.extend({
+    initialize: function(key, dynamicPalette) {
+        this._key = key;
+        this._dynamicPalette = dynamicPalette;
+    },
+    generate: function(options) {
+        var $paletteElement = $('<div class="palette"></div>');
+        var count = options.count;
+        var palette = this._dynamicPalette.getPalette(0, count - 1);
+        var width = options.width;
+        var showText = true;
+        if (options.showText != undefined) {
+            showText = options.showText;
+        }
+        $paletteElement.data("key", this._key);
+        $paletteElement.attr("data-palette-key", this._key);
+        if (this._dynamicPalette.text && showText) {
+            $paletteElement.append('<div class="palette-text"><i class="icon-ok hidden"></i>' + this._dynamicPalette.text + "</div>");
+        }
+        var elementWidth = width / count;
+        if (options.className) {
+            $paletteElement.addClass(options.className);
+        }
+        for (var i = 0; i < count; ++i) {
+            var $i = $('<i class="palette-element"></i>');
+            for (var styleKey in palette) {
+                var styleValue = palette[styleKey];
+                var style = styleValue.evaluate ? styleValue.evaluate(i) : styleValue;
+                L.StyleConverter.setCSSProperty($i, styleKey, style);
+            }
+            $i.width(elementWidth);
+            $paletteElement.append($i);
+        }
+        return $paletteElement;
+    }
+});
 
 L.RegularPolygon = L.Polygon.extend({
     statics: {
@@ -1096,6 +1911,98 @@ L.RegularPolygon = L.Polygon.extend({
 
 L.regularPolygon = function(centerLatLng, options) {
     return new L.RegularPolygon(centerLatLng, options);
+};
+
+var TextFunctions = TextFunctions || {
+    __updatePath: L.Path.prototype._updatePath,
+    _updatePath: function() {
+        this.__updatePath.call(this);
+        if (this.options.text) {
+            this._createText(this.options.text);
+        }
+    },
+    _initText: function() {
+        if (this.options.text) {
+            this._createText(this.options.text);
+        }
+    },
+    getTextAnchor: function() {
+        if (this._point) {
+            return this._point;
+        }
+    },
+    setTextAnchor: function(anchorPoint) {
+        if (this._text) {
+            this._text.setAttribute("x", anchorPoint.x);
+            this._text.setAttribute("y", anchorPoint.y);
+        }
+    },
+    _createText: function(options) {
+        if (this._text) {
+            this._container.removeChild(this._text);
+        }
+        if (this._pathDef) {
+            this._defs.removeChild(this._pathDef);
+        }
+        var setStyle = function(element, style) {
+            var styleString = "";
+            for (var key in style) {
+                styleString += key + ": " + style[key] + ";";
+            }
+            element.setAttribute("style", styleString);
+            return element;
+        };
+        var setAttr = function(element, attr) {
+            for (var key in attr) {
+                element.setAttribute(key, attr[key]);
+            }
+            return element;
+        };
+        this._text = this._createElement("text");
+        var textNode = document.createTextNode(options.text);
+        if (options.path) {
+            var pathOptions = options.path;
+            var pathID = L.Util.guid();
+            var clonedPath = this._createElement("path");
+            clonedPath.setAttribute("d", this._path.getAttribute("d"));
+            clonedPath.setAttribute("id", pathID);
+            if (!this._defs) {
+                this._defs = this._createElement("defs");
+                this._container.appendChild(this._defs);
+            }
+            this._defs.appendChild(clonedPath);
+            this._pathDef = clonedPath;
+            var textPath = this._createElement("textPath");
+            if (pathOptions.startOffset) {
+                textPath.setAttribute("startOffset", pathOptions.startOffset);
+            }
+            if (pathOptions.attr) {
+                setAttr(textPath, pathOptions.attr);
+            }
+            if (pathOptions.style) {
+                setStyle(textPath, pathOptions.style);
+            }
+            textPath.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "#" + pathID);
+            textPath.appendChild(textNode);
+            this._text.appendChild(textPath);
+        } else {
+            this._text.appendChild(textNode);
+            var anchorPoint = this.getTextAnchor();
+            this.setTextAnchor(anchorPoint);
+        }
+        if (options.className) {
+            this._text.setAttribute("class", options.className);
+        } else {
+            this._text.setAttribute("class", "leaflet-svg-text");
+        }
+        if (options.attr) {
+            setAttr(this._text, options.attr);
+        }
+        if (options.style) {
+            setStyle(this._text, options.style);
+        }
+        this._container.appendChild(this._text);
+    }
 };
 
 var PathFunctions = PathFunctions || {
@@ -1233,8 +2140,39 @@ var PathFunctions = PathFunctions || {
         } else {
             this._path.removeAttribute("filter");
         }
+        if (this.options.transform) {
+            this._path.setAttribute("transform", this.options.transform);
+        }
     }
 };
+
+var LineTextFunctions = $.extend(true, {}, TextFunctions);
+
+LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
+
+LineTextFunctions.getCenter = function() {
+    var latlngs = this._latlngs, len = latlngs.length, i, j, p1, p2, f, center;
+    for (i = 0, j = len - 1, area = 0, lat = 0, lng = 0; i < len; j = i++) {
+        p1 = latlngs[i];
+        p2 = latlngs[j];
+        f = p1.lat * p2.lng - p2.lat * p1.lng;
+        lat += (p1.lat + p2.lat) * f;
+        lng += (p1.lng + p2.lng) * f;
+        area += f / 2;
+    }
+    center = area ? new L.LatLng(lat / (6 * area), lng / (6 * area)) : latlngs[0];
+    center.area = area;
+    return center;
+};
+
+LineTextFunctions.getTextAnchor = function() {
+    var center = this.getCenter();
+    return this._map.latLngToLayerPoint(center);
+};
+
+L.Polyline.include(LineTextFunctions);
+
+L.CircleMarker.include(TextFunctions);
 
 L.Path.include(PathFunctions);
 
@@ -1245,6 +2183,7 @@ L.Polyline.include(PathFunctions);
 L.CircleMarker.include(PathFunctions);
 
 L.MapMarker = L.Path.extend({
+    includes: TextFunctions,
     initialize: function(centerLatLng, options) {
         L.Path.prototype.initialize.call(this, options);
         this._latlng = centerLatLng;
@@ -1289,6 +2228,9 @@ L.MapMarker = L.Path.extend({
         this._path.setAttribute("shape-rendering", "geometricPrecision");
         return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
+    getTextAnchor: function() {
+        return new L.Point(this._point.x, this._point.y - 2 * this.options.radius);
+    },
     _getPoints: function(inner) {
         var maxDegrees = !inner ? 210 : 360;
         var angleSize = !inner ? maxDegrees / 50 : maxDegrees / Math.max(this.options.numberOfSides, 3);
@@ -1330,6 +2272,7 @@ L.mapMarker = function(centerLatLng, options) {
 };
 
 L.RegularPolygonMarker = L.Path.extend({
+    includes: TextFunctions,
     initialize: function(centerLatLng, options) {
         L.Path.prototype.initialize.call(this, options);
         this._latlng = centerLatLng;
@@ -1355,7 +2298,6 @@ L.RegularPolygonMarker = L.Path.extend({
     },
     projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
-        this._textPoint = this._point;
         this._points = this._getPoints();
         if (this.options.innerRadius || this.options.innerRadiusX && this.options.innerRadiusY) {
             this._innerPoints = this._getPoints(true).reverse();
@@ -2364,6 +3306,8 @@ L.DataLayer = L.LayerGroup.extend({
         L.Util.setOptions(this, options);
         L.LayerGroup.prototype.initialize.call(this, options);
         data = data || {};
+        this._includeFunction = this.options.filter || this.options.includeLayer;
+        this._markerFunction = this.options.getMarker || this._getMarker;
         this._boundaryLayer = new L.LayerGroup();
         this.addLayer(this._boundaryLayer);
         this.addData(data);
@@ -2471,7 +3415,7 @@ L.DataLayer = L.LayerGroup.extend({
     _getLayer: function(location, options, record) {
         this._addBoundary(location, options);
         location = this._processLocation(location);
-        return this._getMarker(location, options, record);
+        return this._markerFunction.call(this, location, options, record);
     },
     _getMarker: function(location, options, record) {
         var marker;
@@ -2492,13 +3436,11 @@ L.DataLayer = L.LayerGroup.extend({
     },
     _loadRecords: function(records) {
         var location;
-        var includeFunction = this.options.filter || this.options.includeLayer;
-        this._includeFunction = includeFunction;
         records = this._preProcessRecords(records);
         for (var recordIndex in records) {
             if (records.hasOwnProperty(recordIndex)) {
                 var record = records[recordIndex];
-                var includeLayer = includeFunction ? includeFunction.call(this, record) : true;
+                var includeLayer = this._shouldLoadRecord(record);
                 if (includeLayer) {
                     location = this._getLocation(record, recordIndex);
                     this.locationToLayer(location, record);
@@ -2664,7 +3606,7 @@ L.DataLayer = L.LayerGroup.extend({
                 } else {
                     for (var layerProperty in propertyOptions) {
                         valueFunction = propertyOptions[layerProperty];
-                        layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : valueFunction.call ? valueFunction.call(fieldValue) : valueFunction;
+                        layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : valueFunction.call ? valueFunction.call(this, fieldValue) : valueFunction;
                     }
                 }
             }
@@ -2680,9 +3622,8 @@ L.DataLayer = L.LayerGroup.extend({
         var displayOptions = this.options.displayOptions;
         var legendDetails = {};
         var includeLayer = true;
-        var includeFunction = this.options.filter || this.options.includeLayer;
-        if (includeFunction) {
-            includeLayer = includeFunction.call(this, record);
+        if (this._includeFunction) {
+            includeLayer = this._includeFunction.call(this, record);
         }
         if (includeLayer) {
             var dynamicOptions = this._getDynamicOptions(record);
@@ -2696,7 +3637,7 @@ L.DataLayer = L.LayerGroup.extend({
                         this._bindMouseEvents(layer, layerOptions, legendDetails);
                     }
                     if (this.options.onEachRecord) {
-                        this.options.onEachRecord.call(this, layer, record, this);
+                        this.options.onEachRecord.call(this, layer, record, location, this);
                     }
                 }
             }
@@ -3126,14 +4067,15 @@ L.ChoroplethDataLayer = L.DataLayer.extend({
             weight: 1,
             color: "#000"
         },
-        maxZoom: 12,
+        maxZoom: 16,
         backgroundLayer: true
     },
     _getLayer: function(location, layerOptions, record) {
         if (location.location instanceof L.LatLng) {
-            location.location = this._getMarker(location.location, layerOptions, record);
+            location.location = this._markerFunction.call(this, location.location, layerOptions, record);
         }
         if (location.location.setStyle) {
+            layerOptions.gradient = location.location instanceof L.Polyline ? false : layerOptions.gradient;
             location.location.setStyle(layerOptions);
         }
         return location.location;
@@ -3436,9 +4378,10 @@ L.Callout = L.LayerGroup.extend({
                 rotation: rotation,
                 fillColor: this.options.fillColor,
                 color: this.options.color,
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 1,
+                gradient: this.options.gradient,
+                weight: this.options.weight,
+                opacity: this.options.opacity,
+                fillOpacity: this.options.fillOpacity,
                 radius: radius,
                 lineCap: "butt",
                 lineJoin: "miter"
@@ -3529,14 +4472,20 @@ L.FlowLine = L.FlowLine.extend({
                 from: value1,
                 to: value2,
                 change: change,
-                percentChange: percentChange,
-                changeOverTime: change / deltas.time
+                percentChange: percentChange
             };
+            if (deltas.time) {
+                deltas[key].changeOverTime = change / deltas.time;
+            }
         }
         var latlngs = line.getLatLngs();
         var distance = latlngs[0].distanceTo(latlngs[1]);
+        var velocity;
+        if (deltas.time) {
+            velocity = distance / (deltas.time * 1e3);
+        }
         if (this.options.onEachSegment) {
-            this.options.onEachSegment.call(this, record1, record2, line, deltas, distance);
+            this.options.onEachSegment.call(this, record1, record2, line, deltas, distance, velocity);
         }
     },
     _loadRecords: function(records) {
@@ -3593,6 +4542,7 @@ L.arcedFlowLine = function(data, options) {
 };
 
 L.ArcedPolyline = L.Path.extend({
+    includes: TextFunctions,
     initialize: function(latlngs, options) {
         L.Path.prototype.initialize.call(this, options);
         this._latlngs = latlngs;

@@ -1,7 +1,7 @@
-var map;
 
 $(document).ready(function() {
-	
+	var map;
+
 	var cloudmadeUrl = 'http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/{styleId}/256/{z}/{x}/{y}.png',
     	cloudmadeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
 

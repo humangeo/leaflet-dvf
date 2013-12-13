@@ -1,6 +1,7 @@
-var map;
 
 $(document).ready(function() {
+	var map;
+
 	var resize = function () {
 		var $map = $('#map');
 		

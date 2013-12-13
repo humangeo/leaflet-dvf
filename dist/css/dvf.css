@@ -193,6 +193,10 @@ div.leaflet-div-icon div div.key {
 	display: block;
 	font-style: italic;
 	font-weight: bold;
-	
+}
+
+text.leaflet-svg-text {
+	alignment-baseline: central;
+	text-anchor: middle;
 }
 

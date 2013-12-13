@@ -32,7 +32,9 @@ Functions for easily mapping data properties to Leaflet style values:
 	* HSLSaturationFunction - vary the output saturation based on a data property
 	* HSLLuminosityFunction - vary the output lightness/luminosity based on a data property
 	* Various RGB functions
+	* Built-in support for [Colorbrewer](http://colorbrewer2.org) color scales
 * PiecewiseFunction - use multiple LinearFunction classes in sequence (e.g. vary a color from white to yellow, yellow to red)
+* CustomColorFunction - specify the specific color scale to use.  Use L.ColorBrewer to specify Colorbrewer scales.
 
 New layer types that simplify reading and visualizing any JSON-based data structure:
 
@@ -49,6 +51,8 @@ Automatic legend generation and a simple legend control.
 To generate a legend, just call getLegend on any DataLayer, or use the provided legend control and the legend will be displayed automatically.
 
 Support for gradient fills and drop shadows.
+
+Support for text on Path-based items (e.g. markers, polylines, polygons, etc.)
 
 **NEW** Callouts for annotating map data.  Use the L.Callout class to add individual callouts to your map.  See the [Markers](http://humangeo.github.com/leaflet-dvf/examples/html/markers.html) example for an illustration of callouts.
 
@@ -106,6 +110,7 @@ Lines:
 
 In Progress:
 * [Sparklines](http://humangeo.github.com/leaflet-dvf/examples/html/sparklines.html) *NOTE:  This is a work in progress.  The code is incomplete and can be found in src/leaflet.dvf.experimental.js*
+* [Run Map](http://humangeo.github.com/leaflet-dvf/examples/html/runmap.html) *NOTE:  This is a work in progress.  Illustrates using a WeightedPolyline to show variations in GPS data*
 
 Tutorials coming soon to [HumanGeo](http://www.thehumangeo.com/)'s [blog](http://blog.thehumangeo.com)
 
@@ -146,6 +151,43 @@ var layer = new <Leaflet Path-based Layer (e.g. L.Polygon)>(<Constructor inputs>
 });
 
 ```
+
+#### Options
+Option | Type | Default | Description
+--- | --- | --- | ---
+gradient | Boolean OR Object | differs depending on the layer class (most new marker types use a gradient by default) | Specifying a value of true will fill the path with a gradient from white to the specified fillColor (top left - bottom right)
+dropShadow | Boolean | false | Specifying a value of true will add a dropShadow to the path
+
+#### gradient Property Options
+Option | Type | Default | Description
+--- | --- | --- | ---
+vector | Array | [['0%', '0%'], ['100%', '100%']] | an array consisting of a start and end point that defines the direction of the gradient.  Each start and end point is an array of x and y values. Where x and y values can be percentage strings (e.g. '100%') or numbers defining an absolute position
+stops | Array | | an array of stop objects defining the colors to be used in the gradient.  Each stop object has offset and style properties.  See below.
+
+#### stop Options
+Option | Type | Default | Description
+--- | --- | --- | ---
+offset | String OR Number |  | The position along the gradient at which to apply the given color/opacity
+style | Object | { opacity: 1, color: <fillColor OR color>} | an object with color and opacity properties defining the color and opacity to be used in the given stop.  If you omit the color, the Path's fillColor or color will be used automatically.
+
+> You can also add text to any Path based item by passing in the a text option as part of the normal style options
+
+#### Usage
+```javascript
+var layer = new <Leaflet Path-based Layer (e.g. L.Polygon)>(<Constructor inputs>, {
+	// L.Path style options
+	...
+	text: {
+		text: <Text to display>,
+		attr: {<Object of key/value pairs defining SVG element attributes to apply to the text element>},
+		style: {<Object of key/value pairs defining style properties to apply to the text element},
+		path: {
+			startOffset: <percentage or absolute position along the path where text should start>,
+			attr: {},
+			style: {}
+		}
+	}
+});
 
 #### Options
 Option | Type | Default | Description
@@ -492,7 +534,7 @@ var colorFunction = new L.PiecewiseFunction([whiteToYellow, yellowToRed]);
 
 ### L.DataLayer
 
-> Display data values using L.RegularPolygonMarker instances.  In thematic mapping, this class displays data using proportional symbols.  
+> Display data values using L.RegularPolygonMarker instances.  To override the default marker behavior, use the getMarker option or inherit from DataLayer and override _getMarker.  In thematic mapping, this class displays data using proportional symbols.  
 >
 > *NOTE:  If the location features are lines/polygons (e.g. GeoJSON), this class will use the centroid of each line/polygon to place each marker.  When dealing with line/polygon features, you must include a reference to the [JavaScript Topology Suite (JSTS) JS files](https://github.com/bjornharrtell/jsts/tree/master/lib).  These files are used to calculate centroids.  If these files are not included, the DataLayer class will fallback to using the center of the bounds of the layer's geometry.*
 
@@ -517,6 +559,7 @@ getLocation | Function | null | A function for getting a custom location from a 
 locationLookup | Object (GeoJSON FeatureCollection) | null | A GeoJSON FeatureCollection that will be used to lookup the location associated with a given record. This is useful when you have some data that maps to political/statistical boundaries other than US states or countries.  *NOTE: Use with 'lookup locationMode*
 includeBoundary | Boolean | null | true/false - whether or not the boundary polygon should be displayed when displaying proportional symbols.  This is useful for identifying the boundary associated with each symbol.
 boundaryStyle | Object | null | Path style options used for specifying how the boundary associated with the point will be displayed
+getMarker | Function | null | A function for overriding the default marker that gets placed at each location.  The function takes a latlng and options as parameters.
 
 #### Referencing Data Properties
 

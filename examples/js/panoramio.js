@@ -1,6 +1,6 @@
-var map;
 
 $(document).ready(function() {
+	var map;
 
 	// Function for resizing the map to fill the available space on the screen
 	var resize = function () {

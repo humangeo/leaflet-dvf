@@ -1,4 +1,4 @@
-var map;
+map = null;
 var lastWeatherLayer;
 
 /*

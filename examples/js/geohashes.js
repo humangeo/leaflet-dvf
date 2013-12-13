@@ -1,6 +1,7 @@
-var map;
 
 $(document).ready(function() {
+	var map;
+
 	// create a map in the "map" div, set the view to a given place and zoom
 	map = L.map('map').setView([0.0, 0.0], 2);
 	

@@ -83,10 +83,10 @@
 	<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
 	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
 	<script type="text/javascript">
-var map;
-var legendControl;
 
 $(document).ready(function() {
+	var map;
+	var legendControl;
 
 	// Function for resizing the map to fill the available space on the screen
 	var resize = function () {
@@ -119,11 +119,11 @@ $(document).ready(function() {
 	
 	legendControl.addTo(map);
 	
-	var layerControl = new L.Control.Layers({
-		'Stamen Toner': baseLayer
-	});
+	//var layerControl = new L.Control.Layers({
+	//	'Stamen Toner': baseLayer
+	//});
 	
-	layerControl.addTo(map);
+	//layerControl.addTo(map);
 	
 	var data = {
   "gpx": {
@@ -791,6 +791,12 @@ $(document).ready(function() {
     ]
   }
 };
+	
+	var colors = new L.CustomColorFunction(0, 15.02968, [[247, 252, 240], [ 224, 243, 219], [ 204, 235, 197], [ 168, 221, 181], [ 123, 204, 196], [ 78, 179, 211], [ 43, 140, 190], [ 8, 104, 172], [ 8, 64, 129] ], {
+		interpolate: true
+	});
+
+	/*
 	var dataLayer = new L.FlowLine(data, {
 		recordsField: 'gpx.wpt',
 		locationMode: L.LocationModes.LATLNG,
@@ -803,19 +809,33 @@ $(document).ready(function() {
 		displayOptions: {
 			ele: {
 				displayName: 'Elevation',
-				weight: new L.LinearFunction([0, 3], [16, 20]),
-				color: new L.HSLHueFunction([0, 120], [16, -30])
+				weight: new L.LinearFunction([0, 3], [15.02968, 20]),
+				color: colors //new L.HSLHueFunction([0, 120], [16, -30])
 			}
 		},
 		layerOptions: {
-			opacity: 0.9
+			opacity: 1.0
 		}
 	});
 	
 	// Add the data layer to the map
 	map.addLayer(dataLayer);
+	*/
 	
-	var weightedPolylineTest = new L.WeightedPolyline([new L.LatLng(0, 0), new L.LatLng(0, 5), new L.LatLng(0, 7), new L.LatLng(0, 10), new L.LatLng(0, 20)], {
+	var runData = [];
+	var wpts = data.gpx.wpt
+	for (var i = 0; i < wpts.length; ++i) {
+		var wpt = wpts[i];
+		var latlng = new L.LatLng(wpt.lat, wpt.lon);
+		
+		latlng.weight = wpt.ele * 2;
+		
+		console.log(wpt.ele);
+		
+		runData.push(latlng);
+	}
+	
+	var weightedPolylineTest = new L.WeightedPolyline(runData, {
 		fill: true,
 		fillColor: '#0033ff',
 		fillOpacity: 1,

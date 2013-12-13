@@ -732,6 +732,263 @@ L.AnimationUtils = {
  * Adapted from:  http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
  * These functions will be used to provide backwards compatibility with browsers that don't support hsl 
  */
+L.Color = L.Class.extend({
+	initialize: function (colorDef) {
+		this._rgb = [0, 0, 0];
+		this._hsl = [0, 1, 0.5];
+		this._a = 1.0;
+		
+		if (colorDef) {
+			this.parseColorDef(colorDef);
+		}
+	},
+	
+	parseColorDef: function (colorDef) {
+		// Override in inheriting classes
+	},
+	
+	/**
+	 * Converts an RGB color value to HSL. Conversion formula
+	 * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+	 * Assumes r, g, and b are contained in the set [0, 255] and
+	 * returns h, s, and l in the set [0, 1].
+	 *
+	 * @param   Number  r       The red color value
+	 * @param   Number  g       The green color value
+	 * @param   Number  b       The blue color value
+	 * @return  Array           The HSL representation
+	 */
+	rgbToHSL: function(r, g, b){
+	    r /= 255, g /= 255, b /= 255;
+	    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+	    var h, s, l = (max + min) / 2;
+
+	    if(max == min){
+	        h = s = 0; // achromatic
+	    }else{
+	        var d = max - min;
+	        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+	        switch(max){
+	            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+	            case g: h = (b - r) / d + 2; break;
+	            case b: h = (r - g) / d + 4; break;
+	        }
+	        h /= 6;
+	    }
+
+	    return [h, s, l];
+	},
+	
+	/**
+	 * Converts an HSL color value to RGB. Conversion formula
+	 * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+	 * Assumes h, s, and l are contained in the set [0, 1] and
+	 * returns r, g, and b in the set [0, 255].
+	 *
+	 * @param   Number  h       The hue
+	 * @param   Number  s       The saturation
+	 * @param   Number  l       The lightness
+	 * @return  Array           The RGB representation
+	 */
+	hslToRGB: function(h, s, l){
+	    var r, g, b;
+
+	    if(s == 0){
+	        r = g = b = l; // achromatic
+	    }else{
+	        function hue2rgb(p, q, t){
+	            if(t < 0) t += 1;
+	            if(t > 1) t -= 1;
+	            if(t < 1/6) return p + (q - p) * 6 * t;
+	            if(t < 1/2) return q;
+	            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+	            return p;
+	        }
+
+	        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+	        var p = 2 * l - q;
+	        r = hue2rgb(p, q, h + 1/3);
+	        g = hue2rgb(p, q, h);
+	        b = hue2rgb(p, q, h - 1/3);
+	    }
+
+	    return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
+	},
+
+	setRGB: function (r, g, b) {
+		this._rgb = [r, g, b];
+		
+		this._hsl = this.rgbToHSL(r, g, b);
+		
+		return this;
+	},
+	
+	setHSL: function (h, s, l) {
+		this._hsl = [h, s, l];
+		
+		this._rgb = this.hslToRGB(h, s, l);
+		
+		return this;
+	},
+	
+	toHSL: function () {
+		// Return HSL components
+		return this._hsl;
+	},
+	
+	toHSLString: function () {
+		// Return HSL string
+		var prefix = 'hsl';
+		
+		if (this._a < 1.0) {
+			prefix += 'a';
+		}
+		
+		return prefix + '(' + (this._hsl[0] * 360).toFixed(1) + ',' + (this._hsl[1] * 100).toFixed(0) + '%,' + (this._hsl[2] * 100).toFixed(0) + '%)';
+	},
+	
+	toRGB: function () {
+		// Return RGB components
+		return this._rgb;
+	},
+	
+	toRGBString: function () {
+		// Return RGB string
+		var rgbString;
+		
+		if (this._a < 1.0) {
+			rgbString = 'rgba(' + this._rgb[0].toFixed(0) + ',' + this._rgb[1].toFixed(0) + ',' + this._rgb[2].toFixed(0) + ',' + this._a.toFixed(1) + ')';
+		}
+		else {
+			var parts = [this._rgb[0].toString(16), this._rgb[1].toString(16), this._rgb[2].toString(16)];
+
+			for (var i = 0; i < parts.length; ++i) {
+				if (parts[i].length === 1) {
+					parts[i] = '0' + parts[i];
+				}	
+			}
+			
+			rgbString = '#' +  parts.join('');
+		}
+		
+		return rgbString;
+	},
+	
+	r: function (newR) {
+		if (!arguments.length) return this._rgb[0];
+    	this.setRGB(newR, this._rgb[1], this._rgb[2]);
+	},
+	
+	g: function (newG) {
+		if (!arguments.length) return this._rgb[1];
+    	this.setRGB(this._rgb[0], newG, this._rgb[2]);
+	},
+	
+	b: function (newB) {
+		if (!arguments.length) return this._rgb[2];
+    	this.setRGB(this._rgb[0], this._rgb[1], newB);
+	},
+	
+	h: function (newH) {
+		if (!arguments.length) return this._hsl[0];
+    	this.setHSL(newH, this._hsl[1], this._hsl[2]);
+	},
+	
+	s: function (newS) {
+		if (!arguments.length) return this._hsl[1];
+    	this.setHSL(this._hsl[0], newS, this._hsl[2]);
+	},
+	
+	l: function (newL) {
+		if (!arguments.length) return this._hsl[2];
+    	this.setHSL(this._hsl[0], this._hsl[1], newL);
+	},
+});
+
+L.RGBColor = L.Color.extend({
+	initialize: function (colorDef) {
+		L.Color.prototype.initialize.call(this, colorDef);
+	},
+	
+	parseColorDef: function (colorDef) {
+		var isArray = colorDef instanceof Array;
+		var isHex = colorDef.indexOf('#') === 0;
+		var parts = [];
+		var rgb = [];
+		var r, g, b, a;
+		
+		if (isArray) {
+			r = Math.floor(colorDef[0]);
+			g = Math.floor(colorDef[1]);
+			b = Math.floor(colorDef[2]);
+			
+			a = colorDef.length === 4 ? colorDef[3] : 1.0; 
+		}
+		else if (isHex) {
+			colorDef = colorDef.replace('#','');
+		
+			r = parseInt(colorDef.substring(0, 2), 16);
+			g = parseInt(colorDef.substring(2, 4), 16);
+			b = parseInt(colorDef.substring(4, 6), 16);
+		
+			a = colorDef.length === 8 ? parseInt(colorDef.substring(6, 8), 16) : 1.0;
+		}
+		else {
+			parts = colorDef.replace('rgb','').replace('a','').replace(/\s+/g,'').replace('(','').replace(')','').split(',');
+		
+			r = parseInt(parts[0]);
+			g = parseInt(parts[1]);
+			b = parseInt(parts[2]);
+			
+			a = parts.length === 4 ? parseInt(parts[3]) : 1.0;
+		}
+		
+		this.setRGB(r, g, b);
+		this._a = a;
+	}
+});
+
+L.rgbColor = function (colorDef) {
+	return new L.RGBColor(colorDef);
+};
+
+L.HSLColor = L.Color.extend({
+	initialize: function (colorDef) {
+		L.Color.prototype.initialize.call(this, colorDef);
+	},
+	
+	parseColorDef: function (colorDef) {
+		// Could be a string or an array
+		var isArray = colorDef instanceof Array;
+		var h, s, l, a;
+		
+		if (isArray) {
+			h = colorDef[0];
+			s = colorDef[1];
+			l = colorDef[2];
+			
+			a = colorDef.length === 4 ? colorDef[3] : 1.0;
+		}
+		else {
+			var parts = colorDef.replace('hsl','').replace('a','').replace('(','').replace(/\s+/g,'').replace(/%/g,'').replace(')','').split(',');
+		
+			h = Number(parts[0])/360;
+			s = Number(parts[1])/100;
+			l = Number(parts[2])/100;
+			
+			a = parts.length === 4 ? parseInt(parts[3]) : 1.0;
+		}
+		
+		this.setHSL(h, s, l);
+		this._a = a;
+	}
+});
+
+L.hslColor = function (colorDef) {
+	return new L.HSLColor(colorDef);
+};
+
+// TODO:  Replace this with the color classes above
 L.ColorUtils = {	
 	rgbArrayToString: function (rgbArray) {
 		var hexValues = []
@@ -881,6 +1138,29 @@ L.ColorUtils = {
 
 	    return [r * 255, g * 255, b * 255];
 	}
+};
+
+L.ColorUtils.rgbStringToRgb = function (rgbString) {
+	var isHex = rgbString.indexOf('#') === 0;
+	var parts = [];
+	var rgb = [];
+	
+	if (isHex) {
+		rgbString = rgbString.replace('#','');
+		
+		r = rgbString.substring(0, 2);
+		g = rgbString.substring(2, 4);
+		b = rgbString.substring(4, 6);
+		
+		rgb = [r, g, b];
+	}
+	else {
+		parts = rgbString.replace('rgb(','').replace(')','').split(',');
+		
+		rgb = parts;
+	}
+	
+	return rgb;
 };
 
 L.ColorUtils.hslToRgbString = function (h, s, l) {

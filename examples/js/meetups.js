@@ -1,7 +1,7 @@
-var lastMeetupLayer;
-var map;
 
 $(document).ready(function() {
+	var lastMeetupLayer;
+	var map;
 
 	map = L.map('map').setView([0.0, 0.0], 2);
 	

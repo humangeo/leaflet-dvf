@@ -204,9 +204,10 @@ L.Callout = L.LayerGroup.extend({
 				rotation: rotation,
 				fillColor: this.options.fillColor,
 				color: this.options.color,
-				weight: 1,
-				opacity: 1,
-				fillOpacity: 1,
+				gradient: this.options.gradient,
+				weight: this.options.weight,
+				opacity: this.options.opacity,
+				fillOpacity: this.options.fillOpacity,
 				radius: radius,
 				lineCap: 'butt',
 				lineJoin: 'miter'
@@ -329,16 +330,24 @@ L.FlowLine = L.FlowLine.extend({
 				from: value1,
 				to: value2,
 				change: change,
-				percentChange: percentChange,
-				changeOverTime: change/deltas.time
+				percentChange: percentChange
 			};
+			
+			if (deltas.time) {
+				deltas[key].changeOverTime = change/deltas.time;
+			}
 		}
 		
 		var latlngs = line.getLatLngs();
 		var distance = latlngs[0].distanceTo(latlngs[1]);
+		var velocity;
+		
+		if (deltas.time) {
+			velocity = distance/(deltas.time * 1000);	
+		}
 		
 		if (this.options.onEachSegment) {
-			this.options.onEachSegment.call(this, record1, record2, line, deltas, distance);
+			this.options.onEachSegment.call(this, record1, record2, line, deltas, distance, velocity);
 		}
 	},
 	
@@ -413,9 +422,11 @@ L.arcedFlowLine = function (data, options) {
 };
 
 /*
- *
+ * Custom arced polyline implementation.  Draws segments as arcs rather than straight lines.
  */
 L.ArcedPolyline = L.Path.extend({
+	includes: TextFunctions,
+	
 	initialize: function (latlngs, options) {
 		L.Path.prototype.initialize.call(this, options);
 		this._latlngs = latlngs;

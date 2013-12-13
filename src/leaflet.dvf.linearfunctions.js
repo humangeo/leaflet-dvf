@@ -133,10 +133,26 @@ L.LinearFunction = L.Class.extend({
 		}
 		
 		return points;
+	},
+	
+	getIntersectionPoint: function (otherFunction) {
+		var point = null;
+		
+		if (this._slope !== otherFunction._slope) {
+			var x = (this._b - otherFunction._b)/(otherFunction._slope - this._slope)
+			var y = this.evaluate(x);
+			
+			point = new L.Point(x, y);
+		}
+		
+		return point;
 	}
+	
 });
 
-
+/*
+ * A linear function that outputs a color value - used to vary color proportionally to some data property value
+ */
 L.ColorFunction = L.LinearFunction.extend({
 	options: {
 		alpha: 1.0,
@@ -284,32 +300,25 @@ L.RGBGreenFunction = L.LinearFunction.extend({
 });
 
 /*
- * Produces a gradient between two RGB colors.  The colors are specified rgb arrays (e.g. [255, 0, 255])
+ * Produces a gradient between two RGB colors.  The colors are specified as rgb arrays (e.g. [255, 0, 255]) or rgb strings
  */
 L.RGBColorBlendFunction = L.LinearFunction.extend({
 	initialize: function (minX, maxX, rgbMinColor, rgbMaxColor) {
-		var red1 = rgbMinColor[0];
-		var red2 = rgbMaxColor[0];
-		var green1 = rgbMinColor[1];
-		var green2 = rgbMaxColor[1];
-		var blue1 = rgbMinColor[2];
-		var blue2 = rgbMaxColor[2];
-		
-		var postProcess = function (y) {
-			return y.toFixed(0);
-		}
+		rgbMinColor = new L.RGBColor(rgbMinColor);
+		rgbMaxColor = new L.RGBColor(rgbMaxColor);
+		var red1 = rgbMinColor.r();
+		var red2 = rgbMaxColor.r();
+		var green1 = rgbMinColor.g();
+		var green2 = rgbMaxColor.g();
+		var blue1 = rgbMinColor.b();
+		var blue2 = rgbMaxColor.b();
 		
 		this._minX = minX;
 		this._maxX = maxX;
-		this._redFunction = new L.LinearFunction(new L.Point(minX, red1), new L.Point(maxX, red2), {
-			postProcess: postProcess
-		});
-		this._greenFunction = new L.LinearFunction(new L.Point(minX, green1), new L.Point(maxX, green2),{
-			postProcess: postProcess
-		});
-		this._blueFunction = new L.LinearFunction(new L.Point(minX, blue1), new L.Point(maxX, blue2), {
-			postProcess: postProcess
-		});
+		
+		this._redFunction = new L.LinearFunction(new L.Point(minX, red1), new L.Point(maxX, red2));
+		this._greenFunction = new L.LinearFunction(new L.Point(minX, green1), new L.Point(maxX, green2));
+		this._blueFunction = new L.LinearFunction(new L.Point(minX, blue1), new L.Point(maxX, blue2));
 	},
 	
 	getBounds: function () {
@@ -324,7 +333,7 @@ L.RGBColorBlendFunction = L.LinearFunction.extend({
 	},
 	
 	evaluate: function (x) {
-		return 'rgb(' + [this._redFunction.evaluate(x), this._greenFunction.evaluate(x), this._blueFunction.evaluate(x)].join(',') + ')';
+		return new L.RGBColor([this._redFunction.evaluate(x), this._greenFunction.evaluate(x), this._blueFunction.evaluate(x)]).toRGBString();
 	}
 });
 
@@ -386,6 +395,48 @@ L.HSLLuminosityFunction = L.LinearFunction.extend({
 		};
 		
 		this._dynamicPart = 'outputLuminosity';
+	}
+});
+
+/*
+ * Produces a gradient between two HSL colors
+ */
+L.HSLColorBlendFunction = L.LinearFunction.extend({
+	initialize: function (minX, maxX, hslMinColor, hslMaxColor) {
+		hslMinColor = new L.HSLColor(hslMinColor);
+		hslMaxColor = new L.HSLColor(hslMaxColor);
+		var h1 = hslMinColor.h();
+		var h2 = hslMaxColor.h();
+		var s1 = hslMinColor.s();
+		var s2 = hslMaxColor.s();
+		var l1 = hslMinColor.l();
+		var l2 = hslMaxColor.l();
+		
+		var postProcess = function (y) {
+			return y.toFixed(2);
+		}
+		
+		this._minX = minX;
+		this._maxX = maxX;
+		
+		this._hueFunction = new L.LinearFunction(new L.Point(minX, h1), new L.Point(maxX, h2));
+		this._saturationFunction = new L.LinearFunction(new L.Point(minX, s1), new L.Point(maxX, s2));
+		this._luminosityFunction = new L.LinearFunction(new L.Point(minX, l1), new L.Point(maxX, l2));
+	},
+	
+	getBounds: function () {
+		var hBounds = this._hueFunction.getBounds();
+		var sBounds = this._saturationFunction.getBounds();
+		var lBounds = this._luminosityFunction.getBounds();
+		
+		var minY = Math.min(hBounds[0].y, sBounds[0].y, lBounds[0].y);
+		var maxY = Math.max(hBounds[0].y, sBounds[0].y, lBounds[0].y);
+		
+		return [new L.Point(hBounds[0].x, minY), new L.Point(hBounds[1].x, maxY)];
+	},
+	
+	evaluate: function (x) {
+		return new L.HSLColor([this._hueFunction.evaluate(x), this._saturationFunction.evaluate(x), this._luminosityFunction.evaluate(x)]).toHSLString();
 	}
 });
 
@@ -456,6 +507,31 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 		return y;
 	}
 });
+
+L.CustomColorFunction = L.PiecewiseFunction.extend({
+	options: {
+		interpolate: true
+	},
+	
+	initialize: function (minX, maxX, colors, options) {
+		var range = maxX - minX;
+		var xRange = range/(colors.length - 1);
+		var functions = [];
+		var colorFunction;
+		
+		L.Util.setOptions(this, options);
+		
+		for (var i = 0; i < colors.length; ++i) {
+			var next = Math.min(i + 1, colors.length - 1);
+			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+			
+			functions.push(colorFunction);	
+		}
+		
+		L.PiecewiseFunction.prototype.initialize.call(this, functions);
+	}
+});
+
 
 L.CategoryFunction = L.Class.extend({
 	initialize: function (categoryMap, options) {

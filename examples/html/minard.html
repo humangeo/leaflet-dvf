@@ -87,11 +87,12 @@
 	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
 	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
 	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
+	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 	<script type="text/javascript">
-	var map;
 
 $(document).ready(function() {
+	var map;
+
 	var resize = function () {
 		var $map = $('#map');
 		
@@ -639,7 +640,7 @@ $(document).ready(function() {
 			numberOfSides: 50,
 			weight: 0.5,
 			fillOpacity: 0.8
-		},
+		},		
 		legendOptions: {
 			width: 250,
 			numSegments: 7

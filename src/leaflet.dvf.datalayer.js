@@ -1,7 +1,11 @@
 /*
- * 
+ * Various modes in which location information can be encoded
  */
 L.LocationModes = {
+
+	/*
+	 * Each record contains latitude and longitude fields
+	 */
 	LATLNG: function (record, index) {
 		var latitude = L.Util.getFieldValue(record, this.options.latitudeField);
 		var longitude = L.Util.getFieldValue(record, this.options.longitudeField);
@@ -38,6 +42,10 @@ L.LocationModes = {
 
 		return location;
 	},
+	
+	/*
+	 * Each record contains a field with a geohash value
+	 */
 	GEOHASH: function (record, index) {
 		var geohash = this.options.geohashField ? L.Util.getFieldValue(record, this.options.geohashField) : index;
 		var locationInfo = decodeGeoHash(geohash);
@@ -53,6 +61,10 @@ L.LocationModes = {
 			center: bounds.getCenter()
 		};
 	},
+	
+	/*
+	 * Each record contains a reference to a country - Lookup by a number of different country code designations
+	 */
 	COUNTRY: function (record, index) {
 		var code = this.options.codeField ? L.Util.getFieldValue(record, this.options.codeField) : index;
 		var geoJSON;
@@ -67,8 +79,12 @@ L.LocationModes = {
 		
 		code = originalCode;
 		
+		// Is this a G & W number?
 		var gwNo = originalCode in gwNoLookup;
 		
+		// If it's a G & W number, then find the associated country, otherwise
+		// check if it's an ISO 2 or 3 digit code and get the associated 3 digit identifier
+		// to lookup the polygon associated with the country
 		if (gwNo) {
 			code = gwNoLookup[originalCode] || code;
 		}
@@ -79,6 +95,7 @@ L.LocationModes = {
 			code = codeLookup[originalCode] || code;
 		}
 		
+		// If there's a code available, then try to get the associated polygon
 		if (code) {
 			geoJSON = countries[code];
 			centroid = countryCentroids[code];
@@ -87,6 +104,7 @@ L.LocationModes = {
 			console.log('Code not found: ' + originalCode);
 		}
 		
+		// Create a new GeoJSON layer from the polygon definition
 		var geoJSONLayer = new L.GeoJSON(geoJSON);
 		
 		return {
@@ -96,6 +114,10 @@ L.LocationModes = {
 		};
 
 	},
+	
+	/*
+	 * Each record contains a reference to a US State - Lookup by 2 digit state code
+	 */
 	STATE: function (record, index) {
 		var code = this.options.codeField ? L.Util.getFieldValue(record, this.options.codeField) : index;
 		var geoJSON;
@@ -117,6 +139,10 @@ L.LocationModes = {
 			center: centroid
 		};
 	},
+	
+	/*
+	 * Each record contains a field with a GeoJSON geometry
+	 */
 	GEOJSON: function (record, index) {
 		var locationField = this.options.geoJSONField;
 
@@ -134,6 +160,10 @@ L.LocationModes = {
 		
 		return location;
 	},
+	
+	/*
+	 * Each record contains a field with a custom code - Use a custom lookup to find an associated GeoJSON geometry
+	 */
 	LOOKUP: function (record, index) {
 		var code = this.options.codeField ? L.Util.getFieldValue(record, this.options.codeField) : index;
 
@@ -153,6 +183,11 @@ L.LocationModes = {
 		
 		return location;
 	},
+	
+	/*
+	 * In this case, an optional getLocation method is provided and called in order to determine
+	 * the location associated with a record
+	 */
 	CUSTOM: function (record, index) {
 		var locationField = this.options.codeField;
 		var fieldValue = L.Util.getFieldValue(record, locationField);
@@ -176,7 +211,8 @@ L.LocationModes = {
 };
 
 /*
- * 
+ * A generic layer class for parsing any JSON based data structure and plotting locations on a map.  This is somewhat
+ * analogous to the L.GeoJSON class, but has generalized to support JSON structures beyond GeoJSON
  */
 L.DataLayer = L.LayerGroup.extend({
 	
@@ -187,9 +223,12 @@ L.DataLayer = L.LayerGroup.extend({
 		
 		data = data || {};
 		
+		this._includeFunction = this.options.filter || this.options.includeLayer;
+		this._markerFunction = this.options.getMarker || this._getMarker;
+
 		this._boundaryLayer = new L.LayerGroup();
 		this.addLayer(this._boundaryLayer);
-		
+	
 		this.addData(data);
 	},
 	
@@ -326,9 +365,10 @@ L.DataLayer = L.LayerGroup.extend({
 				
 		location = this._processLocation(location);
 		
-		return this._getMarker(location, options, record);
+		return this._markerFunction.call(this, location, options, record);
 	},
 	
+	// Can be overridden by specifying a getMarker option
 	_getMarker: function (location, options, record) {
 		var marker;
 		
@@ -355,9 +395,6 @@ L.DataLayer = L.LayerGroup.extend({
 	
 	_loadRecords: function (records) {
 		var location;
-		var includeFunction = this.options.filter || this.options.includeLayer;
-		
-		this._includeFunction = includeFunction;
 		
 		records = this._preProcessRecords(records);
 							
@@ -365,7 +402,7 @@ L.DataLayer = L.LayerGroup.extend({
 			if (records.hasOwnProperty(recordIndex)) {
 				var record = records[recordIndex];
 
-				var includeLayer = includeFunction ? includeFunction.call(this, record) : true;
+				var includeLayer = this._shouldLoadRecord(record);
 				
 				if (includeLayer) {
 					location = this._getLocation(record, recordIndex);
@@ -591,7 +628,7 @@ L.DataLayer = L.LayerGroup.extend({
 					for (var layerProperty in propertyOptions) {
 						valueFunction = propertyOptions[layerProperty];
 						
-						layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : (valueFunction.call ? valueFunction.call(fieldValue) : valueFunction);
+						layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : (valueFunction.call ? valueFunction.call(this, fieldValue) : valueFunction);
 					}
 				}
 			}
@@ -609,10 +646,9 @@ L.DataLayer = L.LayerGroup.extend({
 		var displayOptions = this.options.displayOptions;
 		var legendDetails = {};
 		var includeLayer = true;
-		var includeFunction = this.options.filter || this.options.includeLayer;
 		
-		if (includeFunction) {
-			includeLayer = includeFunction.call(this, record);
+		if (this._includeFunction) {
+			includeLayer = this._includeFunction.call(this, record);
 		}
 
 		if (includeLayer) {
@@ -632,7 +668,7 @@ L.DataLayer = L.LayerGroup.extend({
 					}
 				
 					if (this.options.onEachRecord) {
-						this.options.onEachRecord.call(this, layer, record, this);
+						this.options.onEachRecord.call(this, layer, record, location, this);
 					}
 				}
 			}
@@ -1204,17 +1240,21 @@ L.ChoroplethDataLayer = L.DataLayer.extend({
 			weight: 1,
 			color: '#000'
 		},
-		maxZoom: 12,
+		maxZoom: 16,
 		backgroundLayer: true
 	},
 	
 	_getLayer: function (location, layerOptions, record) {
 	
 		if (location.location instanceof L.LatLng) {
-			location.location = this._getMarker(location.location, layerOptions, record);
+			location.location = this._markerFunction.call(this, location.location, layerOptions, record);
 		}
 		
 		if (location.location.setStyle) {
+		
+			// Don't apply gradient property to lines, since this will cause the line to be filled
+			layerOptions.gradient = location.location instanceof L.Polyline ? false : layerOptions.gradient;
+			
 			location.location.setStyle(layerOptions);
 		}
 		

@@ -1,4 +1,4 @@
-var map;
+map = null;
 var lastLayer;
 var legendControl;
 
@@ -9,7 +9,7 @@ var eqfeed_callback = function (data) {
 	// Color scale - green to red using the basic HSLHueFunction
 	var magnitudeColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '25%'});
 	var magnitudeFillColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '50%'});
-	var magnitudeRadiusFunction = new L.LinearFunction(new L.Point(0,5), new L.Point(10,25));
+	var magnitudeRadiusFunction = new L.LinearFunction(new L.Point(0,10), new L.Point(10,30));
 
 	// Color scale - white to orange to red using a PiecewiseFunction
 	// NOTE:  Uncomment these lines to see the difference
@@ -30,6 +30,16 @@ var eqfeed_callback = function (data) {
 
 	// Initialize a linear function to map earthquake time to opacity
 	var timeOpacityFunction = new L.LinearFunction(new L.Point(start,0.3), new L.Point(now,1));
+	var fontSizeFunction = new L.LinearFunction(new L.Point(0,8), new L.Point(10,24));
+	
+	var textFunction = function (value) {
+		return {
+			text: value,
+			style: {
+				'font-size': fontSizeFunction.evaluate(value)
+			}
+		};
+	};
 	
 	// Setup a new data layer
 	var dataLayer = new L.DataLayer(data,{
@@ -42,7 +52,8 @@ var eqfeed_callback = function (data) {
 				displayName: 'Magnitude',
 				color: magnitudeColorFunction,
 				fillColor: magnitudeFillColorFunction,
-				radius: magnitudeRadiusFunction
+				radius: magnitudeRadiusFunction,
+				text: textFunction
 			},
 			'properties.time': {
 				displayName: 'Time',
@@ -60,15 +71,33 @@ var eqfeed_callback = function (data) {
 			color: '#000',
 			opacity: 0.2,
 			fillOpacity: 0.7,
-			dropShadow: true
+			dropShadow: true,
+			gradient: true,
+			text: {
+				text: 'Test'
+			}
 		},
 		tooltipOptions: {
 			iconSize: new L.Point(90,76),
 			iconAnchor: new L.Point(-4,76)
 		},
-		onEachRecord: function (layer,record) {
+		onEachRecord: function (layer, record, location) {
 			var $html = L.HTMLUtils.buildTable(record);
+			var magString = record.properties.mag.toFixed(1);
+			var numChars = magString.length;
+			var fontSize = fontSizeFunction.evaluate(record.properties.mag);
 			
+			/*
+			this.addLayer(new L.Marker(location.location, {
+				icon: new L.DivIcon({
+					html: '<div class="mag-value" style="font-size: ' + fontSize + 'px; line-height: ' + fontSize + 'px;">' + magString + '</div>',
+					className: 'mag-text',
+					iconSize: new L.Point(numChars * fontSize, fontSize)
+				}),
+				
+			}));
+			*/
+				    				
 			layer.bindPopup($html.wrap('<div/>').parent().html(),{
 				minWidth: 400,
 				maxWidth: 400

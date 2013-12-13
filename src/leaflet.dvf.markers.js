@@ -1,3 +1,6 @@
+/*
+ * Functions that support displaying text on an SVG path
+ */
 var TextFunctions = TextFunctions || {
 	__updatePath: L.Path.prototype._updatePath,
 	
@@ -133,6 +136,9 @@ var TextFunctions = TextFunctions || {
 	}
 };
 
+/*
+ * Functions that support additions to the basic SVG Path features provided by Leaflet
+ */
 var PathFunctions = PathFunctions || {
 	__updateStyle: L.Path.prototype._updateStyle,
 	
@@ -153,6 +159,7 @@ var PathFunctions = PathFunctions || {
 		
 		var gradient = this._createElement('linearGradient');
 		var gradientGuid = L.Util.guid();
+		this._gradientGuid = gradientGuid;
 		
 		options = options !== true ? $.extend(true, {}, options) : {};
 		
@@ -276,13 +283,49 @@ var PathFunctions = PathFunctions || {
 		for (var key in blendOptions) {
 			feBlend.setAttribute(key, blendOptions[key]);
 		}
-		
+
 		filter.appendChild(feOffset);
 		filter.appendChild(feGaussianBlur);
 		filter.appendChild(feBlend);
 		
 		this._dropShadow = filter;
 		this._defs.appendChild(filter);
+	},
+
+	// Added for image circle
+	_createCircleImage: function (imageUrl,imageSize) {
+
+		var patternGuid = L.Util.guid();
+
+		var imgSize = this.options.radius + 12;
+		var circleSize = this.options.radius -5 ;
+
+		var circle = this._createElement('circle');
+		circle.setAttribute('fill','url(#'+patternGuid+')');
+		circle.setAttribute('cx',0);
+		circle.setAttribute('cy',0);
+		circle.setAttribute('r',circleSize);
+
+		var pattern = this._createElement('pattern');
+		pattern.setAttribute('id',patternGuid);
+		pattern.setAttribute('patternUnits','objectBoundingBox');
+		pattern.setAttribute('height',imgSize);
+		pattern.setAttribute('width',imgSize);
+		pattern.setAttribute('x',0);
+		pattern.setAttribute('y',0);
+
+		var image = this._createElement('image');
+		image.setAttribute('width',imgSize);
+		image.setAttribute('height',imgSize);
+		image.setAttribute('x',0);
+		image.setAttribute('y',0);
+        image.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', imageUrl);
+
+		pattern.appendChild(image);
+		this._defs.appendChild(pattern);
+		this._container.insertBefore(circle,this._defs);
+
+		this._circle = circle;
 	},
 	
 	_updateStyle: function () {
@@ -315,10 +358,12 @@ var PathFunctions = PathFunctions || {
 		else {
 			this._path.removeAttribute('filter');
 		}
-		
-		if (this.options.transform) {
-			this._path.setAttribute('transform', this.options.transform);
+
+		// Added for image circle
+		if (this.options.imageCircleUrl) {
+			this._createCircleImage(this.options.imageCircleUrl);
 		}
+
 	}
 
 };
@@ -329,6 +374,7 @@ var LineTextFunctions = $.extend(true, {}, TextFunctions);
 LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
 
 // Pulled from the Leaflet discussion here:  https://github.com/Leaflet/Leaflet/pull/1586
+// This is useful for getting a centroid/anchor point for centering text or other SVG markup
 LineTextFunctions.getCenter = function () {
 		var latlngs = this._latlngs,
 				len = latlngs.length,
@@ -373,7 +419,6 @@ L.MapMarker = L.Path.extend({
 	
 	initialize: function (centerLatLng, options) {
 		L.Path.prototype.initialize.call(this, options);
-		
 		this._latlng = centerLatLng;
 	},
 
@@ -427,6 +472,13 @@ L.MapMarker = L.Path.extend({
 	},
 
 	getPathString: function () {
+
+		// Added for image circle
+		if (this._circle) {
+			this._circle.setAttribute('cx',this._point.x);
+			this._circle.setAttribute('cy',this._point.y-(this.options.radius*2));
+		}
+
 		this._path.setAttribute('shape-rendering', 'geometricPrecision');
 		return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
 	},

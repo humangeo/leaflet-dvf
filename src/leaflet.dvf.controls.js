@@ -43,11 +43,21 @@ L.Control.Legend = L.Control.extend({
 		$(this._container).toggleClass('larger', 'slow');
 	},
 	
+	redrawLayer: function (layer) {
+		this.removeLayer(layer);
+		this.addLayer(layer);
+	},
+	
 	addLayer: function (layer) {
 		var id = L.Util.stamp(layer);
-			
+		var me = this;
+		
 		if (layer.getLegend) {				
 			this.addLegend(id, layer.getLegend());
+			
+			layer.on('legendChanged', function () {
+				me.redrawLayer(layer);
+			});
 		}
 	},
 	
@@ -56,6 +66,8 @@ L.Control.Legend = L.Control.extend({
 			
 		if (layer.getLegend) {
 			$(this._container).find('#' + id).remove();
+			
+			layer.off('legendChanged'); 
 		}
 	},
 	

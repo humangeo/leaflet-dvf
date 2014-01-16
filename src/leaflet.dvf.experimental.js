@@ -713,7 +713,7 @@ L.WeightedLineSegment = L.Path.extend({
 		var points = [];
 		var points1 = this._weightedPointToPoint(this._weightedPoint1);
 		var points2 = this._weightedPointToPoint(this._weightedPoint2); //.reverse();
-		var shouldReverse = false;
+		
 		var line0 = new L.LinearFunction(points1[0], points2[0]);
 		var line1 = new L.LinearFunction(points1[1], points2[1]);
 		var line2 = new L.LinearFunction(points1[2], points2[2]);
@@ -727,77 +727,8 @@ L.WeightedLineSegment = L.Path.extend({
 		if (!bounds.contains(intersectionPoint)) {
 			points2 = points2.reverse();
 		}
-		/*
-		if (intersectionPoint) {
-			var y = line1.evaluate(intersectionPoint.x);
-			
-			if (y !== intersectionPoint.y) {
-				points2 = points2.reverse();
-			}
-		}
-		*/
-		/*
-		if (line2._slope !== line0._slope) {
-			var iX = (line0._b - line2._b)/(line2._slope - line0._slope)
-			var bounds = new L.Bounds([].concat(points1, points2));
-		
-			console.log("Intersection: " + iX.toString() + "," + bounds.min.toString() + ":" + bounds.max.toString());
-			
-			var minX = bounds.min.x;
-			var maxX = bounds.max.x;
-			var iY = line1.evaluate(iX);
-			
-			var line1Bounds = line1.getBounds();
-			
-			shouldReverse = iX < minX || iX > maxX;
-			
-			console.log(shouldReverse);
-			
-			if (shouldReverse) {
-				points2 = points2.reverse();
-			}
-		}
-		*/
 		
 		points = points.concat(points1, points2);
-		
-		/*
-		var lineFunction = new L.LinearFunction(points1[1], points2[1]);
-		
-		var centerX = (points1[1].x + points[2].x)/2;
-		var center = new L.Point(centerX, lineFunction.evaluate(centerX));
-		
-		var less = function (a, b) {
-			if (a.x-center.x >= 0 && b.x-center.x < 0) {
-				return true;
-			}
-			if (a.x-center.x == 0 && b.x-center.x == 0) {
-				if (a.y-center.y >= 0 || b.y-center.y >= 0) {
-					return a.y > b.y;
-				}
-				return b.y > a.y;
-			}
-
-			// compute the cross product of vectors (center -> a) x (center -> b)
-			var det = (a.x-center.x) * (b.y-center.y) - (b.x - center.x) * (a.y - center.y);
-			if (det < 0) {
-				return true;
-			}
-			if (det > 0) {
-				return false;
-			}
-			
-			// points a and b are on the same line from the center
-			// check which point is closer to the center
-			var d1 = (a.x-center.x) * (a.x-center.x) + (a.y-center.y) * (a.y-center.y);
-			var d2 = (b.x-center.x) * (b.x-center.x) + (b.y-center.y) * (b.y-center.y);
-			return d1 > d2;
-		};
-		
-		points.sort(function (pointA, pointB) {
-			return less(pointA, pointB);
-		});
-		*/
 		
 		return points;
 	},

@@ -51,7 +51,7 @@ div.legend-box {
 	width: 10px;
 	height: 10px;
 	display: inline-block;
-	margin-right: 4px;
+	margin-right: 8px;
 	border: solid 1px #000;
 	margin-bottom: 0px;
 }
@@ -74,6 +74,10 @@ div.leaflet-div-icon div div.key {
 .data-layer-legend div {
 	display: inline-block;
 	font-size: small;
+}
+
+.data-layer-legend .legend-box, .data-layer-legend .key {
+	vertical-align: middle;
 }
 
 .choropleth-text {
@@ -111,7 +115,7 @@ div.leaflet-div-icon div div.key {
 }
 
 .data-layer-legend {
-	padding: 8px;
+	padding: 8px 0px 0px 0px;
 }
 
 .scale-bars {

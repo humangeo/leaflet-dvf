@@ -150,7 +150,7 @@ L.ColorFunction = L.LinearFunction.extend({
                 y = options.postProcess.call(this, y);
             }
             var colorString = this._getColorString(y);
-            if ((L.Browser.ie6 || L.Browser.ie7) && colorString.indexOf("hsl") > -1) {
+            if (L.Browser.ie && colorString.indexOf("hsl") > -1) {
                 colorString = L.ColorUtils.hslStringToRgbString(colorString);
             }
             return colorString;
@@ -500,6 +500,20 @@ L.Util.getFieldValue = function(record, fieldName) {
     return value;
 };
 
+L.Util.getNumericRange = function(records, fieldName) {
+    var min = Number.MAX_VALUE;
+    var max = Number.MIN_VALUE;
+    for (var index in records) {
+        if (records.hasOwnProperty(index)) {
+            var record = records[index];
+            var value = L.Util.getFieldValue(record, fieldName);
+            min = Math.min(min, value);
+            max = Math.max(max, value);
+        }
+    }
+    return [ min, max ];
+};
+
 L.CategoryLegend = L.Class.extend({
     initialize: function(options) {
         L.Util.setOptions(this, options);
@@ -629,7 +643,22 @@ L.GeometryUtils = {
             feature = features[index];
             properties = feature.properties;
             value = properties[indexKey];
-            featureIndex[value] = feature;
+            if (value in featureIndex) {
+                var existingFeature = featureIndex[value];
+                if (existingFeature.geometry.type !== "GeometryCollection") {
+                    featureIndex[value] = {
+                        type: "Feature",
+                        geometry: {
+                            type: "GeometryCollection",
+                            geometries: [ feature.geometry, existingFeature.geometry ]
+                        }
+                    };
+                } else {
+                    existingFeature.geometry.geometries.push(feature.geometry);
+                }
+            } else {
+                featureIndex[value] = feature;
+            }
         }
         return featureIndex;
     },
@@ -1072,6 +1101,10 @@ L.Color = L.Class.extend({
     l: function(newL) {
         if (!arguments.length) return this._hsl[2];
         this.setHSL(this._hsl[0], this._hsl[1], newL);
+    },
+    a: function(newA) {
+        if (!arguments.length) return this._a;
+        this._a = newA;
     }
 });
 
@@ -1849,6 +1882,8 @@ L.DynamicPaletteElement = L.Class.extend({
     }
 });
 
+L.Path.XLINK_NS = "http://www.w3.org/1999/xlink";
+
 var TextFunctions = TextFunctions || {
     __updatePath: L.Path.prototype._updatePath,
     _updatePath: function() {
@@ -1918,7 +1953,7 @@ var TextFunctions = TextFunctions || {
             if (pathOptions.style) {
                 setStyle(textPath, pathOptions.style);
             }
-            textPath.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "#" + pathID);
+            textPath.setAttributeNS(L.Path.XLINK_NS, "xlink:href", "#" + pathID);
             textPath.appendChild(textNode);
             this._text.appendChild(textPath);
         } else {
@@ -2055,32 +2090,94 @@ var PathFunctions = PathFunctions || {
         this._dropShadow = filter;
         this._defs.appendChild(filter);
     },
-    _createCircleImage: function(imageUrl, imageSize) {
-        var patternGuid = L.Util.guid();
-        var imgSize = this.options.radius + 12;
-        var circleSize = this.options.radius - 5;
-        var circle = this._createElement("circle");
-        circle.setAttribute("fill", "url(#" + patternGuid + ")");
-        circle.setAttribute("cx", 0);
-        circle.setAttribute("cy", 0);
-        circle.setAttribute("r", circleSize);
-        var pattern = this._createElement("pattern");
-        pattern.setAttribute("id", patternGuid);
-        pattern.setAttribute("patternUnits", "objectBoundingBox");
-        pattern.setAttribute("height", imgSize);
-        pattern.setAttribute("width", imgSize);
-        pattern.setAttribute("x", 0);
-        pattern.setAttribute("y", 0);
+    _createCustomElement: function(tag, attributes) {
+        var element = this._createElement(tag);
+        for (var key in attributes) {
+            if (attributes.hasOwnProperty(key)) {
+                element.setAttribute(key, attributes[key]);
+            }
+        }
+        return element;
+    },
+    _createImage: function(imageOptions) {
         var image = this._createElement("image");
-        image.setAttribute("width", imgSize);
-        image.setAttribute("height", imgSize);
-        image.setAttribute("x", 0);
-        image.setAttribute("y", 0);
-        image.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", imageUrl);
+        image.setAttribute("width", imageOptions.width);
+        image.setAttribute("height", imageOptions.height);
+        image.setAttribute("x", imageOptions.x || 0);
+        image.setAttribute("y", imageOptions.y || 0);
+        image.setAttributeNS(L.Path.XLINK_NS, "xlink:href", imageOptions.url);
+        return image;
+    },
+    _createPattern: function(patternOptions) {
+        var pattern = this._createCustomElement("pattern", patternOptions);
+        return pattern;
+    },
+    _createShape: function(type, shapeOptions) {
+        var shape = this._createCustomElement(type, shapeOptions);
+        return shape;
+    },
+    _applyCustomStyles: function() {},
+    _createFillPattern: function(imageOptions) {
+        var patternGuid = L.Util.guid();
+        var patternOptions = imageOptions.pattern;
+        patternOptions.id = patternGuid;
+        patternOptions.patternUnits = patternOptions.patternUnits || "objectBoundingBox";
+        var pattern = this._createPattern(patternOptions);
+        var image = this._createImage(imageOptions.image);
+        image.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", imageOptions.url);
+        pattern.appendChild(image);
+        if (!this._defs) {
+            this._createDefs();
+        }
+        this._defs.appendChild(pattern);
+        this._path.setAttribute("fill", "url(#" + patternGuid + ")");
+    },
+    _getDefaultDiameter: function(radius) {
+        return 1.75 * radius;
+    },
+    _createShapeImage: function(imageOptions) {
+        imageOptions = imageOptions || {};
+        var patternGuid = L.Util.guid();
+        var radius = this.options.radius || Math.max(this.options.radiusX, this.options.radiusY);
+        var diameter = this._getDefaultDiameter(radius);
+        var imageSize = imageOptions.imageSize || new L.Point(diameter, diameter);
+        var circleSize = imageOptions.radius || diameter / 2;
+        var shapeOptions = imageOptions.shape || {
+            circle: {
+                r: circleSize,
+                cx: 0,
+                cy: 0
+            }
+        };
+        var patternOptions = imageOptions.pattern || {
+            width: imageSize.x,
+            height: imageSize.y,
+            x: 0,
+            y: 0
+        };
+        var shapeKeys = Object.keys(shapeOptions);
+        var shapeType = shapeKeys.length > 0 ? shapeKeys[0] : "circle";
+        shapeOptions[shapeType].fill = "url(#" + patternGuid + ")";
+        var shape = this._createShape(shapeType, shapeOptions[shapeType]);
+        if (this.options.clickable) {
+            shape.setAttribute("class", "leaflet-clickable");
+        }
+        patternOptions.id = patternGuid;
+        patternOptions.patternUnits = patternOptions.patternUnits || "objectBoundingBox";
+        var pattern = this._createPattern(patternOptions);
+        var imageOptions = imageOptions.image || {
+            width: imageSize.x,
+            height: imageSize.y,
+            x: 0,
+            y: 0,
+            url: this.options.imageCircleUrl
+        };
+        var image = this._createImage(imageOptions);
+        image.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", imageOptions.url);
         pattern.appendChild(image);
         this._defs.appendChild(pattern);
-        this._container.insertBefore(circle, this._defs);
-        this._circle = circle;
+        this._container.insertBefore(shape, this._defs);
+        this._shape = shape;
     },
     _updateStyle: function() {
         this.__updateStyle.call(this);
@@ -2104,9 +2201,7 @@ var PathFunctions = PathFunctions || {
         } else {
             this._path.removeAttribute("filter");
         }
-        if (this.options.imageCircleUrl) {
-            this._createCircleImage(this.options.imageCircleUrl);
-        }
+        this._applyCustomStyles();
     }
 };
 
@@ -2146,6 +2241,13 @@ L.Polyline.include(PathFunctions);
 
 L.CircleMarker.include(PathFunctions);
 
+L.Point.prototype.rotate = function(angle, point) {
+    var radius = this.distanceTo(point);
+    var theta = angle * L.LatLng.DEG_TO_RAD + Math.atan2(this.y - point.y, this.x - point.x);
+    this.x = point.x + radius * Math.cos(theta);
+    this.y = point.y + radius * Math.sin(theta);
+};
+
 L.MapMarker = L.Path.extend({
     includes: TextFunctions,
     initialize: function(centerLatLng, options) {
@@ -2168,7 +2270,8 @@ L.MapMarker = L.Path.extend({
         fillColor: "#0000FF",
         weight: 1,
         gradient: true,
-        dropShadow: true
+        dropShadow: true,
+        clickable: true
     },
     setLatLng: function(latlng) {
         this._latlng = latlng;
@@ -2177,7 +2280,7 @@ L.MapMarker = L.Path.extend({
     projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
-        if (this.options.innerRadius) {
+        if (this.options.innerRadius > 0) {
             this._innerPoints = this._getPoints(true).reverse();
         }
     },
@@ -2189,9 +2292,15 @@ L.MapMarker = L.Path.extend({
         return this._latlng;
     },
     getPathString: function() {
-        if (this._circle) {
-            this._circle.setAttribute("cx", this._point.x);
-            this._circle.setAttribute("cy", this._point.y - this.options.radius * 2);
+        var anchorPoint = this.getTextAnchor();
+        if (this._shape) {
+            if (this._shape.tagName === "circle") {
+                this._shape.setAttribute("cx", anchorPoint.x);
+                this._shape.setAttribute("cy", anchorPoint.y);
+            } else {
+                this._shape.setAttribute("x", anchorPoint.x);
+                this._shape.setAttribute("y", anchorPoint.y);
+            }
         }
         this._path.setAttribute("shape-rendering", "geometricPrecision");
         return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
@@ -2232,6 +2341,13 @@ L.MapMarker = L.Path.extend({
         var markerRadius = radius;
         radius = !inner ? radius : this.options.innerRadius;
         return new L.Point(this._point.x + this.options.position.x + radius * Math.cos(angle), this._point.y - 2 * markerRadius + this.options.position.y - radius * Math.sin(angle));
+    },
+    _applyCustomStyles: function() {
+        if (this.options.shapeImage || this.options.imageCircleUrl) {
+            this._createShapeImage(this.options.shapeImage);
+        } else if (this.options.fillPattern) {
+            this._createFillPattern(this.options.fillPattern);
+        }
     }
 });
 
@@ -2258,7 +2374,8 @@ L.RegularPolygonMarker = L.Path.extend({
         },
         maxDegrees: 360,
         gradient: true,
-        dropShadow: false
+        dropShadow: false,
+        clickable: true
     },
     setLatLng: function(latlng) {
         this._latlng = latlng;
@@ -2280,13 +2397,23 @@ L.RegularPolygonMarker = L.Path.extend({
     },
     getPathString: function() {
         this._path.setAttribute("shape-rendering", "geometricPrecision");
+        var anchorPoint = this.getTextAnchor();
+        if (this._shape) {
+            if (this._shape.tagName === "circle") {
+                this._shape.setAttribute("cx", anchorPoint.x);
+                this._shape.setAttribute("cy", anchorPoint.y);
+            } else {
+                this._shape.setAttribute("x", anchorPoint.x);
+                this._shape.setAttribute("y", anchorPoint.y);
+            }
+        }
         return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
     _getPoints: function(inner) {
         var maxDegrees = this.options.maxDegrees || 360;
         var angleSize = maxDegrees / Math.max(this.options.numberOfSides, 3);
-        var degrees = maxDegrees + this.options.rotation;
-        var angle = this.options.rotation;
+        var degrees = maxDegrees;
+        var angle = 0;
         var points = [];
         var newPoint;
         var angleRadians;
@@ -2304,7 +2431,22 @@ L.RegularPolygonMarker = L.Path.extend({
         return points;
     },
     _getPoint: function(angle, radiusX, radiusY) {
-        return new L.Point(this._point.x + this.options.position.x + radiusX * Math.cos(angle), this._point.y + this.options.position.y + radiusY * Math.sin(angle));
+        var startPoint = this.options.position ? this._point.add(new L.Point(this.options.position.x, this.options.position.y)) : this._point;
+        var point = new L.Point(startPoint.x + radiusX * Math.cos(angle), startPoint.y + radiusY * Math.sin(angle));
+        point.rotate(this.options.rotation, startPoint);
+        return point;
+    },
+    _getDefaultDiameter: function(radius) {
+        var angle = Math.PI / this.options.numberOfSides;
+        var minLength = radius * Math.cos(angle);
+        return 1.75 * minLength;
+    },
+    _applyCustomStyles: function() {
+        if (this.options.shapeImage || this.options.imageCircleUrl) {
+            this._createShapeImage(this.options.shapeImage);
+        } else if (this.options.fillPattern) {
+            this._createFillPattern(this.options.fillPattern);
+        }
     }
 });
 
@@ -2323,8 +2465,8 @@ L.StarMarker = L.RegularPolygonMarker.extend({
     _getPoints: function(inner) {
         var maxDegrees = this.options.maxDegrees || 360;
         var angleSize = maxDegrees / this.options.numberOfPoints;
-        var degrees = maxDegrees + this.options.rotation;
-        var angle = this.options.rotation;
+        var degrees = maxDegrees;
+        var angle = 0;
         var points = [];
         var newPoint, newPointInner;
         var angleRadians;
@@ -2575,6 +2717,10 @@ L.ChartMarker = L.FeatureGroup.extend({
             layer.closePopup();
             break;
         }
+    },
+    redraw: function() {
+        this.clearLayers();
+        this._loadComponents();
     }
 });
 

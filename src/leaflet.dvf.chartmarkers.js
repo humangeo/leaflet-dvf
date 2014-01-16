@@ -207,6 +207,11 @@ L.ChartMarker = L.FeatureGroup.extend({
 			layer.closePopup();
 			break;
 		}
+	},
+	
+	redraw: function () {
+		this.clearLayers();
+		this._loadComponents();
 	}
 });
 

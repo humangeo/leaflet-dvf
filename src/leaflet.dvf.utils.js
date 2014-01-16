@@ -130,6 +130,22 @@ L.Util.getFieldValue = function (record, fieldName) {
 	return value;
 };
 
+L.Util.getNumericRange = function (records, fieldName) {
+	var min = Number.MAX_VALUE;
+	var max = Number.MIN_VALUE;
+	
+	for (var index in records) {
+		if (records.hasOwnProperty(index)) {
+			var record = records[index];
+			var value = L.Util.getFieldValue(record, fieldName);
+			min = Math.min(min, value);
+			max = Math.max(max, value);
+		}
+	}
+	
+	return [min, max];
+};
+
 L.CategoryLegend = L.Class.extend({
 	initialize: function (options) {
 		L.Util.setOptions(this, options);
@@ -306,7 +322,27 @@ L.GeometryUtils = {
 			
 			value = properties[indexKey];
 			
-			featureIndex[value] = feature;			
+			// If the value already exists in the index, then either create a GeometryCollection or append the
+			// feature's geometry to the existing GeometryCollection
+			if (value in featureIndex) {
+				var existingFeature = featureIndex[value];
+				
+				if (existingFeature.geometry.type !== 'GeometryCollection') {
+					featureIndex[value] = {
+						type: 'Feature',
+						geometry: {
+							type: 'GeometryCollection',
+							geometries: [feature.geometry, existingFeature.geometry]
+						}
+					}
+				}
+				else {
+					existingFeature.geometry.geometries.push(feature.geometry);
+				}
+			}
+			else {
+				featureIndex[value] = feature;		
+			}	
 		}
 		
 		return featureIndex;
@@ -903,6 +939,11 @@ L.Color = L.Class.extend({
 		if (!arguments.length) return this._hsl[2];
     	this.setHSL(this._hsl[0], this._hsl[1], newL);
 	},
+	
+	a: function (newA) {
+		if (!arguments.length) return this._a;
+    	this._a = newA;
+	}
 });
 
 L.RGBColor = L.Color.extend({

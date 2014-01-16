@@ -77,7 +77,7 @@ $(document).ready(function() {
 			color: '#000',
 			weight: 1,
 			fillColor: 'hsl(' + colorValue + ',100%,50%)',
-			radius: 20,
+			radius: 30,
 			fillOpacity: 0.7,
 			rotation: 0.0,
 			position: {
@@ -90,7 +90,42 @@ $(document).ready(function() {
 		
 		options.rotation = (options.numberOfSides % 2 === 0 ? 180 : 90)/options.numberOfSides;
 		
-		return new L.RegularPolygonMarker(latlng, options);
+		options.imageCircleUrl = "http://upload.wikimedia.org/wikipedia/commons/6/68/Ambulance_font_awesome.svg";
+
+		var marker = new L.RegularPolygonMarker(latlng, options);
+		
+		marker.on('mousedown', function (e) {
+			var mouseMoveFunction = function (e) {
+				marker.setLatLng(e.latlng);//.redraw();
+			};
+			
+			map.on('mousemove', mouseMoveFunction);
+			
+			map.on('mouseup', function (e) {
+				map.off('mousemove', mouseMoveFunction);
+			});
+			
+			marker.on('mouseup', function (e) {
+				map.off('mousemove', mouseMoveFunction);
+			});
+		});
+		
+		// Test code for animating the rotation of markers
+		/*
+		var angle = 0;
+		var updateFunction = function () {
+			angle = angle + 30 % 360;
+			marker.setStyle({
+				rotation: angle
+			});
+			
+			marker.redraw();
+		};
+		
+		setInterval(updateFunction, 1000);
+		*/
+		
+		return marker;
 	});
 	
 	// Create versions of the basic regular polygons with holes
@@ -152,10 +187,68 @@ $(document).ready(function() {
 				y: 0
 			},
 			offset: 0,
-			radius: (Math.random() * 15) + 5
+			radius: (Math.random() * 30) + 5,
+			innerRadius: 0
 		};
 		
-		options.innerRadius = options.radius/ ((Math.random() * 3) + 2);
+		//options.innerRadius = options.radius/ ((Math.random() * 3) + 2);
+		
+		/*
+		options.fillPattern = {
+				url: 'http://upload.wikimedia.org/wikipedia/commons/3/31/Green_Canada_Flag.png',
+				pattern: {
+					width: 20,
+					height: 10,
+					patternUnits: 'userSpaceOnUse'
+				},
+				image: {
+					width: 20,
+					height: 10
+					
+				}
+			};
+		*/
+		
+		var imageOptions = [
+			'http://upload.wikimedia.org/wikipedia/commons/6/62/Food_font_awesome.svg',
+			'http://upload.wikimedia.org/wikipedia/commons/5/57/Light_bulb_font_awesome.svg',
+			'http://upload.wikimedia.org/wikipedia/commons/4/48/Flag_font_awesome.svg',
+			'http://upload.wikimedia.org/wikipedia/commons/6/64/Plane_font_awesome.svg',
+			'http://upload.wikimedia.org/wikipedia/commons/1/15/Leaf_font_awesome.svg'
+		];
+		
+		options.imageCircleUrl = imageOptions[index];
+		
+		/*
+		options.shapeImage = {
+			shape: {
+				circle: {
+					r: 24,
+					width: 20,
+					height: 20,
+					cx: 20,
+					cy: 0,
+					'fill-opacity': 1.0,
+					stroke: 'green',
+					'stroke-width': 8.0,
+					'stroke-opacity': 0.5
+				}
+			},
+			image: {
+				url: "http://upload.wikimedia.org/wikipedia/commons/a/a7/Emblem-fun.svg",		
+				width: 48,
+				height: 48,
+				x: 0,
+				y: 0
+			},
+			pattern: {
+				width: 48,
+				height: 48,
+				x: 0,
+				y: 0
+			}
+		};
+		*/
 		
 		return new L.MapMarker(latlng, options);
 	});
@@ -261,7 +354,22 @@ $(document).ready(function() {
 			}
 		};
 		
-		return new L.BarChartMarker(latlng, options);
+		var barChart = new L.BarChartMarker(latlng, options);
+		
+		var updateFunction = function () {
+			barChart.options.data = {
+					'dataPoint1': Math.random() * 20,
+					'dataPoint2': Math.random() * 20,
+					'dataPoint3': Math.random() * 20,
+					'dataPoint4': Math.random() * 20
+			};
+			
+			barChart.redraw();
+		};
+		
+		//setInterval(updateFunction, 1000);
+		
+		return barChart;
 	});
 	
 	addMarkers('Pie Charts', -2.0, 14.0, 2.0, 5, function (latlng) {

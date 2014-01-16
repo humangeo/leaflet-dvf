@@ -114,6 +114,10 @@ div.leaflet-div-icon div div.key {
 	padding: 8px;
 }
 
+.data-layer-legend .legend-box, .data-layer-legend .key {
+	vertical-align: middle;
+}
+
 .scale-bars {
 	vertical-align: middle;
 	line-height: 10px;

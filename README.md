@@ -70,6 +70,7 @@ Optional - required for particular classes to work:
 * [geohash.js](https://github.com/davetroy/geohash-js)
 * [JavaScript Topology Suite (JSTS)](https://github.com/bjornharrtell/jsts)
 * [Core Framework SVG Utilities](https://code.google.com/p/core-framework/source/browse/trunk/plugins/svg.js) *Required for full functionality in archaic browsers (see note below)*
+* [TopoJSON](https://github.com/mbostock/topojson) *Recommended/required for US county lookups
 
 Using the framework in IE8 and below:
 
@@ -111,6 +112,7 @@ Lines:
 In Progress:
 * [Sparklines](http://humangeo.github.com/leaflet-dvf/examples/html/sparklines.html) *NOTE:  This is a work in progress.  The code is incomplete and can be found in src/leaflet.dvf.experimental.js*
 * [Run Map](http://humangeo.github.com/leaflet-dvf/examples/html/runmap.html) *NOTE:  This is a work in progress.  Illustrates using a WeightedPolyline to show variations in GPS data*
+* [US County Statistics](http://humangeo.github.com/leaflet-dvf/examples/html/countystats.html)
 
 Tutorials coming soon to [HumanGeo](http://www.thehumangeo.com/)'s [blog](http://blog.thehumangeo.com)
 
@@ -265,6 +267,7 @@ numberOfSides | Number | 3 | The number of sides the marker should have
 rotation | Number | 0.0 | The angle in degrees that the marker should be rotated
 radius OR radiusX, radiusY | Number | 10 | The radius of the marker in pixels 
 innerRadius OR innerRadiusX, innerRadiusY | Number | null | The inner radius of the marker in pixels.  Specifying an innerRadius will produce a regular polygon with a hole in the middle.
+imageCircleUrl | String | null | The URL of an image to display on the marker.  This will be displayed in the main circular area of the marker.
 
 ### L.StarMarker
 
@@ -556,6 +559,7 @@ onEachRecord | Function | null | A function that performs additional operations 
 includeLayer OR filter | Function | null | A function for determining whether or not the layer for a given record should be added to the map.
 getLocation | Function | null | A function for getting a custom location from a record (e.g. looking up an address) *NOTE: Use with 'custom' locationMode value*
 locationLookup | Object (GeoJSON FeatureCollection) | null | A GeoJSON FeatureCollection that will be used to lookup the location associated with a given record. This is useful when you have some data that maps to political/statistical boundaries other than US states or countries.  *NOTE: Use with 'lookup locationMode*
+locationIndexField | String | null | A string identifying the field that will be used to index GeoJSON Feature objects when the locationMode is L.LocationModes.LOOKUP.  If you don't specify this field, the DataLayer will use the codeField value as the property to use when indexing GeoJSON Features
 includeBoundary | Boolean | null | true/false - whether or not the boundary polygon should be displayed when displaying proportional symbols.  This is useful for identifying the boundary associated with each symbol.
 boundaryStyle | Object | null | Path style options used for specifying how the boundary associated with the point will be displayed
 getMarker | Function | null | A function for overriding the default marker that gets placed at each location.  The function takes a latlng and options as parameters.

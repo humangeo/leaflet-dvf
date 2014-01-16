@@ -167,10 +167,14 @@ L.LocationModes = {
 	LOOKUP: function (record, index) {
 		var code = this.options.codeField ? L.Util.getFieldValue(record, this.options.codeField) : index;
 
-		this._lookupIndex = this._lookupIndex || L.GeometryUtils.indexFeatureCollection(this.options.locationLookup, this.options.codeField);
+		this._lookupIndex = this._lookupIndex || L.GeometryUtils.indexFeatureCollection(this.options.locationLookup, this.options.locationIndexField || this.options.codeField);
 		
 		var geoJSON = this._lookupIndex[code];
 		var location = null;
+		
+		if (!geoJSON && code.indexOf('0') === 0) {
+			geoJSON = this._lookupIndex[code.substring(1)];
+		}
 		
 		if (geoJSON) {
 			var me = this;
@@ -215,6 +219,7 @@ L.LocationModes = {
  * analogous to the L.GeoJSON class, but has generalized to support JSON structures beyond GeoJSON
  */
 L.DataLayer = L.LayerGroup.extend({
+	includes: L.Mixin.Events,
 	
 	initialize: function (data, options) {
 		L.Util.setOptions(this, options);
@@ -484,6 +489,8 @@ L.DataLayer = L.LayerGroup.extend({
 		if (this._data) {
 			this.addData(this._data);
 		}
+		
+		this.fire('legendChanged', this);
 		
 		return this;
 	},

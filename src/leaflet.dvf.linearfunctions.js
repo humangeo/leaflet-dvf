@@ -217,7 +217,7 @@ L.ColorFunction = L.LinearFunction.extend({
 			
 			var colorString = this._getColorString(y);
 			
-			if ((L.Browser.ie6 || L.Browser.ie7) && colorString.indexOf('hsl') > -1) {
+			if ((L.Browser.ie) && colorString.indexOf('hsl') > -1) {
 				colorString = L.ColorUtils.hslStringToRgbString(colorString);
 			}
 			

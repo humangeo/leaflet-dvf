@@ -486,7 +486,7 @@ L.SVGPathBuilder = L.Class.extend({
 			if (L.Browser.vml) {
 				digits = 0;
 				startChar = 'm';
-				lineToChar = '|';
+				lineToChar = 'l';
 				closePath = 'xe';
 			}
 			 

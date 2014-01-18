@@ -5,6 +5,7 @@
 The Leaflet DVF is an extension to [CloudMade][]'s [Leaflet][] JavaScript mapping library.
 The primary goal of the framework is to simplify data visualization and thematic mapping.
 
+![Overview](http://humangeo.github.com/leaflet-dvf/images/overview.png "Overview")
 ![Election Mapping](http://humangeo.github.com/leaflet-dvf/images/electionmapping.png "Election Mapping")
 ![Country Data](http://humangeo.github.com/leaflet-dvf/images/countrydata.png "Country Data")
 
@@ -50,11 +51,9 @@ Polygons are indexed via a state or country code and lookups are created to map 
 Automatic legend generation and a simple legend control.
 To generate a legend, just call getLegend on any DataLayer, or use the provided legend control and the legend will be displayed automatically.
 
-Support for gradient fills and drop shadows.
+Support for gradient fills and drop shadows, text on Path-based items (e.g. markers, polylines, polygons, etc.), and more. 
 
-Support for text on Path-based items (e.g. markers, polylines, polygons, etc.)
-
-**NEW** Callouts for annotating map data.  Use the L.Callout class to add individual callouts to your map.  See the [Markers](http://humangeo.github.com/leaflet-dvf/examples/html/markers.html) example for an illustration of callouts.
+Callouts for annotating map data.  Use the L.Callout class to add individual callouts to your map.  See the [Markers](http://humangeo.github.com/leaflet-dvf/examples/html/markers.html) example for an illustration of callouts.
 
 *NOTE:  The dist folder includes a minified version of the full framework as well as a minified version of the code required to use the new markers*
 *Use leaflet-dvf.markers.min.js if you want to use the new markers without the rest of the framework*
@@ -70,7 +69,7 @@ Optional - required for particular classes to work:
 * [geohash.js](https://github.com/davetroy/geohash-js)
 * [JavaScript Topology Suite (JSTS)](https://github.com/bjornharrtell/jsts)
 * [Core Framework SVG Utilities](https://code.google.com/p/core-framework/source/browse/trunk/plugins/svg.js) *Required for full functionality in archaic browsers (see note below)*
-* [TopoJSON](https://github.com/mbostock/topojson) *Recommended/required for US county lookups
+* [TopoJSON](https://github.com/mbostock/topojson) *Recommended/required for US county lookups*
 
 Using the framework in IE8 and below:
 

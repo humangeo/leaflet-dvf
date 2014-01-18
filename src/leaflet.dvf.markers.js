@@ -257,19 +257,19 @@ var PathFunctions = PathFunctions || {
 		
 		var offsetOptions = {
 			result: 'offOut',
-			in: 'SourceAlpha',
+			'in': 'SourceAlpha',
 			dx: '2',
 			dy: '2'
 		};
 		
 		var blurOptions = {
 			result: 'blurOut',
-			in: 'offOut',
+			'in': 'offOut',
 			stdDeviation: '2'
 		};
 
 		var blendOptions = {
-			in: 'SourceGraphic',
+			'in': 'SourceGraphic',
 			in2: 'blurOut',
 			mode: 'lighten'
 		};

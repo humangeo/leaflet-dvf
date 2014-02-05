@@ -1,4 +1,3 @@
-
 $(document).ready(function() {
 	var map;
 
@@ -165,13 +164,138 @@ $(document).ready(function() {
 				y: 0
 			},
 			offset: 0,
-			rotation: 55,
+			rotation: Math.random() * 360,
 			numberOfPoints: index + 5
 		};
 		
 		options.innerRadius = options.radius/2;
 
-		return new L.StarMarker(latlng, options);
+		var marker = new L.StarMarker(latlng, options);
+		
+		return marker;
+	});
+	
+	addMarkers('Custom SVG', -10.0, 0.0, 2.0, 5, function (latlng, index) {
+		var colorValue = Math.random() * 360;
+		var options = {
+			color: '#000',
+			weight: 1,
+			fillColor: 'hsl(' + colorValue + ',100%,50%)',
+			radius: Math.random() * 40 + 10,
+			fillOpacity: 0.7,
+			rotation: 0.0,
+			position: {
+				x: 0,
+				y: 0
+			},
+			offset: 0,
+			rotation: Math.random() * 360,
+			numberOfPoints: index + 5,
+			clickable: true
+		};
+		
+		options.innerRadius = options.radius/2;
+
+		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/8/8b/Globe_font_awesome.svg';
+		options.svg = 'http://upload.wikimedia.org/wikipedia/commons/8/8b/Green_Arrow_Up_Darker.svg';
+		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/c/c2/F_icon.svg';
+		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/43/Feed-icon.svg';
+		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/48/Location_indicator_icon.svg';
+		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/0/05/Robot_icon.svg';
+		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/d/d7/Android_robot.svg';
+		
+		//options.svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><path d="M75,0 V75 H0 V125 H75 V200 H125 V125 H200 V75 H125 V0 H75 z" fill="#000" /></svg>';
+		
+		var width = Math.max(40, Math.random() * 100);
+		options.size = new L.Point(width, width);
+		
+		var colorFunction = new L.HSLHueFunction([0, 0], [5, 330]);
+		
+		var color = colorFunction.random();
+		
+		options.setStyle = function ($svg) {
+			//$svg.find('#Blue_1_').css('fill', color);
+			$svg.find('path').css('fill', color);
+		};
+		
+		var marker = new L.SVGMarker(latlng, options); //new L.StarMarker(latlng, options);
+
+		var angle = 0;
+		var updateFunction = function () {
+			angle = angle + 30 % 360;
+			
+			marker.setStyle({
+				rotation: angle
+			});
+			
+			marker.redraw();
+		};
+		
+		setInterval(updateFunction, 1000);
+		
+		marker.bindPopup('Test');
+		return marker;
+	});
+	
+	addMarkers('Custom SVG', -12.0, 0.0, 2.0, 5, function (latlng, index) {
+		var colorValue = Math.random() * 360;
+		var options = {
+			color: '#000',
+			weight: 1,
+			fillColor: 'hsl(' + colorValue + ',100%,50%)',
+			radius: Math.random() * 40 + 10,
+			fillOpacity: 0.7,
+			rotation: 0.0,
+			position: {
+				x: 0,
+				y: 0
+			},
+			offset: 0,
+			//rotation: Math.random() * 360,
+			numberOfPoints: index + 5,
+			clickable: true
+		};
+		
+		options.innerRadius = options.radius/2;
+
+		// Remove/add comments to see different SVG icons
+		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/8/8b/Globe_font_awesome.svg';
+		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/8/8b/Green_Arrow_Up_Darker.svg';
+		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/c/c2/F_icon.svg';
+		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/43/Feed-icon.svg';
+		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/48/Location_indicator_icon.svg';
+		options.svg = 'http://upload.wikimedia.org/wikipedia/commons/0/05/Robot_icon.svg';
+		
+		var width = Math.max(40, Math.random() * 100);
+		options.size = new L.Point(width, width);
+		
+		var colorFunction = new L.HSLHueFunction([0, 0], [5, 330]);
+		
+		var color = colorFunction.random();
+		
+		// Specifying this option allows you to customize the SVG elements to your liking or style
+		// items in the SVG image dynamically
+		options.setStyle = function ($svg) {
+			//$svg.find('#Blue_1_').css('fill', color);
+			//$svg.find('path, circle').css('fill', color);
+			//$svg.find('#path4941').css('fill', color);
+			//$svg.find('path').css('stroke', color);
+			$svg.find('rect').css('fill', color);
+		};
+		
+		var marker = new L.SVGMarker(latlng, options); //new L.StarMarker(latlng, options);
+		
+		marker.on('mouseover', function (e) {
+			marker.setStyle({
+				setStyle: function ($svg) {
+					$svg.find('rect').css('fill', 'blue');
+				}
+			});
+		});
+		
+		
+		
+		return marker;
 	});
 	
 	addMarkers('Map Markers', -6.0, 0.0, 2.0, 5, function (latlng, index) {

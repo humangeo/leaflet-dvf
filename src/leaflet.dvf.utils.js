@@ -1,3 +1,14 @@
+// indexOf doesn't work in IE 8 and below, so add this method if it doesn't exist
+// Copied from:  http://stackoverflow.com/questions/1744310/how-to-fix-array-indexof-in-javascript-for-ie-browsers
+if (!Array.prototype.indexOf) {
+	Array.prototype.indexOf = function(obj, start) {
+		 for (var i = (start || 0), j = this.length; i < j; i++) {
+			 if (this[i] === obj) { return i; }
+		 }
+		 return -1;
+	}
+}
+
 // Add the keys method to the Object class if it doesn't exist
 // Object.keys is supported in newer browsers IE9+, etc.
 if (!Object.keys) {

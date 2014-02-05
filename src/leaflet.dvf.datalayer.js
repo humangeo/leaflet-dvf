@@ -62,16 +62,10 @@ L.LocationModes = {
 		};
 	},
 	
-	/*
-	 * Each record contains a reference to a country - Lookup by a number of different country code designations
-	 */
-	COUNTRY: function (record, index) {
+	GWCOUNTRY: function (record, index) {
 		var code = this.options.codeField ? L.Util.getFieldValue(record, this.options.codeField) : index;
 		var geoJSON;
 		var centroid;
-		var codeLookup = L.codeLookup || {};
-		var alpha2Lookup = L.alpha2Lookup || {};
-		var fips2Lookup = L.fips2Lookup || {};
 		var gwNoLookup = L.gwNoLookup || {};
 		var countries = L.countries || {};
 		var countryCentroids = L.countryCentroids || {};
@@ -88,7 +82,45 @@ L.LocationModes = {
 		if (gwNo) {
 			code = gwNoLookup[originalCode] || code;
 		}
-		else if (code.length === 2) {
+		
+		// TODO:  Move the below code into a common function, since it's duplicated elsewhere
+		// If there's a code available, then try to get the associated polygon
+		if (code) {
+			geoJSON = countries[code];
+			centroid = countryCentroids[code];
+		}
+		else {
+			console.log('Code not found: ' + originalCode);
+		}
+		
+		// Create a new GeoJSON layer from the polygon definition
+		var geoJSONLayer = new L.GeoJSON(geoJSON);
+		
+		return {
+			location: geoJSONLayer,
+			text: L.GeometryUtils.getName(geoJSON) || code,
+			center: centroid
+		};
+
+	},
+	
+	/*
+	 * Each record contains a reference to a country - Lookup by a number of different country code designations
+	 */
+	COUNTRY: function (record, index) {
+		var code = this.options.codeField ? L.Util.getFieldValue(record, this.options.codeField) : index;
+		var geoJSON;
+		var centroid;
+		var codeLookup = L.codeLookup || {};
+		var alpha2Lookup = L.alpha2Lookup || {};
+		var fips2Lookup = L.fips2Lookup || {};
+		var countries = L.countries || {};
+		var countryCentroids = L.countryCentroids || {};
+		var originalCode = code.toUpperCase();
+		
+		code = originalCode;
+		
+		if (code.length === 2) {
 			code = alpha2Lookup[originalCode] || fips2Lookup[originalCode];
 		}
 		else if (code.length === 3) {
@@ -216,7 +248,7 @@ L.LocationModes = {
 
 /*
  * A generic layer class for parsing any JSON based data structure and plotting locations on a map.  This is somewhat
- * analogous to the L.GeoJSON class, but has generalized to support JSON structures beyond GeoJSON
+ * analogous to the L.GeoJSON class, but has been generalized to support JSON structures beyond GeoJSON
  */
 L.DataLayer = L.LayerGroup.extend({
 	includes: L.Mixin.Events,

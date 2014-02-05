@@ -404,6 +404,17 @@ L.CategoryFunction = L.Class.extend({
     }
 });
 
+if (!Array.prototype.indexOf) {
+    Array.prototype.indexOf = function(obj, start) {
+        for (var i = start || 0, j = this.length; i < j; i++) {
+            if (this[i] === obj) {
+                return i;
+            }
+        }
+        return -1;
+    };
+}
+
 if (!Object.keys) {
     Object.keys = function() {
         var hasOwnProperty = Object.prototype.hasOwnProperty, hasDontEnumBug = !{
@@ -2188,7 +2199,7 @@ var PathFunctions = PathFunctions || {
         patternOptions.patternUnits = patternOptions.patternUnits || "objectBoundingBox";
         var pattern = this._createPattern(patternOptions);
         var image = this._createImage(imageOptions.image);
-        image.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", imageOptions.url);
+        image.setAttributeNS(L.Path.XLINK_NS, "xlink:href", imageOptions.url);
         pattern.appendChild(image);
         if (!this._defs) {
             this._createDefs();
@@ -2237,7 +2248,7 @@ var PathFunctions = PathFunctions || {
             url: this.options.imageCircleUrl
         };
         var image = this._createImage(imageOptions);
-        image.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", imageOptions.url);
+        image.setAttributeNS(L.Path.XLINK_NS, "xlink:href", imageOptions.url);
         pattern.appendChild(image);
         this._defs.appendChild(pattern);
         this._container.insertBefore(shape, this._defs);
@@ -2626,6 +2637,67 @@ L.OctagonMarker = L.RegularPolygonMarker.extend({
 L.octagonMarker = function(centerLatLng, options) {
     return new L.OctagonMarker(centerLatLng, options);
 };
+
+L.SVGMarker = L.Path.extend({
+    initialize: function(latlng, options) {
+        L.Path.prototype.initialize.call(this, options);
+        this._svg = options.svg;
+        if (this._svg.indexOf("<") === 0) {
+            this._data = this._svg;
+        }
+        this._latlng = latlng;
+    },
+    projectLatlngs: function() {
+        this._point = this._map.latLngToLayerPoint(this._latlng);
+    },
+    getPathString: function() {
+        var me = this;
+        var addSVG = function() {
+            var $g = $(me._path).parent("g");
+            if (me.options.clickable) {
+                $g.attr("class", "leaflet-clickable");
+            }
+            var $data = $(me._data);
+            var $svg;
+            $svg = $data.prop("tagName") === "svg" ? $data.clone(true) : $data.find("svg").clone(true);
+            if (me.options.setStyle) {
+                me.options.setStyle.call(me, $svg);
+            }
+            var elementWidth = $svg.attr("width");
+            var elementHeight = $svg.attr("height");
+            var width = elementWidth ? elementWidth.replace("px", "") : "100%";
+            var height = elementHeight ? elementHeight.replace("px", "") : "100%";
+            if (width === "100%") {
+                width = me.options.size.x;
+                height = me.options.size.y;
+                $svg.attr("width", width);
+                $svg.attr("height", height);
+            }
+            var size = me.options.size || new L.Point(width, height);
+            var scaleSize = new L.Point(size.x / width, size.y / height);
+            $g.find("svg").remove();
+            $g.append($svg);
+            var transforms = [];
+            var anchor = me.options.anchor || new L.Point(-size.x / 2, -size.y / 2);
+            var x = me._point.x + anchor.x;
+            var y = me._point.y + anchor.y;
+            transforms.push("translate(" + x + " " + y + ")");
+            transforms.push("scale(" + scaleSize.x + " " + scaleSize.y + ")");
+            if (me.options.rotation) {
+                transforms.push("rotate(" + me.options.rotation + " " + width / 2 + " " + height / 2 + ")");
+            }
+            $g.attr("transform", transforms.join(" "));
+        };
+        if (!this._data) {
+            $.get(this._svg, null, function(data) {
+                me._data = data;
+                addSVG();
+            });
+        } else {
+            addSVG();
+        }
+    }
+});
 
 L.BarMarker = L.Path.extend({
     initialize: function(centerLatLng, options) {
@@ -3385,13 +3457,10 @@ L.LocationModes = {
             center: bounds.getCenter()
         };
     },
-    COUNTRY: function(record, index) {
+    GWCOUNTRY: function(record, index) {
         var code = this.options.codeField ? L.Util.getFieldValue(record, this.options.codeField) : index;
         var geoJSON;
         var centroid;
-        var codeLookup = L.codeLookup || {};
-        var alpha2Lookup = L.alpha2Lookup || {};
-        var fips2Lookup = L.fips2Lookup || {};
         var gwNoLookup = L.gwNoLookup || {};
         var countries = L.countries || {};
         var countryCentroids = L.countryCentroids || {};
@@ -3400,7 +3469,32 @@ L.LocationModes = {
         var gwNo = originalCode in gwNoLookup;
         if (gwNo) {
             code = gwNoLookup[originalCode] || code;
-        } else if (code.length === 2) {
+        }
+        if (code) {
+            geoJSON = countries[code];
+            centroid = countryCentroids[code];
+        } else {
+            console.log("Code not found: " + originalCode);
+        }
+        var geoJSONLayer = new L.GeoJSON(geoJSON);
+        return {
+            location: geoJSONLayer,
+            text: L.GeometryUtils.getName(geoJSON) || code,
+            center: centroid
+        };
+    },
+    COUNTRY: function(record, index) {
+        var code = this.options.codeField ? L.Util.getFieldValue(record, this.options.codeField) : index;
+        var geoJSON;
+        var centroid;
+        var codeLookup = L.codeLookup || {};
+        var alpha2Lookup = L.alpha2Lookup || {};
+        var fips2Lookup = L.fips2Lookup || {};
+        var countries = L.countries || {};
+        var countryCentroids = L.countryCentroids || {};
+        var originalCode = code.toUpperCase();
+        code = originalCode;
+        if (code.length === 2) {
             code = alpha2Lookup[originalCode] || fips2Lookup[originalCode];
         } else if (code.length === 3) {
             code = codeLookup[originalCode] || code;

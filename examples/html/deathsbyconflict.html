@@ -175,7 +175,7 @@ $(document).ready(function() {
 	
 	dataLayer = new L.ChoroplethDataLayer(deathsByLocation,{
 		recordsField: null,
-		locationMode: L.LocationModes.COUNTRY,
+		locationMode: L.LocationModes.GWCOUNTRY,
 		codeField: '0', //'gwnoa',
 		displayOptions: {
 			'1.total': {
@@ -205,7 +205,7 @@ $(document).ready(function() {
 	
 	var sparklines = new L.SparklineDataLayer(deathsByLocation,{
 		recordsField: null,
-		locationMode: L.LocationModes.COUNTRY,
+		locationMode: L.LocationModes.GWCOUNTRY,
 		codeField: '0',
 		xField: '0',
 		yField: '1',

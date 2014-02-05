@@ -26,6 +26,8 @@
     <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="../css/MarkerCluster.Default.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="../css/MarkerCluster.css" type="text/css" media="screen" />
 </head>
 
 <body>
@@ -58,6 +60,7 @@
 	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
 	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
 	<script type="text/javascript" src="../lib/geohash.js"></script>
+	<script type="text/javascript" src="../lib/leaflet.markercluster-src.js"></script>
 	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
 	<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
 	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
@@ -104,6 +107,9 @@ $(document).ready(function() {
 	
 	layerControl.addTo(map);
 	
+	var markers = new L.MarkerClusterGroup();
+	map.addLayer(markers);
+	
 	for (var i = 0; i < 3000; ++i) {
 		var marker = new L.MapMarker(new L.LatLng(Math.random() * 90, Math.random() * 180), {
 			gradient: true,
@@ -113,7 +119,7 @@ $(document).ready(function() {
 		});
 	
 		// Add the data layer to the map
-		map.addLayer(marker);
+		markers.addLayer(marker);
 	}
 	
 });

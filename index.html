@@ -40,7 +40,7 @@
 <p>The Leaflet DVF is an extension to <a href="http://www.cloudmade.com">CloudMade</a>'s <a href="http://leafletjs.com">Leaflet</a> JavaScript mapping library.
 The primary goal of the framework is to simplify data visualization and thematic mapping.</p>
 
-<p><img src="http://humangeo.github.com/leaflet-dvf/images/markers.png" alt="Markers" title="Markers"><img src="http://humangeo.github.com/leaflet-dvf/images/electionmapping.png" alt="Election Mapping" title="Election Mapping"><img src="http://humangeo.github.com/leaflet-dvf/images/countrydata.png" alt="Country Data" title="Country Data"></p>
+<p><img src="http://humangeo.github.com/leaflet-dvf/images/overview.png" alt="Overview" title="Overview"><img src="http://humangeo.github.com/leaflet-dvf/images/electionmapping.png" alt="Election Mapping" title="Election Mapping"><img src="http://humangeo.github.com/leaflet-dvf/images/countrydata.png" alt="Country Data" title="Country Data"></p>
 
 <p>It includes:</p>
 
@@ -59,6 +59,7 @@ The primary goal of the framework is to simplify data visualization and thematic
 <li>CoxcombChartMarker</li>
 <li>RadialMeterMarker</li>
 <li>StackedRegularPolygonMarker - a variation on the bar chart</li>
+<li>SparklineMarker - graph-based markers for illustrating time series and other x, y data in a geospatial context (Coming soon)</li>
 </ul>
 </li>
 </ul><p>Functions for easily mapping data properties to Leaflet style values:</p>
@@ -72,14 +73,16 @@ The primary goal of the framework is to simplify data visualization and thematic
 <li>HSLSaturationFunction - vary the output saturation based on a data property</li>
 <li>HSLLuminosityFunction - vary the output lightness/luminosity based on a data property</li>
 <li>Various RGB functions</li>
+<li>Built-in support for <a href="http://colorbrewer2.org">Colorbrewer</a> color scales</li>
 </ul>
 </li>
 <li>PiecewiseFunction - use multiple LinearFunction classes in sequence (e.g. vary a color from white to yellow, yellow to red)</li>
+<li>CustomColorFunction - specify the specific color scale to use.  Use L.ColorBrewer to specify Colorbrewer scales.</li>
 </ul><p>New layer types that simplify reading and visualizing any JSON-based data structure:</p>
 
 <ul>
 <li>DataLayer</li>
-<li>ChartDataLayer</li>
+<li>ChartDataLayer and corresponding DataLayer instances for various chart types</li>
 <li>ChoroplethDataLayer</li>
 <li>Others</li>
 </ul><p>GeoJSON polygons for countries and US states to support Choropleth mapping.  Countries are generated from:  <a href="https://github.com/johan/world.geo.json">https://github.com/johan/world.geo.json</a>.
@@ -89,10 +92,39 @@ Polygons are indexed via a state or country code and lookups are created to map 
 <p>Automatic legend generation and a simple legend control.
 To generate a legend, just call getLegend on any DataLayer, or use the provided legend control and the legend will be displayed automatically.</p>
 
-<p>Support for gradient fills and drop shadows.</p>
+<p>Support for gradient fills and drop shadows, text on Path-based items (e.g. markers, polylines, polygons, etc.), and more. </p>
+
+<p>Callouts for annotating map data.  Use the L.Callout class to add individual callouts to your map.  See the <a href="http://humangeo.github.com/leaflet-dvf/examples/html/markers.html">Markers</a> example for an illustration of callouts.</p>
 
 <p><em>NOTE:  The dist folder includes a minified version of the full framework as well as a minified version of the code required to use the new markers</em>
 <em>Use leaflet-dvf.markers.min.js if you want to use the new markers without the rest of the framework</em></p>
+
+<h2>
+<a name="pre-requisites" class="anchor" href="#pre-requisites"><span class="octicon octicon-link"></span></a>Pre-requisites</h2>
+
+<p>Required:</p>
+
+<ul>
+<li><a href="http://jquery.com/">jQuery</a></li>
+</ul><p>Optional - required for particular classes to work:</p>
+
+<ul>
+<li><a href="http://underscorejs.org/">Underscore JS</a></li>
+<li><a href="http://momentjs.com/">Moment JS</a></li>
+<li><a href="https://github.com/davetroy/geohash-js">geohash.js</a></li>
+<li><a href="https://github.com/bjornharrtell/jsts">JavaScript Topology Suite (JSTS)</a></li>
+<li>
+<a href="https://code.google.com/p/core-framework/source/browse/trunk/plugins/svg.js">Core Framework SVG Utilities</a> <em>Required for full functionality in archaic browsers (see note below)</em>
+</li>
+<li>
+<a href="https://github.com/mbostock/topojson">TopoJSON</a> <em>Recommended/required for US county lookups</em>
+</li>
+</ul><p>Using the framework in IE8 and below:</p>
+
+<p><strong>Special thanks to Keith Chew of <a href="http://www.e3solutions.net">e3solutions</a> for testing and getting things working in IE8 and below.  This is still an on-going effort, so additional bug fixes may be forthcoming.  The examples provided here may need some tweaking to work in IE8 and below</strong></p>
+
+<p>As you may or may not be aware, IE8 and below do not support SVG.  Leaflet and most SVG frameworks mitigate this problem by using Vector Markup Language (VML) instead of SVG when rendering custom shapes and paths.
+With the latest version of the framework, most of the components will work without requiring any extra dependencies.  However, L.RadialBarChartMarker and L.PieChartMarker will require including the <a href="https://code.google.com/p/core-framework/source/browse/trunk/plugins/svg.js">Core Framework SVG Utilities</a>.  These utilities can convert more complex SVG shapes into corresponding VML shapes.</p>
 
 <h2>
 <a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h2>
@@ -108,7 +140,8 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <ul>
 <li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/earthquakes.html">USGS Earthquakes</a></li>
 <li>
-<a href="http://humangeo.github.com/leaflet-dvf/examples/html/meetups.html">Meetup Finder</a> - zoom to an area of interest, put in a Meetup topic, and click the search button</li>
+<a href="http://humangeo.github.com/leaflet-dvf/examples/html/meetups.html">Meetup Finder</a> <em>Zoom to an area of interest, put in a Meetup topic, and click the search button</em>
+</li>
 <li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/weather.html">Weather</a></li>
 </ul><p>Choropleth Mapping:</p>
 
@@ -119,15 +152,39 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 
 <ul>
 <li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/incomelevels.html">WorldBank and UN Data</a></li>
-<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/election2012.html">Election 2012 Polling</a></li>
+<li>
+<a href="http://humangeo.github.com/leaflet-dvf/examples/html/election2012.html">Election 2012 Polling</a> <em>Illustrates sizing pie charts by a data value</em>
+</li>
 <li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/election2012results.html">2008 vs 2012 Election Results</a></li>
 <li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/uselectiondata.html">2008 Election Results</a></li>
 <li>
-<a href="http://humangeo.github.com/leaflet-dvf/examples/html/nlzip.html">Netherlands Population by ZIP 2</a> ** Thanks to Steven De Schrijver of <a href="http://www.conundra.eu">Conundra</a> for providing the example use case **</li>
+<a href="http://humangeo.github.com/leaflet-dvf/examples/html/nlzip.html">Netherlands Population by ZIP 2</a> <strong>Thanks to Steven De Schrijver of <a href="http://www.conundra.eu">Conundra</a> for providing the example use case</strong>
+</li>
 </ul><p>Images:</p>
 
 <ul>
-<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/panoramio.html">Panoramio Layer</a></li>
+<li>
+<a href="http://humangeo.github.com/leaflet-dvf/examples/html/panoramio.html">Panoramio Browser</a> <em>NOTE:  This is a work in progress but is mostly complete</em>
+</li>
+</ul><p>Lines:</p>
+
+<ul>
+<li>
+<a href="http://humangeo.github.com/leaflet-dvf/examples/html/minard.html">Napoleon's March</a> <em>Yet another variation of Charle's Minard's famous visualization that illustrates the use of the FlowLine class</em>
+</li>
+<li>
+<a href="http://humangeo.github.com/leaflet-dvf/examples/html/airports.html">US Airports and Flight Data</a> <em>Illustrates using the L.Graph class for visualizing flights between airports</em>
+</li>
+</ul><p>In Progress:</p>
+
+<ul>
+<li>
+<a href="http://humangeo.github.com/leaflet-dvf/examples/html/sparklines.html">Sparklines</a> <em>NOTE:  This is a work in progress.  The code is incomplete and can be found in src/leaflet.dvf.experimental.js</em>
+</li>
+<li>
+<a href="http://humangeo.github.com/leaflet-dvf/examples/html/runmap.html">Run Map</a> <em>NOTE:  This is a work in progress.  Illustrates using a WeightedPolyline to show variations in GPS data</em>
+</li>
+<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/countystats.html">US County Statistics</a></li>
 </ul><p>Tutorials coming soon to <a href="http://www.thehumangeo.com/">HumanGeo</a>'s <a href="http://blog.thehumangeo.com">blog</a></p>
 
 <h1>
@@ -147,12 +204,32 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <h4>
 <a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h4>
 
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">layer</span> <span class="o">=</span> <span class="k">new</span> <span class="o">&lt;</span><span class="nx">Leaflet</span> <span class="nx">Path</span><span class="o">-</span><span class="nx">based</span> <span class="nx">Layer</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">g</span><span class="p">.</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Polygon</span><span class="p">)</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Constructor</span> <span class="nx">inputs</span><span class="o">&gt;</span><span class="p">,</span> <span class="p">{</span>
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">layer</span> <span class="o">=</span> <span class="k">new</span> <span class="o">&lt;</span><span class="nx">Leaflet</span> <span class="nx">Path</span><span class="o">-</span><span class="nx">based</span> <span class="nx">Layer</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">g</span><span class="p">.</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Polygon</span><span class="p">)</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Constructor</span> <span class="nx">inputs</span><span class="o">&gt;</span><span class="p">,</span> <span class="p">{</span>
     <span class="c1">// L.Path style options</span>
     <span class="p">...</span>
     <span class="nx">gradient</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
     <span class="nx">dropShadow</span><span class="o">:</span> <span class="kc">true</span>
 <span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">layer</span> <span class="o">=</span> <span class="k">new</span> <span class="o">&lt;</span><span class="nx">Leaflet</span> <span class="nx">Path</span><span class="o">-</span><span class="nx">based</span> <span class="nx">Layer</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">g</span><span class="p">.</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Polygon</span><span class="p">)</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Constructor</span> <span class="nx">inputs</span><span class="o">&gt;</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">gradient</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">vector</span><span class="o">:</span> <span class="p">[[</span><span class="s1">'0%'</span><span class="p">,</span> <span class="s1">'50%'</span><span class="p">],</span> <span class="p">[</span><span class="s1">'100%'</span><span class="p">,</span> <span class="s1">'50%'</span><span class="p">]],</span>
+        <span class="nx">stops</span><span class="o">:</span> <span class="p">[{</span>
+            <span class="nx">offset</span><span class="o">:</span> <span class="s1">'0%'</span><span class="p">,</span>
+            <span class="nx">style</span><span class="o">:</span> <span class="p">{</span>
+                <span class="nx">color</span><span class="o">:</span> <span class="s1">'#ffffff'</span><span class="p">,</span>
+                <span class="nx">opacity</span><span class="o">:</span> <span class="mi">1</span>
+            <span class="p">}</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="nx">offset</span><span class="o">:</span> <span class="s1">'50%'</span><span class="p">,</span>
+            <span class="nx">style</span><span class="o">:</span> <span class="p">{</span>
+                <span class="nx">color</span><span class="o">:</span> <span class="s1">'#ff0000'</span><span class="p">,</span>
+                <span class="nx">opacity</span><span class="o">:</span> <span class="mi">1</span>
+            <span class="p">}</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+
 </pre></div>
 
 <h4>
@@ -168,7 +245,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <tbody>
 <tr>
 <td>gradient</td>
-<td>Boolean</td>
+<td>Boolean OR Object</td>
 <td>differs depending on the layer class (most new marker types use a gradient by default)</td>
 <td>Specifying a value of true will fill the path with a gradient from white to the specified fillColor (top left - bottom right)</td>
 </tr>
@@ -177,6 +254,143 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <td>Boolean</td>
 <td>false</td>
 <td>Specifying a value of true will add a dropShadow to the path</td>
+</tr>
+</tbody>
+</table><h4>
+<a name="gradient-property-options" class="anchor" href="#gradient-property-options"><span class="octicon octicon-link"></span></a>gradient Property Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>vector</td>
+<td>Array</td>
+<td>[['0%', '0%'], ['100%', '100%']]</td>
+<td>an array consisting of a start and end point that defines the direction of the gradient.  Each start and end point is an array of x and y values. Where x and y values can be percentage strings (e.g. '100%') or numbers defining an absolute position</td>
+</tr>
+<tr>
+<td>stops</td>
+<td>Array</td>
+<td></td>
+<td>an array of stop objects defining the colors to be used in the gradient.  Each stop object has offset and style properties.  See below.</td>
+</tr>
+</tbody>
+</table><h4>
+<a name="stop-options" class="anchor" href="#stop-options"><span class="octicon octicon-link"></span></a>stop Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>offset</td>
+<td>String OR Number</td>
+<td></td>
+<td>The position along the gradient at which to apply the given color/opacity</td>
+</tr>
+<tr>
+<td>style</td>
+<td>Object</td>
+<td>{ opacity: 1, color: }</td>
+<td>an object with color and opacity properties defining the color and opacity to be used in the given stop.  If you omit the color, the Path's fillColor or color will be used automatically.</td>
+</tr>
+</tbody>
+</table><blockquote>
+<p>You can also add text to any Path based item by passing in the a text option as part of the normal style options</p>
+</blockquote>
+
+<h4>
+<a name="usage-1" class="anchor" href="#usage-1"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">layer</span> <span class="o">=</span> <span class="k">new</span> <span class="o">&lt;</span><span class="nx">Leaflet</span> <span class="nx">Path</span><span class="o">-</span><span class="nx">based</span> <span class="nx">Layer</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">g</span><span class="p">.</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Polygon</span><span class="p">)</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Constructor</span> <span class="nx">inputs</span><span class="o">&gt;</span><span class="p">,</span> <span class="p">{</span>
+    <span class="c1">// L.Path style options</span>
+    <span class="p">...</span>
+    <span class="nx">text</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">text</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">to</span> <span class="nx">display</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="nx">attr</span><span class="o">:</span> <span class="p">{</span><span class="o">&lt;</span><span class="nb">Object</span> <span class="nx">of</span> <span class="nx">key</span><span class="o">/</span><span class="nx">value</span> <span class="nx">pairs</span> <span class="nx">defining</span> <span class="nx">SVG</span> <span class="nx">element</span> <span class="nx">attributes</span> <span class="nx">to</span> <span class="nx">apply</span> <span class="nx">to</span> <span class="nx">the</span> <span class="nx">text</span> <span class="nx">element</span><span class="o">&gt;</span><span class="p">},</span>
+        <span class="nx">style</span><span class="o">:</span> <span class="p">{</span><span class="o">&lt;</span><span class="nb">Object</span> <span class="nx">of</span> <span class="nx">key</span><span class="o">/</span><span class="nx">value</span> <span class="nx">pairs</span> <span class="nx">defining</span> <span class="nx">style</span> <span class="nx">properties</span> <span class="nx">to</span> <span class="nx">apply</span> <span class="nx">to</span> <span class="nx">the</span> <span class="nx">text</span> <span class="nx">element</span><span class="p">},</span>
+        <span class="nx">path</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">startOffset</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">percentage</span> <span class="nx">or</span> <span class="nx">absolute</span> <span class="nx">position</span> <span class="nx">along</span> <span class="nx">the</span> <span class="nx">path</span> <span class="nx">where</span> <span class="nx">text</span> <span class="nx">should</span> <span class="nx">start</span><span class="o">&gt;</span><span class="p">,</span>
+            <span class="nx">attr</span><span class="o">:</span> <span class="p">{},</span>
+            <span class="nx">style</span><span class="o">:</span> <span class="p">{}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+
+<h4>
+<a name="text-options" class="anchor" href="#text-options"><span class="octicon octicon-link"></span></a>Text Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>text</td>
+<td>String</td>
+<td>null</td>
+<td>The text to display</td>
+</tr>
+<tr>
+<td>attr</td>
+<td>Object</td>
+<td>null</td>
+<td>A set of key/value pairs that will be added as attributes to the created SVG text element (see the SVG spec for specifics)</td>
+</tr>
+<tr>
+<td>style</td>
+<td>Object</td>
+<td>null</td>
+<td>A set of key/value pairs that will be added to the style attribute for the created SVG text element (see the SVG spec for specific styles)</td>
+</tr>
+<tr>
+<td>path</td>
+<td>Object</td>
+<td>null</td>
+<td>This will cause the specified text to be displayed along the path (see options below)</td>
+</tr>
+</tbody>
+</table><h4>
+<a name="path-options" class="anchor" href="#path-options"><span class="octicon octicon-link"></span></a>Path Options</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>startOffset</td>
+<td>String</td>
+<td>null</td>
+<td>Percentage or absolute position along the path where text should start</td>
+</tr>
+<tr>
+<td>attr</td>
+<td>Object</td>
+<td>null</td>
+<td>A set of key/value pairs that will be added as attributes to the created SVG textPath element (see the SVG spec for specifics)</td>
+</tr>
+<tr>
+<td>style</td>
+<td>Object</td>
+<td>null</td>
+<td>A set of key/value pairs that will be added to the style attribute for the created SVG textPath element (see the SVG spec for specific styles)</td>
 </tr>
 </tbody>
 </table><h2>
@@ -196,11 +410,11 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <p><img alt="Map Marker" src="http://humangeo.github.com/leaflet-dvf/images/mapmarker.png"></p>
 
 <h4>
-<a name="usage-1" class="anchor" href="#usage-1"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-2" class="anchor" href="#usage-2"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <p><code>L.MapMarker(&lt;LatLng&gt; LatLng, &lt;Marker options&gt; options?);</code></p>
 
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">marker</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">MapMarker</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LatLng</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">{</span>
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">marker</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">MapMarker</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LatLng</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">{</span>
     <span class="nx">radius</span><span class="o">:</span> <span class="mi">10</span><span class="p">,</span>
     <span class="c1">// L.Path style options</span>
     <span class="p">...</span>
@@ -244,6 +458,12 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <td>null</td>
 <td>The inner radius of the marker hole in pixels.</td>
 </tr>
+<tr>
+<td>imageCircleUrl</td>
+<td>String</td>
+<td>null</td>
+<td>The URL of an image to display on the marker.  This will be displayed in the main circular area of the marker.</td>
+</tr>
 </tbody>
 </table><h3>
 <a name="lregularpolygonmarker" class="anchor" href="#lregularpolygonmarker"><span class="octicon octicon-link"></span></a>L.RegularPolygonMarker</h3>
@@ -255,11 +475,11 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <p><img alt="Regular Polygons" src="http://humangeo.github.io/leaflet-dvf/images/regularpolygon.png"></p>
 
 <h4>
-<a name="usage-2" class="anchor" href="#usage-2"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-3" class="anchor" href="#usage-3"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <p><code>L.RegularPolygonMarker(&lt;LatLng&gt; LatLng, &lt;Marker options&gt; options?);</code></p>
 
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">marker</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">RegularPolygonMarker</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LatLng</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">{</span>
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">marker</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">RegularPolygonMarker</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LatLng</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">{</span>
     <span class="nx">numberOfSides</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span>
     <span class="nx">rotation</span><span class="o">:</span> <span class="mf">60.0</span><span class="p">,</span>
     <span class="nx">radius</span><span class="o">:</span> <span class="mi">10</span><span class="p">,</span>
@@ -305,6 +525,12 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <td>null</td>
 <td>The inner radius of the marker in pixels.  Specifying an innerRadius will produce a regular polygon with a hole in the middle.</td>
 </tr>
+<tr>
+<td>imageCircleUrl</td>
+<td>String</td>
+<td>null</td>
+<td>The URL of an image to display on the marker.  This will be displayed in the main circular area of the marker.</td>
+</tr>
 </tbody>
 </table><h3>
 <a name="lstarmarker" class="anchor" href="#lstarmarker"><span class="octicon octicon-link"></span></a>L.StarMarker</h3>
@@ -316,7 +542,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 </blockquote>
 
 <h4>
-<a name="usage-3" class="anchor" href="#usage-3"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-4" class="anchor" href="#usage-4"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <p><code>L.StarMarker(&lt;LatLng&gt; LatLng, &lt;StarMarker options&gt; options?);</code></p>
 
@@ -346,7 +572,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 </blockquote>
 
 <h4>
-<a name="usage-4" class="anchor" href="#usage-4"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-5" class="anchor" href="#usage-5"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <p><code>L.BarChartMarker(&lt;LatLng&gt; LatLng, &lt;Chart options&gt; options?);</code>
 <code>L.RadialBarChartMarker(&lt;LatLng&gt; LatLng, &lt;Chart options&gt; options?);</code>
@@ -355,7 +581,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <code>L.StackedRegularPolygonMarker(&lt;LatLng&gt; LatLng, &lt;Chart options&gt; options?);</code>
 <code>L.RadialMeterMarker(&lt;LatLng&gt; LatLng, &lt;Chart options&gt; options?);</code></p>
 
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
     <span class="nx">data</span><span class="o">:</span> <span class="p">{</span>
         <span class="s1">'dataPoint1'</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>
         <span class="s1">'dataPoint2'</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>
@@ -431,7 +657,138 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <td>null</td>
 <td>A set of key/value pairs that defines the options associated with each data property displayed by the marker.</td>
 </tr>
+<tr>
+<td>backgroundStyle (L.RadialMeterMarker)</td>
+<td>Object</td>
+<td>L.Path object with a semi-transparent gray fill and stroke</td>
+<td>An object of L.Path style options that will be used to style the background area of the chart.  Set this to null or false to prevent a background from being displayed.</td>
+</tr>
 </tbody>
+</table><h3>
+<a name="lcallout" class="anchor" href="#lcallout"><span class="octicon octicon-link"></span></a>L.Callout</h3>
+
+<blockquote>
+<p>Used for annotating markers, lines, and polygons.  Callouts include a line and associated icon (L.Icon or L.DivIcon).</p>
+</blockquote>
+
+<h4>
+<a name="usage-6" class="anchor" href="#usage-6"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.Callout(&lt;LatLng&gt; latlng, &lt;Callout options&gt; options?);</code></p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">callout</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Callout</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LatLng</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="p">{</span>
+    <span class="nx">arrow</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nx">numberOfSides</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="nx">radius</span><span class="o">:</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="nx">icon</span><span class="o">:</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">DivIcon</span><span class="p">(...),</span>
+    <span class="nx">direction</span><span class="o">:</span> <span class="nx">L</span><span class="p">.</span><span class="nx">CalloutLine</span><span class="p">.</span><span class="nx">DIRECTION</span><span class="p">.</span><span class="nx">NE</span><span class="p">,</span>
+    <span class="nx">lineStyle</span><span class="o">:</span> <span class="nx">L</span><span class="p">.</span><span class="nx">CalloutLine</span><span class="p">.</span><span class="nx">LINESTYLE</span><span class="p">.</span><span class="nx">ARC</span><span class="p">,</span>
+    <span class="nx">size</span><span class="o">:</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+    <span class="nx">weight</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="nx">fillOpacity</span><span class="o">:</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="nx">color</span><span class="o">:</span> <span class="s1">'#FFFFFF'</span><span class="p">,</span>
+    <span class="nx">fillColor</span><span class="o">:</span> <span class="s1">'#FFFFFF'</span>
+<span class="p">});</span>
+
+<span class="nx">map</span><span class="p">.</span><span class="nx">addLayer</span><span class="p">(</span><span class="nx">callout</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="options-in-addition-to-lpath-style-options" class="anchor" href="#options-in-addition-to-lpath-style-options"><span class="octicon octicon-link"></span></a>Options (in addition to L.Path style options)</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>arrow</td>
+<td>Boolean</td>
+<td>true</td>
+<td>true/false - whether or not an arrow should be added to the end of the callout line</td>
+</tr>
+<tr>
+<td>numberOfSides</td>
+<td>Number</td>
+<td>3</td>
+<td>The number of sides the arrow at the end of the callout line will have.</td>
+</tr>
+<tr>
+<td>radius</td>
+<td>Number</td>
+<td>6</td>
+<td>The radius of the arrow that will be displayed at the end of the callout line</td>
+</tr>
+<tr>
+<td>icon</td>
+<td>Object</td>
+<td>null</td>
+<td>An L.Icon or L.DivIcon object that will be displayed at the end of the callout line</td>
+</tr>
+<tr>
+<td>direction</td>
+<td>String</td>
+<td>'ne'</td>
+<td>The quadrant in which the callout will be placed: 'ne', 'se', 'sw', 'nw'.  Use L.CalloutLine.DIRECTION properties (NE, SE, SW, NW) to specify this</td>
+</tr>
+<tr>
+<td>lineStyle</td>
+<td>String</td>
+<td>'angle'</td>
+<td>The style of the associated callout line: 'arc', 'angle', 'straight'.  Use L.CalloutLine.LINESTYLE properties (ARC, ANGLE, STRAIGHT) to specify this.  'arc' displays a curved line, 'angle' displays an angled line, and 'straight' displays a straight line from the annotation point to the associated icon.</td>
+</tr>
+<tr>
+<td>size</td>
+<td>Object</td>
+<td>L.Point(60, 30)</td>
+<td>The bounds of the callout line</td>
+</tr>
+</tbody>
+</table><p>Include L.Path options to style the callout line associated with the callout object (e.g. color, fillColor, weight, etc.)</p>
+
+<h2>
+<a name="lines" class="anchor" href="#lines"><span class="octicon octicon-link"></span></a>Lines</h2>
+
+<h3>
+<a name="larcedpolyline" class="anchor" href="#larcedpolyline"><span class="octicon octicon-link"></span></a>L.ArcedPolyline</h3>
+
+<blockquote>
+<p>Draws an arced polyline.  Rather than drawing a straight line from latlng1 to latlng2, this class draws an arced line from latlng1 to latlng2.  The height of the arc is proportional to the distance between latlng1 and latlng2 and defined by a customizable L.LinearFunction instance.  This is useful for illustrating spatial relationships, flight paths, etc.</p>
+</blockquote>
+
+<h4>
+<a name="usage-7" class="anchor" href="#usage-7"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<p><code>L.ArcedPolyline(&lt;LatLng[]&gt; latlngs, &lt;ArcedPolyline options&gt; options?);</code></p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">arcedPolyline</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">ArcedPolyline</span><span class="p">([...],</span> <span class="p">{</span>
+    <span class="nx">distanceToHeight</span><span class="o">:</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LinearFunction</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">4000</span><span class="p">,</span> <span class="mi">400</span><span class="p">]),</span>
+    <span class="nx">color</span><span class="o">:</span> <span class="s1">'#FF00000'</span><span class="p">,</span>
+    <span class="nx">weight</span><span class="o">:</span> <span class="mi">4</span>
+<span class="p">});</span>
+
+<span class="nx">map</span><span class="p">.</span><span class="nx">addLayer</span><span class="p">(</span><span class="nx">arcedPolyline</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="options-in-addition-to-lpath-style-options-1" class="anchor" href="#options-in-addition-to-lpath-style-options-1"><span class="octicon octicon-link"></span></a>Options (in addition to L.Path style options)</h4>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody><tr>
+<td>distanceToHeight</td>
+<td>L.LinearFunction</td>
+<td>new L.LinearFunction([0, 5], [1000, 200])</td>
+<td>An L.LinearFunction instance that maps the distance between two points to an arc height in pixels</td>
+</tr></tbody>
 </table><h2>
 <a name="utility-functions" class="anchor" href="#utility-functions"><span class="octicon octicon-link"></span></a>Utility Functions</h2>
 
@@ -447,11 +804,11 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 </blockquote>
 
 <h4>
-<a name="usage-5" class="anchor" href="#usage-5"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-8" class="anchor" href="#usage-8"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <p><code>L.LinearFunction(&lt;Number[]|Point&gt; minPoint, &lt;Number[]|Point&gt; maxPoint, &lt;LinearFunction options&gt; options?);</code></p>
 
-<div class="highlight"><pre><span class="c1">// Map a data property that ranges from 0 to 100 to a value between 5 and 20 (e.g. marker radius)</span>
+<div class="highlight highlight-javascript"><pre><span class="c1">// Map a data property that ranges from 0 to 100 to a value between 5 and 20 (e.g. marker radius)</span>
 <span class="kd">var</span> <span class="nx">linearFunction</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LinearFunction</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
 
 <span class="c1">// OR - In addition to L.Point objects, you can also use arrays</span>
@@ -506,7 +863,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 </blockquote>
 
 <h4>
-<a name="usage-6" class="anchor" href="#usage-6"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-9" class="anchor" href="#usage-9"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <blockquote>
 <p>Change the output hue dynamically based on the input data property<br><em>Useful for producing colors along a rainbow scale (or subset)</em>
@@ -531,7 +888,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <code>L.RGBColorBlendFunction(&lt;Number&gt; minX, &lt;Number&gt;&gt; maxX, &lt;RGB array&gt; minColor, &lt;RGB array&gt; maxColor);</code></p>
 </blockquote>
 
-<div class="highlight"><pre><span class="c1">// Map a data property that ranges from 0 to 100 to a color between green (hue of 120) and red (hue of 0)</span>
+<div class="highlight highlight-javascript"><pre><span class="c1">// Map a data property that ranges from 0 to 100 to a color between green (hue of 120) and red (hue of 0)</span>
 <span class="kd">var</span> <span class="nx">colorFunction</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">HSLHueFunction</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">120</span><span class="p">),</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">20</span><span class="p">));</span>
 
 <span class="nx">colorFunction</span><span class="p">.</span><span class="nx">evaluate</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span> <span class="c1">// prints 'hsl(110.00, 100%, 50%)'</span>
@@ -614,11 +971,11 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 </blockquote>
 
 <h4>
-<a name="usage-7" class="anchor" href="#usage-7"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-10" class="anchor" href="#usage-10"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <p><code>L.PiecewiseFunction(&lt;LinearFunction[]&gt; functions, &lt;LinearFunction options&gt; options?);</code></p>
 
-<div class="highlight"><pre><span class="c1">// Map a data property that ranges from 0 to 100 to a color that ranges from white to yellow, yellow to red</span>
+<div class="highlight highlight-javascript"><pre><span class="c1">// Map a data property that ranges from 0 to 100 to a color that ranges from white to yellow, yellow to red</span>
 <span class="c1">// To vary a color between white and that color, use an HSLLuminosityFunction.  In this case we'll vary</span>
 <span class="c1">// the color from white to yellow until the value reaches 50</span>
 <span class="kd">var</span> <span class="nx">whiteToYellow</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">HSLLuminosityFunction</span><span class="p">(</span><span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">{</span>
@@ -645,13 +1002,13 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <a name="ldatalayer" class="anchor" href="#ldatalayer"><span class="octicon octicon-link"></span></a>L.DataLayer</h3>
 
 <blockquote>
-<p>Display data values using L.RegularPolygonMarker instances.  In thematic mapping, this class displays data using proportional symbols.  </p>
+<p>Display data values using L.RegularPolygonMarker instances.  To override the default marker behavior, use the getMarker option or inherit from DataLayer and override _getMarker.  In thematic mapping, this class displays data using proportional symbols.  </p>
 
 <p><em>NOTE:  If the location features are lines/polygons (e.g. GeoJSON), this class will use the centroid of each line/polygon to place each marker.  When dealing with line/polygon features, you must include a reference to the <a href="https://github.com/bjornharrtell/jsts/tree/master/lib">JavaScript Topology Suite (JSTS) JS files</a>.  These files are used to calculate centroids.  If these files are not included, the DataLayer class will fallback to using the center of the bounds of the layer's geometry.</em></p>
 </blockquote>
 
 <h4>
-<a name="usage-8" class="anchor" href="#usage-8"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-11" class="anchor" href="#usage-11"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <p><code>L.DataLayer(&lt;Object&gt; data, &lt;DataLayer options&gt; options?);</code></p>
 
@@ -728,10 +1085,10 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <td>onEachRecord</td>
 <td>Function</td>
 <td>null</td>
-<td>A function that performs additional operations (e.g. binding a popup) on a created layer based on the record associated with that layer (similar to the L.GeoJSON onEachFeature method</td>
+<td>A function that performs additional operations (e.g. binding a popup) on a created layer based on the record associated with that layer (similar to the L.GeoJSON onEachFeature method).  Note that the parameter ordering is: layer, record.  This is slightly different from the L.GeoJSON onEachFeature method, where the ordering is:  featureData, layer.</td>
 </tr>
 <tr>
-<td>includeLayer</td>
+<td>includeLayer OR filter</td>
 <td>Function</td>
 <td>null</td>
 <td>A function for determining whether or not the layer for a given record should be added to the map.</td>
@@ -751,10 +1108,28 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 </td>
 </tr>
 <tr>
+<td>locationIndexField</td>
+<td>String</td>
+<td>null</td>
+<td>A string identifying the field that will be used to index GeoJSON Feature objects when the locationMode is L.LocationModes.LOOKUP.  If you don't specify this field, the DataLayer will use the codeField value as the property to use when indexing GeoJSON Features</td>
+</tr>
+<tr>
 <td>includeBoundary</td>
 <td>Boolean</td>
 <td>null</td>
 <td>true/false - whether or not the boundary polygon should be displayed when displaying proportional symbols.  This is useful for identifying the boundary associated with each symbol.</td>
+</tr>
+<tr>
+<td>boundaryStyle</td>
+<td>Object</td>
+<td>null</td>
+<td>Path style options used for specifying how the boundary associated with the point will be displayed</td>
+</tr>
+<tr>
+<td>getMarker</td>
+<td>Function</td>
+<td>null</td>
+<td>A function for overriding the default marker that gets placed at each location.  The function takes a latlng and options as parameters.</td>
 </tr>
 </tbody>
 </table><h4>
@@ -764,7 +1139,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 
 <p>Given an object like:</p>
 
-<div class="highlight"><pre><span class="p">{</span>
+<div class="highlight highlight-javascript"><pre><span class="p">{</span>
     <span class="nx">data</span><span class="o">:</span> <span class="p">{</span>
         <span class="nx">values</span><span class="o">:</span> <span class="p">[</span>
             <span class="p">{</span>
@@ -795,7 +1170,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 
 <p>You might specify the following options:</p>
 
-<div class="highlight"><pre><span class="p">{</span>
+<div class="highlight highlight-javascript"><pre><span class="p">{</span>
     <span class="nx">recordsField</span><span class="o">:</span> <span class="s1">'data.values'</span><span class="p">,</span>
     <span class="nx">locationMode</span><span class="o">:</span> <span class="nx">L</span><span class="p">.</span><span class="nx">LocationModes</span><span class="p">.</span><span class="nx">LATLNG</span><span class="p">,</span>
     <span class="nx">latitudeField</span><span class="o">:</span> <span class="s1">'location.1'</span>  <span class="c1">// Points to the second item in the location array</span>
@@ -815,7 +1190,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <p>The <em>displayOptions</em> option is used to define how data properties are dynamically mapped to display styles. It's a JavaScript object of key/value pairs that follows the pattern:</p>
 </blockquote>
 
-<div class="highlight"><pre><span class="p">{</span>
+<div class="highlight highlight-javascript"><pre><span class="p">{</span>
     <span class="o">&lt;</span><span class="nx">reference</span> <span class="nx">to</span> <span class="nx">data</span> <span class="nx">property</span> <span class="mi">1</span><span class="o">&gt;:</span> <span class="p">{</span>
         <span class="nx">displayName</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">Human</span><span class="o">-</span><span class="nx">readable</span> <span class="nx">text</span> <span class="nx">describing</span> <span class="k">this</span> <span class="nx">property</span><span class="o">&gt;</span><span class="p">,</span>
         <span class="nx">displayText</span><span class="o">:</span> <span class="o">&lt;</span><span class="nb">Function</span> <span class="k">for</span> <span class="nx">converting</span> <span class="nx">the</span> <span class="nx">value</span> <span class="nx">of</span> <span class="k">this</span> <span class="nx">property</span> <span class="nx">to</span> <span class="nx">a</span> <span class="nx">human</span><span class="o">-</span><span class="nx">readable</span> <span class="nx">value</span><span class="o">&gt;</span><span class="p">,</span>
@@ -847,7 +1222,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 </blockquote>
 
 <h4>
-<a name="usage-9" class="anchor" href="#usage-9"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-12" class="anchor" href="#usage-12"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <p><code>L.BarChartDataLayer(&lt;Object&gt; data, &lt;ChartDataLayer options&gt; options?);</code>
 <code>L.RadialBarChartDataLayer(&lt;Object&gt; data, &lt;ChartDataLayer options&gt; options?);</code>
@@ -866,7 +1241,11 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <th>Description</th>
 </tr></thead>
 <tbody></tbody>
-</table><h3>
+</table><blockquote>
+<p>NOTE:  You can use the displayOptions option to size ChartMarker instances dynamically by some property of each record.  See the DataLayer options above for more information about displayOptions.</p>
+</blockquote>
+
+<h3>
 <a name="lchoroplethdatalayer" class="anchor" href="#lchoroplethdatalayer"><span class="octicon octicon-link"></span></a>L.ChoroplethDataLayer</h3>
 
 <blockquote>
@@ -876,7 +1255,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <p><img alt="Choropleth Data Layer" src="http://humangeo.github.com/leaflet-dvf/images/choropleth.png"><img alt="Choropleth Data Layer" src="http://humangeo.github.com/leaflet-dvf/images/choropleth1.png"></p>
 
 <h4>
-<a name="usage-10" class="anchor" href="#usage-10"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-13" class="anchor" href="#usage-13"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <p><code>L.ChoroplethDataLayer(&lt;Object&gt; data, &lt;DataLayer options&gt; options?);</code></p>
 
@@ -899,7 +1278,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 </blockquote>
 
 <h4>
-<a name="usage-11" class="anchor" href="#usage-11"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-14" class="anchor" href="#usage-14"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <p><code>L.MarkerDataLayer(&lt;Object&gt; data, &lt;MarkerDataLayer options&gt; options?);</code></p>
 
@@ -918,13 +1297,14 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <a name="lpanoramiolayer" class="anchor" href="#lpanoramiolayer"><span class="octicon octicon-link"></span></a>L.PanoramioLayer</h3>
 
 <blockquote>
-<p>Display Panoramio images on the map.  Shows the top 50 most popular images for the current map view.</p>
+<p>Display Panoramio images on the map.  Shows the top 50 most popular images for the current map view.
+NOTE:  Requires <a href="http://momentjs.com">Moment.js</a>
+Check out <a href="http://humangeo.github.com/leaflet-dvf/examples/html/panoramio.html">Panoramio Browser</a> for an example of using this layer.
+<img alt="Panoramio Layer" src="http://humangeo.github.com/leaflet-dvf/images/panoramiolayer.png"></p>
 </blockquote>
 
-<p><img alt="Panoramio Layer" src="http://humangeo.github.com/leaflet-dvf/images/panoramiolayer.png"></p>
-
 <h4>
-<a name="usage-12" class="anchor" href="#usage-12"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-15" class="anchor" href="#usage-15"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <p><code>L.PanoramioLayer(&lt;PanoramioLayer options&gt; options?);</code></p>
 
@@ -939,6 +1319,12 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <th>Description</th>
 </tr></thead>
 <tbody>
+<tr>
+<td>photoSet</td>
+<td>String</td>
+<td>public</td>
+<td>The Panoramio API photo set to use for retrieving images.  Can be one of 'public' - the most popular photos, 'full' - all photos, or a specific author id</td>
+</tr>
 <tr>
 <td>updateInterval</td>
 <td>Number</td>
@@ -957,6 +1343,12 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <td>moveend</td>
 <td>The Leaflet events that will trigger a refresh of photos (separate with spaces)</td>
 </tr>
+<tr>
+<td>onEachPhoto</td>
+<td>Function</td>
+<td>null</td>
+<td>A function that will be called for each photo in the collection of retrieved photos.  This is similar to the onEachRecord function of a DataLayer.</td>
+</tr>
 </tbody>
 </table><h2>
 <a name="legends" class="anchor" href="#legends"><span class="octicon octicon-link"></span></a>Legends</h2>
@@ -972,7 +1364,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <p>Add this control to your map to automatically display a dynamic legend for any L.DataLayer based instance that you add to your map</p>
 </blockquote>
 
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">legendControl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Control</span><span class="p">.</span><span class="nx">Legend</span><span class="p">();</span>
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">legendControl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">Control</span><span class="p">.</span><span class="nx">Legend</span><span class="p">();</span>
 
 <span class="nx">legendControl</span><span class="p">.</span><span class="nx">addTo</span><span class="p">(</span><span class="nx">map</span><span class="p">);</span>
 </pre></div>
@@ -986,11 +1378,11 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 </blockquote>
 
 <h4>
-<a name="usage-13" class="anchor" href="#usage-13"><span class="octicon octicon-link"></span></a>Usage</h4>
+<a name="usage-16" class="anchor" href="#usage-16"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <p><code>layer.getLegend(&lt;Legend options&gt; options?);</code></p>
 
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">layer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">DataLayer</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="p">{...});</span>
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">layer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">L</span><span class="p">.</span><span class="nx">DataLayer</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="p">{...});</span>
 
 <span class="nx">layer</span><span class="p">.</span><span class="nx">getLegend</span><span class="p">();</span> <span class="c1">// Returns HTML</span>
 </pre></div>

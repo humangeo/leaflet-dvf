@@ -852,3 +852,139 @@ L.WeightedPolyline = L.LayerGroup.extend({
 L.weightedPolyline = function (latlngs, options) {
 	return new L.WeightedPolyline(latlngs, options);
 };
+
+/*
+ * Incomplete - A WORK IN PROGRESS
+ * Takes an array of of values (degrees for each slice), an array of fillColors (color for each level of the stack), and an array for each one of the options.data (must have the same length for each)
+ */
+L.StackedPieChartMarker = L.ChartMarker.extend({
+    initialize: function(centerLatLng, options) {
+        L.Util.setOptions(this, options);
+        L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
+    },
+
+    options: {
+        weight: 1,
+        opacity: 1,
+        color: "#000",
+        fill: true,
+        radius: 10,
+        rotation: 0,
+        numberOfSides: 50,
+        mouseOverExaggeration: 1.2,
+        maxDegrees: 360,
+        iconSize: new L.Point(50, 40)
+    },
+
+    _loadComponents: function() {
+        var value;
+        var allValueMax = 0;
+        var scale = 1;
+        var sum = 0;
+        var angle = 0;
+        var percentage = 0;
+        var radius = this.options.radius;
+        var barThickness = this.options.barThickness;
+        var maxDegrees = this.options.maxDegrees || 360;
+        var lastAngle = 0;//this.options.rotation;
+        var bar;
+        var options = this.options;
+        var dataPoint;
+        var data = this.options.data;
+        var chartOptions = this.options.chartOptions;
+        var chartOption;
+        var key;
+        var getValue = function(data, key) {
+            var value = 0;
+            if (data[key]) {
+                value = parseFloat(data[key]);
+            }
+            return value;
+        };
+        var j = 0;
+        var dataValueSum = [];
+        var dataScale = [];
+        for (key in data) {
+            value = getValue(data, key);
+            //sum += value;
+            var valueSum = 0;
+            for(var i = 0; i < data[key].length; ++i){
+        		value = parseFloat(data[key][i]);
+        		valueSum += value;
+        	}
+        	dataValueSum.push(valueSum);
+        	dataScale.push(options.barThickness / valueSum);
+        	allValueMax = (allValueMax > valueSum) ? allValueMax : valueSum;
+            sum += options.values[j];
+            ++j;
+        }
+        scale = options.barThickness / allValueMax;
+        if (sum > 0) {
+            circle = new L.CircleMarker(this._latlng, {
+            	color: options.color, 
+            	radius: barThickness, 
+            	fillColor: options.fillColor, 
+            	fill:true, 
+            	iconSize: new L.Point(50, 40)
+            });
+			this._bindMouseEvents(circle);
+			this.addLayer(circle);
+
+        	var j = 0;
+            for (key in data) {
+            	var valueSum = 0.0;
+                percentage = options.values[j]/sum;
+                angle = percentage * maxDegrees;
+                options.startAngle = lastAngle;
+                options.endAngle = lastAngle + angle;
+            	for(var i = 0; i < data[key].length; ++i){
+            		value = parseFloat(data[key][i]);
+            		
+            		valueSum += value;
+            		options.radius = valueSum * dataScale[j];
+            		options.barThickness = value * dataScale[j];
+
+	                chartOption = chartOptions[key];
+	                options.fillColor = this.options.fillColors[i];
+	                if(options.fillColor == 'transparent')
+	                	options.fillOpacity = 0.0;
+	                else
+	                	options.fillOpacity = 1.0;
+	                options.color = chartOption.color || "#000";
+	                options.radiusX = options.radius;
+	                options.radiusY = options.radius;
+	                options.rotation = 0;
+	                options.key = key + ' ' + i;
+	                options.value = value;
+	                options.displayName = chartOption.displayName;
+	                options.displayText = chartOption.displayText;
+	                bar = new L.RadialBarMarker(this._latlng, options);
+	                this._bindMouseEvents(bar);
+	                this.addLayer(bar);
+            	}
+                lastAngle = options.endAngle;
+                j++;
+            }
+            for(var i = 0.2; i < 1.0; i+=0.2){
+	            circle = new L.CircleMarker(this._latlng, {
+	            	value: i,
+	            	color: options.color,
+	            	radius: barThickness*i,
+	            	weight: 1,
+	            	dashArray: [5,5],
+	            	fill:false,
+	            	iconSize: new L.Point(50, 40),
+	            	displayName: "percent",
+	            	displayText: function(v){ return parseInt(100*v)+"%";}
+	            });
+				this._bindMouseEvents(circle);
+				this.addLayer(circle);
+			}
+        }
+    }
+});
+
+L.stackedPieChartMarker = function(centerLatLng, options) {
+    return new L.PieChartMarker(centerLatLng, options);
+};
+

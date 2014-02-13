@@ -1,4 +1,7 @@
 /*
+ @preserve Leaflet Data Visualization Framework, a JavaScript library for creating thematic maps using Leaflet
+ (c) 2013, Scott Fairgrieve, HumanGeo
+*//*
  * Class for interpolating values along a line using a linear equation
  */
 L.LinearFunction = L.Class.extend({

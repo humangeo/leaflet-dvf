@@ -4,13 +4,13 @@ $(document).ready(function() {
 	var map;
 
 	map = L.map('map').setView([0.0, 0.0], 2);
-	
+
 	L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/998/256/{z}/{x}/{y}.png', {
 	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
 	}).addTo(map);
-	
+
 	var getGroups = function (topic, count, centerLatLng) {
-			
+
 		var data = {
 			topic: topic,
 			key: '2aa7c18485e27a1f39a4746226b',
@@ -18,7 +18,7 @@ $(document).ready(function() {
 			page: count,
 			ordering: 'members'
 		};
-		
+
 		if (centerLatLng) {
 			data['lat'] = centerLatLng.lat;
 			data['lon'] = centerLatLng.lng;
@@ -33,11 +33,11 @@ $(document).ready(function() {
 				if (lastMeetupLayer) {
 					map.removeLayer(lastMeetupLayer);
 				}
-				
+
 				var radiusFunction = new L.LinearFunction(new L.Point(5,5), new L.Point(10000,50));
 				var colorFunction = new L.HSLHueFunction(new L.Point(0,360), new L.Point(5,200), {outputSaturation: '100%', outputLuminosity: '25%'});
 				var fillColorFunction = new L.HSLHueFunction(new L.Point(0,360), new L.Point(5,200), {outputSaturation: '100%', outputLuminosity: '50%'});
-				
+
 				var options = {
 					recordsField: 'results',
 					latitudeField: 'lat',
@@ -55,7 +55,7 @@ $(document).ready(function() {
 								if (value === null) {
 									value = 'N/A';
 								}
-								
+
 								return value;
 							}
 						}
@@ -73,39 +73,39 @@ $(document).ready(function() {
 						iconAnchor: new L.Point(-5,75)
 					},
 					onEachRecord: function (layer,record) {
-						$html = L.HTMLUtils.buildTable(record);
-						
+						$html = $(L.HTMLUtils.buildTable(record));
+
 						layer.bindPopup($html.wrap('<div/>').parent().html(),{
 							minWidth: 400,
 							maxWidth: 400
 						});
 					}
 				};
-				
+
 				lastMeetupLayer = new L.DataLayer(data, options);
-				
+
 				map.addLayer(lastMeetupLayer);
-				
+
 				var $legend = $('#legend');
-				
+
 				$legend.empty();
-				
+
 				$legend.append(lastMeetupLayer.getLegend({
 					className: 'well'
 				}))
 			}
 		});
 	};
-	
+
 	var $meetupTopic = $('#meetup-topic');
 	var $findMeetupsButton = $('#find-meetups-button');
-	
+
 	$findMeetupsButton.on('click', function (e) {
 		e.preventDefault();
-	
+
 		var topic = $meetupTopic.val();
-		
+
 		getGroups(topic, 200, map.getBounds().getCenter());
-		
+
 	});
 });

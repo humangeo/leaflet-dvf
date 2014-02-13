@@ -13,20 +13,20 @@
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
-      
+
       #map {
       	background-image: url('../img/subtlepatterns/pw_maze_white/pw_maze_white.png');
       }
-      
+
       #map div.leaflet-tile-pane {
       	opacity: 0.4;
       }
-      
+
       div.leaflet-control-legend {
       	width: 400px;
       	max-height: 80px;
       }
-      
+
       .legend-line {
       	margin-bottom: 20px;
       }
@@ -38,21 +38,21 @@
       	vertical-align: middle;
       	border-left: none !important;
       }
-      
+
       .line-legend .legend-box {
       	width: 0px;
       	height: 0px !important;
       	border-top: none !important;
       	border-right: none !important;
       }
-      
+
       .airport-icon .icon-plane {
       	text-align: center;
       	vertical-align: middle;
       	display: inline-block;
       	text-shadow: 2px 2px 3px #555555
       }
-      
+
       .airport-icon .code {
       	color: #777777;
       	text-align: center;
@@ -63,7 +63,7 @@
       	*background-color: rgba(255, 255, 255, 0.5);
       	*border-radius: 3px;
       }
- 
+
     </style>
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
     <link href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
@@ -97,7 +97,7 @@
 			<div id="map"></div>
 		</div>
 	</div>
-	
+
 	<script>
 	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -118,86 +118,86 @@
 	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
 	<script type="text/javascript">
-	
+
 
 $(document).ready(function() {
 	var map;
 	var resize = function () {
 		var $map = $('#map');
-		
+
 		$map.height($(window).height() - $('div.navbar').outerHeight());
-		
+
 		if (map) {
 			map.invalidateSize();
 		}
 	};
-	
+
 	$(window).on('resize', function () {
 		resize();
 	});
-	
+
 	resize();
-	
-	map = L.map('map').setView([44.715514, -112.148438], 4);	
+
+	map = L.map('map').setView([44.715514, -112.148438], 4);
 
 	// Add the Stamen toner tiles as a base layer
 	var baseLayer = new L.StamenTileLayer('toner').addTo(map);
-	
+
 	// Add a layer control
 	var layerControl = L.control.layers().addTo(map);
-	
+
 	// Add a legend control
 	var legendControl = L.control.legend({
 		autoAdd: false
 	}).addTo(map);
-	
+
 	// Create a lookup of airports by code.  NOTE:  this is easy, but non-optimal, particularly with a large dataset
 	// Ideally, the lookup would have already been created on the server or created and imported directly
 	var airportsLookup = L.GeometryUtils.arrayToMap(airports, 'code');
-	
+
 	// Sort flight data in descending order by the number of flights.  This will ensure that thicker lines get displayed
 	// below thinner lines
 	flights = _.sortBy(flights, function (value) {
 		return -1 * value.cnt;
 	});
-	
+
 	// Group flight data by airline code
 	var airlineLookup = _.groupBy(flights, function (value) {
 		return value.airline;
 	});
-	
+
 	var maxCountAll = Number(flights[0].cnt);
-	
+
 	// Get the top count of flights
 	flights = _.filter(flights, function (value) {
 		return value.airline !== 'all';
 	});
-	
+
 	var maxCount = Number(flights[0].cnt);
 
 	var count = 0;
-	
+
 	// Get an airport location.  This function looks up an airport from a provided airport code
 	var getLocation = function (context, locationField, fieldValues, callback) {
 		var key = fieldValues[0];
 		var airport = airportsLookup[key];
 		var location;
-	
+
 		if (airport) {
 			var latlng = new L.LatLng(Number(airport.lat), Number(airport.lon));
-		
+
 			location = {
 				location: latlng,
 				text: key,
 				center: latlng
 			};
 		}
-	
+
 		return location;
 	};
-	
+
 	var sizeFunction = new L.LinearFunction([1, 16], [253, 48]);
-	
+
 	var airportsLayer = new L.MarkerDataLayer(airportsLookup, {
 		recordsField: null,
 		locationMode: L.LocationModes.LATLNG,
@@ -214,7 +214,7 @@ $(document).ready(function() {
 					return value;
 				}
 			}
-		},		
+		},
 		layerOptions: {
 			fill: false,
 			stroke: false,
@@ -228,25 +228,25 @@ $(document).ready(function() {
 			var html = '<div><i class="icon-plane"></i><span class="code">' + record.code + '</span></div>';
 			var $html = $(html);
 			var $i = $html.find('i');
-			
-			L.StyleConverter.applySVGStyle($i, options);
-			
+
+			L.StyleConverter.applySVGStyle($i.get(0), options);
+
 			var directFlights = L.Util.getFieldValue(record, 'direct_flights');
 			var size = sizeFunction.evaluate(directFlights);
-			
+
 			$i.width(size);
 			$i.height(size);
 			$i.css('font-size', size + 'px');
 			$i.css('line-height', size + 'px');
-			
+
 			var $code = $html.find('.code');
-			
+
 			$code.width(size);
 			$code.height(size);
 			$code.css('line-height', size + 'px');
 			$code.css('font-size', size/3 + 'px');
 			$code.css('margin-top', -size/2 + 'px');
-			
+
 			var icon = new L.DivIcon({
 				iconSize: new L.Point(size, size),
 				iconAnchor: new L.Point(size/2, size/2),
@@ -257,10 +257,10 @@ $(document).ready(function() {
 			return icon;
 		},
 		onEachRecord: function (layer, record) {
-			layer.bindPopup(L.HTMLUtils.buildTable(record).wrap('<div/>').parent().html());
+			layer.bindPopup($(L.HTMLUtils.buildTable(record)).wrap('<div/>').parent().html());
 		}
 	});
-	
+
 	map.addLayer(airportsLayer);
 	layerControl.addOverlay(airportsLayer, 'Airports');
 
@@ -284,12 +284,12 @@ $(document).ready(function() {
 				},
 				setHighlight: function (style) {
 					style.opacity = 1.0;
-			
+
 					return style;
 				},
 				unsetHighlight: function (style) {
 					style.opacity = 0.8;
-			
+
 					return style;
 				},
 				layerOptions: {
@@ -319,24 +319,24 @@ $(document).ready(function() {
 					}
 				},
 				onEachRecord: function (layer, record) {
-					layer.bindPopup(L.HTMLUtils.buildTable(record).wrap('<div/>').parent().html());
+					layer.bindPopup($(L.HTMLUtils.buildTable(record)).wrap('<div/>').parent().html());
 				}
 			});
-	
+
 			layerControl.addOverlay(flightLayer, key);
-	
+
 			if (count === 0) {
 				// Add the layers we want to display to the legend
 				// Since all group lines use the same weight and color scales, just add the first layer to the legend
 				legendControl.addLayer(flightLayer);
-	
-				// Add each layer to the map 
+
+				// Add each layer to the map
 				map.addLayer(flightLayer);
 			}
 			count++;
 		}
 	}
-});	
+});
 	</script>
 </body>
 </html>

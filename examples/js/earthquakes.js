@@ -18,20 +18,20 @@ var eqfeed_callback = function (data) {
 		new L.HSLLuminosityFunction(new L.Point(0,0.8), new L.Point(4,0.3), {outputSaturation: '100%', outputHue: 30}),
 		new L.HSLHueFunction(new L.Point(4,30), new L.Point(10,0), {outputLuminosity: '30%'})
 	]);
-		
+
 	var magnitudeFillColorFunction = new L.PiecewiseFunction([
 		new L.HSLLuminosityFunction(new L.Point(0,1), new L.Point(4,0.5), {outputSaturation: '100%', outputHue: 30}),
 		new L.HSLHueFunction(new L.Point(4,30), new L.Point(10,0))
 	]);
 	*/
-	
+
 	var now = Math.round((new Date()).getTime());
 	var start = now - 86400000;
 
 	// Initialize a linear function to map earthquake time to opacity
 	var timeOpacityFunction = new L.LinearFunction(new L.Point(start,0.3), new L.Point(now,1));
 	var fontSizeFunction = new L.LinearFunction(new L.Point(0,8), new L.Point(10,24));
-	
+
 	var textFunction = function (value) {
 		return {
 			text: value,
@@ -40,7 +40,7 @@ var eqfeed_callback = function (data) {
 			}
 		};
 	};
-	
+
 	// Setup a new data layer
 	var dataLayer = new L.DataLayer(data,{
 		recordsField: 'features',
@@ -82,11 +82,11 @@ var eqfeed_callback = function (data) {
 			iconAnchor: new L.Point(-4,76)
 		},
 		onEachRecord: function (layer, record, location) {
-			var $html = L.HTMLUtils.buildTable(record);
+			var $html = $(L.HTMLUtils.buildTable(record));
 			var magString = record.properties.mag.toFixed(1);
 			var numChars = magString.length;
 			var fontSize = fontSizeFunction.evaluate(record.properties.mag);
-			
+
 			/*
 			this.addLayer(new L.Marker(location.location, {
 				icon: new L.DivIcon({
@@ -94,20 +94,20 @@ var eqfeed_callback = function (data) {
 					className: 'mag-text',
 					iconSize: new L.Point(numChars * fontSize, fontSize)
 				}),
-				
+
 			}));
 			*/
-				    				
+
 			layer.bindPopup($html.wrap('<div/>').parent().html(),{
 				minWidth: 400,
 				maxWidth: 400
 			});
 		}
 	});
-	
+
 	// Add the data layer to the map
 	map.addLayer(dataLayer);
-	
+
 	lastLayer = dataLayer;
 };
 
@@ -116,65 +116,65 @@ $(document).ready(function() {
 	// Function for resizing the map to fill the available space on the screen
 	var resize = function () {
 		var $map = $('#map');
-		
+
 		$map.height($(window).height() - $('div.navbar').outerHeight());
-		
+
 		if (map) {
 			map.invalidateSize();
 		}
 	};
-	
+
 	// Resize the map element on window resize
 	$(window).on('resize', function () {
 		resize();
 	});
-	
+
 	// Resize the map element
 	resize();
-	
+
 	// Initialize the map
 	map = L.map('map').setView([0.0, 0.0], 2);
-	
+
 	// Add a CloudMade tile layer with style #999
 	var baseLayer = L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
 	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
 	});
-	
+
 	baseLayer.addTo(map);
-	
+
 	var prccEarthquakesLayer = L.tileLayer('http://{s}.tiles.mapbox.com/v3/bclc-apec.map-rslgvy56/{z}/{x}/{y}.png', {
 		attribution: 'Map &copy; Pacific Rim Coordination Center (PRCC).  Certain data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
 	});
-	
+
 	// Initialize the legend control and add it to the map
 	var legendControl = new L.Control.Legend();
-	
+
 	legendControl.addTo(map);
-	
+
 	var layerControl = new L.Control.Layers({
 		'Cloudmade': baseLayer,
-		'PRCC Earthquake Risk Zones': prccEarthquakesLayer 
+		'PRCC Earthquake Risk Zones': prccEarthquakesLayer
 	});
-	
+
 	layerControl.addTo(map);
-	
+
 	// Function for requesting the latest earthquakes from USGS
 	var getData = function () {
-		
+
 		if (lastLayer) {
 			map.removeLayer(lastLayer);
 		}
-		
+
 		$.ajax({
 			url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
 			type: 'GET',
 			dataType: 'jsonp'
 		});
 	};
-	
+
 	// Get the latest earthquake data
 	getData();
-	
+
 	// Periodically request the latest data
 	setInterval(getData,300000);
 });

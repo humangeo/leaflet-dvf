@@ -202,8 +202,8 @@ L.LegendIcon = L.DivIcon.extend({
 		var container = document.createElement('div');
 		var legendContent = L.DomUtil.create('div', 'legend', container);
 		var legendTitle = L.DomUtil.create('div', 'title', legendContent);
-		var legendBox = L.DomUtil.create('div', 'legend-box', 'legendContent);
-		var legendValues = L.DomUtil.create('div', 'legend-values', 'legendContent);
+		var legendBox = L.DomUtil.create('div', 'legend-box', legendContent);
+		var legendValues = L.DomUtil.create('div', 'legend-values', legendContent);
 		var field;
 		var title = layerOptions.title || layerOptions.name;
 
@@ -595,7 +595,7 @@ L.StyleConverter = {
 		element.style.borderStyle = 'solid';
 
 		for (var property in svgStyle) {
-			element = L.StyleConverter.setCSSProperty(element, property, svgStyle[property], keyMap);
+			L.StyleConverter.setCSSProperty(element, property, svgStyle[property], keyMap);
 		}
 
 		return element;
@@ -604,13 +604,15 @@ L.StyleConverter = {
 	setCSSProperty: function (element, key, value, keyMap) {
 		var keyMap = keyMap || L.StyleConverter.keyMap;
 		var cssProperty = keyMap[key];
+		var cssText = '';
 
 		if (cssProperty) {
 			var propertyKey = cssProperty.property;
 			for (var propertyIndex = 0, propertyLength = propertyKey.length; propertyIndex < propertyLength; ++propertyIndex) {
-				element.style.cssText += propertyKey[propertyIndex] + '=' + cssProperty.valueFunction(value);
+				cssText += propertyKey[propertyIndex] + ':' + cssProperty.valueFunction(value) + ';';
 			}
 		}
+		element.style.cssText += cssText;
 
 		return element;
 	}
@@ -722,7 +724,7 @@ L.HTMLUtils = {
 					container.appendChild(L.HTMLUtils.buildTable(value, ignoreFields));
 					value = container.innerHTML;
 				}
-				tbody.appendChild('<tr><td>' + property + '</td><td>' + value + '</td></tr>');
+				tbody.innerHTML += '<tr><td>' + property + '</td><td>' + value + '</td></tr>';
 			}
 		}
 

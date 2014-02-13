@@ -868,9 +868,7 @@ L.DataLayer = L.LayerGroup.extend({
 
 			if (styles) {
 				// Generate category legend
-				var legend = new L.CategoryLegend(styles);
-
-				legendElement.appendChild(legend.generate());
+				legendElement.innerHTML += new L.CategoryLegend(styles).generate();
 			}
 			else {
 				// Generate numeric legend

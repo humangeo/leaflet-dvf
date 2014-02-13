@@ -24,9 +24,11 @@ L.Control.Legend = L.Control.extend({
 			});
 		}
 
+		this.toggleSize = L.bind(this.toggleSize, this);
+
 		L.DomEvent
-		.addListener(container, 'mouseover', self.toggleSize)
-		.addListener(container, 'mouseout', self.toggleSize)
+		.addListener(container, 'mouseover', this.toggleSize)
+		.addListener(container, 'mouseout', this.toggleSize)
 		.addListener(container, 'click', L.DomEvent.stopPropagation)
 		.addListener(container, 'click', L.DomEvent.preventDefault);
 
@@ -39,11 +41,10 @@ L.Control.Legend = L.Control.extend({
 
 	toggleSize: function () {
 		if (L.DomUtil.hasClass(this._container, 'larger')) {
-				L.DomUtil.removeClass(this._container, 'larger');
-			}
-			else {
-				L.DomUtil.addClass(this._container, 'larger');
-			}
+			L.DomUtil.removeClass(this._container, 'larger');
+		}
+		else {
+			L.DomUtil.addClass(this._container, 'larger');
 		}
 	},
 
@@ -69,7 +70,7 @@ L.Control.Legend = L.Control.extend({
 		var id = L.Util.stamp(layer);
 
 		if (layer.getLegend) {
-			var element = this._container.getElementById(id);
+			var element = document.getElementById(id);
 			element.parentNode.removeChild(element);
 
 			layer.off('legendChanged');
@@ -78,9 +79,9 @@ L.Control.Legend = L.Control.extend({
 
 	addLegend: function (id, html) {
 		var container = this._container,
-		    legend = container.getElementById(id);
+		    legend = document.getElementById(id);
 
-		if (typeof legend === 'undefined') {
+		if (!legend) {
 			legend = L.DomUtil.create('div', '', container);
 			legend.id = id;
 		}

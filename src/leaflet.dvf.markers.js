@@ -954,7 +954,7 @@ L.SVGMarker = L.Path.extend({
 
 		var addSVG = function () {
 			var g = me._path.parentNode;
-			while (g.tagName.toLowerCase() !== 'g') {
+			while (g.nodeName.toLowerCase() !== 'g') {
 				g = g.parentNode;
 			}
 
@@ -963,7 +963,7 @@ L.SVGMarker = L.Path.extend({
 			}
 
 			var data = me._data;
-			var svg = data.tagName.toLowerCase() === 'svg' ? data.cloneNode(true) : data.getElementsByTagName('svg')[0].cloneNode(true);
+			var svg = data.nodeName.toLowerCase() === 'svg' ? data.cloneNode(true) : data.querySelector('svg').cloneNode(true);
 
 			if (me.options.setStyle) {
 				me.options.setStyle.call(me, svg);
@@ -1013,9 +1013,7 @@ L.SVGMarker = L.Path.extend({
 			var xhr = new XMLHttpRequest();
 			xhr.onreadystatechange  = function() {
 				if (this.readyState == 4 && this.status == 200) {
-					var element = document.createElement('div');
-					element.innerHTML = this.responseText;
-					me._data = element.firstChild();
+					me._data = this.responseXML;
 					addSVG();
 				}
 			}

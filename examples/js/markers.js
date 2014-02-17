@@ -3,48 +3,48 @@ $(document).ready(function() {
 
 	var resize = function () {
 		var $map = $('#map');
-		
+
 		$map.height($(window).height() - $('div.navbar').outerHeight());
-		
+
 		if (map) {
 			map.invalidateSize();
 		}
 	};
-	
+
 	$(window).on('resize', function () {
 		resize();
 	});
-	
+
 	resize();
-	
+
 	map = L.map('map').setView([-4.0, 13.0], 6);
 
 	var baseLayer = L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
 	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
 	});
-	
+
 	baseLayer.addTo(map);
-	
+
 	var layerControl = L.control.layers({
-		'Cloudmade (Dark)': baseLayer 
+		'Cloudmade (Dark)': baseLayer
 	}).addTo(map);
-	
+
 	var marker;
 	var layer;
-	
+
 	var createLayerGroup = function (name) {
 		var layerGroup = new L.LayerGroup();
-		
+
 		map.addLayer(layerGroup);
 		layerControl.addOverlay(layerGroup, name);
-		
+
 		return layerGroup;
 	};
-	
+
 	var addMarkers = function (layerGroupName, lat, lng, deltaLng, count, markerFunction, text) {
-		
+
 		var layerGroup = createLayerGroup(layerGroupName);
-		
+
 		var callout = new L.Callout(new L.LatLng(lat, lng), {
 			direction: L.CalloutLine.DIRECTION.NW,
 			lineStyle: L.CalloutLine.LINESTYLE.STRAIGHT,
@@ -60,16 +60,16 @@ $(document).ready(function() {
 				className: 'callout-text'
 			})
 		});
-	
+
 		layerGroup.addLayer(callout);
-			
+
 		for (var i = 0; i < count; ++i) {
 			layerGroup.addLayer(markerFunction(new L.LatLng(lat, lng + i * deltaLng), i));
 		}
 	};
-	
+
 	// Create some sample basic shape markers.  NOTE:  There are built-in classes for constructing the common shapes:
-	// triangles, squares, pentagons, hexagons, and octagons that can be used instead of the L.RegularPolygonMarker class.			
+	// triangles, squares, pentagons, hexagons, and octagons that can be used instead of the L.RegularPolygonMarker class.
 	addMarkers('Regular Polygons', 0.0, 0.0, 2.0, 5, function (latlng, index) {
 		var colorValue = index * 20;
 		var options = {
@@ -86,29 +86,29 @@ $(document).ready(function() {
 			offset: 0,
 			numberOfSides: index + 3
 		};
-		
+
 		options.rotation = (options.numberOfSides % 2 === 0 ? 180 : 90)/options.numberOfSides;
-		
+
 		options.imageCircleUrl = "http://upload.wikimedia.org/wikipedia/commons/6/68/Ambulance_font_awesome.svg";
 
 		var marker = new L.RegularPolygonMarker(latlng, options);
-		
+
 		marker.on('mousedown', function (e) {
 			var mouseMoveFunction = function (e) {
 				marker.setLatLng(e.latlng);//.redraw();
 			};
-			
+
 			map.on('mousemove', mouseMoveFunction);
-			
+
 			map.on('mouseup', function (e) {
 				map.off('mousemove', mouseMoveFunction);
 			});
-			
+
 			marker.on('mouseup', function (e) {
 				map.off('mousemove', mouseMoveFunction);
 			});
 		});
-		
+
 		// Test code for animating the rotation of markers
 		/*
 		var angle = 0;
@@ -117,16 +117,16 @@ $(document).ready(function() {
 			marker.setStyle({
 				rotation: angle
 			});
-			
+
 			marker.redraw();
 		};
-		
+
 		setInterval(updateFunction, 1000);
 		*/
-		
+
 		return marker;
 	});
-	
+
 	// Create versions of the basic regular polygons with holes
 	addMarkers('Regular Polygons (Hollow)', -2.0, 0.0, 2.0, 5, function (latlng, index) {
 		var colorValue = Math.random() * 360;
@@ -144,12 +144,12 @@ $(document).ready(function() {
 			offset: 0,
 			numberOfSides: index + 3
 		};
-		
+
 		options.innerRadius = options.radius/2;
 
 		return new L.RegularPolygonMarker(latlng, options);
 	});
-	
+
 	addMarkers('Stars', -4.0, 0.0, 2.0, 5, function (latlng, index) {
 		var colorValue = Math.random() * 360;
 		var options = {
@@ -167,14 +167,14 @@ $(document).ready(function() {
 			rotation: Math.random() * 360,
 			numberOfPoints: index + 5
 		};
-		
+
 		options.innerRadius = options.radius/2;
 
 		var marker = new L.StarMarker(latlng, options);
-		
+
 		return marker;
 	});
-	
+
 	addMarkers('Custom SVG', -10.0, 0.0, 2.0, 5, function (latlng, index) {
 		var colorValue = Math.random() * 360;
 		var options = {
@@ -193,7 +193,7 @@ $(document).ready(function() {
 			numberOfPoints: index + 5,
 			clickable: true
 		};
-		
+
 		options.innerRadius = options.radius/2;
 
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/8/8b/Globe_font_awesome.svg';
@@ -203,40 +203,40 @@ $(document).ready(function() {
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/48/Location_indicator_icon.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/0/05/Robot_icon.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/d/d7/Android_robot.svg';
-		
+
 		//options.svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><path d="M75,0 V75 H0 V125 H75 V200 H125 V125 H200 V75 H125 V0 H75 z" fill="#000" /></svg>';
-		
+
 		var width = Math.max(40, Math.random() * 100);
 		options.size = new L.Point(width, width);
-		
+
 		var colorFunction = new L.HSLHueFunction([0, 0], [5, 330]);
-		
+
 		var color = colorFunction.random();
-		
-		options.setStyle = function ($svg) {
+
+		options.setStyle = function (svg) {
 			//$svg.find('#Blue_1_').css('fill', color);
-			$svg.find('path').css('fill', color);
+			$(svg).find('path').css('fill', color);
 		};
-		
+
 		var marker = new L.SVGMarker(latlng, options); //new L.StarMarker(latlng, options);
 
 		var angle = 0;
 		var updateFunction = function () {
 			angle = angle + 30 % 360;
-			
+
 			marker.setStyle({
 				rotation: angle
 			});
-			
+
 			marker.redraw();
 		};
-		
+
 		setInterval(updateFunction, 1000);
-		
+
 		marker.bindPopup('Test');
 		return marker;
 	});
-	
+
 	addMarkers('Custom SVG', -12.0, 0.0, 2.0, 5, function (latlng, index) {
 		var colorValue = Math.random() * 360;
 		var options = {
@@ -255,7 +255,7 @@ $(document).ready(function() {
 			numberOfPoints: index + 5,
 			clickable: true
 		};
-		
+
 		options.innerRadius = options.radius/2;
 
 		// Remove/add comments to see different SVG icons
@@ -265,26 +265,26 @@ $(document).ready(function() {
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/43/Feed-icon.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/48/Location_indicator_icon.svg';
 		options.svg = 'http://upload.wikimedia.org/wikipedia/commons/0/05/Robot_icon.svg';
-		
+
 		var width = Math.max(40, Math.random() * 100);
 		options.size = new L.Point(width, width);
-		
+
 		var colorFunction = new L.HSLHueFunction([0, 0], [5, 330]);
-		
+
 		var color = colorFunction.random();
-		
+
 		// Specifying this option allows you to customize the SVG elements to your liking or style
 		// items in the SVG image dynamically
-		options.setStyle = function ($svg) {
+		options.setStyle = function (svg) {
 			//$svg.find('#Blue_1_').css('fill', color);
 			//$svg.find('path, circle').css('fill', color);
 			//$svg.find('#path4941').css('fill', color);
 			//$svg.find('path').css('stroke', color);
-			$svg.find('rect').css('fill', color);
+			$(svg).find('rect').css('fill', color);
 		};
-		
+
 		var marker = new L.SVGMarker(latlng, options); //new L.StarMarker(latlng, options);
-		
+
 		marker.on('mouseover', function (e) {
 			marker.setStyle({
 				setStyle: function ($svg) {
@@ -292,12 +292,12 @@ $(document).ready(function() {
 				}
 			});
 		});
-		
-		
-		
+
+
+
 		return marker;
 	});
-	
+
 	addMarkers('Map Markers', -6.0, 0.0, 2.0, 5, function (latlng, index) {
 		var colorValue = Math.random() * 360;
 		var options = {
@@ -314,9 +314,9 @@ $(document).ready(function() {
 			radius: (Math.random() * 30) + 5,
 			innerRadius: 0
 		};
-		
+
 		//options.innerRadius = options.radius/ ((Math.random() * 3) + 2);
-		
+
 		/*
 		options.fillPattern = {
 				url: 'http://upload.wikimedia.org/wikipedia/commons/3/31/Green_Canada_Flag.png',
@@ -328,11 +328,11 @@ $(document).ready(function() {
 				image: {
 					width: 20,
 					height: 10
-					
+
 				}
 			};
 		*/
-		
+
 		var imageOptions = [
 			'http://upload.wikimedia.org/wikipedia/commons/6/62/Food_font_awesome.svg',
 			'http://upload.wikimedia.org/wikipedia/commons/5/57/Light_bulb_font_awesome.svg',
@@ -340,9 +340,9 @@ $(document).ready(function() {
 			'http://upload.wikimedia.org/wikipedia/commons/6/64/Plane_font_awesome.svg',
 			'http://upload.wikimedia.org/wikipedia/commons/1/15/Leaf_font_awesome.svg'
 		];
-		
+
 		options.imageCircleUrl = imageOptions[index];
-		
+
 		/*
 		options.shapeImage = {
 			shape: {
@@ -359,7 +359,7 @@ $(document).ready(function() {
 				}
 			},
 			image: {
-				url: "http://upload.wikimedia.org/wikipedia/commons/a/a7/Emblem-fun.svg",		
+				url: "http://upload.wikimedia.org/wikipedia/commons/a/a7/Emblem-fun.svg",
 				width: 48,
 				height: 48,
 				x: 0,
@@ -373,10 +373,10 @@ $(document).ready(function() {
 			}
 		};
 		*/
-		
+
 		return new L.MapMarker(latlng, options);
 	});
-	
+
 	addMarkers('Radial Meter Markers', -8.0, 0.0, 2.0, 5, function (latlng, index) {
 		var minHue = 120;
 		var maxHue = 0;
@@ -414,7 +414,7 @@ $(document).ready(function() {
 
 		return new L.RadialMeterMarker(latlng, meterMarkerOptions);
 	});
-	
+
 	addMarkers('Bar Charts', 0.0, 14.0, 2.0, 5, function (latlng) {
 		var colorValue = Math.random() * 360;
 		var options = {
@@ -431,14 +431,14 @@ $(document).ready(function() {
 			offset: 0,
 			width: 8
 		};
-		
+
 		options.data = {
 			'dataPoint1': Math.random() * 20,
 			'dataPoint2': Math.random() * 20,
 			'dataPoint3': Math.random() * 20,
 			'dataPoint4': Math.random() * 20
 		};
-		
+
 		options.chartOptions = {
 			'dataPoint1': {
 				fillColor: '#F2F0F7',
@@ -477,9 +477,9 @@ $(document).ready(function() {
 				}
 			}
 		};
-		
+
 		var barChart = new L.BarChartMarker(latlng, options);
-		
+
 		var updateFunction = function () {
 			barChart.options.data = {
 					'dataPoint1': Math.random() * 20,
@@ -487,15 +487,15 @@ $(document).ready(function() {
 					'dataPoint3': Math.random() * 20,
 					'dataPoint4': Math.random() * 20
 			};
-			
+
 			barChart.redraw();
 		};
-		
+
 		//setInterval(updateFunction, 1000);
-		
+
 		return barChart;
 	});
-	
+
 	addMarkers('Pie Charts', -2.0, 14.0, 2.0, 5, function (latlng) {
 		var colorValue = Math.random() * 360;
 		var options = {
@@ -520,7 +520,7 @@ $(document).ready(function() {
 			'dataPoint3': Math.random() * 20,
 			'dataPoint4': Math.random() * 20
 		};
-		
+
 		options.chartOptions = {
 			'dataPoint1': {
 				fillColor: '#F1EEF6',
@@ -559,10 +559,10 @@ $(document).ready(function() {
 				}
 			}
 		};
-		
+
 		return new L.PieChartMarker(latlng, options);
 	});
-	
+
 	addMarkers('Coxcomb Charts', -4.0, 14.0, 2.0, 5, function (latlng) {
 		var colorValue = Math.random() * 360;
 		var options = {
@@ -587,7 +587,7 @@ $(document).ready(function() {
 			'dataPoint3': Math.random() * 20,
 			'dataPoint4': Math.random() * 20
 		};
-		
+
 		options.chartOptions = {
 			'dataPoint1': {
 				fillColor: '#EDF8FB',
@@ -629,7 +629,7 @@ $(document).ready(function() {
 
 		return new L.CoxcombChartMarker(latlng, options);
 	});
-	
+
 	addMarkers('Radial Bar Charts', -6.0, 14.0, 2.0, 5, function (latlng) {
 		var colorValue = Math.random() * 360;
 		var options = {
@@ -654,7 +654,7 @@ $(document).ready(function() {
 			'dataPoint3': Math.random() * 20,
 			'dataPoint4': Math.random() * 20
 		};
-		
+
 		options.chartOptions = {
 			'dataPoint1': {
 				fillColor: '#FEE5D9',
@@ -696,7 +696,7 @@ $(document).ready(function() {
 
 		return new L.RadialBarChartMarker(latlng, options);
 	});
-	
+
 	addMarkers('Stacked Regular Polygons', -8.0, 14.0, 2.0, 5, function (latlng, index) {
 		var stackedOptions = {
 			chartOptions: {
@@ -748,28 +748,28 @@ $(document).ready(function() {
 			numberOfSides: 6,
 			rotation: 0
 		};
-		
+
 		stackedOptions.data = {};
-		
+
 		for (var i = 1; i <= 4; ++i) {
 			stackedOptions.data['dataPoint' + i] = Math.random() * 20;
 		};
-		
+
 		return new L.StackedRegularPolygonMarker(latlng, stackedOptions);
 	});
 
 	var directions = Object.keys(L.CalloutLine.DIRECTION);
-	
+
 	console.log(directions);
-	
+
 	var styles = Object.keys(L.CalloutLine.LINESTYLE);
 	var xOffsets = [5, -5, 5, -5];
 	var yOffsets = [-5, -5, 5, 5];
-	
+
 	var calloutGenerator = function (style) {
 		return function (latlng, index) {
 			var direction = directions[index % directions.length];
-		
+
 			return new L.Callout(latlng, {
 				direction: L.CalloutLine.DIRECTION[direction],
 				lineStyle: L.CalloutLine.LINESTYLE[style],
@@ -787,7 +787,7 @@ $(document).ready(function() {
 			});
 		}
 	};
-	
+
 	addMarkers('Callouts (Arced)', -1.0, 28.0, 0.0, 4, calloutGenerator(styles[0]));
 	addMarkers('Callouts (Angled)', -4.0, 28.0, 0.0, 4, calloutGenerator(styles[1]));
 	addMarkers('Callouts (Straight)', -7.0, 28.0, 0.0, 4, calloutGenerator(styles[2]));

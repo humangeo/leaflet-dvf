@@ -45,13 +45,13 @@ New layer types that simplify reading and visualizing any JSON-based data struct
 * Others
 
 GeoJSON polygons for countries and US states to support Choropleth mapping.  Countries are generated from:  https://github.com/johan/world.geo.json.
-Just include these JavaScript files if you plan to build a country or US state choropleth.  
+Just include these JavaScript files if you plan to build a country or US state choropleth.
 Polygons are indexed via a state or country code and lookups are created to map various state/country code formats to the default index format.
 
 Automatic legend generation and a simple legend control.
 To generate a legend, just call getLegend on any DataLayer, or use the provided legend control and the legend will be displayed automatically.
 
-Support for gradient fills and drop shadows, text on Path-based items (e.g. markers, polylines, polygons, etc.), and more. 
+Support for gradient fills and drop shadows, text on Path-based items (e.g. markers, polylines, polygons, etc.), and more.
 
 Callouts for annotating map data.  Use the L.Callout class to add individual callouts to your map.  See the [Markers](http://humangeo.github.com/leaflet-dvf/examples/html/markers.html) example for an illustration of callouts.
 
@@ -61,7 +61,7 @@ Callouts for annotating map data.  Use the L.Callout class to add individual cal
 ## Pre-requisites
 
 Required:
-* [jQuery](http://jquery.com/)
+* [Leaflet](http://leafletjs.com/)
 
 Optional - required for particular classes to work:
 * [Underscore JS](http://underscorejs.org/)
@@ -77,6 +77,30 @@ Using the framework in IE8 and below:
 
 As you may or may not be aware, IE8 and below do not support SVG.  Leaflet and most SVG frameworks mitigate this problem by using Vector Markup Language (VML) instead of SVG when rendering custom shapes and paths.
 With the latest version of the framework, most of the components will work without requiring any extra dependencies.  However, L.RadialBarChartMarker and L.PieChartMarker will require including the [Core Framework SVG Utilities](https://code.google.com/p/core-framework/source/browse/trunk/plugins/svg.js).  These utilities can convert more complex SVG shapes into corresponding VML shapes.
+
+## Build
+
+Concatenate the source files in the following order:
+
+Full:
+* src/copyright.js
+* src/leaflet.dvf.linearfunctions.js
+* src/leaflet.dvf.utils.js
+* src/leaflet.dvf.palettes.js
+* src/leaflet.dvf.regularpolygon.js
+* src/leaflet.dvf.markers.js
+* src/leaflet.dvf.chartmarkers.js
+* src/leaflet.dvf.datalayer.js
+* src/leaflet.dvf.lines.js
+* src/leaflet.dvf.controls.js
+
+Markers only:
+* src/copyright.js
+* src/leaflet.dvf.linearfunctions.js
+* src/leaflet.dvf.utils.js
+* src/leaflet.dvf.palettes.js
+* src/leaflet.dvf.markers.js
+* src/leaflet.dvf.chartmarkers.js
 
 ## Examples
 
@@ -264,7 +288,7 @@ Option | Type | Default | Description
 --- | --- | --- | ---
 numberOfSides | Number | 3 | The number of sides the marker should have
 rotation | Number | 0.0 | The angle in degrees that the marker should be rotated
-radius OR radiusX, radiusY | Number | 10 | The radius of the marker in pixels 
+radius OR radiusX, radiusY | Number | 10 | The radius of the marker in pixels
 innerRadius OR innerRadiusX, innerRadiusY | Number | null | The inner radius of the marker in pixels.  Specifying an innerRadius will produce a regular polygon with a hole in the middle.
 imageCircleUrl | String | null | The URL of an image to display on the marker.  This will be displayed in the main circular area of the marker.
 
@@ -354,7 +378,7 @@ var barChartMarker = new L.BarChartMarker(new L.LatLng(0, 0), options);
 
 Option | Type | Default | Description
 --- | --- | --- | ---
-data | Object | null | A set of key/value pairs that provides a data value for each property displayed by the marker 
+data | Object | null | A set of key/value pairs that provides a data value for each property displayed by the marker
 chartOptions | Object | null | A set of key/value pairs that defines the options associated with each data property displayed by the marker.
 backgroundStyle (L.RadialMeterMarker) | Object | L.Path object with a semi-transparent gray fill and stroke | An object of L.Path style options that will be used to style the background area of the chart.  Set this to null or false to prevent a background from being displayed.
 
@@ -444,7 +468,7 @@ console.log(linearFunction.evaluate(10));  // prints 6.5
 #### Options
 Option | Type | Default | Description
 --- | --- | --- | ---
-preProcess | Function | null | A function for pre-processing an input value 
+preProcess | Function | null | A function for pre-processing an input value
 postProcess | Function | null | A function for post-processing an output value
 
 #### Key Methods
@@ -452,21 +476,21 @@ Method | Usage | Description
 --- | --- | ---
 evaluate | `linearFunction.evaluate(<value>);` | Interpolates an output value based on the passed in input value
 
-### Color Functions 
+### Color Functions
 
 > Used to map a data property to a color.  The framework includes tools for mapping color using Hue, Saturation, and Lightness/Luminosity (HSL) or Red, Green, Blue (RGB) color.  See the [Colors](http://humangeo.github.com/leaflet-dvf/examples/html/colors.html) example.
 
 #### Usage
 
-> Change the output hue dynamically based on the input data property  
+> Change the output hue dynamically based on the input data property
 > *Useful for producing colors along a rainbow scale (or subset)*
 `L.HSLHueFunction(<Number[]|Point> minPoint, <Number[]|Point> maxPoint, <HSL options> options?);`
 
-> Change the output saturation dynamically based on the input data property  
+> Change the output saturation dynamically based on the input data property
 > *Useful for varying between a color and gray*
 `L.HSLSaturationFunction(<Number[]|Point> minPoint, <Number[]|Point> maxPoint, <HSL options> options?);`
 
-> Change the output luminosity dynamically based on the input data property  
+> Change the output luminosity dynamically based on the input data property
 > *Useful for varying between a color and white*
 `L.HSLLuminosityFunction(<Number[]|Point> minPoint, <Number[]|Point> maxPoint, <HSL options> options?);`
 
@@ -535,7 +559,7 @@ var colorFunction = new L.PiecewiseFunction([whiteToYellow, yellowToRed]);
 
 ### L.DataLayer
 
-> Display data values using L.RegularPolygonMarker instances.  To override the default marker behavior, use the getMarker option or inherit from DataLayer and override _getMarker.  In thematic mapping, this class displays data using proportional symbols.  
+> Display data values using L.RegularPolygonMarker instances.  To override the default marker behavior, use the getMarker option or inherit from DataLayer and override _getMarker.  In thematic mapping, this class displays data using proportional symbols.
 >
 > *NOTE:  If the location features are lines/polygons (e.g. GeoJSON), this class will use the centroid of each line/polygon to place each marker.  When dealing with line/polygon features, you must include a reference to the [JavaScript Topology Suite (JSTS) JS files](https://github.com/bjornharrtell/jsts/tree/master/lib).  These files are used to calculate centroids.  If these files are not included, the DataLayer class will fallback to using the center of the bounds of the layer's geometry.*
 
@@ -546,7 +570,7 @@ var colorFunction = new L.PiecewiseFunction([whiteToYellow, yellowToRed]);
 Option | Type | Default | Description
 --- | --- | --- | ---
 recordsField | String | 'features' | A pointer to the field in the input data that contains the records to be visualized.  Use null when the data being passed in is the set of records to be visualized.  Use dot notation to specify child properties (e.g. data.election.resultsByState), see note below.
-locationMode | String | 'latlng' OR L.LocationModes.LATLNG | The mode used to determine a location for each record.  Use a string or the *L.LocationModes* constant values 
+locationMode | String | 'latlng' OR L.LocationModes.LATLNG | The mode used to determine a location for each record.  Use a string or the *L.LocationModes* constant values
 latitudeField | String | 'coordinates.1' | The property of each record that contains the latitude *NOTE: Use with 'latlng' locationMode*
 longitudeField | String | 'coordinates.0' | The property of each record that contains the longitude *NOTE: Use with 'latlng' locationMode*
 codeField | String | null | The property of each record that contains the code used to lookup a location *NOTE: Use with 'state', 'country', or 'lookup' locationMode values*

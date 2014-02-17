@@ -531,49 +531,48 @@ L.CategoryLegend = L.Class.extend({
     },
     generate: function(options) {
         options = options || {};
-        var legend = '<div class="legend"></div>';
-        var $legend = $(legend);
+        var container = document.createElement("div");
+        var legend = L.DomUtil.create("div", "legend", container);
         var className = options.className;
         var legendOptions = this.options;
         if (className) {
-            $legend.addClass(className);
+            L.DomUtil.addClass(legend, className);
         }
         if (options.title) {
-            $legend.append('<div class="legend-title">' + options.title + "</div>");
+            L.DomUtil.create("div", "legend-title", legend).innerHTML = options.title;
         }
         for (var key in legendOptions) {
             categoryOptions = legendOptions[key];
             var displayName = categoryOptions.displayName || key;
-            var $legendElement = $('<div class="data-layer-legend"><div class="legend-box"></div><div class="key">' + displayName + "</div></div>");
-            var $legendBox = $legendElement.find(".legend-box");
-            L.StyleConverter.applySVGStyle($legendBox, categoryOptions);
-            $legend.append($legendElement);
+            var legendElement = L.DomUtil.create("div", "data-layer-legend", legend);
+            var legendBox = L.DomUtil.create("div", "legend-box", legendElement);
+            L.DomUtil.create("div", "key", legendElement).innerHTML = displayName;
+            L.StyleConverter.applySVGStyle(legendBox, categoryOptions);
         }
-        return $legend.wrap("<div/>").parent().html();
+        return container.innerHTML;
     }
 });
 
 L.LegendIcon = L.DivIcon.extend({
     initialize: function(fields, layerOptions, options) {
-        var html = '<div class="legend-content"><div class="title"></div><div class="legend-box"></div><div class="legend-values"></div></div>';
-        var $html = $(html);
-        var $legendBox = $html.find(".legend-box");
-        var $legendValues = $html.find(".legend-values");
+        var container = document.createElement("div");
+        var legendContent = L.DomUtil.create("div", "legend", container);
+        var legendTitle = L.DomUtil.create("div", "title", legendContent);
+        var legendBox = L.DomUtil.create("div", "legend-box", legendContent);
+        var legendValues = L.DomUtil.create("div", "legend-values", legendContent);
         var field;
         var title = layerOptions.title || layerOptions.name;
         if (title) {
-            $html.find(".title").text(title);
+            legendTitle.innerHTML = title;
         }
         for (var key in fields) {
             field = fields[key];
-            var displayName = field.name || key;
-            var displayText = field.value;
-            $legendValues.append('<div class="key">' + displayName + '</div><div class="value">' + displayText + "</div>");
+            L.DomUtil.create("div", "key", legendValues).innerHTML = field.name || key;
+            L.DomUtil.create("div", "value", legendValues).innerHTML = field.value;
         }
-        L.StyleConverter.applySVGStyle($legendBox, layerOptions);
-        $legendBox.height(5);
-        html = $html.wrap("<div>").parent().html();
-        options.html = html;
+        L.StyleConverter.applySVGStyle(legendBox, layerOptions);
+        legendBox.style.height = "5px";
+        options.html = container.innerHTML;
         options.className = options.className || "legend-icon";
         L.DivIcon.prototype.initialize.call(this, options);
     }
@@ -857,27 +856,29 @@ L.StyleConverter = {
             }
         }
     },
-    applySVGStyle: function($element, svgStyle, additionalKeys) {
+    applySVGStyle: function(element, svgStyle, additionalKeys) {
         var keyMap = L.StyleConverter.keyMap;
         if (additionalKeys) {
             keyMap = L.Util.extend(keyMap, additionalKeys);
         }
-        $element.css("border-style", "solid");
+        element.style.borderStyle = "solid";
         for (var property in svgStyle) {
-            $element = L.StyleConverter.setCSSProperty($element, property, svgStyle[property], keyMap);
+            L.StyleConverter.setCSSProperty(element, property, svgStyle[property], keyMap);
         }
-        return $element;
+        return element;
     },
-    setCSSProperty: function($element, key, value, keyMap) {
+    setCSSProperty: function(element, key, value, keyMap) {
         var keyMap = keyMap || L.StyleConverter.keyMap;
         var cssProperty = keyMap[key];
+        var cssText = "";
         if (cssProperty) {
             var propertyKey = cssProperty.property;
-            for (var propertyIndex = 0; propertyIndex < propertyKey.length; ++propertyIndex) {
-                $element.css(propertyKey[propertyIndex], cssProperty.valueFunction(value));
+            for (var propertyIndex = 0, propertyLength = propertyKey.length; propertyIndex < propertyLength; ++propertyIndex) {
+                cssText += propertyKey[propertyIndex] + ":" + cssProperty.valueFunction(value) + ";";
             }
         }
-        return $element;
+        element.style.cssText += cssText;
+        return element;
     }
 };
 
@@ -914,7 +915,8 @@ L.PaletteBuilder = L.Class.extend({
     },
     generate: function(options) {
         options = options || {};
-        var $paletteElement = $('<div class="palette"></div>');
+        var container = document.createElement("div");
+        var paletteElement = L.DomUtil.create("div", "palette", container);
         var count = options.count || 10;
         var categories = function(count) {
             var categoryArray = [];
@@ -926,35 +928,45 @@ L.PaletteBuilder = L.Class.extend({
         var styleBuilder = new L.StylesBuilder(categories, this._styleFunctionMap);
         var styles = styleBuilder.getStyles();
         if (options.className) {
-            $paletteElement.addClass(options.className);
+            L.DomUtil.addClass(paletteElement, options.className);
         }
         for (var styleKey in styles) {
-            var $i = $('<i class="palette-element"></i>');
+            var i = L.DomUtil.create("i", "palette-element", paletteElement);
             var style = styles[styleKey];
-            L.StyleConverter.applySVGStyle($i, style);
-            $paletteElement.append($i);
+            L.StyleConverter.applySVGStyle(i, style);
         }
-        return $paletteElement.wrap("<div/>").parent().html();
+        return container.innerHTML;
     }
 });
 
 L.HTMLUtils = {
     buildTable: function(obj, className, ignoreFields) {
         className = className || "table table-condensed table-striped table-bordered";
-        var html = '<table class="' + className + '"><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody></tbody></table>';
-        var $html = $(html);
-        var $tbody = $html.find("tbody");
+        var table = L.DomUtil.create("table", className);
+        var thead = L.DomUtil.create("thead", "", table);
+        var tbody = L.DomUtil.create("tbody", "", table);
+        thead.innerHTML = "<tr><th>Name</th><th>Value</th></tr>";
         ignoreFields = ignoreFields || [];
-        for (var property in obj) {
-            if (obj.hasOwnProperty(property) && $.inArray(ignoreFields, property) === -1) {
-                if ($.isPlainObject(obj[property]) || obj[property] instanceof Array) {
-                    $tbody.append("<tr><td>" + property + "</td><td>" + L.HTMLUtils.buildTable(obj[property], ignoreFields).wrap("<div/>").parent().html() + "</td></tr>");
-                } else {
-                    $tbody.append("<tr><td>" + property + "</td><td>" + obj[property] + "</td></tr>");
+        function inArray(arrayObj, value) {
+            for (var i = 0, l = arrayObj.length; i < l; i++) {
+                if (arrayObj[i] === value) {
+                    return true;
                 }
             }
+            return false;
         }
-        return $html;
+        for (var property in obj) {
+            if (obj.hasOwnProperty(property) && !inArray(ignoreFields, property)) {
+                var value = obj[property];
+                if (typeof value === "object") {
+                    var container = document.createElement("div");
+                    container.appendChild(L.HTMLUtils.buildTable(value, ignoreFields));
+                    value = container.innerHTML;
+                }
+                tbody.innerHTML += "<tr><td>" + property + "</td><td>" + value + "</td></tr>";
+            }
+        }
+        return table;
     }
 };
 
@@ -980,7 +992,7 @@ L.AnimationUtils = {
             for (var key in linearFunctions) {
                 layerOptions[key] = linearFunctions[key].evaluate(frame);
             }
-            layer.options = $.extend(true, {}, layer.options, layerOptions);
+            layer.options = L.extend({}, layer.options, layerOptions);
             layer.redraw();
             frame++;
             step = easeFunction(step);
@@ -1862,7 +1874,7 @@ L.DynamicPaletteElement = L.Class.extend({
         this._dynamicPalette = dynamicPalette;
     },
     generate: function(options) {
-        var $paletteElement = $('<div class="palette"></div>');
+        var paletteElement = L.DomUtil.create("div", "palette");
         var count = options.count;
         var palette = this._dynamicPalette.getPalette(0, count - 1);
         var width = options.width;
@@ -1870,26 +1882,25 @@ L.DynamicPaletteElement = L.Class.extend({
         if (options.showText != undefined) {
             showText = options.showText;
         }
-        $paletteElement.data("key", this._key);
-        $paletteElement.attr("data-palette-key", this._key);
+        paletteElement.setAttribute("data-palette-key", this._key);
         if (this._dynamicPalette.text && showText) {
-            $paletteElement.append('<div class="palette-text"><i class="icon-ok hidden"></i>' + this._dynamicPalette.text + "</div>");
+            L.DomUtil.create("div", "palette-text", paletteElement).innerHTML = '<i class="icon-ok hidden"></i>' + this._dynamicPalette.text;
         }
         var elementWidth = width / count;
         if (options.className) {
-            $paletteElement.addClass(options.className);
+            L.DomUtil.addClass(paletteElement, options.className);
         }
         for (var i = 0; i < count; ++i) {
-            var $i = $('<i class="palette-element"></i>');
+            var i = L.DomUtil.create("i", "palette-element");
             for (var styleKey in palette) {
                 var styleValue = palette[styleKey];
                 var style = styleValue.evaluate ? styleValue.evaluate(i) : styleValue;
-                L.StyleConverter.setCSSProperty($i, styleKey, style);
+                L.StyleConverter.setCSSProperty(i, styleKey, style);
             }
-            $i.width(elementWidth);
-            $paletteElement.append($i);
+            i.style.width = elementWidth + "px";
+            paletteElement.appendChild(i);
         }
-        return $paletteElement;
+        return paletteElement;
     }
 });
 
@@ -2067,7 +2078,7 @@ var PathFunctions = PathFunctions || {
         var gradient = this._createElement("linearGradient");
         var gradientGuid = L.Util.guid();
         this._gradientGuid = gradientGuid;
-        options = options !== true ? $.extend(true, {}, options) : {};
+        options = options !== true ? L.extend({}, options) : {};
         var vector = options.vector || [ [ "0%", "0%" ], [ "100%", "100%" ] ];
         var vectorOptions = {
             x1: vector[0][0],
@@ -2100,7 +2111,7 @@ var PathFunctions = PathFunctions || {
                 var stopProperty = stop[key];
                 if (key === "style") {
                     var styleProperty = "";
-                    stopProperty.color = stopProperty.color || this.options.fillColor || this.options.color;
+                    stopProperty.color = stopProperty.color || (this.options.fillColor || this.options.color);
                     stopProperty.opacity = typeof stopProperty.opacity === "undefined" ? 1 : stopProperty.opacity;
                     for (var propKey in stopProperty) {
                         styleProperty += "stop-" + propKey + ":" + stopProperty[propKey] + ";";
@@ -2280,7 +2291,7 @@ var PathFunctions = PathFunctions || {
     }
 };
 
-var LineTextFunctions = $.extend(true, {}, TextFunctions);
+var LineTextFunctions = L.extend({}, TextFunctions);
 
 LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
 
@@ -2653,30 +2664,35 @@ L.SVGMarker = L.Path.extend({
     getPathString: function() {
         var me = this;
         var addSVG = function() {
-            var $g = $(me._path).parent("g");
+            var g = me._path.parentNode;
+            while (g.nodeName.toLowerCase() !== "g") {
+                g = g.parentNode;
+            }
             if (me.options.clickable) {
-                $g.attr("class", "leaflet-clickable");
+                g.setAttribute("class", "leaflet-clickable");
             }
-            var $data = $(me._data);
-            var $svg;
-            $svg = $data.prop("tagName") === "svg" ? $data.clone(true) : $data.find("svg").clone(true);
+            var data = me._data;
+            var svg = data.nodeName.toLowerCase() === "svg" ? data.cloneNode(true) : data.querySelector("svg").cloneNode(true);
             if (me.options.setStyle) {
-                me.options.setStyle.call(me, $svg);
+                me.options.setStyle.call(me, svg);
             }
-            var elementWidth = $svg.attr("width");
-            var elementHeight = $svg.attr("height");
+            var elementWidth = svg.getAttribute("width");
+            var elementHeight = svg.getAttribute("height");
             var width = elementWidth ? elementWidth.replace("px", "") : "100%";
             var height = elementHeight ? elementHeight.replace("px", "") : "100%";
             if (width === "100%") {
                 width = me.options.size.x;
                 height = me.options.size.y;
-                $svg.attr("width", width);
-                $svg.attr("height", height);
+                svg.setAttribute("width", width);
+                svg.setAttribute("height", height + (height.indexOf("%") !== -1 ? "" : "px"));
             }
             var size = me.options.size || new L.Point(width, height);
             var scaleSize = new L.Point(size.x / width, size.y / height);
-            $g.find("svg").remove();
-            $g.append($svg);
+            var old = g.getElementsByTagName("svg");
+            if (old.length > 0) {
+                old[0].parentNode.removeChild(old[0]);
+            }
+            g.appendChild(svg);
             var transforms = [];
             var anchor = me.options.anchor || new L.Point(-size.x / 2, -size.y / 2);
             var x = me._point.x + anchor.x;
@@ -2686,13 +2702,18 @@ L.SVGMarker = L.Path.extend({
             if (me.options.rotation) {
                 transforms.push("rotate(" + me.options.rotation + " " + width / 2 + " " + height / 2 + ")");
             }
-            $g.attr("transform", transforms.join(" "));
+            g.setAttribute("transform", transforms.join(" "));
         };
         if (!this._data) {
-            $.get(this._svg, null, function(data) {
-                me._data = data;
-                addSVG();
-            });
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    me._data = this.responseXML;
+                    addSVG();
+                }
+            };
+            xhr.open("GET", this._svg, true);
+            xhr.send(null);
         } else {
             addSVG();
         }
@@ -3679,7 +3700,7 @@ L.DataLayer = L.LayerGroup.extend({
                 layer = new L.Rectangle(layer);
             }
             if (layer.setStyle) {
-                var style = this.options.boundaryStyle || $.extend(true, {}, options, {
+                var style = this.options.boundaryStyle || L.extend({}, options, {
                     fillOpacity: .2,
                     clickable: false
                 });
@@ -3753,7 +3774,7 @@ L.DataLayer = L.LayerGroup.extend({
         this.options.displayOptions = this.options.displayOptions || {};
         if (key in this.options.displayOptions) {
             var existingOption = this.options.displayOptions[key];
-            this.options.displayOptions[key] = $.extend({}, existingOption, options);
+            this.options.displayOptions[key] = L.extend({}, existingOption, options);
         } else {
             this.options.displayOptions[key] = options;
         }
@@ -3927,7 +3948,7 @@ L.DataLayer = L.LayerGroup.extend({
     _getLegendElement: function(params) {
         var displayMin;
         var displayMax;
-        var $i = $("<i></i>");
+        var i = document.createElement("i");
         var displayProperties = params.displayProperties;
         var layerOptions = params.layerOptions;
         var ignoreProperties = params.ignoreProperties;
@@ -3935,9 +3956,9 @@ L.DataLayer = L.LayerGroup.extend({
         var index = params.index;
         var numSegments = params.numSegments;
         var segmentWidth = params.segmentWidth;
-        var $minValue = params.$minValue;
-        var $maxValue = params.$maxValue;
-        L.StyleConverter.applySVGStyle($i, layerOptions);
+        var minValue = params.minValue;
+        var maxValue = params.maxValue;
+        L.StyleConverter.applySVGStyle(i, layerOptions);
         for (var property in displayProperties) {
             if (ignoreProperties.indexOf(property) === -1) {
                 valueFunction = displayProperties[property];
@@ -3953,32 +3974,23 @@ L.DataLayer = L.LayerGroup.extend({
                         displayMax = displayTextFunction(maxX);
                     }
                     if (index === 0) {
-                        $minValue.html(displayMin);
-                        $maxValue.html(displayMax);
+                        minValue.innerHTML = displayMin;
+                        maxValue.innerHTML = displayMax;
                     }
                     var segmentSize = (maxX - minX) / numSegments;
                     var x = binFunction.evaluate(index);
                     var nextX = binFunction.evaluate(index + 1);
                     var value = valueFunction.evaluate ? valueFunction.evaluate(x) : valueFunction(x);
                     var nextValue = valueFunction.evaluate ? valueFunction.evaluate(nextX) : valueFunction(nextX);
-                    L.StyleConverter.setCSSProperty($i, property, value);
+                    L.StyleConverter.setCSSProperty(i, property, value);
                     if (property === "fillColor") {
-                        $i.css("background-image", "linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
-                        $i.css("background-image", "-ms-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
-                        $i.css("background-image", "-moz-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
-                        $i.css("background-image", "-webkit-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%)");
+                        i.style.cssText += "background-image:linear-gradient(left , " + value + " 0%, " + nextValue + " 100%);" + "background-image:-ms-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%);" + "background-image:-moz-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%);" + "background-image:-webkit-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%);";
                     }
                     if (property === "color") {
-                        $i.css("border-top-color", value);
-                        $i.css("border-bottom-color", nextValue);
-                        $i.css("border-left-color", value);
-                        $i.css("border-right-color", nextValue);
+                        i.style.cssText += "border-top-color:" + value + ";" + "border-bottom-color:" + nextValue + ";" + "border-left-color:" + value + ";" + "border-right-color:" + nextValue + ";";
                     }
                     if (property === "weight") {
-                        $i.css("border-top-width", value);
-                        $i.css("border-bottom-width", nextValue);
-                        $i.css("border-left-width", value);
-                        $i.css("border-right-width", nextValue);
+                        i.style.cssText += "border-top-width:" + value + ";" + "border-bottom-width:" + nextValue + ";" + "border-left-width:" + value + ";" + "border-right-width:" + nextValue + ";";
                     }
                     var min = segmentSize * index + minX;
                     var max = min + segmentSize;
@@ -3986,18 +3998,18 @@ L.DataLayer = L.LayerGroup.extend({
                         min = displayTextFunction(min);
                         max = displayTextFunction(max);
                     }
-                    $i.attr("title", min + " - " + max);
+                    i.setAttribute("title", min + " - " + max);
                 }
             }
         }
-        $i.width(segmentWidth);
-        return $i;
+        i.style.width = segmentWidth + "px";
+        return i;
     },
     _getLegend: function(legendOptions) {
         legendOptions = legendOptions || this.options.legendOptions || {};
         var className = legendOptions.className;
-        var legendElement = '<div class="legend"></div>';
-        var $legendElement = $(legendElement);
+        var container = document.createElement("div");
+        var legendElement = L.DomUtil.create("div", "legend", container);
         var displayOption;
         var valueFunction;
         var numSegments = legendOptions.numSegments || 10;
@@ -4018,10 +4030,10 @@ L.DataLayer = L.LayerGroup.extend({
             }
         };
         if (className) {
-            $legendElement.addClass(className);
+            L.DomUtil.addClass(legendElement, className);
         }
         if (legendOptions.title) {
-            $legendElement.append("<legend>" + legendOptions.title + "</legend>");
+            L.DomUtil.create("legend", "", legendElement).innerHTML = legendOptions.title;
         }
         var defaultFunction = function(value) {
             return value;
@@ -4032,15 +4044,14 @@ L.DataLayer = L.LayerGroup.extend({
             displayText = displayProperties.displayText;
             var displayTextFunction = displayText ? displayText : defaultFunction;
             var styles = displayProperties.styles;
-            $legendElement.append('<div class="legend-title">' + displayName + "</div>");
+            L.DomUtil.create("div", "legend-title", legendElement).innerHTML = displayName;
             if (styles) {
-                var legend = new L.CategoryLegend(styles);
-                $legendElement.append(legend.generate());
+                legendElement.innerHTML += new L.CategoryLegend(styles).generate();
             } else {
-                var $legendItems = $('<div class="data-layer-legend"><div class="min-value"></div><div class="scale-bars"></div><div class="max-value"></div></div>');
-                var $minValue = $legendItems.find(".min-value");
-                var $maxValue = $legendItems.find(".max-value");
-                var $scaleBars = $legendItems.find(".scale-bars");
+                var legendItems = L.DomUtil.create("div", "data-layer-legend");
+                var minValue = L.DomUtil.create("div", "min-value", legendItems);
+                var scaleBars = L.DomUtil.create("div", "scale-bars", legendItems);
+                var maxValue = L.DomUtil.create("div", "max-value", legendItems);
                 var ignoreProperties = [ "displayName", "displayText", "minValue", "maxValue" ];
                 for (var index = 0; index < numSegments; ++index) {
                     var legendParams = {
@@ -4051,16 +4062,16 @@ L.DataLayer = L.LayerGroup.extend({
                         index: index,
                         numSegments: numSegments,
                         segmentWidth: segmentWidth,
-                        $minValue: $minValue,
-                        $maxValue: $maxValue
+                        minValue: minValue,
+                        maxValue: maxValue
                     };
-                    var $element = this._getLegendElement(legendParams);
-                    $scaleBars.append($element);
+                    var element = this._getLegendElement(legendParams);
+                    scaleBars.appendChild(element);
                 }
+                legendElement.appendChild(legendItems);
             }
-            $legendElement.append($legendItems);
         }
-        return $legendElement.wrap("<div/>").parent().html();
+        return container.innerHTML;
     }
 });
 
@@ -4141,7 +4152,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
             opacity: 1
         },
         onEachRecord: function(layer, record) {
-            var $html = L.HTMLUtils.buildTable(record);
+            var html = L.HTMLUtils.buildTable(record);
             var photoUrl = record["photo_file_url"];
             var title = record["photo_title"];
             var me = this;
@@ -4149,12 +4160,22 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
             var height = record["height"];
             var offset = 2e4;
             layer.on("click", function(e) {
-                var $html = $('<div><img class="photo" onload="this.style.opacity=1" src="' + photoUrl + '"/><div class="photo-info"><span>' + title + '</span><a class="photo-link" target="_blank" href="' + record["photo_url"] + '"><img src="http://www.panoramio.com/img/glass/components/logo_bar/panoramio.png" style="height: 14px;"/></a></div><a class="author-link" target="_blank" href="' + record["owner_url"] + '">by ' + record["owner_name"] + "</a></div>");
-                $html.find(".photo").width(width);
-                $html.find(".photo-info").width(width - 20);
+                var container = document.createElement("div");
+                var content = L.DomUtil.create("div", "", container);
+                var photo = L.DomUtil.create("img", "photo", content);
+                photo.setAttribute("onload", "this.style.opacity=1;");
+                photo.setAttribute("src", photoUrl);
+                photo.style.width = width + "px";
+                var photoInfo = L.DomUtil.create("div", "photo-info", content);
+                photoInfo.width = width - 20 + "px";
+                photoInfo.innerHTML = "<span>" + title + "</span>" + '<a class="photo-link" target="_blank" href="' + record["photo_url"] + '">' + '<img src="http://www.panoramio.com/img/glass/components/logo_bar/panoramio.png" style="height: 14px;"/>' + "</a>";
+                var authorLink = L.DomUtil.create("a", "author-link", content);
+                authorLink.setAttribute("target", "_blank");
+                authorLink.setAttribute("href", record["owner_url"]);
+                authorLink.innerHTML = "by " + record["owner_name"];
                 var icon = new L.DivIcon({
                     className: "photo-details",
-                    html: $html.wrap("<div/>").parent().html(),
+                    html: container.innerHTML,
                     iconAnchor: [ width / 2, height / 2 ]
                 });
                 var marker = new L.Marker(e.target._latlng, {
@@ -4263,6 +4284,39 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
         this._from = this._from - L.PanoramioLayer.NUM_PHOTOS;
         this.requestPhotos();
     },
+    requestJsonp: function(url, data, callback) {
+        var self = this, key = "function" + new Date().getTime(), params = [];
+        data.callback = "window.LeafletDvfJsonpCallbacks." + key;
+        for (property in data) {
+            if (data.hasOwnProperty(property)) {
+                params.push(property + "=" + encodeURIComponent(data[property]));
+            }
+        }
+        url += (url.indexOf("?") > 0 ? "&" : "?") + params.join("&");
+        if (typeof window.LeafletDvfJsonpCallbacks === "undefined") {
+            window.LeafletDvfJsonpCallbacks = {};
+        }
+        window.LeafletDvfJsonpCallbacks[key] = function(data) {
+            callback.call(self, data);
+            delete window.LeafletDvfJsonpCallbacks[key];
+        };
+        if (typeof this.jsonpScript === "undefined") {
+            this.jsonpScript = document.createElement("script");
+            this.jsonpScript.setAttribute("type", "text/javascript");
+            this.jsonpScript.setAttribute("async", "true");
+        }
+        this.jsonpScript.setAttribute("src", url);
+        document.head.appendChild(this.jsonpScript);
+        return {
+            abort: function() {
+                if (key in window.LeafletDvfJsonpCallbacks) {
+                    window.LeafletDvfJsonpCallbacks[key] = function() {
+                        delete window.LeafletDvfJsonpCallbacks[key];
+                    };
+                }
+            }
+        };
+    },
     requestPhotos: function() {
         var me = this;
         var bounds = this._map.getBounds();
@@ -4271,32 +4325,26 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
         while (me._calls.length > 0) {
             me._calls.pop().abort();
         }
-        var request = $.ajax({
-            url: "http://www.panoramio.com/map/get_panoramas.php",
-            data: {
-                set: this.options.photoSet,
-                from: me._from,
-                to: me._to,
-                minx: southWest.lng,
-                miny: southWest.lat,
-                maxx: northEast.lng,
-                maxy: northEast.lat,
-                size: "medium",
-                mapfilter: "true"
-            },
-            type: "GET",
-            dataType: "jsonp",
-            success: function(data) {
-                me._count = data.count;
-                if (moment && me.options.sizeBy === L.PanoramioLayer.SIZE_BY_DATE) {
-                    data = me.calculateSizeByDate(data);
-                } else if (me.options.sizeBy === L.PanoramioLayer.SIZE_BY_POPULARITY) {
-                    data = me.calculateSizeByPopularity(data);
-                }
-                me.fire("photosAvailable", data);
-                me.clearLayers();
-                me.addData(data);
+        var request = this.requestJsonp("http://www.panoramio.com/map/get_panoramas.php", {
+            set: this.options.photoSet,
+            from: me._from,
+            to: me._to,
+            minx: southWest.lng,
+            miny: southWest.lat,
+            maxx: northEast.lng,
+            maxy: northEast.lat,
+            size: "medium",
+            mapfilter: "true"
+        }, function(data) {
+            me._count = data.count;
+            if (moment && me.options.sizeBy === L.PanoramioLayer.SIZE_BY_DATE) {
+                data = me.calculateSizeByDate(data);
+            } else if (me.options.sizeBy === L.PanoramioLayer.SIZE_BY_POPULARITY) {
+                data = me.calculateSizeByPopularity(data);
             }
+            me.fire("photosAvailable", data);
+            me.clearLayers();
+            me.addData(data);
         });
         me._calls.push(request);
     }
@@ -4894,17 +4942,19 @@ L.Control.Legend = L.Control.extend({
                 self.removeLayer(layer);
             });
         }
-        $(container).on("mouseover mouseout", function(e) {
-            $(this).toggleClass("larger");
-        });
-        L.DomEvent.addListener(container, "click", L.DomEvent.stopPropagation).addListener(container, "click", L.DomEvent.preventDefault);
+        this.toggleSize = L.bind(this.toggleSize, this);
+        L.DomEvent.addListener(container, "mouseover", this.toggleSize).addListener(container, "mouseout", this.toggleSize).addListener(container, "click", L.DomEvent.stopPropagation).addListener(container, "click", L.DomEvent.preventDefault);
         return container;
     },
     clear: function() {
-        $(this._container).empty();
+        this._container.innerHTML = "";
     },
     toggleSize: function() {
-        $(this._container).toggleClass("larger", "slow");
+        if (L.DomUtil.hasClass(this._container, "larger")) {
+            L.DomUtil.removeClass(this._container, "larger");
+        } else {
+            L.DomUtil.addClass(this._container, "larger");
+        }
     },
     redrawLayer: function(layer) {
         this.removeLayer(layer);
@@ -4923,19 +4973,18 @@ L.Control.Legend = L.Control.extend({
     removeLayer: function(layer) {
         var id = L.Util.stamp(layer);
         if (layer.getLegend) {
-            $(this._container).find("#" + id).remove();
+            var element = document.getElementById(id);
+            element.parentNode.removeChild(element);
             layer.off("legendChanged");
         }
     },
     addLegend: function(id, html) {
-        var $container = $(this._container);
-        var $html = $(html);
-        var $existingLegend = $container.find("#" + id);
-        if ($existingLegend.size() === 0) {
-            $container.append('<div id="' + id + '">' + html + "</div>");
-        } else {
-            $existingLegend.find("div.legend").replaceWith($html);
+        var container = this._container, legend = document.getElementById(id);
+        if (!legend) {
+            legend = L.DomUtil.create("div", "", container);
+            legend.id = id;
         }
+        legend.innerHTML = html;
     }
 });
 

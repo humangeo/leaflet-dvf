@@ -531,49 +531,48 @@ L.CategoryLegend = L.Class.extend({
     },
     generate: function(options) {
         options = options || {};
-        var legend = '<div class="legend"></div>';
-        var $legend = $(legend);
+        var container = document.createElement("div");
+        var legend = L.DomUtil.create("div", "legend", container);
         var className = options.className;
         var legendOptions = this.options;
         if (className) {
-            $legend.addClass(className);
+            L.DomUtil.addClass(legend, className);
         }
         if (options.title) {
-            $legend.append('<div class="legend-title">' + options.title + "</div>");
+            L.DomUtil.create("div", "legend-title", legend).innerHTML = options.title;
         }
         for (var key in legendOptions) {
             categoryOptions = legendOptions[key];
             var displayName = categoryOptions.displayName || key;
-            var $legendElement = $('<div class="data-layer-legend"><div class="legend-box"></div><div class="key">' + displayName + "</div></div>");
-            var $legendBox = $legendElement.find(".legend-box");
-            L.StyleConverter.applySVGStyle($legendBox, categoryOptions);
-            $legend.append($legendElement);
+            var legendElement = L.DomUtil.create("div", "data-layer-legend", legend);
+            var legendBox = L.DomUtil.create("div", "legend-box", legendElement);
+            L.DomUtil.create("div", "key", legendElement).innerHTML = displayName;
+            L.StyleConverter.applySVGStyle(legendBox, categoryOptions);
         }
-        return $legend.wrap("<div/>").parent().html();
+        return container.innerHTML;
     }
 });
 
 L.LegendIcon = L.DivIcon.extend({
     initialize: function(fields, layerOptions, options) {
-        var html = '<div class="legend-content"><div class="title"></div><div class="legend-box"></div><div class="legend-values"></div></div>';
-        var $html = $(html);
-        var $legendBox = $html.find(".legend-box");
-        var $legendValues = $html.find(".legend-values");
+        var container = document.createElement("div");
+        var legendContent = L.DomUtil.create("div", "legend", container);
+        var legendTitle = L.DomUtil.create("div", "title", legendContent);
+        var legendBox = L.DomUtil.create("div", "legend-box", legendContent);
+        var legendValues = L.DomUtil.create("div", "legend-values", legendContent);
         var field;
         var title = layerOptions.title || layerOptions.name;
         if (title) {
-            $html.find(".title").text(title);
+            legendTitle.innerHTML = title;
         }
         for (var key in fields) {
             field = fields[key];
-            var displayName = field.name || key;
-            var displayText = field.value;
-            $legendValues.append('<div class="key">' + displayName + '</div><div class="value">' + displayText + "</div>");
+            L.DomUtil.create("div", "key", legendValues).innerHTML = field.name || key;
+            L.DomUtil.create("div", "value", legendValues).innerHTML = field.value;
         }
-        L.StyleConverter.applySVGStyle($legendBox, layerOptions);
-        $legendBox.height(5);
-        html = $html.wrap("<div>").parent().html();
-        options.html = html;
+        L.StyleConverter.applySVGStyle(legendBox, layerOptions);
+        legendBox.style.height = "5px";
+        options.html = container.innerHTML;
         options.className = options.className || "legend-icon";
         L.DivIcon.prototype.initialize.call(this, options);
     }
@@ -857,27 +856,29 @@ L.StyleConverter = {
             }
         }
     },
-    applySVGStyle: function($element, svgStyle, additionalKeys) {
+    applySVGStyle: function(element, svgStyle, additionalKeys) {
         var keyMap = L.StyleConverter.keyMap;
         if (additionalKeys) {
             keyMap = L.Util.extend(keyMap, additionalKeys);
         }
-        $element.css("border-style", "solid");
+        element.style.borderStyle = "solid";
         for (var property in svgStyle) {
-            $element = L.StyleConverter.setCSSProperty($element, property, svgStyle[property], keyMap);
+            L.StyleConverter.setCSSProperty(element, property, svgStyle[property], keyMap);
         }
-        return $element;
+        return element;
     },
-    setCSSProperty: function($element, key, value, keyMap) {
+    setCSSProperty: function(element, key, value, keyMap) {
         var keyMap = keyMap || L.StyleConverter.keyMap;
         var cssProperty = keyMap[key];
+        var cssText = "";
         if (cssProperty) {
             var propertyKey = cssProperty.property;
-            for (var propertyIndex = 0; propertyIndex < propertyKey.length; ++propertyIndex) {
-                $element.css(propertyKey[propertyIndex], cssProperty.valueFunction(value));
+            for (var propertyIndex = 0, propertyLength = propertyKey.length; propertyIndex < propertyLength; ++propertyIndex) {
+                cssText += propertyKey[propertyIndex] + ":" + cssProperty.valueFunction(value) + ";";
             }
         }
-        return $element;
+        element.style.cssText += cssText;
+        return element;
     }
 };
 
@@ -914,7 +915,8 @@ L.PaletteBuilder = L.Class.extend({
     },
     generate: function(options) {
         options = options || {};
-        var $paletteElement = $('<div class="palette"></div>');
+        var container = document.createElement("div");
+        var paletteElement = L.DomUtil.create("div", "palette", container);
         var count = options.count || 10;
         var categories = function(count) {
             var categoryArray = [];
@@ -926,35 +928,45 @@ L.PaletteBuilder = L.Class.extend({
         var styleBuilder = new L.StylesBuilder(categories, this._styleFunctionMap);
         var styles = styleBuilder.getStyles();
         if (options.className) {
-            $paletteElement.addClass(options.className);
+            L.DomUtil.addClass(paletteElement, options.className);
         }
         for (var styleKey in styles) {
-            var $i = $('<i class="palette-element"></i>');
+            var i = L.DomUtil.create("i", "palette-element", paletteElement);
             var style = styles[styleKey];
-            L.StyleConverter.applySVGStyle($i, style);
-            $paletteElement.append($i);
+            L.StyleConverter.applySVGStyle(i, style);
         }
-        return $paletteElement.wrap("<div/>").parent().html();
+        return container.innerHTML;
     }
 });
 
 L.HTMLUtils = {
     buildTable: function(obj, className, ignoreFields) {
         className = className || "table table-condensed table-striped table-bordered";
-        var html = '<table class="' + className + '"><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody></tbody></table>';
-        var $html = $(html);
-        var $tbody = $html.find("tbody");
+        var table = L.DomUtil.create("table", className);
+        var thead = L.DomUtil.create("thead", "", table);
+        var tbody = L.DomUtil.create("tbody", "", table);
+        thead.innerHTML = "<tr><th>Name</th><th>Value</th></tr>";
         ignoreFields = ignoreFields || [];
-        for (var property in obj) {
-            if (obj.hasOwnProperty(property) && $.inArray(ignoreFields, property) === -1) {
-                if ($.isPlainObject(obj[property]) || obj[property] instanceof Array) {
-                    $tbody.append("<tr><td>" + property + "</td><td>" + L.HTMLUtils.buildTable(obj[property], ignoreFields).wrap("<div/>").parent().html() + "</td></tr>");
-                } else {
-                    $tbody.append("<tr><td>" + property + "</td><td>" + obj[property] + "</td></tr>");
+        function inArray(arrayObj, value) {
+            for (var i = 0, l = arrayObj.length; i < l; i++) {
+                if (arrayObj[i] === value) {
+                    return true;
                 }
             }
+            return false;
         }
-        return $html;
+        for (var property in obj) {
+            if (obj.hasOwnProperty(property) && !inArray(ignoreFields, property)) {
+                var value = obj[property];
+                if (typeof value === "object") {
+                    var container = document.createElement("div");
+                    container.appendChild(L.HTMLUtils.buildTable(value, ignoreFields));
+                    value = container.innerHTML;
+                }
+                tbody.innerHTML += "<tr><td>" + property + "</td><td>" + value + "</td></tr>";
+            }
+        }
+        return table;
     }
 };
 
@@ -980,7 +992,7 @@ L.AnimationUtils = {
             for (var key in linearFunctions) {
                 layerOptions[key] = linearFunctions[key].evaluate(frame);
             }
-            layer.options = $.extend(true, {}, layer.options, layerOptions);
+            layer.options = L.extend({}, layer.options, layerOptions);
             layer.redraw();
             frame++;
             step = easeFunction(step);
@@ -1862,7 +1874,7 @@ L.DynamicPaletteElement = L.Class.extend({
         this._dynamicPalette = dynamicPalette;
     },
     generate: function(options) {
-        var $paletteElement = $('<div class="palette"></div>');
+        var paletteElement = L.DomUtil.create("div", "palette");
         var count = options.count;
         var palette = this._dynamicPalette.getPalette(0, count - 1);
         var width = options.width;
@@ -1870,26 +1882,25 @@ L.DynamicPaletteElement = L.Class.extend({
         if (options.showText != undefined) {
             showText = options.showText;
         }
-        $paletteElement.data("key", this._key);
-        $paletteElement.attr("data-palette-key", this._key);
+        paletteElement.setAttribute("data-palette-key", this._key);
         if (this._dynamicPalette.text && showText) {
-            $paletteElement.append('<div class="palette-text"><i class="icon-ok hidden"></i>' + this._dynamicPalette.text + "</div>");
+            L.DomUtil.create("div", "palette-text", paletteElement).innerHTML = '<i class="icon-ok hidden"></i>' + this._dynamicPalette.text;
         }
         var elementWidth = width / count;
         if (options.className) {
-            $paletteElement.addClass(options.className);
+            L.DomUtil.addClass(paletteElement, options.className);
         }
         for (var i = 0; i < count; ++i) {
-            var $i = $('<i class="palette-element"></i>');
+            var i = L.DomUtil.create("i", "palette-element");
             for (var styleKey in palette) {
                 var styleValue = palette[styleKey];
                 var style = styleValue.evaluate ? styleValue.evaluate(i) : styleValue;
-                L.StyleConverter.setCSSProperty($i, styleKey, style);
+                L.StyleConverter.setCSSProperty(i, styleKey, style);
             }
-            $i.width(elementWidth);
-            $paletteElement.append($i);
+            i.style.width = elementWidth + "px";
+            paletteElement.appendChild(i);
         }
-        return $paletteElement;
+        return paletteElement;
     }
 });
 
@@ -2003,7 +2014,7 @@ var PathFunctions = PathFunctions || {
         var gradient = this._createElement("linearGradient");
         var gradientGuid = L.Util.guid();
         this._gradientGuid = gradientGuid;
-        options = options !== true ? $.extend(true, {}, options) : {};
+        options = options !== true ? L.extend({}, options) : {};
         var vector = options.vector || [ [ "0%", "0%" ], [ "100%", "100%" ] ];
         var vectorOptions = {
             x1: vector[0][0],
@@ -2036,7 +2047,7 @@ var PathFunctions = PathFunctions || {
                 var stopProperty = stop[key];
                 if (key === "style") {
                     var styleProperty = "";
-                    stopProperty.color = stopProperty.color || this.options.fillColor || this.options.color;
+                    stopProperty.color = stopProperty.color || (this.options.fillColor || this.options.color);
                     stopProperty.opacity = typeof stopProperty.opacity === "undefined" ? 1 : stopProperty.opacity;
                     for (var propKey in stopProperty) {
                         styleProperty += "stop-" + propKey + ":" + stopProperty[propKey] + ";";
@@ -2216,7 +2227,7 @@ var PathFunctions = PathFunctions || {
     }
 };
 
-var LineTextFunctions = $.extend(true, {}, TextFunctions);
+var LineTextFunctions = L.extend({}, TextFunctions);
 
 LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
 
@@ -2589,30 +2600,35 @@ L.SVGMarker = L.Path.extend({
     getPathString: function() {
         var me = this;
         var addSVG = function() {
-            var $g = $(me._path).parent("g");
+            var g = me._path.parentNode;
+            while (g.nodeName.toLowerCase() !== "g") {
+                g = g.parentNode;
+            }
             if (me.options.clickable) {
-                $g.attr("class", "leaflet-clickable");
+                g.setAttribute("class", "leaflet-clickable");
             }
-            var $data = $(me._data);
-            var $svg;
-            $svg = $data.prop("tagName") === "svg" ? $data.clone(true) : $data.find("svg").clone(true);
+            var data = me._data;
+            var svg = data.nodeName.toLowerCase() === "svg" ? data.cloneNode(true) : data.querySelector("svg").cloneNode(true);
             if (me.options.setStyle) {
-                me.options.setStyle.call(me, $svg);
+                me.options.setStyle.call(me, svg);
             }
-            var elementWidth = $svg.attr("width");
-            var elementHeight = $svg.attr("height");
+            var elementWidth = svg.getAttribute("width");
+            var elementHeight = svg.getAttribute("height");
             var width = elementWidth ? elementWidth.replace("px", "") : "100%";
             var height = elementHeight ? elementHeight.replace("px", "") : "100%";
             if (width === "100%") {
                 width = me.options.size.x;
                 height = me.options.size.y;
-                $svg.attr("width", width);
-                $svg.attr("height", height);
+                svg.setAttribute("width", width);
+                svg.setAttribute("height", height + (height.indexOf("%") !== -1 ? "" : "px"));
             }
             var size = me.options.size || new L.Point(width, height);
             var scaleSize = new L.Point(size.x / width, size.y / height);
-            $g.find("svg").remove();
-            $g.append($svg);
+            var old = g.getElementsByTagName("svg");
+            if (old.length > 0) {
+                old[0].parentNode.removeChild(old[0]);
+            }
+            g.appendChild(svg);
             var transforms = [];
             var anchor = me.options.anchor || new L.Point(-size.x / 2, -size.y / 2);
             var x = me._point.x + anchor.x;
@@ -2622,13 +2638,18 @@ L.SVGMarker = L.Path.extend({
             if (me.options.rotation) {
                 transforms.push("rotate(" + me.options.rotation + " " + width / 2 + " " + height / 2 + ")");
             }
-            $g.attr("transform", transforms.join(" "));
+            g.setAttribute("transform", transforms.join(" "));
         };
         if (!this._data) {
-            $.get(this._svg, null, function(data) {
-                me._data = data;
-                addSVG();
-            });
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    me._data = this.responseXML;
+                    addSVG();
+                }
+            };
+            xhr.open("GET", this._svg, true);
+            xhr.send(null);
         } else {
             addSVG();
         }

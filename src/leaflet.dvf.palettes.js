@@ -505,56 +505,52 @@ L.DynamicPaletteElement = L.Class.extend({
 		this._key = key;
 		this._dynamicPalette = dynamicPalette;
 	},
-	
+
 	generate: function (options) {
-		var $paletteElement = $('<div class="palette"></div>');
+		var paletteElement = L.DomUtil.create('div', 'palette');
 		var count = options.count;
 		var palette = this._dynamicPalette.getPalette(0, count - 1);
 		var width = options.width;
-		
+
 		var showText = true;
-		
+
 		if (options.showText != undefined) {
 			showText = options.showText;
 		}
 
-        // Use jQuery's .data() function to associate the palette key with the object. For more
-        // on how this works see http://stackoverflow.com/a/2446182/62694.
-		$paletteElement.data('key', this._key);
+		// Store the palette key in the element via HTML5 custom "data-" attribute.
+		// Doing this will make it possible use a CSS selector to "find" this element
+		// based on the palette key value later.
+		paletteElement.setAttribute('data-palette-key', this._key);
 
-        // Store the palette key in the element via HTML5 custom "data-" attribute.
-        // Doing this will make it possible use a CSS selector to "find" this element
-        // based on the palette key value later.
-        $paletteElement.attr("data-palette-key", this._key);
-		
 		if (this._dynamicPalette.text && showText) {
-			$paletteElement.append('<div class="palette-text"><i class="icon-ok hidden"></i>' + this._dynamicPalette.text + '</div>');
+			L.DomUtil.create('div', 'palette-text', paletteElement).innerHTML = '<i class="icon-ok hidden"></i>' + this._dynamicPalette.text;
 		}
-		
+
 		var elementWidth = width/count;
-		
+
 		if (options.className) {
-			$paletteElement.addClass(options.className);
+			L.DomUtil.addClass(paletteElement, options.className);
 		}
-		
+
 		for (var i = 0; i < count; ++i) {
-			var $i = $('<i class="palette-element"></i>');
-			
+			var i = L.DomUtil.create('i', 'palette-element');
+
 			for (var styleKey in palette) {
-				
+
 				var styleValue = palette[styleKey];
 				var style = styleValue.evaluate ? styleValue.evaluate(i) : styleValue;
-				
-				L.StyleConverter.setCSSProperty($i, styleKey, style);
+
+				L.StyleConverter.setCSSProperty(i, styleKey, style);
 
 			}
-			
-			$i.width(elementWidth);
-			
-			$paletteElement.append($i);
-			
+
+			i.style.width = elementWidth + 'px';
+
+			paletteElement.appendChild(i);
+
 		}
-		return $paletteElement;
+		return paletteElement;
 	}
 
 });

@@ -13,21 +13,21 @@
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
-      
+
       #map {
       	background-image: url('http://upload.wikimedia.org/wikipedia/commons/d/d4/Battle_of_Moscow_7_Septembr_1812_year.jpg');
       	background-size: 100%;
       }
-      
+
       #map div.leaflet-tile-pane {
       	opacity: 0.4;
       }
-      
+
       div.leaflet-control-legend {
       	width: 400px;
       	min-height: 120px;
       }
-      
+
       .legend-line {
       	margin-bottom: 20px;
       }
@@ -39,7 +39,7 @@
       	vertical-align: middle;
       	border-left: none !important;
       }
- 
+
     </style>
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" type="text/css" media="screen" />
@@ -72,7 +72,7 @@
 			<div id="map"></div>
 		</div>
 	</div>
-	
+
 	<script>
 	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -95,36 +95,36 @@ $(document).ready(function() {
 
 	var resize = function () {
 		var $map = $('#map');
-		
+
 		$map.height($(window).height() - $('div.navbar').outerHeight());
-		
+
 		if (map) {
 			map.invalidateSize();
 		}
 	};
-	
+
 	$(window).on('resize', function () {
 		resize();
 	});
-	
+
 	resize();
-	
-	map = L.map('map').setView([54.5, 31.5], 7);	
+
+	map = L.map('map').setView([54.5, 31.5], 7);
 	map.attributionControl.addAttribution('Original idea from <a href="http://en.wikipedia.org/wiki/Charles_Joseph_Minard" target="_blank">Charles Minard</a> and his famous <a href="http://upload.wikimedia.org/wikipedia/commons/2/29/Minard.png" style="font-style: italic;" target="_blank">Carte figurative des pertes successives en hommes de l\'Armée Française dans la campagne de Russie 1812-1813</a>.  Minard troop data courtesy of <a href="http://www-958.ibm.com/software/data/cognos/manyeyes/datasets/minard-troops/versions/1" target="_blank">IBM Many Eyes</a>.  Background image from Albrecht Adam\'s <a style="font-style: italic;" href="http://upload.wikimedia.org/wikipedia/commons/d/d4/Battle_of_Moscow_7_Septembr_1812_year.jpg" target="_blank">Battle of Moscow on 7 September 1812</a>');
-	
+
 	// Add the Stamen toner tiles as a base layer
 	var baseLayer = new L.StamenTileLayer('toner').addTo(map);
-	
+
 	// Add a layer control
 	var layerControl = L.control.layers({
-		'Background': baseLayer 
+		'Background': baseLayer
 	}).addTo(map);
-	
+
 	// Add a legend control
 	var legendControl = L.control.legend({
 		autoAdd: false
 	}).addTo(map);
-	
+
 	// Napoleon's march troop data from IBM Many Eyes (http://www-958.ibm.com/software/data/cognos/manyeyes/datasets/minard-troops/versions/1) - converted from CSV to JSON
 	var troopData = [
 		{
@@ -536,7 +536,7 @@ $(document).ready(function() {
 			"group": "3"
 		}
 	];
-	
+
 	// Vary the color from dark blue to grey to dark red
 	// Blues = more survivors, Reds = fewer survivors
 	var colorFunction = new L.PiecewiseFunction([
@@ -557,20 +557,20 @@ $(document).ready(function() {
 			outputSaturation: '60%'
 		})
 	]);
-	
+
 	// Vary the line weight from 5 pixels to 40 pixels based on the number of survivors
 	var weightFunction = new L.LinearFunction([4000, 5], [340000, 40]);
-	
+
 	// On each line segment, bind a popup that displays the changes from the starting point to the ending point
 	var onEachSegment = function (record1, record2, line, deltas) {
-		line.bindPopup(L.HTMLUtils.buildTable(deltas.survivors).wrap('<div/>').parent().html());
+		line.bindPopup($(L.HTMLUtils.buildTable(deltas.survivors)).wrap('<div/>').parent().html());
 	};
-	
+
 	// Define layerOptions and displayOptions that will be used across flow lines
 	var layerOptions = {
 		opacity: 0.9
 	};
-	
+
 	var displayOptions = {
 		survivors: {
 			weight: weightFunction,
@@ -578,9 +578,9 @@ $(document).ready(function() {
 			displayName: 'Survivors over Time'
 		}
 	};
-	
+
 	// Define flow lines for each group of troops in the data.  The includeLayer option is provided to filter
-	// points by a particular group (see below).  
+	// points by a particular group (see below).
 	var group1Line = new L.FlowLine(troopData, {
 		recordsField: null,
 		locationMode: L.LocationModes.LATLNG,
@@ -598,7 +598,7 @@ $(document).ready(function() {
 		displayOptions: displayOptions,
 		onEachSegment: onEachSegment
 	});
-	
+
 	var group2Line = new L.FlowLine(troopData, {
 		recordsField: null,
 		locationMode: L.LocationModes.LATLNG,
@@ -611,7 +611,7 @@ $(document).ready(function() {
 		displayOptions: displayOptions,
 		onEachSegment: onEachSegment
 	});
-	
+
 	var group3Line = new L.FlowLine(troopData, {
 		recordsField: null,
 		locationMode: L.LocationModes.LATLNG,
@@ -624,7 +624,7 @@ $(document).ready(function() {
 		displayOptions: displayOptions,
 		onEachSegment: onEachSegment
 	});
-	
+
 	// Create a data layer for points - displayed as circles.  This will be displayed over top of the flow lines
 	var points = new L.DataLayer(troopData, {
 		recordsField: null,
@@ -640,7 +640,7 @@ $(document).ready(function() {
 			numberOfSides: 50,
 			weight: 0.5,
 			fillOpacity: 0.8
-		},		
+		},
 		legendOptions: {
 			width: 250,
 			numSegments: 7
@@ -657,27 +657,27 @@ $(document).ready(function() {
 			}
 		},
 		onEachRecord: function (layer, record) {
-			layer.bindPopup(L.HTMLUtils.buildTable(record).wrap('<div/>').parent().html());
+			layer.bindPopup($(L.HTMLUtils.buildTable(record)).wrap('<div/>').parent().html());
 		}
 	});
-	
+
 	// Add each layer to the layer control
 	layerControl.addOverlay(group1Line, 'Group 1');
 	layerControl.addOverlay(group2Line, 'Group 2');
 	layerControl.addOverlay(group3Line, 'Group 3');
 	layerControl.addOverlay(points, 'Points');
-	
+
 	// Add the layers we want to display to the legend
 	// Since all group lines use the same weight and color scales, just add the first layer to the legend
 	legendControl.addLayer(group1Line);
 	legendControl.addLayer(points);
-	
-	// Add each layer to the map 
+
+	// Add each layer to the map
 	map.addLayer(group1Line);
 	map.addLayer(group2Line);
 	map.addLayer(group3Line);
 	map.addLayer(points);
-});	
+});
 	</script>
 </body>
 </html>

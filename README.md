@@ -80,7 +80,7 @@ With the latest version of the framework, most of the components will work witho
 
 ## Build
 
-Concatenate the source files in the following order:
+Install [UglifyJS](https://github.com/mishoo/UglifyJS) and run build.sh in the build folder OR concatenate the source files in the following order:
 
 Full:
 * src/copyright.js
@@ -113,6 +113,7 @@ Proportional Symbol:
 * [USGS Earthquakes](http://humangeo.github.com/leaflet-dvf/examples/html/earthquakes.html)
 * [Meetup Finder](http://humangeo.github.com/leaflet-dvf/examples/html/meetups.html) *Zoom to an area of interest, put in a Meetup topic, and click the search button*
 * [Weather](http://humangeo.github.com/leaflet-dvf/examples/html/weather.html)
+* [Sochi Medal Count](http://humangeo.github.com/leaflet-dvf/examples/html/sochistats.html)
 
 Choropleth Mapping:
 * [Color Functions](http://humangeo.github.com/leaflet-dvf/examples/html/colors.html)

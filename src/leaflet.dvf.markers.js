@@ -451,6 +451,10 @@ var PathFunctions = PathFunctions || {
 			this._path.removeAttribute('filter');
 		}
 
+		if (this.options.fillPattern) {
+			this._createFillPattern(this.options.fillPattern);
+		}
+		
 		this._applyCustomStyles();
 
 	}
@@ -650,9 +654,6 @@ L.MapMarker = L.Path.extend({
 		if (this.options.shapeImage || this.options.imageCircleUrl) {
 			this._createShapeImage(this.options.shapeImage);
 		}
-		else if (this.options.fillPattern) {
-			this._createFillPattern(this.options.fillPattern);
-		}
 	}
 });
 
@@ -795,9 +796,6 @@ L.RegularPolygonMarker = L.Path.extend({
 		// Added for image circle
 		if (this.options.shapeImage || this.options.imageCircleUrl) {
 			this._createShapeImage(this.options.shapeImage);
-		}
-		else if (this.options.fillPattern) {
-			this._createFillPattern(this.options.fillPattern);
 		}
 	}
 });
@@ -948,7 +946,16 @@ L.SVGMarker = L.Path.extend({
 	projectLatlngs: function () {
 		this._point = this._map.latLngToLayerPoint(this._latlng);
 	},
-
+	
+	setLatLng: function (latlng) {
+		this._latlng = latlng;
+		this.redraw();
+	},
+	
+	getLatLng: function () {
+		return this._latlng;
+	},
+	
 	getPathString: function () {
 		var me = this;
 
@@ -1000,7 +1007,6 @@ L.SVGMarker = L.Path.extend({
 
 			transforms.push('translate(' + x + ' ' + y + ')');
 			transforms.push('scale(' + scaleSize.x + ' ' + scaleSize.y + ')');
-
 
 			if (me.options.rotation) {
 				transforms.push('rotate(' + me.options.rotation + ' ' + (width/2) + ' ' + (height/2) + ')'); //' ' + -1 * anchor.x + ' ' + -1 * anchor.y + ')');

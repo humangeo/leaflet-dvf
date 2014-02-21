@@ -2047,7 +2047,7 @@ var PathFunctions = PathFunctions || {
                 var stopProperty = stop[key];
                 if (key === "style") {
                     var styleProperty = "";
-                    stopProperty.color = stopProperty.color || (this.options.fillColor || this.options.color);
+                    stopProperty.color = stopProperty.color || this.options.fillColor || this.options.color;
                     stopProperty.opacity = typeof stopProperty.opacity === "undefined" ? 1 : stopProperty.opacity;
                     for (var propKey in stopProperty) {
                         styleProperty += "stop-" + propKey + ":" + stopProperty[propKey] + ";";
@@ -2223,6 +2223,9 @@ var PathFunctions = PathFunctions || {
         } else {
             this._path.removeAttribute("filter");
         }
+        if (this.options.fillPattern) {
+            this._createFillPattern(this.options.fillPattern);
+        }
         this._applyCustomStyles();
     }
 };
@@ -2367,8 +2370,6 @@ L.MapMarker = L.Path.extend({
     _applyCustomStyles: function() {
         if (this.options.shapeImage || this.options.imageCircleUrl) {
             this._createShapeImage(this.options.shapeImage);
-        } else if (this.options.fillPattern) {
-            this._createFillPattern(this.options.fillPattern);
         }
     }
 });
@@ -2466,8 +2467,6 @@ L.RegularPolygonMarker = L.Path.extend({
     _applyCustomStyles: function() {
         if (this.options.shapeImage || this.options.imageCircleUrl) {
             this._createShapeImage(this.options.shapeImage);
-        } else if (this.options.fillPattern) {
-            this._createFillPattern(this.options.fillPattern);
         }
     }
 });
@@ -2596,6 +2595,13 @@ L.SVGMarker = L.Path.extend({
     },
     projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
+    },
+    setLatLng: function(latlng) {
+        this._latlng = latlng;
+        this.redraw();
+    },
+    getLatLng: function() {
+        return this._latlng;
     },
     getPathString: function() {
         var me = this;

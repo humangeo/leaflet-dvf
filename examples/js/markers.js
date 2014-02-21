@@ -758,6 +758,76 @@ $(document).ready(function() {
 		return new L.StackedRegularPolygonMarker(latlng, stackedOptions);
 	});
 
+	addMarkers('Stacked Pie Charts', -10.0, 14.0, 2.0, 5, function (latlng) {
+		var colorValue = Math.random() * 360;
+		var options = {
+			color: '#000',
+			weight: 0.5,
+			stroke: true,
+			fillColor: 'white',//'hsl(' + colorValue + ',100%,50%)',
+			fillColors: ['#00FF00','#FFFF00','#FF0000','transparent'],
+			values: [2,4,3,5],
+			//radius: 30,
+			barThickness: 40,
+			fillOpacity: 0.7,
+			rotation: 0.0,
+			position: {
+				x: 0,
+				y: 0
+			},
+			offset: 0,
+			numberOfSides: 50
+		};
+
+		options.data = {
+			'dp1': [ 5, 5, 5.1, 10 ],
+			'dp2': [ Math.random() * 20, Math.random() * 20, Math.random() * 20, Math.random() * 20 ],
+			'dp3': [ Math.random() * 20, Math.random() * 20, Math.random() * 20, Math.random() * 20 ],
+			'dp4': [ Math.random() * 20, Math.random() * 20, Math.random() * 20, Math.random() * 20 ]
+		};
+
+		options.chartOptions = {
+			'dp1': {
+				fillColor: '#F1EEF6',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dp2': {
+				fillColor: '#BDC9E1',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dp3': {
+				fillColor: '#74A9CF',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			},
+			'dp4': {
+				fillColor: '#0570B0',
+				minValue: 0,
+				maxValue: 20,
+				maxHeight: 20,
+				displayText: function (value) {
+					return value.toFixed(2);
+				}
+			}
+		};
+
+		return new L.StackedPieChartMarker(latlng, options);
+	});
+
 	var directions = Object.keys(L.CalloutLine.DIRECTION);
 
 	console.log(directions);

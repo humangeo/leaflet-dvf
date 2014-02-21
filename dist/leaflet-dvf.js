@@ -2111,7 +2111,7 @@ var PathFunctions = PathFunctions || {
                 var stopProperty = stop[key];
                 if (key === "style") {
                     var styleProperty = "";
-                    stopProperty.color = stopProperty.color || (this.options.fillColor || this.options.color);
+                    stopProperty.color = stopProperty.color || this.options.fillColor || this.options.color;
                     stopProperty.opacity = typeof stopProperty.opacity === "undefined" ? 1 : stopProperty.opacity;
                     for (var propKey in stopProperty) {
                         styleProperty += "stop-" + propKey + ":" + stopProperty[propKey] + ";";
@@ -2287,6 +2287,9 @@ var PathFunctions = PathFunctions || {
         } else {
             this._path.removeAttribute("filter");
         }
+        if (this.options.fillPattern) {
+            this._createFillPattern(this.options.fillPattern);
+        }
         this._applyCustomStyles();
     }
 };
@@ -2431,8 +2434,6 @@ L.MapMarker = L.Path.extend({
     _applyCustomStyles: function() {
         if (this.options.shapeImage || this.options.imageCircleUrl) {
             this._createShapeImage(this.options.shapeImage);
-        } else if (this.options.fillPattern) {
-            this._createFillPattern(this.options.fillPattern);
         }
     }
 });
@@ -2530,8 +2531,6 @@ L.RegularPolygonMarker = L.Path.extend({
     _applyCustomStyles: function() {
         if (this.options.shapeImage || this.options.imageCircleUrl) {
             this._createShapeImage(this.options.shapeImage);
-        } else if (this.options.fillPattern) {
-            this._createFillPattern(this.options.fillPattern);
         }
     }
 });
@@ -2660,6 +2659,13 @@ L.SVGMarker = L.Path.extend({
     },
     projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
+    },
+    setLatLng: function(latlng) {
+        this._latlng = latlng;
+        this.redraw();
+    },
+    getLatLng: function() {
+        return this._latlng;
     },
     getPathString: function() {
         var me = this;
@@ -3693,14 +3699,18 @@ L.DataLayer = L.LayerGroup.extend({
         var processedLocation = location.center;
         return processedLocation;
     },
-    _addBoundary: function(location, options) {
+    _addBoundary: function(location, options, record) {
         var layer = location.location;
         if (this.options.includeBoundary) {
             if (layer instanceof L.LatLngBounds) {
                 layer = new L.Rectangle(layer);
             }
             if (layer.setStyle) {
-                var style = this.options.boundaryStyle || L.extend({}, options, {
+                var style;
+                if (this.options.boundaryStyle instanceof Function) {
+                    style = this.options.boundaryStyle.call(this, record);
+                }
+                style = style || this.options.boundaryStyle || L.extend({}, options, {
                     fillOpacity: .2,
                     clickable: false
                 });
@@ -3710,9 +3720,11 @@ L.DataLayer = L.LayerGroup.extend({
         }
     },
     _getLayer: function(location, options, record) {
-        this._addBoundary(location, options);
+        this._addBoundary(location, options, record);
         location = this._processLocation(location);
-        return this._markerFunction.call(this, location, options, record);
+        if (location) {
+            return this._markerFunction.call(this, location, options, record);
+        }
     },
     _getMarker: function(location, options, record) {
         var marker;
@@ -4167,7 +4179,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
                 photo.setAttribute("src", photoUrl);
                 photo.style.width = width + "px";
                 var photoInfo = L.DomUtil.create("div", "photo-info", content);
-                photoInfo.width = width - 20 + "px";
+                photoInfo.style.width = width - 20 + "px";
                 photoInfo.innerHTML = "<span>" + title + "</span>" + '<a class="photo-link" target="_blank" href="' + record["photo_url"] + '">' + '<img src="http://www.panoramio.com/img/glass/components/logo_bar/panoramio.png" style="height: 14px;"/>' + "</a>";
                 var authorLink = L.DomUtil.create("a", "author-link", content);
                 authorLink.setAttribute("target", "_blank");
@@ -4300,11 +4312,13 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
             callback.call(self, data);
             delete window.LeafletDvfJsonpCallbacks[key];
         };
-        if (typeof this.jsonpScript === "undefined") {
-            this.jsonpScript = document.createElement("script");
-            this.jsonpScript.setAttribute("type", "text/javascript");
-            this.jsonpScript.setAttribute("async", "true");
+        if (this.jsonpScript) {
+            document.head.removeChild(this.jsonpScript);
+            this.jsonpScript = null;
         }
+        this.jsonpScript = document.createElement("script");
+        this.jsonpScript.setAttribute("type", "text/javascript");
+        this.jsonpScript.setAttribute("async", "true");
         this.jsonpScript.setAttribute("src", url);
         document.head.appendChild(this.jsonpScript);
         return {
@@ -4419,7 +4433,7 @@ L.ChartDataLayer = L.DataLayer.extend({
         L.DataLayer.prototype.initialize.call(this, data, options);
     },
     _getLayer: function(latLng, layerOptions, record) {
-        this._addBoundary(latLng, layerOptions);
+        this._addBoundary(latLng, layerOptions, record);
         latLng = this._processLocation(latLng);
         var chartOptions = this.options.chartOptions;
         var tooltipOptions = this.options.tooltipOptions;

@@ -376,7 +376,7 @@ L.DataLayer = L.LayerGroup.extend({
 		return processedLocation;
 	},
 
-	_addBoundary: function (location, options) {
+	_addBoundary: function (location, options, record) {
 		var layer = location.location;
 
 		if (this.options.includeBoundary) {
@@ -385,7 +385,13 @@ L.DataLayer = L.LayerGroup.extend({
 			}
 
 			if (layer.setStyle) {
-				var style = this.options.boundaryStyle || L.extend({}, options, {
+				var style;
+				
+				if (this.options.boundaryStyle instanceof Function) {
+					style = this.options.boundaryStyle.call(this, record);
+				}
+				
+				style = style || this.options.boundaryStyle || L.extend({}, options, {
 					fillOpacity: 0.2,
 					clickable: false
 				});
@@ -398,11 +404,13 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 
 	_getLayer: function (location, options, record) {
-		this._addBoundary(location, options);
+		this._addBoundary(location, options, record);
 
 		location = this._processLocation(location);
 
-		return this._markerFunction.call(this, location, options, record);
+		if (location) {
+			return this._markerFunction.call(this, location, options, record);
+		}
 	},
 
 	// Can be overridden by specifying a getMarker option
@@ -1026,7 +1034,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 				photo.style.width = width + 'px';
 
 				var photoInfo = L.DomUtil.create('div', 'photo-info', content);
-				photoInfo.width = (width - 20) + 'px';
+				photoInfo.style.width = (width - 20) + 'px';
 				photoInfo.innerHTML = '<span>' + title + '</span>' +
 						      '<a class="photo-link" target="_blank" href="' + record['photo_url'] + '">' +
 						      '<img src="http://www.panoramio.com/img/glass/components/logo_bar/panoramio.png" style="height: 14px;"/>' +
@@ -1036,7 +1044,6 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 				authorLink.setAttribute('target', '_blank');
 				authorLink.setAttribute('href', record['owner_url']);
 				authorLink.innerHTML = 'by ' + record['owner_name'];
-
 
 				var icon = new L.DivIcon({
 					className: 'photo-details',
@@ -1218,15 +1225,18 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 			delete window.LeafletDvfJsonpCallbacks[key];
 		};
 
-		if (typeof this.jsonpScript === 'undefined') {
-			this.jsonpScript = document.createElement('script');
-			this.jsonpScript.setAttribute('type', 'text/javascript');
-			this.jsonpScript.setAttribute('async', 'true');
+		if (this.jsonpScript) {
+			document.head.removeChild(this.jsonpScript);
+			this.jsonpScript = null;
 		}
+		
+		this.jsonpScript = document.createElement('script');
+		this.jsonpScript.setAttribute('type', 'text/javascript');
+		this.jsonpScript.setAttribute('async', 'true');
 		this.jsonpScript.setAttribute('src', url);
-
+		
 		document.head.appendChild(this.jsonpScript);
-
+		
 		return {
 			abort: function () {
 				if (key in window.LeafletDvfJsonpCallbacks) {
@@ -1375,7 +1385,7 @@ L.ChartDataLayer = L.DataLayer.extend({
 	},
 
 	_getLayer: function (latLng, layerOptions, record) {
-		this._addBoundary(latLng, layerOptions);
+		this._addBoundary(latLng, layerOptions, record);
 
 		latLng = this._processLocation(latLng);
 

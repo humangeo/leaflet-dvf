@@ -86,13 +86,13 @@ The primary goal of the framework is to simplify data visualization and thematic
 <li>ChoroplethDataLayer</li>
 <li>Others</li>
 </ul><p>GeoJSON polygons for countries and US states to support Choropleth mapping.  Countries are generated from:  <a href="https://github.com/johan/world.geo.json">https://github.com/johan/world.geo.json</a>.
-Just include these JavaScript files if you plan to build a country or US state choropleth.<br>
+Just include these JavaScript files if you plan to build a country or US state choropleth.
 Polygons are indexed via a state or country code and lookups are created to map various state/country code formats to the default index format.</p>
 
 <p>Automatic legend generation and a simple legend control.
 To generate a legend, just call getLegend on any DataLayer, or use the provided legend control and the legend will be displayed automatically.</p>
 
-<p>Support for gradient fills and drop shadows, text on Path-based items (e.g. markers, polylines, polygons, etc.), and more. </p>
+<p>Support for gradient fills and drop shadows, text on Path-based items (e.g. markers, polylines, polygons, etc.), and more.</p>
 
 <p>Callouts for annotating map data.  Use the L.Callout class to add individual callouts to your map.  See the <a href="http://humangeo.github.com/leaflet-dvf/examples/html/markers.html">Markers</a> example for an illustration of callouts.</p>
 
@@ -105,7 +105,7 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 <p>Required:</p>
 
 <ul>
-<li><a href="http://jquery.com/">jQuery</a></li>
+<li><a href="http://leafletjs.com/">Leaflet</a></li>
 </ul><p>Optional - required for particular classes to work:</p>
 
 <ul>
@@ -127,6 +127,33 @@ To generate a legend, just call getLegend on any DataLayer, or use the provided 
 With the latest version of the framework, most of the components will work without requiring any extra dependencies.  However, L.RadialBarChartMarker and L.PieChartMarker will require including the <a href="https://code.google.com/p/core-framework/source/browse/trunk/plugins/svg.js">Core Framework SVG Utilities</a>.  These utilities can convert more complex SVG shapes into corresponding VML shapes.</p>
 
 <h2>
+<a name="build" class="anchor" href="#build"><span class="octicon octicon-link"></span></a>Build</h2>
+
+<p>Install <a href="https://github.com/mishoo/UglifyJS">UglifyJS</a> and run build.sh in the build folder OR concatenate the source files in the following order:</p>
+
+<p>Full:</p>
+
+<ul>
+<li>src/copyright.js</li>
+<li>src/leaflet.dvf.linearfunctions.js</li>
+<li>src/leaflet.dvf.utils.js</li>
+<li>src/leaflet.dvf.palettes.js</li>
+<li>src/leaflet.dvf.regularpolygon.js</li>
+<li>src/leaflet.dvf.markers.js</li>
+<li>src/leaflet.dvf.chartmarkers.js</li>
+<li>src/leaflet.dvf.datalayer.js</li>
+<li>src/leaflet.dvf.lines.js</li>
+<li>src/leaflet.dvf.controls.js</li>
+</ul><p>Markers only:</p>
+
+<ul>
+<li>src/copyright.js</li>
+<li>src/leaflet.dvf.linearfunctions.js</li>
+<li>src/leaflet.dvf.utils.js</li>
+<li>src/leaflet.dvf.palettes.js</li>
+<li>src/leaflet.dvf.markers.js</li>
+<li>src/leaflet.dvf.chartmarkers.js</li>
+</ul><h2>
 <a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h2>
 
 <p><em>NOTE:  Most of these examples have multiple layers; use the layers control to see all of the layers</em></p>
@@ -143,6 +170,7 @@ With the latest version of the framework, most of the components will work witho
 <a href="http://humangeo.github.com/leaflet-dvf/examples/html/meetups.html">Meetup Finder</a> <em>Zoom to an area of interest, put in a Meetup topic, and click the search button</em>
 </li>
 <li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/weather.html">Weather</a></li>
+<li><a href="http://humangeo.github.com/leaflet-dvf/examples/html/sochistats.html">Sochi Medal Count</a></li>
 </ul><p>Choropleth Mapping:</p>
 
 <ul>
@@ -866,13 +894,16 @@ With the latest version of the framework, most of the components will work witho
 <a name="usage-9" class="anchor" href="#usage-9"><span class="octicon octicon-link"></span></a>Usage</h4>
 
 <blockquote>
-<p>Change the output hue dynamically based on the input data property<br><em>Useful for producing colors along a rainbow scale (or subset)</em>
+<p>Change the output hue dynamically based on the input data property
+<em>Useful for producing colors along a rainbow scale (or subset)</em>
 <code>L.HSLHueFunction(&lt;Number[]|Point&gt; minPoint, &lt;Number[]|Point&gt; maxPoint, &lt;HSL options&gt; options?);</code></p>
 
-<p>Change the output saturation dynamically based on the input data property<br><em>Useful for varying between a color and gray</em>
+<p>Change the output saturation dynamically based on the input data property
+<em>Useful for varying between a color and gray</em>
 <code>L.HSLSaturationFunction(&lt;Number[]|Point&gt; minPoint, &lt;Number[]|Point&gt; maxPoint, &lt;HSL options&gt; options?);</code></p>
 
-<p>Change the output luminosity dynamically based on the input data property<br><em>Useful for varying between a color and white</em>
+<p>Change the output luminosity dynamically based on the input data property
+<em>Useful for varying between a color and white</em>
 <code>L.HSLLuminosityFunction(&lt;Number[]|Point&gt; minPoint, &lt;Number[]|Point&gt; maxPoint, &lt;HSL options&gt; options?);</code></p>
 
 <p>Change the output red value dynamically based on the input data property
@@ -1002,7 +1033,7 @@ With the latest version of the framework, most of the components will work witho
 <a name="ldatalayer" class="anchor" href="#ldatalayer"><span class="octicon octicon-link"></span></a>L.DataLayer</h3>
 
 <blockquote>
-<p>Display data values using L.RegularPolygonMarker instances.  To override the default marker behavior, use the getMarker option or inherit from DataLayer and override _getMarker.  In thematic mapping, this class displays data using proportional symbols.  </p>
+<p>Display data values using L.RegularPolygonMarker instances.  To override the default marker behavior, use the getMarker option or inherit from DataLayer and override _getMarker.  In thematic mapping, this class displays data using proportional symbols.</p>
 
 <p><em>NOTE:  If the location features are lines/polygons (e.g. GeoJSON), this class will use the centroid of each line/polygon to place each marker.  When dealing with line/polygon features, you must include a reference to the <a href="https://github.com/bjornharrtell/jsts/tree/master/lib">JavaScript Topology Suite (JSTS) JS files</a>.  These files are used to calculate centroids.  If these files are not included, the DataLayer class will fallback to using the center of the bounds of the layer's geometry.</em></p>
 </blockquote>

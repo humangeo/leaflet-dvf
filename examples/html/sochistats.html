@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Examples - Earthquakes</title>
+    <title>Examples - Sochi Medal Counts</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -10,6 +10,25 @@
     <style>
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+      
+      #map {
+      	background: url(http://subtlepatterns.com/patterns/paper.png);
+      }
+      
+      .leaflet-tile-pane {
+      	opacity: 0.5;
+      }
+      
+      div.legend {
+      	background: url(http://upload.wikimedia.org/wikipedia/de/thumb/0/08/Logo_Sochi_2014.svg/608px-Logo_Sochi_2014.svg.png);
+		background-size: 50%;
+		background-repeat: no-repeat;
+		background-position: 100px 20px;
+      }
+      
+      div.leaflet-control-legend {
+      	max-height: 500px;
       }
     </style>
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
@@ -20,7 +39,7 @@
 </head>
 
 <body>
-	<div class="navbar navbar-inverse">
+	<div class="navbar">
       <div class="navbar-inner">
         <div class="container">
           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -28,7 +47,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="#">Earthquakes</a>
+          <a class="brand" href="#">Sochi Medal Counts</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
@@ -55,80 +74,15 @@
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
-	<script type="text/javascript" src="../lib/date.format.js"></script>
+	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
+	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
+	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
 	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+	<script type="text/javascript" src="../../dist/data/countryData.min.js"></script>
 	<script type="text/javascript">
 map = null;
 var lastLayer;
 var legendControl;
-
-// JSONP callback function for displaying the latest earthquake data
-var eqfeed_callback = function (data) {
-
-	var now = Math.round((new Date()).getTime());
-	var start = now - 86400000;
-	var timeOpacityFunction = new L.LinearFunction(new L.Point(start,0.3), new L.Point(now,1));
-
-	// Setup a new data layer
-	var dataLayer = new L.BarChartDataLayer(data,{
-		recordsField: 'features',
-		geoJSONField: null,
-		locationMode: L.LocationModes.GEOJSON,
-		chartOptions: {
-			'properties.mag':{
-				color: 'orangered',
-				fillColor: 'orange',
-				minValue: 0,
-				maxValue: 10,
-				minHeight: 4,
-				maxHeight: 40,
-				displayName: 'Magnitude'
-			},
-			'properties.time':{
-				color: 'goldenrod',
-				fillColor: 'yellow',
-				minValue: start,
-				maxValue: now,
-				minHeight: 0,
-				maxHeight: 10,
-				displayName: 'Time'
-			}
-		},
-		layerOptions: {
-			fillOpacity: 0.9,
-			opacity: 1,
-			weight: 1,
-			width: 8,
-			gradient: true,
-			dropShadow: true,
-			lineCap: 'square',
-			lineJoin: 'miter'
-		},
-		displayOptions: {
-			'properties.time': {
-				fillOpacity: timeOpacityFunction,
-				opacity: timeOpacityFunction
-			}
-		},
-		tooltipOptions: {
-			iconSize: new L.Point(90,76),
-			iconAnchor: new L.Point(-4,76)
-		},
-		onEachRecord: function (layer,record) {
-			var $html = $(L.HTMLUtils.buildTable(record));
-
-			layer.bindPopup($html.wrap('<div/>').parent().html(),{
-				minWidth: 400,
-				maxWidth: 400
-			});
-		}
-	});
-
-	// Add the data layer to the map
-	map.addLayer(dataLayer);
-
-	lastLayer = dataLayer;
-};
 
 $(document).ready(function() {
 
@@ -153,17 +107,13 @@ $(document).ready(function() {
 
 	// Initialize the map
 	map = L.map('map').setView([0.0, 0.0], 2);
-
+	map.attributionControl.addAttribution('Medal counts from the <a href="http://www.kimonolabs.com/sochi/docs">Kimono Labs Sochi API</a>');
+	
 	// Add a CloudMade tile layer with style #999
-	var baseLayer = L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
-	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery ?<a href="http://cloudmade.com">CloudMade</a>'
-	});
+	// Add the Stamen toner tiles as a base layer
+	var baseLayer = new L.StamenTileLayer('toner').addTo(map);
 
 	baseLayer.addTo(map);
-
-	var prccEarthquakesLayer = L.tileLayer('http://{s}.tiles.mapbox.com/v3/bclc-apec.map-rslgvy56/{z}/{x}/{y}.png', {
-		attribution: 'Map &copy; Pacific Rim Coordination Center (PRCC).  Certain data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
-	});
 
 	// Initialize the legend control and add it to the map
 	var legendControl = new L.Control.Legend();
@@ -172,30 +122,91 @@ $(document).ready(function() {
 
 	var layerControl = new L.Control.Layers({
 		'Cloudmade': baseLayer,
-		'PRCC Earthquake Risk Zones': prccEarthquakesLayer
 	});
 
 	layerControl.addTo(map);
 
-	// Function for requesting the latest earthquakes from USGS
-	var getData = function () {
+	$.getJSON("http://sochi.kimonolabs.com/api/countries?apikey=02f5cef421e2c6c2f57454e7a0898204&limit=100", null, function (data) {			
+			var countLayer = new L.StackedRegularPolygonDataLayer(data, {
+				recordsField: 'data',
+				locationMode: L.LocationModes.COUNTRY,
+				codeField: 'abbr',
+				includeBoundary: true,
+				boundaryStyle: function (record) {
+					return {
+						fillPattern: {
+							url: record.flag,
+							pattern: {
+								width: '100px',
+								height: '66px',
+								patternUnits: 'userSpaceOnUse',
+								patternContentUnits: 'Default'
+							},
+							image: {
+								width: '113px',
+								height: '87px'
+							}
+						},
+						fillOpacity: 0.7,
+						weight: 2,
+						color: '#303030',
+						opacity: 1.0
+					}
+				},
+				legendOptions: {
+					title: 'Medals'
+				},
+				tooltipOptions: {
+					iconSize: new L.Point(100, 70),
+					iconAnchor: new L.Point(-5, 70)
+				},
+				chartOptions: {
+					'medals.gold':{
+						color: 'black',
+						fillColor: 'gold',
+						minValue: 0,
+						maxValue: 30,
+						minRadius: 0,
+						maxRadius: 100,
+						displayName: 'Gold'
+					},
+					'medals.silver':{
+						color: 'black',
+						fillColor: 'silver',
+						minValue: 0,
+						maxValue: 30,
+						minRadius: 0,
+						maxRadius: 100,
+						displayName: 'Silver'
+					},
+					'medals.bronze':{
+						color: 'black',
+						fillColor: '#8C7853',
+						minValue: 0,
+						maxValue: 30,
+						minRadius: 0,
+						maxRadius: 100,
+						displayName: 'Bronze'
+					}
+				},
+				layerOptions: {
+					fillOpacity: 0.9,
+					opacity: 1,
+					weight: 1,
+					width: 8,
+					numberOfSides: 100,
+					gradient: true,
+					dropShadow: true,
+					//lineCap: 'square',
+					//lineJoin: 'miter'//,
+					stroke: false
+				}
+			});
+			
+			map.addLayer(countLayer);
 
-		if (lastLayer) {
-			map.removeLayer(lastLayer);
-		}
-
-		$.ajax({
-			url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
-			type: 'GET',
-			dataType: 'jsonp'
 		});
-	};
 
-	// Get the latest earthquake data
-	getData();
-
-	// Periodically request the latest data
-	setInterval(getData,300000);
 });
 	</script>
 </body>

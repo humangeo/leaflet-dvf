@@ -108,7 +108,8 @@ $(document).ready(function() {
 	layerControl.addTo(map);
 	
 	var markers = new L.MarkerClusterGroup();
-	map.addLayer(markers);
+
+	layerControl.addOverlay(markers, 'Markers');
 	
 	for (var i = 0; i < 3000; ++i) {
 		var marker = new L.MapMarker(new L.LatLng(Math.random() * 90, Math.random() * 180), {
@@ -117,10 +118,17 @@ $(document).ready(function() {
 			radius: Math.random() * 20,
 			fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)'
 		});
-	
+		
+		marker = new L.SVGMarker(new L.LatLng(Math.random() * 90, Math.random() * 180), {
+		  svg: "http://upload.wikimedia.org/wikipedia/commons/8/8b/Green_Arrow_Up_Darker.svg",
+		  size: new L.Point(20, 20)
+		});
 		// Add the data layer to the map
 		markers.addLayer(marker);
 	}
+	
+	map.addLayer(markers);
+	
 	
 });
 	</script>

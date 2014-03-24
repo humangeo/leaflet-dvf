@@ -221,8 +221,9 @@ $(document).ready(function() {
 		var marker = new L.SVGMarker(latlng, options); //new L.StarMarker(latlng, options);
 
 		var angle = 0;
-		var updateFunction = function () {
-			angle = angle + 30 % 360;
+		var updateFunction = function (time) {
+			L.Util.requestAnimFrame(updateFunction);
+			angle = angle + 2 % 360;
 
 			marker.setStyle({
 				rotation: angle
@@ -231,7 +232,8 @@ $(document).ready(function() {
 			marker.redraw();
 		};
 
-		setInterval(updateFunction, 1000);
+		setTimeout(updateFunction, 1000/60);
+		//setInterval(updateFunction, 1000);
 
 		marker.bindPopup('Test');
 		return marker;
@@ -287,8 +289,8 @@ $(document).ready(function() {
 
 		marker.on('mouseover', function (e) {
 			marker.setStyle({
-				setStyle: function ($svg) {
-					$svg.find('rect').css('fill', 'blue');
+				setStyle: function (svg) {
+					$(svg).find('rect').css('fill', 'blue');
 				}
 			});
 		});
@@ -853,7 +855,8 @@ $(document).ready(function() {
 					iconSize: new L.Point(28, 14),
 					html: direction.toUpperCase(),
 					className: 'callout-text'
-				})
+				}),
+				dropShadow: false
 			});
 		}
 	};

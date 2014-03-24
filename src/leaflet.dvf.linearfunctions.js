@@ -218,7 +218,7 @@ L.ColorFunction = L.LinearFunction.extend({
 			var colorString = this._getColorString(y);
 			
 			if ((L.Browser.ie) && colorString.indexOf('hsl') > -1) {
-				colorString = L.ColorUtils.hslStringToRgbString(colorString);
+				colorString = L.hslColor(colorString).toRGBString();
 			}
 			
 			return colorString;
@@ -411,10 +411,6 @@ L.HSLColorBlendFunction = L.LinearFunction.extend({
 		var s2 = hslMaxColor.s();
 		var l1 = hslMinColor.l();
 		var l2 = hslMaxColor.l();
-		
-		var postProcess = function (y) {
-			return y.toFixed(2);
-		}
 		
 		this._minX = minX;
 		this._maxX = maxX;

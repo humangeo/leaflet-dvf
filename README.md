@@ -507,6 +507,9 @@ evaluate | `linearFunction.evaluate(<value>);` | Interpolates an output value ba
 > Vary the output color dynamically between two RGB colors
 `L.RGBColorBlendFunction(<Number> minX, <Number>> maxX, <RGB array> minColor, <RGB array> maxColor);`
 
+> Vary the output color dynamically using the colors specified in the colors array.  Use with L.ColorBrewer color scales
+`L.CustomColorFunction(<Number> minX, <Number>> maxX, <RGB/HSL Array> colors, <CustomColorFunction options> options?);`
+
 ```javascript
 // Map a data property that ranges from 0 to 100 to a color between green (hue of 120) and red (hue of 0)
 var colorFunction = new L.HSLHueFunction(new L.Point(0, 120), new L.Point(100, 20));
@@ -765,6 +768,7 @@ Option | Type | Default | Description
 className | String | null | A class name that will be added to the legend element, useful for adding custom CSS styles
 numSegments | Number | 10 | The number of segments/bars to include in the legend element
 width | Number | 100 | The desired width of the legend element
+gradient | Boolean | true | Whether or not to display numeric legend segments with a gradient between color values
 
 [CloudMade]: http://www.cloudmade.com
 [Leaflet]: http://leafletjs.com

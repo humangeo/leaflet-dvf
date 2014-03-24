@@ -33,7 +33,7 @@ L.CalloutLine = L.CalloutLine.extend({
 		fillColor: '#000000',
 		fill: false,
 		gradient: false,
-		dropShadow: true,
+		dropShadow: false,
 		direction: L.CalloutLine.DIRECTION.NE,
 		lineStyle: L.CalloutLine.LINESTYLE.ANGLE,
 		lineCap: 'butt',
@@ -60,12 +60,8 @@ L.CalloutLine = L.CalloutLine.extend({
 	
 	_getPathArc: function () {
 		var direction = (this.options.direction || L.CalloutLine.DIRECTION.NE).toLowerCase();
-		var xDirection = direction[1];
 		var yDirection = direction[0];
-		
-		var xMultiplier = xDirection === 'w' ? -1 : 1;
 		var yMultiplier = yDirection === 'n' ? -1 : 1;
-		
 		var point1 = this._points[0];
 		var point2 = this._points[this._points.length - 1];
 		
@@ -236,15 +232,13 @@ L.Callout = L.LayerGroup.extend({
 	addIcon: function (direction, position) {
 		var size = this.options.size;
 		var icon = this.options.icon;
-		
-		var iconAnchor = icon.options.iconAnchor;
 		var iconSize = icon.options.iconSize;
 		
 		var yDirection = direction[0];
 		var xDirection = direction[1];
 		
-		var xAnchor = xDirection === 'w' ? icon.options.iconSize.x + size.x - position.x : -1 * (size.x + position.x);
-		var yAnchor = yDirection === 'n' ? icon.options.iconSize.y/2 + size.y - position.y : -1 * (-icon.options.iconSize.y/2 + size.y + position.y);
+		var xAnchor = xDirection === 'w' ? iconSize.x + size.x - position.x : -1 * (size.x + position.x);
+		var yAnchor = yDirection === 'n' ? iconSize.y/2 + size.y - position.y : -1 * (-iconSize.y/2 + size.y + position.y);
 		
 		icon.options.iconAnchor = new L.Point(xAnchor, yAnchor);
 		
@@ -453,15 +447,13 @@ L.ArcedPolyline = L.Path.extend({
 	},
 	
 	getBounds: function () {
-		// TODO:  Update this
-		var map = this._map,
-			point = map.project(this._latlngs[0]),
-			swPoint = new L.Point(point.x + this.options.offset.x, point.y + this.options.offset.y),
-			nePoint = new L.Point(swPoint.x + this.options.size.x, swPoint.y - this.options.size.y),
-			sw = map.unproject(swPoint),
-			ne = map.unproject(nePoint);
-
-		return new L.LatLngBounds(sw, ne);
+		var bounds = new L.LatLngBounds();
+		
+		for (var i = 0; i < this._latlngs.length; ++i) {
+			bounds.extend(this._latlngs[i]);
+		}
+		
+		return bounds;
 	},
 
 	setLatLngs: function (latlngs) {
@@ -476,9 +468,7 @@ L.ArcedPolyline = L.Path.extend({
 	drawSegment: function (point1, point2) {
 		var distance = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
 		var heightOffset = this.options.distanceToHeight.evaluate(distance);
-		var directionX = point1.x - point2.x;
-		var multiplierX = directionX / Math.abs(directionX);
-		
+
 		var parts = ['M', point1.x, ',', point1.y, ' C', point1.x, ',', point1.y - heightOffset, ' ', point2.x, ',', point2.y - heightOffset, ' ', point2.x, ',', point2.y ];
 		
 		return parts.join(' ');

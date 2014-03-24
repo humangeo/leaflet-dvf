@@ -241,15 +241,8 @@ L.BarChartMarker = L.ChartMarker.extend({
 
 	_loadComponents: function () {
 		var value, minValue, maxValue;
-		var angle = this.options.rotation;
-		var percentage = 0.0;
-		var maxDegrees = this.options.maxDegrees || 360.0;
 		var bar;
 		var options = this.options;
-		var dataPoint;
-		var lastRadiusX = this.options.radiusX || this.options.radius;
-		var lastRadiusY = this.options.radiusY || this.options.radius;
-		
 		var x;
 		var y;
 		var keys = Object.keys(this.options.data);
@@ -270,8 +263,6 @@ L.BarChartMarker = L.ChartMarker.extend({
 
 			minValue = chartOption.minValue || 0;
 			maxValue = chartOption.maxValue || 100;
-			
-			var range = maxValue - minValue;
 			
 			options.fillColor = chartOption.fillColor || this.options.fillColor;
 			options.value = value;
@@ -385,13 +376,9 @@ L.RadialBarMarker = L.Path.extend({
 	_getPoints: function () {
 
 		var angleDelta = this.options.endAngle - this.options.startAngle;
-		var angleSize = angleDelta / this.options.numberOfSides;
 		var degrees = this.options.endAngle + this.options.rotation;
 		var angle = this.options.startAngle + this.options.rotation;
 		var points = [];
-		var innerPoints = [];
-		var newPoint, innerPoint;
-		var angleRadians;
 		var radiusX = 'radiusX' in this.options ? this.options.radiusX : this.options.radius; 
 		var radiusY = 'radiusY' in this.options ? this.options.radiusY : this.options.radius;
 		var toRad = function (number) {
@@ -410,10 +397,6 @@ L.RadialBarMarker = L.Path.extend({
 		
 		if (this.options.barThickness) {
 			this._innerPoints = [];
-			
-			var innerRadiusX = radiusX - this.options.barThickness;
-			var innerRadiusY = radiusY - this.options.barThickness;
-			
 			this._innerPoints.push(this._getPoint(endRadians, radiusX - this.options.barThickness, radiusY - this.options.barThickness));
 			this._innerPoints.push(this._getPoint(startRadians, radiusX - this.options.barThickness, radiusY - this.options.barThickness));
 		}
@@ -482,7 +465,6 @@ L.PieChartMarker = L.ChartMarker.extend({
 		var lastAngle = this.options.rotation;
 		var bar;
 		var options = this.options;
-		var dataPoint;
 		var data = this.options.data;
 		var chartOptions = this.options.chartOptions;
 		var chartOption;
@@ -574,14 +556,11 @@ L.CoxcombChartMarker = L.CoxcombChartMarker.extend({
 
 	_loadComponents: function () {
 		var value, minValue, maxValue;
-		var sum = 0;
 		var angle = 0;
-		var percentage = 0.0;
 		var maxDegrees = this.options.maxDegrees || 360.0;
 		var lastAngle = this.options.rotation;
 		var bar;
 		var options = this.options;
-		var dataPoint;
 		var radiusX = 'radiusX' in this.options ? this.options.radiusX : this.options.radius;
 		var radiusY = 'radiusY' in this.options ? this.options.radiusY : this.options.radius;
 		var keys = Object.keys(this.options.data);
@@ -676,12 +655,9 @@ L.RadialBarChartMarker = L.ChartMarker.extend({
 	_loadComponents: function() {
 		var value, minValue, maxValue;
 		var angle = this.options.rotation;
-		var percentage = 0.0;
 		var maxDegrees = this.options.maxDegrees || 360.0;
 		var bar;
 		var options = this.options;
-		var dataPoint;
-		var count = 0;
 		var lastRadiusX = this.options.radiusX || this.options.radius;
 		var lastRadiusY = this.options.radiusY || this.options.radius;
 		var data = this.options.data;

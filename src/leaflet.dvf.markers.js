@@ -503,6 +503,15 @@ L.Polygon.include(PathFunctions);
 L.Polyline.include(PathFunctions);
 L.CircleMarker.include(PathFunctions);
 
+L.CircleMarker = L.CircleMarker.extend({
+	_applyCustomStyles: function () {
+		// Added for image circle
+		if (this.options.shapeImage || this.options.imageCircleUrl) {
+			this._createShapeImage(this.options.shapeImage);
+		}
+	}
+});
+
 /*
  * Rotates a point the provided number of degrees about another point.  Code inspired/borrowed from OpenLayers
  */
@@ -982,12 +991,13 @@ L.SVGMarker = L.Path.extend({
 			var width = elementWidth ? elementWidth.replace('px','') : '100%';
 			var height = elementHeight ? elementHeight.replace('px','') : '100%';
 
+			// If the width is 100% (meaning that no width is provided), then set the width and height to the size specified in the options
 			if (width === '100%') {
 				width = me.options.size.x;
 				height = me.options.size.y;
 
-				svg.setAttribute('width', width);
-				svg.setAttribute('height', height + (height.indexOf('%') !== -1 ? '' : 'px'));
+				svg.setAttribute('width', width + (String(width).indexOf('%') !== -1 ? '' : 'px'));
+				svg.setAttribute('height', height + (String(height).indexOf('%') !== -1 ? '' : 'px'));
 			}
 
 			var size = me.options.size || new L.Point(width, height);
@@ -1031,4 +1041,30 @@ L.SVGMarker = L.Path.extend({
 		}
 	}
 
+});
+
+/*
+ * A FeatureGroup with setLatLng and getLatLng methods
+ */
+L.MarkerGroup = L.FeatureGroup.extend({
+	initialize: function (latlng, markers) {
+		L.FeatureGroup.prototype.initialize.call(this, markers);
+
+		this.setLatLng(latlng);
+	},
+	
+	setLatLng: function (latlng) {
+		this._latlng = latlng;
+		this.eachLayer(function (layer) {
+			if (layer.setLatLng) {
+				layer.setLatLng(latlng);
+			}
+		});
+		
+		return this;
+	},
+	
+	getLatLng: function (latlng) {
+		return this._latlng;
+	}
 });

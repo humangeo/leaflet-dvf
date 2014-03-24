@@ -7,10 +7,6 @@ L.LocationModes = {
 	 * Each record contains latitude and longitude fields
 	 */
 	LATLNG: function (record, index) {
-		var latitude = L.Util.getFieldValue(record, this.options.latitudeField);
-		var longitude = L.Util.getFieldValue(record, this.options.longitudeField);
-		var self = this;
-
 		var getLocation = function (latitudeField, longitudeField) {
 			var latitude = L.Util.getFieldValue(record, latitudeField);
 			var longitude = L.Util.getFieldValue(record, longitudeField);
@@ -365,8 +361,6 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 
 	_getLocation: function (record, index) {
-		var location;
-
 		return this.options.locationMode.call(this, record, index);
 	},
 
@@ -388,7 +382,7 @@ L.DataLayer = L.LayerGroup.extend({
 				var style;
 				
 				if (this.options.boundaryStyle instanceof Function) {
-					style = this.options.boundaryStyle.call(this, record);
+					style = this.options.boundaryStyle.call(this, record, layer);
 				}
 				
 				style = style || this.options.boundaryStyle || L.extend({}, options, {
@@ -440,13 +434,15 @@ L.DataLayer = L.LayerGroup.extend({
 
 	_loadRecords: function (records) {
 		var location;
-
+		
 		records = this._preProcessRecords(records);
 
 		for (var recordIndex in records) {
 			if (records.hasOwnProperty(recordIndex)) {
 				var record = records[recordIndex];
 
+				record = this.options.deriveProperties ? this.options.deriveProperties(record) : record;
+				
 				var includeLayer = this._shouldLoadRecord(record);
 
 				if (includeLayer) {
@@ -537,8 +533,6 @@ L.DataLayer = L.LayerGroup.extend({
 
 	addData: function (data) {
 		var records = this.options.recordsField !== null && this.options.recordsField.length > 0 ? L.Util.getFieldValue(data, this.options.recordsField) : data;
-		var layer;
-		var location;
 
 		if (this.options.locationMode === L.LocationModes.CUSTOM && this.options.preload) {
 			this._preloadLocations(records);
@@ -690,7 +684,6 @@ L.DataLayer = L.LayerGroup.extend({
 	recordToLayer: function (location, record) {
 		var layerOptions = L.Util.extend({},this.options.layerOptions);
 		var layer;
-		var displayOptions = this.options.displayOptions;
 		var legendDetails = {};
 		var includeLayer = true;
 
@@ -782,10 +775,15 @@ L.DataLayer = L.LayerGroup.extend({
 					// If this is the fillColor property then setup the legend so that the background is a left-right gradient
 					// moving from the lowest value of the range to the highest value of the range
 					if (property === 'fillColor') {
-						i.style.cssText += 'background-image:linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);' +
-							           'background-image:-ms-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);' +
-							           'background-image:-moz-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);' +
-							           'background-image:-webkit-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);';
+						if (params.gradient) {
+							i.style.cssText += 'background-image:linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);' +
+										   'background-image:-ms-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);' +
+										   'background-image:-moz-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);' +
+										   'background-image:-webkit-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);';
+						}
+						else {
+							i.style.cssText += 'background-color:' + nextValue + ';';
+						}
 					}
 
 					if (property === 'color') {
@@ -829,25 +827,13 @@ L.DataLayer = L.LayerGroup.extend({
 		var className = legendOptions.className;
 		var container = document.createElement('div');
 		var legendElement = L.DomUtil.create('div', 'legend', container);
-		var displayOption;
-		var valueFunction;
 		var numSegments = legendOptions.numSegments || 10;
 		var legendWidth = legendOptions.width || 100;
-		var fieldBounds = {};
-		var weight = this.options.layerOptions.weight || 0;
+		var layerOptions = this.options.layerOptions || {};
+		var weight = layerOptions.weight || 0;
 		var segmentWidth = (legendWidth / numSegments) - 2 * weight;
-		var fieldElements = {};
-		var layerOptions = this.options.layerOptions;
-		var propertiesByField = {};
 		var displayText;
-		var displayOptions = this.options.displayOptions;
-		var displayMin, displayMax;
-		var radiusOptions = {
-			property: ['height'],
-			valueFunction: function (value) {
-				return (2 * value).toFixed(0) + 'px';
-			}
-		};
+		var displayOptions = this.options.displayOptions || {};
 
 		if (className) {
 			L.DomUtil.addClass(legendElement, className);
@@ -896,7 +882,8 @@ L.DataLayer = L.LayerGroup.extend({
 						numSegments: numSegments,
 						segmentWidth: segmentWidth,
 						minValue: minValue,
-						maxValue: maxValue
+						maxValue: maxValue,
+						gradient: legendOptions.gradient
 					};
 
 					var element = this._getLegendElement(legendParams);
@@ -1016,7 +1003,6 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 			opacity: 1.0
 		},
 		onEachRecord: function (layer, record) {
-			var html = L.HTMLUtils.buildTable(record);
 			var photoUrl = record['photo_file_url'];
 			var title = record['photo_title'];
 			var me = this;
@@ -1402,8 +1388,8 @@ L.ChartDataLayer = L.DataLayer.extend({
 			options.data[key] = L.Util.getFieldValue(record, key);
 		}
 
-		for (var key in this.options.tooltipOptions) {
-			options[key] = this.options.tooltipOptions[key];
+		for (var key in tooltipOptions) {
+			options[key] = tooltipOptions[key];
 		}
 
 		var marker;
@@ -1420,6 +1406,7 @@ L.ChartDataLayer = L.DataLayer.extend({
 	},
 
 	_getLegend: function (legendOptions) {
+		var dataLayerLegend = L.DataLayer.prototype._getLegend.call(this, legendOptions);
 		var legend = new L.CategoryLegend(this.options.chartOptions);
 
 		legendOptions = legendOptions || this.options.legendOptions;
@@ -1545,8 +1532,8 @@ L.RadialMeterMarkerDataLayer = L.DataLayer.extend({
 			options.data[key] = L.Util.getFieldValue(record, key);
 		}
 
-		for (var key in this.options.tooltipOptions) {
-			options[key] = this.options.tooltipOptions[key];
+		for (var key in tooltipOptions) {
+			options[key] = tooltipOptions[key];
 		}
 
 		var marker;

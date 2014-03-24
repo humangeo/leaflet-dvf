@@ -733,7 +733,7 @@ L.HTMLUtils = {
 };
 
 /*
- * Provides basic animation of numeric properties
+ * Provides basic animation of numeric properties.  TODO:  Change this to use L.Util.requestAnimFrame
  */
 L.AnimationUtils = {
 	animate: function (layer, from, to, options) {
@@ -749,6 +749,9 @@ L.AnimationUtils = {
 			if (key != 'color' && key != 'fillColor' && to[key]) {
 				linearFunctions[key] = new L.LinearFunction([0, from[key]], [frames - 1, to[key]]);
 			}
+			else if (key == 'color' || key == 'fillColor') {
+				linearFunctions[key] = new L.RGBColorBlendFunction(0, frames - 1, from[key], to[key]);
+			}
 		}
 
 		var layerOptions = {};
@@ -761,7 +764,7 @@ L.AnimationUtils = {
 			}
 
 			layer.options = L.extend({}, layer.options, layerOptions);
-			layer.redraw();
+			layer.setStyle(layer.options).redraw();
 
 			frame++;
 
@@ -927,37 +930,38 @@ L.Color = L.Class.extend({
 
 	r: function (newR) {
 		if (!arguments.length) return this._rgb[0];
-    	this.setRGB(newR, this._rgb[1], this._rgb[2]);
+    	return this.setRGB(newR, this._rgb[1], this._rgb[2]);
 	},
 
 	g: function (newG) {
 		if (!arguments.length) return this._rgb[1];
-    	this.setRGB(this._rgb[0], newG, this._rgb[2]);
+    	return this.setRGB(this._rgb[0], newG, this._rgb[2]);
 	},
 
 	b: function (newB) {
 		if (!arguments.length) return this._rgb[2];
-    	this.setRGB(this._rgb[0], this._rgb[1], newB);
+    	return this.setRGB(this._rgb[0], this._rgb[1], newB);
 	},
 
 	h: function (newH) {
 		if (!arguments.length) return this._hsl[0];
-    	this.setHSL(newH, this._hsl[1], this._hsl[2]);
+    	return this.setHSL(newH, this._hsl[1], this._hsl[2]);
 	},
 
 	s: function (newS) {
 		if (!arguments.length) return this._hsl[1];
-    	this.setHSL(this._hsl[0], newS, this._hsl[2]);
+    	return this.setHSL(this._hsl[0], newS, this._hsl[2]);
 	},
 
 	l: function (newL) {
 		if (!arguments.length) return this._hsl[2];
-    	this.setHSL(this._hsl[0], this._hsl[1], newL);
+    	return this.setHSL(this._hsl[0], this._hsl[1], newL);
 	},
 
 	a: function (newA) {
 		if (!arguments.length) return this._a;
     	this._a = newA;
+    	return this;
 	}
 });
 
@@ -970,7 +974,6 @@ L.RGBColor = L.Color.extend({
 		var isArray = colorDef instanceof Array;
 		var isHex = colorDef.indexOf('#') === 0;
 		var parts = [];
-		var rgb = [];
 		var r, g, b, a;
 
 		if (isArray) {
@@ -1044,190 +1047,66 @@ L.hslColor = function (colorDef) {
 	return new L.HSLColor(colorDef);
 };
 
-// TODO:  Replace this with the color classes above
-L.ColorUtils = {
-	rgbArrayToString: function (rgbArray) {
-		var hexValues = []
+/*
+ * A generic animation class based on the L.PosAnimation code from Leaflet
+ */
+L.Animation = L.Class.extend({
 
-		for (var index = 0; index < rgbArray.length; ++index) {
-			var hexValue = Math.round(rgbArray[index]).toString(16);
+	initialize: function (easeFunction, animateFrame) {
+		this._easeFunction = easeFunction; // Function that takes time as an input parameter
+		this._animateFrame = animateFrame;
+	},
+	
+	run: function (el, options) { // (HTMLElement, Point[, Number, Number])
+		this.stop();
 
-			if (hexValue.length === 1) {
-				hexValue = '0' + hexValue;
-			}
+		this._el = el;
+		this._inProgress = true;
+		this._duration = options.duration || 0.25;
+		
+		this._animationOptions = options;
+		this._startTime = +new Date();
 
-			hexValues.push(hexValue);
+		this.fire('start');
+
+		this._animate();
+	},
+
+	stop: function () {
+		if (!this._inProgress) { return; }
+
+		this._step();
+		this._complete();
+	},
+
+	_animate: function () {
+		// animation loop
+		this._animId = L.Util.requestAnimFrame(this._animate, this);
+		this._step();
+	},
+
+	_step: function () {
+		var elapsed = (+new Date()) - this._startTime,
+		    duration = this._duration * 1000;
+
+		if (elapsed < duration) {
+			this._runFrame(this._easeFunction(elapsed / duration));
+		} else {
+			this._runFrame(1);
+			this._complete();
 		}
-
-		return '#' + hexValues.join('');
 	},
 
-	/**
-	 * Converts an RGB color value to HSL. Conversion formula
-	 * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
-	 * Assumes r, g, and b are contained in the set [0, 255] and
-	 * returns h, s, and l in the set [0, 1].
-	 *
-	 * @param   Number  r       The red color value
-	 * @param   Number  g       The green color value
-	 * @param   Number  b       The blue color value
-	 * @return  Array           The HSL representation
-	 */
-	rgbToHsl: function(r, g, b){
-	    r /= 255, g /= 255, b /= 255;
-	    var max = Math.max(r, g, b), min = Math.min(r, g, b);
-	    var h, s, l = (max + min) / 2;
+	_runFrame: function (progress) {
+		this._animateFrame(progress);
 
-	    if(max == min){
-	        h = s = 0; // achromatic
-	    }else{
-	        var d = max - min;
-	        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-	        switch(max){
-	            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-	            case g: h = (b - r) / d + 2; break;
-	            case b: h = (r - g) / d + 4; break;
-	        }
-	        h /= 6;
-	    }
-
-	    return [h, s, l];
+		this.fire('step');
 	},
 
-	/**
-	 * Converts an HSL color value to RGB. Conversion formula
-	 * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
-	 * Assumes h, s, and l are contained in the set [0, 1] and
-	 * returns r, g, and b in the set [0, 255].
-	 *
-	 * @param   Number  h       The hue
-	 * @param   Number  s       The saturation
-	 * @param   Number  l       The lightness
-	 * @return  Array           The RGB representation
-	 */
-	hslToRgb: function(h, s, l){
-	    var r, g, b;
+	_complete: function () {
+		L.Util.cancelAnimFrame(this._animId);
 
-	    if(s == 0){
-	        r = g = b = l; // achromatic
-	    }else{
-	        function hue2rgb(p, q, t){
-	            if(t < 0) t += 1;
-	            if(t > 1) t -= 1;
-	            if(t < 1/6) return p + (q - p) * 6 * t;
-	            if(t < 1/2) return q;
-	            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-	            return p;
-	        }
-
-	        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-	        var p = 2 * l - q;
-	        r = hue2rgb(p, q, h + 1/3);
-	        g = hue2rgb(p, q, h);
-	        b = hue2rgb(p, q, h - 1/3);
-	    }
-
-	    return [r * 255, g * 255, b * 255];
-	},
-
-	/**
-	 * Converts an RGB color value to HSV. Conversion formula
-	 * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
-	 * Assumes r, g, and b are contained in the set [0, 255] and
-	 * returns h, s, and v in the set [0, 1].
-	 *
-	 * @param   Number  r       The red color value
-	 * @param   Number  g       The green color value
-	 * @param   Number  b       The blue color value
-	 * @return  Array           The HSV representation
-	 */
-	rgbToHsv: function(r, g, b){
-	    r = r/255, g = g/255, b = b/255;
-	    var max = Math.max(r, g, b), min = Math.min(r, g, b);
-	    var h, s, v = max;
-
-	    var d = max - min;
-	    s = max == 0 ? 0 : d / max;
-
-	    if(max == min){
-	        h = 0; // achromatic
-	    }else{
-	        switch(max){
-	            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-	            case g: h = (b - r) / d + 2; break;
-	            case b: h = (r - g) / d + 4; break;
-	        }
-	        h /= 6;
-	    }
-
-	    return [h, s, v];
-	},
-
-	/**
-	 * Converts an HSV color value to RGB. Conversion formula
-	 * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
-	 * Assumes h, s, and v are contained in the set [0, 1] and
-	 * returns r, g, and b in the set [0, 255].
-	 *
-	 * @param   Number  h       The hue
-	 * @param   Number  s       The saturation
-	 * @param   Number  v       The value
-	 * @return  Array           The RGB representation
-	 */
-	hsvToRgb: function(h, s, v){
-	    var r, g, b;
-
-	    var i = Math.floor(h * 6);
-	    var f = h * 6 - i;
-	    var p = v * (1 - s);
-	    var q = v * (1 - f * s);
-	    var t = v * (1 - (1 - f) * s);
-
-	    switch(i % 6){
-	        case 0: r = v, g = t, b = p; break;
-	        case 1: r = q, g = v, b = p; break;
-	        case 2: r = p, g = v, b = t; break;
-	        case 3: r = p, g = q, b = v; break;
-	        case 4: r = t, g = p, b = v; break;
-	        case 5: r = v, g = p, b = q; break;
-	    }
-
-	    return [r * 255, g * 255, b * 255];
+		this._inProgress = false;
+		this.fire('end');
 	}
-};
-
-L.ColorUtils.rgbStringToRgb = function (rgbString) {
-	var isHex = rgbString.indexOf('#') === 0;
-	var parts = [];
-	var rgb = [];
-
-	if (isHex) {
-		rgbString = rgbString.replace('#','');
-
-		r = rgbString.substring(0, 2);
-		g = rgbString.substring(2, 4);
-		b = rgbString.substring(4, 6);
-
-		rgb = [r, g, b];
-	}
-	else {
-		parts = rgbString.replace('rgb(','').replace(')','').split(',');
-
-		rgb = parts;
-	}
-
-	return rgb;
-};
-
-L.ColorUtils.hslToRgbString = function (h, s, l) {
-	return L.ColorUtils.rgbArrayToString(L.ColorUtils.hslToRgb(h, s, l));
-};
-
-L.ColorUtils.hslStringToRgbString = function (hslString) {
-	var parts = hslString.replace('hsl(','').replace(')','').split(',');
-	var h = Number(parts[0])/360;
-	var s = Number(parts[1].replace('%',''))/100;
-	var l = Number(parts[2].replace('%',''))/100;
-
-	return L.ColorUtils.hslToRgbString(h, s, l);
-};
+});

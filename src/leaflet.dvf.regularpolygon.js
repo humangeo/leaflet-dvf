@@ -40,8 +40,6 @@ L.RegularPolygon = L.Polygon.extend({
 		var angle = this.options.rotation;
 		var latlngs = [];
 		var newLatLng;
-		var angleRadians;
-		var layer;
 		
 		while (angle < degrees) {
 			// Calculate the point the radius meters away from the center point at the

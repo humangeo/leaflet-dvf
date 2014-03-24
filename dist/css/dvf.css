@@ -201,6 +201,7 @@ div.leaflet-div-icon div div.key {
 
 text.leaflet-svg-text {
 	alignment-baseline: central;
+	dominant-baseline: central;
 	text-anchor: middle;
 }
 

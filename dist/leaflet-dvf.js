@@ -151,7 +151,7 @@ L.ColorFunction = L.LinearFunction.extend({
             }
             var colorString = this._getColorString(y);
             if (L.Browser.ie && colorString.indexOf("hsl") > -1) {
-                colorString = L.ColorUtils.hslStringToRgbString(colorString);
+                colorString = L.hslColor(colorString).toRGBString();
             }
             return colorString;
         };
@@ -291,9 +291,6 @@ L.HSLColorBlendFunction = L.LinearFunction.extend({
         var s2 = hslMaxColor.s();
         var l1 = hslMinColor.l();
         var l2 = hslMaxColor.l();
-        var postProcess = function(y) {
-            return y.toFixed(2);
-        };
         this._minX = minX;
         this._maxX = maxX;
         this._hueFunction = new L.LinearFunction(new L.Point(minX, h1), new L.Point(maxX, h2));
@@ -984,6 +981,8 @@ L.AnimationUtils = {
         for (var key in from) {
             if (key != "color" && key != "fillColor" && to[key]) {
                 linearFunctions[key] = new L.LinearFunction([ 0, from[key] ], [ frames - 1, to[key] ]);
+            } else if (key == "color" || key == "fillColor") {
+                linearFunctions[key] = new L.RGBColorBlendFunction(0, frames - 1, from[key], to[key]);
             }
         }
         var layerOptions = {};
@@ -993,7 +992,7 @@ L.AnimationUtils = {
                 layerOptions[key] = linearFunctions[key].evaluate(frame);
             }
             layer.options = L.extend({}, layer.options, layerOptions);
-            layer.redraw();
+            layer.setStyle(layer.options).redraw();
             frame++;
             step = easeFunction(step);
             if (frame < frames) {
@@ -1103,31 +1102,32 @@ L.Color = L.Class.extend({
     },
     r: function(newR) {
         if (!arguments.length) return this._rgb[0];
-        this.setRGB(newR, this._rgb[1], this._rgb[2]);
+        return this.setRGB(newR, this._rgb[1], this._rgb[2]);
     },
     g: function(newG) {
         if (!arguments.length) return this._rgb[1];
-        this.setRGB(this._rgb[0], newG, this._rgb[2]);
+        return this.setRGB(this._rgb[0], newG, this._rgb[2]);
     },
     b: function(newB) {
         if (!arguments.length) return this._rgb[2];
-        this.setRGB(this._rgb[0], this._rgb[1], newB);
+        return this.setRGB(this._rgb[0], this._rgb[1], newB);
     },
     h: function(newH) {
         if (!arguments.length) return this._hsl[0];
-        this.setHSL(newH, this._hsl[1], this._hsl[2]);
+        return this.setHSL(newH, this._hsl[1], this._hsl[2]);
     },
     s: function(newS) {
         if (!arguments.length) return this._hsl[1];
-        this.setHSL(this._hsl[0], newS, this._hsl[2]);
+        return this.setHSL(this._hsl[0], newS, this._hsl[2]);
     },
     l: function(newL) {
         if (!arguments.length) return this._hsl[2];
-        this.setHSL(this._hsl[0], this._hsl[1], newL);
+        return this.setHSL(this._hsl[0], this._hsl[1], newL);
     },
     a: function(newA) {
         if (!arguments.length) return this._a;
         this._a = newA;
+        return this;
     }
 });
 
@@ -1139,7 +1139,6 @@ L.RGBColor = L.Color.extend({
         var isArray = colorDef instanceof Array;
         var isHex = colorDef.indexOf("#") === 0;
         var parts = [];
-        var rgb = [];
         var r, g, b, a;
         if (isArray) {
             r = Math.floor(colorDef[0]);
@@ -1196,155 +1195,51 @@ L.hslColor = function(colorDef) {
     return new L.HSLColor(colorDef);
 };
 
-L.ColorUtils = {
-    rgbArrayToString: function(rgbArray) {
-        var hexValues = [];
-        for (var index = 0; index < rgbArray.length; ++index) {
-            var hexValue = Math.round(rgbArray[index]).toString(16);
-            if (hexValue.length === 1) {
-                hexValue = "0" + hexValue;
-            }
-            hexValues.push(hexValue);
-        }
-        return "#" + hexValues.join("");
+L.Animation = L.Class.extend({
+    initialize: function(easeFunction, animateFrame) {
+        this._easeFunction = easeFunction;
+        this._animateFrame = animateFrame;
     },
-    rgbToHsl: function(r, g, b) {
-        r /= 255, g /= 255, b /= 255;
-        var max = Math.max(r, g, b), min = Math.min(r, g, b);
-        var h, s, l = (max + min) / 2;
-        if (max == min) {
-            h = s = 0;
+    run: function(el, options) {
+        this.stop();
+        this._el = el;
+        this._inProgress = true;
+        this._duration = options.duration || .25;
+        this._animationOptions = options;
+        this._startTime = +new Date();
+        this.fire("start");
+        this._animate();
+    },
+    stop: function() {
+        if (!this._inProgress) {
+            return;
+        }
+        this._step();
+        this._complete();
+    },
+    _animate: function() {
+        this._animId = L.Util.requestAnimFrame(this._animate, this);
+        this._step();
+    },
+    _step: function() {
+        var elapsed = +new Date() - this._startTime, duration = this._duration * 1e3;
+        if (elapsed < duration) {
+            this._runFrame(this._easeFunction(elapsed / duration));
         } else {
-            var d = max - min;
-            s = l > .5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-              case r:
-                h = (g - b) / d + (g < b ? 6 : 0);
-                break;
-
-              case g:
-                h = (b - r) / d + 2;
-                break;
-
-              case b:
-                h = (r - g) / d + 4;
-                break;
-            }
-            h /= 6;
+            this._runFrame(1);
+            this._complete();
         }
-        return [ h, s, l ];
     },
-    hslToRgb: function(h, s, l) {
-        var r, g, b;
-        if (s == 0) {
-            r = g = b = l;
-        } else {
-            function hue2rgb(p, q, t) {
-                if (t < 0) t += 1;
-                if (t > 1) t -= 1;
-                if (t < 1 / 6) return p + (q - p) * 6 * t;
-                if (t < 1 / 2) return q;
-                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-                return p;
-            }
-            var q = l < .5 ? l * (1 + s) : l + s - l * s;
-            var p = 2 * l - q;
-            r = hue2rgb(p, q, h + 1 / 3);
-            g = hue2rgb(p, q, h);
-            b = hue2rgb(p, q, h - 1 / 3);
-        }
-        return [ r * 255, g * 255, b * 255 ];
+    _runFrame: function(progress) {
+        this._animateFrame(progress);
+        this.fire("step");
     },
-    rgbToHsv: function(r, g, b) {
-        r = r / 255, g = g / 255, b = b / 255;
-        var max = Math.max(r, g, b), min = Math.min(r, g, b);
-        var h, s, v = max;
-        var d = max - min;
-        s = max == 0 ? 0 : d / max;
-        if (max == min) {
-            h = 0;
-        } else {
-            switch (max) {
-              case r:
-                h = (g - b) / d + (g < b ? 6 : 0);
-                break;
-
-              case g:
-                h = (b - r) / d + 2;
-                break;
-
-              case b:
-                h = (r - g) / d + 4;
-                break;
-            }
-            h /= 6;
-        }
-        return [ h, s, v ];
-    },
-    hsvToRgb: function(h, s, v) {
-        var r, g, b;
-        var i = Math.floor(h * 6);
-        var f = h * 6 - i;
-        var p = v * (1 - s);
-        var q = v * (1 - f * s);
-        var t = v * (1 - (1 - f) * s);
-        switch (i % 6) {
-          case 0:
-            r = v, g = t, b = p;
-            break;
-
-          case 1:
-            r = q, g = v, b = p;
-            break;
-
-          case 2:
-            r = p, g = v, b = t;
-            break;
-
-          case 3:
-            r = p, g = q, b = v;
-            break;
-
-          case 4:
-            r = t, g = p, b = v;
-            break;
-
-          case 5:
-            r = v, g = p, b = q;
-            break;
-        }
-        return [ r * 255, g * 255, b * 255 ];
+    _complete: function() {
+        L.Util.cancelAnimFrame(this._animId);
+        this._inProgress = false;
+        this.fire("end");
     }
-};
-
-L.ColorUtils.rgbStringToRgb = function(rgbString) {
-    var isHex = rgbString.indexOf("#") === 0;
-    var parts = [];
-    var rgb = [];
-    if (isHex) {
-        rgbString = rgbString.replace("#", "");
-        r = rgbString.substring(0, 2);
-        g = rgbString.substring(2, 4);
-        b = rgbString.substring(4, 6);
-        rgb = [ r, g, b ];
-    } else {
-        parts = rgbString.replace("rgb(", "").replace(")", "").split(",");
-        rgb = parts;
-    }
-    return rgb;
-};
-
-L.ColorUtils.hslToRgbString = function(h, s, l) {
-    return L.ColorUtils.rgbArrayToString(L.ColorUtils.hslToRgb(h, s, l));
-};
-
-L.ColorUtils.hslStringToRgbString = function(hslString) {
-    var parts = hslString.replace("hsl(", "").replace(")", "").split(",");
-    var h = Number(parts[0]) / 360;
-    var s = Number(parts[1].replace("%", "")) / 100;
-    var l = Number(parts[2].replace("%", "")) / 100;
-    return L.ColorUtils.hslToRgbString(h, s, l);
-};
+});
 
 L.ColorBrewer = {
     Sequential: {
@@ -1936,8 +1831,6 @@ L.RegularPolygon = L.Polygon.extend({
         var angle = this.options.rotation;
         var latlngs = [];
         var newLatLng;
-        var angleRadians;
-        var layer;
         while (angle < degrees) {
             newLatLng = this._getPoint(angle);
             latlngs.push(newLatLng);
@@ -2330,6 +2223,14 @@ L.Polyline.include(PathFunctions);
 
 L.CircleMarker.include(PathFunctions);
 
+L.CircleMarker = L.CircleMarker.extend({
+    _applyCustomStyles: function() {
+        if (this.options.shapeImage || this.options.imageCircleUrl) {
+            this._createShapeImage(this.options.shapeImage);
+        }
+    }
+});
+
 L.Point.prototype.rotate = function(angle, point) {
     var radius = this.distanceTo(point);
     var theta = angle * L.LatLng.DEG_TO_RAD + Math.atan2(this.y - point.y, this.x - point.x);
@@ -2689,8 +2590,8 @@ L.SVGMarker = L.Path.extend({
             if (width === "100%") {
                 width = me.options.size.x;
                 height = me.options.size.y;
-                svg.setAttribute("width", width);
-                svg.setAttribute("height", height + (height.indexOf("%") !== -1 ? "" : "px"));
+                svg.setAttribute("width", width + (String(width).indexOf("%") !== -1 ? "" : "px"));
+                svg.setAttribute("height", height + (String(height).indexOf("%") !== -1 ? "" : "px"));
             }
             var size = me.options.size || new L.Point(width, height);
             var scaleSize = new L.Point(size.x / width, size.y / height);
@@ -2723,6 +2624,25 @@ L.SVGMarker = L.Path.extend({
         } else {
             addSVG();
         }
+    }
+});
+
+L.MarkerGroup = L.FeatureGroup.extend({
+    initialize: function(latlng, markers) {
+        L.FeatureGroup.prototype.initialize.call(this, markers);
+        this.setLatLng(latlng);
+    },
+    setLatLng: function(latlng) {
+        this._latlng = latlng;
+        this.eachLayer(function(layer) {
+            if (layer.setLatLng) {
+                layer.setLatLng(latlng);
+            }
+        });
+        return this;
+    },
+    getLatLng: function(latlng) {
+        return this._latlng;
     }
 });
 
@@ -2907,14 +2827,8 @@ L.BarChartMarker = L.ChartMarker.extend({
     },
     _loadComponents: function() {
         var value, minValue, maxValue;
-        var angle = this.options.rotation;
-        var percentage = 0;
-        var maxDegrees = this.options.maxDegrees || 360;
         var bar;
         var options = this.options;
-        var dataPoint;
-        var lastRadiusX = this.options.radiusX || this.options.radius;
-        var lastRadiusY = this.options.radiusY || this.options.radius;
         var x;
         var y;
         var keys = Object.keys(this.options.data);
@@ -2931,7 +2845,6 @@ L.BarChartMarker = L.ChartMarker.extend({
             chartOption = chartOptions[key];
             minValue = chartOption.minValue || 0;
             maxValue = chartOption.maxValue || 100;
-            var range = maxValue - minValue;
             options.fillColor = chartOption.fillColor || this.options.fillColor;
             options.value = value;
             options.minValue = minValue;
@@ -3010,13 +2923,9 @@ L.RadialBarMarker = L.Path.extend({
     },
     _getPoints: function() {
         var angleDelta = this.options.endAngle - this.options.startAngle;
-        var angleSize = angleDelta / this.options.numberOfSides;
         var degrees = this.options.endAngle + this.options.rotation;
         var angle = this.options.startAngle + this.options.rotation;
         var points = [];
-        var innerPoints = [];
-        var newPoint, innerPoint;
-        var angleRadians;
         var radiusX = "radiusX" in this.options ? this.options.radiusX : this.options.radius;
         var radiusY = "radiusY" in this.options ? this.options.radiusY : this.options.radius;
         var toRad = function(number) {
@@ -3031,8 +2940,6 @@ L.RadialBarMarker = L.Path.extend({
         points.push(this._getPoint(endRadians, radiusX, radiusY));
         if (this.options.barThickness) {
             this._innerPoints = [];
-            var innerRadiusX = radiusX - this.options.barThickness;
-            var innerRadiusY = radiusY - this.options.barThickness;
             this._innerPoints.push(this._getPoint(endRadians, radiusX - this.options.barThickness, radiusY - this.options.barThickness));
             this._innerPoints.push(this._getPoint(startRadians, radiusX - this.options.barThickness, radiusY - this.options.barThickness));
         }
@@ -3091,7 +2998,6 @@ L.PieChartMarker = L.ChartMarker.extend({
         var lastAngle = this.options.rotation;
         var bar;
         var options = this.options;
-        var dataPoint;
         var data = this.options.data;
         var chartOptions = this.options.chartOptions;
         var chartOption;
@@ -3164,14 +3070,11 @@ L.CoxcombChartMarker = L.CoxcombChartMarker.extend({
     },
     _loadComponents: function() {
         var value, minValue, maxValue;
-        var sum = 0;
         var angle = 0;
-        var percentage = 0;
         var maxDegrees = this.options.maxDegrees || 360;
         var lastAngle = this.options.rotation;
         var bar;
         var options = this.options;
-        var dataPoint;
         var radiusX = "radiusX" in this.options ? this.options.radiusX : this.options.radius;
         var radiusY = "radiusY" in this.options ? this.options.radiusY : this.options.radius;
         var keys = Object.keys(this.options.data);
@@ -3243,12 +3146,9 @@ L.RadialBarChartMarker = L.ChartMarker.extend({
     _loadComponents: function() {
         var value, minValue, maxValue;
         var angle = this.options.rotation;
-        var percentage = 0;
         var maxDegrees = this.options.maxDegrees || 360;
         var bar;
         var options = this.options;
-        var dataPoint;
-        var count = 0;
         var lastRadiusX = this.options.radiusX || this.options.radius;
         var lastRadiusY = this.options.radiusY || this.options.radius;
         var data = this.options.data;
@@ -3442,9 +3342,6 @@ L.RadialMeterMarker = L.ChartMarker.extend({
 
 L.LocationModes = {
     LATLNG: function(record, index) {
-        var latitude = L.Util.getFieldValue(record, this.options.latitudeField);
-        var longitude = L.Util.getFieldValue(record, this.options.longitudeField);
-        var self = this;
         var getLocation = function(latitudeField, longitudeField) {
             var latitude = L.Util.getFieldValue(record, latitudeField);
             var longitude = L.Util.getFieldValue(record, longitudeField);
@@ -3692,7 +3589,6 @@ L.DataLayer = L.LayerGroup.extend({
         }
     },
     _getLocation: function(record, index) {
-        var location;
         return this.options.locationMode.call(this, record, index);
     },
     _processLocation: function(location) {
@@ -3708,7 +3604,7 @@ L.DataLayer = L.LayerGroup.extend({
             if (layer.setStyle) {
                 var style;
                 if (this.options.boundaryStyle instanceof Function) {
-                    style = this.options.boundaryStyle.call(this, record);
+                    style = this.options.boundaryStyle.call(this, record, layer);
                 }
                 style = style || this.options.boundaryStyle || L.extend({}, options, {
                     fillOpacity: .2,
@@ -3749,6 +3645,7 @@ L.DataLayer = L.LayerGroup.extend({
         for (var recordIndex in records) {
             if (records.hasOwnProperty(recordIndex)) {
                 var record = records[recordIndex];
+                record = this.options.deriveProperties ? this.options.deriveProperties(record) : record;
                 var includeLayer = this._shouldLoadRecord(record);
                 if (includeLayer) {
                     location = this._getLocation(record, recordIndex);
@@ -3812,8 +3709,6 @@ L.DataLayer = L.LayerGroup.extend({
     },
     addData: function(data) {
         var records = this.options.recordsField !== null && this.options.recordsField.length > 0 ? L.Util.getFieldValue(data, this.options.recordsField) : data;
-        var layer;
-        var location;
         if (this.options.locationMode === L.LocationModes.CUSTOM && this.options.preload) {
             this._preloadLocations(records);
         } else {
@@ -3929,7 +3824,6 @@ L.DataLayer = L.LayerGroup.extend({
     recordToLayer: function(location, record) {
         var layerOptions = L.Util.extend({}, this.options.layerOptions);
         var layer;
-        var displayOptions = this.options.displayOptions;
         var legendDetails = {};
         var includeLayer = true;
         if (this._includeFunction) {
@@ -3996,7 +3890,11 @@ L.DataLayer = L.LayerGroup.extend({
                     var nextValue = valueFunction.evaluate ? valueFunction.evaluate(nextX) : valueFunction(nextX);
                     L.StyleConverter.setCSSProperty(i, property, value);
                     if (property === "fillColor") {
-                        i.style.cssText += "background-image:linear-gradient(left , " + value + " 0%, " + nextValue + " 100%);" + "background-image:-ms-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%);" + "background-image:-moz-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%);" + "background-image:-webkit-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%);";
+                        if (params.gradient) {
+                            i.style.cssText += "background-image:linear-gradient(left , " + value + " 0%, " + nextValue + " 100%);" + "background-image:-ms-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%);" + "background-image:-moz-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%);" + "background-image:-webkit-linear-gradient(left , " + value + " 0%, " + nextValue + " 100%);";
+                        } else {
+                            i.style.cssText += "background-color:" + nextValue + ";";
+                        }
                     }
                     if (property === "color") {
                         i.style.cssText += "border-top-color:" + value + ";" + "border-bottom-color:" + nextValue + ";" + "border-left-color:" + value + ";" + "border-right-color:" + nextValue + ";";
@@ -4022,25 +3920,13 @@ L.DataLayer = L.LayerGroup.extend({
         var className = legendOptions.className;
         var container = document.createElement("div");
         var legendElement = L.DomUtil.create("div", "legend", container);
-        var displayOption;
-        var valueFunction;
         var numSegments = legendOptions.numSegments || 10;
         var legendWidth = legendOptions.width || 100;
-        var fieldBounds = {};
-        var weight = this.options.layerOptions.weight || 0;
+        var layerOptions = this.options.layerOptions || {};
+        var weight = layerOptions.weight || 0;
         var segmentWidth = legendWidth / numSegments - 2 * weight;
-        var fieldElements = {};
-        var layerOptions = this.options.layerOptions;
-        var propertiesByField = {};
         var displayText;
-        var displayOptions = this.options.displayOptions;
-        var displayMin, displayMax;
-        var radiusOptions = {
-            property: [ "height" ],
-            valueFunction: function(value) {
-                return (2 * value).toFixed(0) + "px";
-            }
-        };
+        var displayOptions = this.options.displayOptions || {};
         if (className) {
             L.DomUtil.addClass(legendElement, className);
         }
@@ -4075,7 +3961,8 @@ L.DataLayer = L.LayerGroup.extend({
                         numSegments: numSegments,
                         segmentWidth: segmentWidth,
                         minValue: minValue,
-                        maxValue: maxValue
+                        maxValue: maxValue,
+                        gradient: legendOptions.gradient
                     };
                     var element = this._getLegendElement(legendParams);
                     scaleBars.appendChild(element);
@@ -4164,7 +4051,6 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
             opacity: 1
         },
         onEachRecord: function(layer, record) {
-            var html = L.HTMLUtils.buildTable(record);
             var photoUrl = record["photo_file_url"];
             var title = record["photo_title"];
             var me = this;
@@ -4444,8 +4330,8 @@ L.ChartDataLayer = L.DataLayer.extend({
         for (var key in this.options.chartOptions) {
             options.data[key] = L.Util.getFieldValue(record, key);
         }
-        for (var key in this.options.tooltipOptions) {
-            options[key] = this.options.tooltipOptions[key];
+        for (var key in tooltipOptions) {
+            options[key] = tooltipOptions[key];
         }
         var marker;
         if (latLng) {
@@ -4455,6 +4341,7 @@ L.ChartDataLayer = L.DataLayer.extend({
     },
     _getMarker: function(latLng, options) {},
     _getLegend: function(legendOptions) {
+        var dataLayerLegend = L.DataLayer.prototype._getLegend.call(this, legendOptions);
         var legend = new L.CategoryLegend(this.options.chartOptions);
         legendOptions = legendOptions || this.options.legendOptions;
         return legend.generate(legendOptions);
@@ -4547,8 +4434,8 @@ L.RadialMeterMarkerDataLayer = L.DataLayer.extend({
         for (var key in this.options.chartOptions) {
             options.data[key] = L.Util.getFieldValue(record, key);
         }
-        for (var key in this.options.tooltipOptions) {
-            options[key] = this.options.tooltipOptions[key];
+        for (var key in tooltipOptions) {
+            options[key] = tooltipOptions[key];
         }
         var marker;
         if (latLng) {
@@ -4596,7 +4483,7 @@ L.CalloutLine = L.CalloutLine.extend({
         fillColor: "#000000",
         fill: false,
         gradient: false,
-        dropShadow: true,
+        dropShadow: false,
         direction: L.CalloutLine.DIRECTION.NE,
         lineStyle: L.CalloutLine.LINESTYLE.ANGLE,
         lineCap: "butt",
@@ -4618,9 +4505,7 @@ L.CalloutLine = L.CalloutLine.extend({
     },
     _getPathArc: function() {
         var direction = (this.options.direction || L.CalloutLine.DIRECTION.NE).toLowerCase();
-        var xDirection = direction[1];
         var yDirection = direction[0];
-        var xMultiplier = xDirection === "w" ? -1 : 1;
         var yMultiplier = yDirection === "n" ? -1 : 1;
         var point1 = this._points[0];
         var point2 = this._points[this._points.length - 1];
@@ -4742,12 +4627,11 @@ L.Callout = L.LayerGroup.extend({
     addIcon: function(direction, position) {
         var size = this.options.size;
         var icon = this.options.icon;
-        var iconAnchor = icon.options.iconAnchor;
         var iconSize = icon.options.iconSize;
         var yDirection = direction[0];
         var xDirection = direction[1];
-        var xAnchor = xDirection === "w" ? icon.options.iconSize.x + size.x - position.x : -1 * (size.x + position.x);
-        var yAnchor = yDirection === "n" ? icon.options.iconSize.y / 2 + size.y - position.y : -1 * (-icon.options.iconSize.y / 2 + size.y + position.y);
+        var xAnchor = xDirection === "w" ? iconSize.x + size.x - position.x : -1 * (size.x + position.x);
+        var yAnchor = yDirection === "n" ? iconSize.y / 2 + size.y - position.y : -1 * (-iconSize.y / 2 + size.y + position.y);
         icon.options.iconAnchor = new L.Point(xAnchor, yAnchor);
         var iconMarker = new L.Marker(this._latlng, {
             icon: icon
@@ -4904,8 +4788,11 @@ L.ArcedPolyline = L.Path.extend({
         }
     },
     getBounds: function() {
-        var map = this._map, point = map.project(this._latlngs[0]), swPoint = new L.Point(point.x + this.options.offset.x, point.y + this.options.offset.y), nePoint = new L.Point(swPoint.x + this.options.size.x, swPoint.y - this.options.size.y), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
-        return new L.LatLngBounds(sw, ne);
+        var bounds = new L.LatLngBounds();
+        for (var i = 0; i < this._latlngs.length; ++i) {
+            bounds.extend(this._latlngs[i]);
+        }
+        return bounds;
     },
     setLatLngs: function(latlngs) {
         this._latlngs = latlngs;
@@ -4917,8 +4804,6 @@ L.ArcedPolyline = L.Path.extend({
     drawSegment: function(point1, point2) {
         var distance = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
         var heightOffset = this.options.distanceToHeight.evaluate(distance);
-        var directionX = point1.x - point2.x;
-        var multiplierX = directionX / Math.abs(directionX);
         var parts = [ "M", point1.x, ",", point1.y, " C", point1.x, ",", point1.y - heightOffset, " ", point2.x, ",", point2.y - heightOffset, " ", point2.x, ",", point2.y ];
         return parts.join(" ");
     },

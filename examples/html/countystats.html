@@ -103,14 +103,13 @@
 			}
 		}
 		
-		console.log(countyPolygons);
-		
 		var field = 'Population';
 		var range = L.Util.getNumericRange(countyStats, field);
 		
-		console.log(range);
-		
-		var fillColor = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse());
+		// Specify an option of interpolate: false to use only discrete colors rather than interpolating between colors
+		var fillColor = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse(), {
+			interpolate: false
+		});
 		
 		var color = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse(), {
 			postProcess: function (y) {
@@ -141,6 +140,10 @@
 			tooltipOptions: {
 				iconSize: new L.Point(130, 60),
 				iconAnchor: new L.Point(-5, 60)
+			},
+			legendOptions: {
+				numSegments: 11, 
+				gradient: false // Use this option to specify whether or not a gradient will be used when displaying the legend
 			},
 			displayOptions: {}
 		};
@@ -184,7 +187,9 @@
 			var displayOptions = {};
 			var range = L.Util.getNumericRange(countyStats, field);
 		
-			var fillColor = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse());
+			var fillColor = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse(), {
+				interpolate: false
+			});
 		
 			var color = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse(), {
 				postProcess: function (y) {
@@ -214,7 +219,9 @@
 				
 				var range = L.Util.getNumericRange(countyStats, field);
 		
-				var fillColor = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse());
+				var fillColor = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse(), {
+					interpolate: false
+				});
 		
 				var color = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse(), {
 					postProcess: function (y) {

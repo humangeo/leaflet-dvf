@@ -14,4 +14,5 @@ Leaflet DVF is made possible by contributions from:
 * [orakili](https://github.com/orakili)
 * Matthew Sabol [Xal3ph](https://github.com/Xal3ph)
 * Ulrich Lehner [ulrichson](https://github.com/ulrichson)
+* Sylvain Caillot [sylvaincaillot](https://github.com/sylvaincaillot)
 

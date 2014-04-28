@@ -2222,12 +2222,14 @@ L.MapMarker = L.Path.extend({
     getPathString: function() {
         var anchorPoint = this.getTextAnchor();
         if (this._shape) {
-            if (this._shape.tagName === "circle") {
+            if (this._shape.tagName === "circle" || this._shape.tagName === "ellipse") {
                 this._shape.setAttribute("cx", anchorPoint.x);
                 this._shape.setAttribute("cy", anchorPoint.y);
             } else {
-                this._shape.setAttribute("x", anchorPoint.x);
-                this._shape.setAttribute("y", anchorPoint.y);
+                var width = this._shape.getAttribute("width");
+                var height = this._shape.getAttribute("height");
+                this._shape.setAttribute("x", anchorPoint.x - Number(width) / 2);
+                this._shape.setAttribute("y", anchorPoint.y - Number(height) / 2);
             }
         }
         this._path.setAttribute("shape-rendering", "geometricPrecision");
@@ -2322,17 +2324,19 @@ L.RegularPolygonMarker = L.Path.extend({
         return this._latlng;
     },
     getPathString: function() {
-        this._path.setAttribute("shape-rendering", "geometricPrecision");
         var anchorPoint = this.getTextAnchor();
         if (this._shape) {
-            if (this._shape.tagName === "circle") {
+            if (this._shape.tagName === "circle" || this._shape.tagName === "ellipse") {
                 this._shape.setAttribute("cx", anchorPoint.x);
                 this._shape.setAttribute("cy", anchorPoint.y);
             } else {
-                this._shape.setAttribute("x", anchorPoint.x);
-                this._shape.setAttribute("y", anchorPoint.y);
+                var width = this._shape.getAttribute("width");
+                var height = this._shape.getAttribute("height");
+                this._shape.setAttribute("x", anchorPoint.x - Number(width) / 2);
+                this._shape.setAttribute("y", anchorPoint.y - Number(height) / 2);
             }
         }
+        this._path.setAttribute("shape-rendering", "geometricPrecision");
         return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
     _getPoints: function(inner) {

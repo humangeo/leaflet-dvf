@@ -46,7 +46,7 @@ $(document).ready(function() {
 		var keys = Object.keys(choices);
 		
 		colorFunctions[key] = new L.CustomColorFunction(1, 55, choices[keys[keys.length - 1]], {
-			interpolate: false
+			interpolate: true
 		});
 	}
 	
@@ -89,5 +89,5 @@ $(document).ready(function() {
 		
 		index++;
 	}
-
+	
 });

@@ -346,7 +346,7 @@ L.RadialBarMarker = L.Path.extend({
 	getLatLng: function () {
 		return this._latlng;
 	},
-
+	
 	getPathString: function () {
 	
 		var angle = this.options.endAngle - this.options.startAngle;

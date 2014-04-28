@@ -348,28 +348,27 @@ $(document).ready(function() {
 		/*
 		options.shapeImage = {
 			shape: {
-				circle: {
-					r: 24,
-					width: 20,
-					height: 20,
-					cx: 20,
-					cy: 0,
+				ellipse: {
+					rx: 12,
+					ry: 30,
 					'fill-opacity': 1.0,
 					stroke: 'green',
+					width: 24,
+					height: 24,
 					'stroke-width': 8.0,
 					'stroke-opacity': 0.5
 				}
 			},
 			image: {
 				url: "http://upload.wikimedia.org/wikipedia/commons/a/a7/Emblem-fun.svg",
-				width: 48,
-				height: 48,
+				width: 24,
+				height: 60,
 				x: 0,
 				y: 0
 			},
 			pattern: {
-				width: 48,
-				height: 48,
+				width: 24,
+				height: 24,
 				x: 0,
 				y: 0
 			}

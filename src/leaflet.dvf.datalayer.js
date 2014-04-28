@@ -305,7 +305,23 @@ L.DataLayer = L.LayerGroup.extend({
 
 		map.off('zoomend', this._zoomFunction, this);
 	},
-
+	
+	bringToBack: function () {		
+		this.invoke('bringToBack');
+		
+		if (this._boundaryLayer) {
+			this._boundaryLayer.invoke('bringToBack');
+		}
+	},
+	
+	bringToFront: function () {
+		if (this._boundaryLayer) {
+			this._boundaryLayer.invoke('bringToFront');
+		}
+		
+		this.invoke('bringToFront');
+	},
+	
 	getBounds: function () {
 		var bounds;
 

@@ -19,14 +19,12 @@ $(document).ready(function() {
 
 	map = L.map('map').setView([-4.0, 13.0], 6);
 
-	var baseLayer = L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
-	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
-	});
+	var baseLayer = new L.StamenTileLayer('toner');
 
 	baseLayer.addTo(map);
 
 	var layerControl = L.control.layers({
-		'Cloudmade (Dark)': baseLayer
+		'Stamen Toner': baseLayer
 	}).addTo(map);
 
 	var marker;
@@ -348,28 +346,27 @@ $(document).ready(function() {
 		/*
 		options.shapeImage = {
 			shape: {
-				circle: {
-					r: 24,
-					width: 20,
-					height: 20,
-					cx: 20,
-					cy: 0,
+				ellipse: {
+					rx: 12,
+					ry: 30,
 					'fill-opacity': 1.0,
 					stroke: 'green',
+					width: 24,
+					height: 24,
 					'stroke-width': 8.0,
 					'stroke-opacity': 0.5
 				}
 			},
 			image: {
 				url: "http://upload.wikimedia.org/wikipedia/commons/a/a7/Emblem-fun.svg",
-				width: 48,
-				height: 48,
+				width: 24,
+				height: 60,
 				x: 0,
 				y: 0
 			},
 			pattern: {
-				width: 48,
-				height: 48,
+				width: 24,
+				height: 24,
 				x: 0,
 				y: 0
 			}

@@ -5,10 +5,9 @@ $(document).ready(function() {
 	// create a map in the "map" div, set the view to a given place and zoom
 	map = L.map('map').setView([0.0, 0.0], 2);
 	
-	// add a CloudMade tile layer with style #997
-	L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/997/256/{z}/{x}/{y}.png', {
-	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
-	}).addTo(map);
+	var baseLayer = new L.StamenTileLayer('toner');
+	
+	baseLayer.addTo(map);
 	
 	var geohashData = {
 		      "_type": "terms", 

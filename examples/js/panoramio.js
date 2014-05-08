@@ -24,7 +24,7 @@ $(document).ready(function() {
 	// Initialize the map
 	map = L.map('map').setView([0.0, 0.0], 2);
 	
-	// Add a CloudMade tile layer with style #999
+	// Add Mapquest tile layer
 	var baseLayer = L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png', {
 	    attribution: 'Tiles Courtesy of MapQuest <img width="10" height="10" alt="" style="margin-top: -6px;" src="http://developer.mapquest.com/content/osm/mq_logo.png">'
 	});

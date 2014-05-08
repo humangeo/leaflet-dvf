@@ -11,6 +11,14 @@
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
+      
+      .leaflet-tile-pane {
+	  	  opacity: 0.3;
+	  }
+	  
+	  #map {
+		  background-color: #090920;
+	  }
     </style>
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" type="text/css" media="screen" />
@@ -56,6 +64,7 @@
 	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
 	<script type="text/javascript" src="../lib/date.format.js"></script>
+	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
 	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 	<script type="text/javascript">
 map = null;
@@ -144,10 +153,7 @@ $(document).ready(function() {
 	// Initialize the map
 	map = L.map('map').setView([0.0, 0.0], 2);
 
-	// Add a CloudMade tile layer with style #999
-	var baseLayer = L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/999/256/{z}/{x}/{y}.png', {
-	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery ?<a href="http://cloudmade.com">CloudMade</a>'
-	});
+	var baseLayer = new L.StamenTileLayer('toner');
 
 	baseLayer.addTo(map);
 

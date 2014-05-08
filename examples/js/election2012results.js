@@ -25,9 +25,9 @@ $(document).ready(function() {
 
 	legendControl.addTo(map);
 
-	L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/997/256/{z}/{x}/{y}.png', {
-	    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
-	}).addTo(map);
+	var baseLayer = new L.StamenTileLayer('toner');
+	
+	baseLayer.addTo(map);
 
 	// Define a fill color function for Romney (light red to red) and a fill color function for Obama (light blue to blue)
 	var fillColorFunctionRomney = new L.HSLLuminosityFunction(new L.Point(0, 0.95), new L.Point(55, 0.4), {outputHue: 0, outputSaturation: '100%'});

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Leaflet DVF is an extension to the [Leaflet][] JavaScript mapping library.
+The Leaflet DVF is an extension to the [Leaflet](http://leafletjs.com) JavaScript mapping library.
 The primary goal of the framework is to simplify data visualization and thematic mapping using Leaflet - making it easier to turn raw data into compelling maps.
 
 ![Overview](http://humangeo.github.com/leaflet-dvf/images/overview.png "Overview")

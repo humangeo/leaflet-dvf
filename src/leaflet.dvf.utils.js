@@ -965,6 +965,9 @@ L.Color = L.Class.extend({
 	}
 });
 
+/*
+ * A class representing an RGB color - extends L.Color
+ */
 L.RGBColor = L.Color.extend({
 	initialize: function (colorDef) {
 		L.Color.prototype.initialize.call(this, colorDef);

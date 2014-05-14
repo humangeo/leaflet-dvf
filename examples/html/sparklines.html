@@ -1560,7 +1560,10 @@ $(document).ready(function() {
 				fillColor: '#FF0000',
 				color: '#000000',
 				displayName: 'Category 1',
-				fillOpacity: 0.9
+				fillOpacity: 0.9,
+				displayText: function (value) {
+					return value;
+				}
 			}
 		},
 		layerOptions: {

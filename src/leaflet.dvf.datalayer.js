@@ -977,14 +977,16 @@ L.MarkerDataLayer = L.DataLayer.extend({
 	}
 });
 
+/*
+ *
+ */
 L.markerDataLayer = function (data, options) {
 	return new L.MarkerDataLayer(data, options);
 };
 
 /*
- *
+ * Displays the top 50 photos for a given area on the map
  */
-
 L.PanoramioLayer = L.MarkerDataLayer.extend({
 	statics: {
 		UPLOAD_DATE_FORMAT: 'DD MMM YYYY',

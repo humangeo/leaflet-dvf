@@ -584,6 +584,26 @@ L.MapMarker = L.Path.extend({
 		return this._latlng;
 	},
 
+	setRadius: function (radius) {
+		this.options.radius = radius;
+		return this.redraw();
+	},
+	
+	setInnerRadius: function (innerRadius) {
+		this.options.innerRadius = innerRadius;
+		return this.redraw();
+	},
+	
+	setRotation: function (rotation) {
+		this.options.rotation = rotation;
+		return this.redraw();
+	},
+	
+	setNumberOfSides: function (numberOfSides) {
+		this.options.numberOfSides = numberOfSides;
+		return this.redraw();
+	},
+	
 	getPathString: function () {
 		var anchorPoint = this.getTextAnchor();
 
@@ -731,6 +751,40 @@ L.RegularPolygonMarker = L.Path.extend({
 		return new L.LatLngBounds(sw, ne);
 	},
 
+	setRadius: function (radius) {
+		this.options.radius = radius;
+		return this.redraw();
+	},
+	
+	setRadiusXY: function (radiusX, radiusY) {
+		this.options.radius = null;
+		this.options.radiusX = radiusX;
+		this.options.radiusY = radiusY;
+		return this.redraw();
+	},
+	
+	setInnerRadius: function (innerRadius) {
+		this.options.innerRadius = innerRadius;
+		return this.redraw();
+	},
+	
+	setInnerRadiusXY: function (innerRadiusX, innerRadiusY) {
+		this.options.innerRadius = null;
+		this.options.innerRadiusX = innerRadiusX;
+		this.options.innerRadiusY = innerRadiusY;
+		return this.redraw();
+	},
+	
+	setRotation: function (rotation) {
+		this.options.rotation = rotation;
+		return this.redraw();
+	},
+	
+	setNumberOfSides: function (numberOfSides) {
+		this.options.numberOfSides = numberOfSides;
+		return this.redraw();
+	},
+	
 	getLatLng: function () {
 		return this._latlng;
 	},
@@ -826,6 +880,11 @@ L.StarMarker = L.RegularPolygonMarker.extend({
 		dropShadow: true
 	},
 
+	setNumberOfPoints: function (numberOfPoints) {
+		this.options.numberOfPoints = numberOfPoints;
+		return this.redraw();
+	},
+	
 	_getPoints: function (inner) {
 		var maxDegrees = this.options.maxDegrees || 360;
 		var angleSize = maxDegrees / this.options.numberOfPoints;

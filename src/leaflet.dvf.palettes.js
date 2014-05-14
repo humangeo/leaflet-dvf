@@ -369,7 +369,7 @@ L.Palettes = {
 };
 
 /*
- * Pre-defined color palettes for easy use
+ * Pre-defined color palettes for easy use.  Call getPalette passing a min and max value get a pre-defined LinearFunction
  */
 L.DynamicColorPalettes = {
 	rainbow: {
@@ -500,6 +500,9 @@ L.DynamicColorPalettes = {
 	}
 };
 
+/*
+ *
+ */
 L.DynamicPaletteElement = L.Class.extend({
 	initialize: function (key, dynamicPalette) {
 		this._key = key;

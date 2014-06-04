@@ -609,6 +609,9 @@ L.DataLayer = L.LayerGroup.extend({
 			if (target.setStyle) {
 				target.setStyle(layerOptions);
 			}
+
+			// Addresses https://github.com/humangeo/leaflet-dvf/issues/30
+			target.isHighlighted = true;
 		};
 
 		var move = function (e) {
@@ -618,6 +621,13 @@ L.DataLayer = L.LayerGroup.extend({
 		};
 
 		var unhighlight = function (e) {
+
+			// Addresses https://github.com/humangeo/leaflet-dvf/issues/30
+			if(!e.target.isHighlighted) {
+				return;
+			}
+			e.target.isHighlighted = false;
+
 			if (self.tooltip) {
 				self.removeLayer(self.tooltip);
 				self.tooltip = null;

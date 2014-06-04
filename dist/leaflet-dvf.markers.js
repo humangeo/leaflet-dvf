@@ -1942,7 +1942,7 @@ var PathFunctions = PathFunctions || {
                 var stopProperty = stop[key];
                 if (key === "style") {
                     var styleProperty = "";
-                    stopProperty.color = stopProperty.color || this.options.fillColor || this.options.color;
+                    stopProperty.color = stopProperty.color || (this.options.fillColor || this.options.color);
                     stopProperty.opacity = typeof stopProperty.opacity === "undefined" ? 1 : stopProperty.opacity;
                     for (var propKey in stopProperty) {
                         styleProperty += "stop-" + propKey + ":" + stopProperty[propKey] + ";";

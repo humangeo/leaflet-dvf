@@ -2004,7 +2004,7 @@ var PathFunctions = PathFunctions || {
                 var stopProperty = stop[key];
                 if (key === "style") {
                     var styleProperty = "";
-                    stopProperty.color = stopProperty.color || this.options.fillColor || this.options.color;
+                    stopProperty.color = stopProperty.color || (this.options.fillColor || this.options.color);
                     stopProperty.opacity = typeof stopProperty.opacity === "undefined" ? 1 : stopProperty.opacity;
                     for (var propKey in stopProperty) {
                         styleProperty += "stop-" + propKey + ":" + stopProperty[propKey] + ";";
@@ -3817,6 +3817,7 @@ L.DataLayer = L.LayerGroup.extend({
             if (target.setStyle) {
                 target.setStyle(layerOptions);
             }
+            target.isHighlighted = true;
         };
         var move = function(e) {
             if (self.tooltip) {
@@ -3824,6 +3825,10 @@ L.DataLayer = L.LayerGroup.extend({
             }
         };
         var unhighlight = function(e) {
+            if (!e.target.isHighlighted) {
+                return;
+            }
+            e.target.isHighlighted = false;
             if (self.tooltip) {
                 self.removeLayer(self.tooltip);
                 self.tooltip = null;

@@ -420,46 +420,62 @@ var PathFunctions = PathFunctions || {
 		this._shape = shape;
 	},
 
-	_updateStyle: function () {
-		this.__updateStyle.call(this);
+	_updateStyle: function (layer) {
+		this.__updateStyle.call(this, layer);
 
-		if (this.options.stroke) {
-			if (this.options.lineCap) {
-				this._path.setAttribute('stroke-linecap', this.options.lineCap);
+		var context = layer ? layer : this;
+		
+		if (context.options.stroke) {
+			if (context.options.lineCap) {
+				context._path.setAttribute('stroke-linecap', context.options.lineCap);
 			}
 
-			if (this.options.lineJoin) {
-				this._path.setAttribute('stroke-linejoin', this.options.lineJoin);
+			if (context.options.lineJoin) {
+				context._path.setAttribute('stroke-linejoin', context.options.lineJoin);
 			}
 		}
 
-		if (this.options.gradient) {
-			this._createGradient(this.options.gradient);
+		if (context.options.gradient) {
+			context._createGradient(context.options.gradient);
 
-			this._path.setAttribute('fill', 'url(#' + this._gradient.getAttribute('id') + ')');
+			context._path.setAttribute('fill', 'url(#' + context._gradient.getAttribute('id') + ')');
 		}
-		else if (!this.options.fill) {
-			this._path.setAttribute('fill', 'none');
+		else if (!context.options.fill) {
+			context._path.setAttribute('fill', 'none');
 		}
 
-		if (this.options.dropShadow) {
-			this._createDropShadow();
+		if (context.options.dropShadow) {
+			context._createDropShadow();
 
-			this._path.setAttribute('filter', 'url(#' + this._dropShadow.getAttribute('id') + ')');
+			context._path.setAttribute('filter', 'url(#' + context._dropShadow.getAttribute('id') + ')');
 		}
 		else {
-			this._path.removeAttribute('filter');
+			context._path.removeAttribute('filter');
 		}
 
-		if (this.options.fillPattern) {
-			this._createFillPattern(this.options.fillPattern);
+		if (context.options.fillPattern) {
+			context._createFillPattern(context.options.fillPattern);
 		}
 		
-		this._applyCustomStyles();
+		context._applyCustomStyles();
 
 	}
 
 };
+
+if (L.SVG) {
+	// Potential fix for working with 0.8
+	var SVGStyleFunctions = L.Util.extend(PathFunctions, {
+		__updateStyle: L.SVG.prototype._updateStyle
+	});
+
+	var SVGTextFunctions = L.Util.extend(TextFunctions, {
+		__updatePath: L.SVG.prototype._updatePath
+	});
+
+	L.SVG.include(SVGStyleFunctions);
+	L.SVG.include(SVGTextFunctions);
+}
 
 // Extend the TextFunctions above and change the __updatePath reference, since
 // _updatePath for a line/polygon is different than for a regular path
@@ -685,6 +701,10 @@ L.MapMarker = L.Path.extend({
 		if (this.options.shapeImage || this.options.imageCircleUrl) {
 			this._createShapeImage(this.options.shapeImage);
 		}
+	},
+	
+	toGeoJSON: function () {
+		return L.Util.pointToGeoJSON.call(this);
 	}
 });
 
@@ -699,7 +719,7 @@ L.RegularPolygonMarker = L.Path.extend({
 	includes: TextFunctions,
 
 	initialize: function (centerLatLng, options) {
-		L.Path.prototype.initialize.call(this, options);
+		L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
 
 		this._latlng = centerLatLng;
 
@@ -863,6 +883,10 @@ L.RegularPolygonMarker = L.Path.extend({
 		if (this.options.shapeImage || this.options.imageCircleUrl) {
 			this._createShapeImage(this.options.shapeImage);
 		}
+	},
+	
+	toGeoJSON: function () {
+		return L.Util.pointToGeoJSON.call(this);
 	}
 });
 
@@ -1101,6 +1125,10 @@ L.SVGMarker = L.Path.extend({
 		else {
 			addSVG();
 		}
+	},
+	
+	toGeoJSON: function () {
+		return pointToGeoJSON.call(this);
 	}
 
 });
@@ -1113,6 +1141,10 @@ L.MarkerGroup = L.FeatureGroup.extend({
 		L.FeatureGroup.prototype.initialize.call(this, markers);
 
 		this.setLatLng(latlng);
+	},
+	
+	setStyle: function (style) {
+		return this;
 	},
 	
 	setLatLng: function (latlng) {
@@ -1128,5 +1160,22 @@ L.MarkerGroup = L.FeatureGroup.extend({
 	
 	getLatLng: function (latlng) {
 		return this._latlng;
+	},
+	
+	toGeoJSON: function () {
+		var featureCollection = {
+			type: 'FeatureCollection',
+			features: []
+		};
+		
+		var eachLayerFunction = function (featureCollection) {
+			return function (layer) {
+				featureCollection.features.push(L.Util.pointToGeoJSON.call(layer));
+			}
+		};
+		
+		this.eachLayer(eachLayerFunction(featureCollection));
+		
+		return featureCollection;
 	}
 });

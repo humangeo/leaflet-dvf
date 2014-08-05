@@ -1,6 +1,6 @@
 /*
  @preserve Leaflet Data Visualization Framework, a JavaScript library for creating thematic maps using Leaflet
- (c) 2013, Scott Fairgrieve, HumanGeo
+ (c) 2013-2014, Scott Fairgrieve, HumanGeo
 */
 L.LinearFunction = L.Class.extend({
     initialize: function(minPoint, maxPoint, options) {
@@ -145,12 +145,13 @@ L.ColorFunction = L.LinearFunction.extend({
             }
             return prefix + "(" + parts.join(",") + ")";
         };
+        options = this.options;
         var postProcess = function(y) {
             if (options && options.postProcess) {
                 y = options.postProcess.call(this, y);
             }
             var colorString = this._getColorString(y);
-            if (L.Browser.ie && colorString.indexOf("hsl") > -1) {
+            if (L.Browser.ie && colorString.indexOf("hsl") > -1 || options.rgb) {
                 colorString = L.hslColor(colorString).toRGBString();
             }
             return colorString;
@@ -520,6 +521,36 @@ L.Util.getNumericRange = function(records, fieldName) {
         }
     }
     return [ min, max ];
+};
+
+L.Util.pointToGeoJSON = function() {
+    var feature = {
+        type: "Feature",
+        geometry: {
+            type: "Point",
+            coordinates: [ this._latlng[1], this._latlng[0] ]
+        },
+        properties: {}
+    };
+    for (var key in this.options) {
+        if (this.options.hasOwnProperty(key)) {
+            var value = this.options[key];
+            if (typeof value !== "function") {
+                feature.properties[key] = value;
+            }
+        }
+    }
+    return feature;
+};
+
+L.Util.updateLayer = function(layer, updateFunction) {
+    if (layer.eachLayer && !layer instanceof L.FeatureGroup) {
+        layer.eachLayer(function(layer) {
+            L.Util.updateLayer(layer, updateFunction);
+        });
+    } else {
+        updateFunction.call(this, layer);
+    }
 };
 
 L.CategoryLegend = L.Class.extend({
@@ -1609,156 +1640,156 @@ L.Palettes = {
 L.DynamicColorPalettes = {
     rainbow: {
         text: "Rainbow",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 0, 300);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 0, 300, options);
         }
     },
     greentored: {
         text: "Green - Red",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 120, 0);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 120, 0, options);
         }
     },
     yellowtored: {
         text: "Yellow - Red",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 60, 0);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 60, 0, options);
         }
     },
     orangetored: {
         text: "Orange - Red",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 30, 0);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 30, 0, options);
         }
     },
     redtopurple: {
         text: "Red - Purple",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 360, 270);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 360, 270, options);
         }
     },
     bluetored: {
         text: "Blue - Red",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 210, 360);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 210, 360, options);
         }
     },
     bluetored2: {
         text: "Blue - Red 2",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 180, 0);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 180, 0, options);
         }
     },
     whitetored: {
         text: "White - Red",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 0
-            });
+            }));
         }
     },
     whitetoorange: {
         text: "White - Orange",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 30
-            });
+            }));
         }
     },
     whitetoyellow: {
         text: "White - Yellow",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 60
-            });
+            }));
         }
     },
     whitetogreen: {
         text: "White - Green",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 120
-            });
+            }));
         }
     },
     whitetoltblue: {
         text: "White - Lt. Blue",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 180
-            });
+            }));
         }
     },
     whitetoblue: {
         text: "White - Blue",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 240
-            });
+            }));
         }
     },
     whitetopurple: {
         text: "White - Purple",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 270
-            });
+            }));
         }
     },
     graytored: {
         text: "Gray - Red",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 0
-            });
+            }));
         }
     },
     graytoorange: {
         text: "Gray - Orange",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 30
-            });
+            }));
         }
     },
     graytoyellow: {
         text: "Gray - Yellow",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 60
-            });
+            }));
         }
     },
     graytogreen: {
         text: "Gray - Green",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 120
-            });
+            }));
         }
     },
     graytoltblue: {
         text: "Gray - Lt. Blue",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 180
-            });
+            }));
         }
     },
     graytoblue: {
         text: "Gray - Blue",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 240
-            });
+            }));
         }
     },
     graytopurple: {
         text: "Gray - Purple",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 270
-            });
+            }));
         }
     }
 };
@@ -2096,34 +2127,46 @@ var PathFunctions = PathFunctions || {
         this._container.insertBefore(shape, this._defs);
         this._shape = shape;
     },
-    _updateStyle: function() {
-        this.__updateStyle.call(this);
-        if (this.options.stroke) {
-            if (this.options.lineCap) {
-                this._path.setAttribute("stroke-linecap", this.options.lineCap);
+    _updateStyle: function(layer) {
+        this.__updateStyle.call(this, layer);
+        var context = layer ? layer : this;
+        if (context.options.stroke) {
+            if (context.options.lineCap) {
+                context._path.setAttribute("stroke-linecap", context.options.lineCap);
             }
-            if (this.options.lineJoin) {
-                this._path.setAttribute("stroke-linejoin", this.options.lineJoin);
+            if (context.options.lineJoin) {
+                context._path.setAttribute("stroke-linejoin", context.options.lineJoin);
             }
         }
-        if (this.options.gradient) {
-            this._createGradient(this.options.gradient);
-            this._path.setAttribute("fill", "url(#" + this._gradient.getAttribute("id") + ")");
-        } else if (!this.options.fill) {
-            this._path.setAttribute("fill", "none");
+        if (context.options.gradient) {
+            context._createGradient(context.options.gradient);
+            context._path.setAttribute("fill", "url(#" + context._gradient.getAttribute("id") + ")");
+        } else if (!context.options.fill) {
+            context._path.setAttribute("fill", "none");
         }
-        if (this.options.dropShadow) {
-            this._createDropShadow();
-            this._path.setAttribute("filter", "url(#" + this._dropShadow.getAttribute("id") + ")");
+        if (context.options.dropShadow) {
+            context._createDropShadow();
+            context._path.setAttribute("filter", "url(#" + context._dropShadow.getAttribute("id") + ")");
         } else {
-            this._path.removeAttribute("filter");
+            context._path.removeAttribute("filter");
         }
-        if (this.options.fillPattern) {
-            this._createFillPattern(this.options.fillPattern);
+        if (context.options.fillPattern) {
+            context._createFillPattern(context.options.fillPattern);
         }
-        this._applyCustomStyles();
+        context._applyCustomStyles();
     }
 };
+
+if (L.SVG) {
+    var SVGStyleFunctions = L.Util.extend(PathFunctions, {
+        __updateStyle: L.SVG.prototype._updateStyle
+    });
+    var SVGTextFunctions = L.Util.extend(TextFunctions, {
+        __updatePath: L.SVG.prototype._updatePath
+    });
+    L.SVG.include(SVGStyleFunctions);
+    L.SVG.include(SVGTextFunctions);
+}
 
 var LineTextFunctions = L.extend({}, TextFunctions);
 
@@ -2292,6 +2335,9 @@ L.MapMarker = L.Path.extend({
         if (this.options.shapeImage || this.options.imageCircleUrl) {
             this._createShapeImage(this.options.shapeImage);
         }
+    },
+    toGeoJSON: function() {
+        return L.Util.pointToGeoJSON.call(this);
     }
 });
 
@@ -2302,7 +2348,7 @@ L.mapMarker = function(centerLatLng, options) {
 L.RegularPolygonMarker = L.Path.extend({
     includes: TextFunctions,
     initialize: function(centerLatLng, options) {
-        L.Path.prototype.initialize.call(this, options);
+        L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
         this._latlng = centerLatLng;
         this.options.numberOfSides = Math.max(this.options.numberOfSides, 3);
     },
@@ -2419,6 +2465,9 @@ L.RegularPolygonMarker = L.Path.extend({
         if (this.options.shapeImage || this.options.imageCircleUrl) {
             this._createShapeImage(this.options.shapeImage);
         }
+    },
+    toGeoJSON: function() {
+        return L.Util.pointToGeoJSON.call(this);
     }
 });
 
@@ -2614,6 +2663,9 @@ L.SVGMarker = L.Path.extend({
         } else {
             addSVG();
         }
+    },
+    toGeoJSON: function() {
+        return pointToGeoJSON.call(this);
     }
 });
 
@@ -2621,6 +2673,9 @@ L.MarkerGroup = L.FeatureGroup.extend({
     initialize: function(latlng, markers) {
         L.FeatureGroup.prototype.initialize.call(this, markers);
         this.setLatLng(latlng);
+    },
+    setStyle: function(style) {
+        return this;
     },
     setLatLng: function(latlng) {
         this._latlng = latlng;
@@ -2633,6 +2688,19 @@ L.MarkerGroup = L.FeatureGroup.extend({
     },
     getLatLng: function(latlng) {
         return this._latlng;
+    },
+    toGeoJSON: function() {
+        var featureCollection = {
+            type: "FeatureCollection",
+            features: []
+        };
+        var eachLayerFunction = function(featureCollection) {
+            return function(layer) {
+                featureCollection.features.push(L.Util.pointToGeoJSON.call(layer));
+            };
+        };
+        this.eachLayer(eachLayerFunction(featureCollection));
+        return featureCollection;
     }
 });
 
@@ -2794,6 +2862,9 @@ L.ChartMarker = L.FeatureGroup.extend({
     redraw: function() {
         this.clearLayers();
         this._loadComponents();
+    },
+    toGeoJSON: function() {
+        return L.Util.pointToGeoJSON.call(this);
     }
 });
 
@@ -3196,6 +3267,7 @@ L.StackedRegularPolygonMarker = L.ChartMarker.extend({
         var chartOptions = this.options.chartOptions;
         var chartOption;
         var key;
+        var bars = [];
         for (key in data) {
             value = parseFloat(data[key]);
             chartOption = chartOptions[key];
@@ -3224,7 +3296,18 @@ L.StackedRegularPolygonMarker = L.ChartMarker.extend({
             this._bindMouseEvents(bar);
             lastRadiusX = options.radiusX;
             lastRadiusY = options.radiusY;
-            this.addLayer(bar);
+            if (this.options.drawReverse) {
+                bars.push(bar);
+            } else {
+                this.addLayer(bar);
+            }
+        }
+        if (this.options.drawReverse) {
+            var item = bars.pop();
+            while (item) {
+                this.addLayer(item);
+                item = bars.pop();
+            }
         }
     }
 });

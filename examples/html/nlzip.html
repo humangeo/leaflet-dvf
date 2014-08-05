@@ -41,7 +41,7 @@
 	<script type="text/javascript" src="../data/NETZIP2.js"></script>
 	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
+	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
 	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
 	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
@@ -110,7 +110,9 @@
 		
 		var symbolOptions = $.extend(true, {}, options, {
 			layerOptions: {
-				numberOfSides: 50
+				numberOfSides: 50,
+				fillOpacity: 1.0,
+				gradient: true
 			},
 			displayOptions: {
 				POPU: {
@@ -124,10 +126,22 @@
 					radius: new L.LinearFunction([90000, 15],[635100, 25]),
 					innerRadius: new L.LinearFunction([90000, 5],[635100, 15])
 				}
+			},
+			getIndexKey: function (location, record) {
+				return location.text;
 			}
 		});
 		
 		var nlPopLayerSymbol = new L.DataLayer(NLpopdens, symbolOptions);
+		
+		// Added for index key testing - should change layer styling after 5 seconds
+		setTimeout(function () {
+			var func = new L.HSLHueFunction(new L.Point(90000, 200), new L.Point(635100, 330));
+			nlPopLayerSymbol.setDisplayOption('POPU', {
+				fillColor:func, 
+				color: func
+			});
+		}, 5000);
 		
 		map.addLayer(nlPopLayerSymbol);
 		layerControl.addOverlay(nlPopLayerSymbol, 'Proportional Symbol');

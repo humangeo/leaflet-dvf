@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Examples - Geohashes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style>
+      body {
+        padding: 0px;
+        margin: 0px;
+      }
+      
+      .leaflet-tile-pane {
+      	opacity: 1.0;
+      }
+    </style>
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
+
+</head>
+
+<body>
+
+	<div id="map"></div>
+
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-42733116-1', 'humangeo.github.io');
+	  ga('send', 'pageview');
+	</script>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
+	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
+	<script type="text/javascript" src="../lib/date.format.js"></script>
+	<script type="text/javascript" src="../lib/geohash.js"></script>
+	<script type="text/javascript" src="../lib/tilefilter/TileLayer.Filter.js"></script>
+	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
+	<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
+	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+	<script>
+		
+$(document).ready(function() {
+	var map;
+
+	var resize = function () {
+		var $map = $('#map');
+
+		$map.height($(window).height());
+
+		if (map) {
+			map.invalidateSize();
+		}
+	};
+
+	$(window).on('resize', function () {
+		resize();
+	});
+
+	resize();
+	
+	// create a map in the "map" div, set the view to a given place and zoom
+	map = L.map('map', {
+		maxZoom: 32,
+		zoom: 18,
+		maxNativeZoom: 18,
+		zoomControl: false,
+		attributionControl: false
+	}).setView([0.0, 0.0], 2);
+	
+	/*
+	var baseLayer = new L.StamenTileLayer('toner', {
+		maxZoom: 32,
+		maxNativeZoom: 18
+	});
+	*/
+	
+	var baseLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 32,
+		maxNativeZoom: 18
+	}); 
+
+	//L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png', {maxZoom: 18}); //new L.StamenTileLayer('watercolor');
+	
+	baseLayer.addTo(map);
+	
+	var data = [];
+	var focusPoint = [38.881547, -77.113475]
+	var geohashValue = encodeGeoHash(focusPoint[0], focusPoint[1]);
+	
+	for (var i = 0; i < 8; ++i) {
+		data.push({
+			geohash: geohashValue.substring(0, i + 1),
+			length: i + 1
+		});
+	}
+	
+	var colorFunction = new L.HSLHueFunction(new L.Point(1,0), new L.Point(12,240), {outputSaturation: '100%', outputLuminosity: '25%'});
+	var fillColorFunction = new L.HSLHueFunction(new L.Point(1,0), new L.Point(12,240), {outputSaturation: '100%', outputLuminosity: '50%'});
+	var additive = 40;
+		
+	var options = {
+		recordsField: null,
+		geohashField: 'geohash',
+
+		displayOptions: {
+			/*
+			length: {
+				color: colorFunction,
+				fillColor: fillColorFunction
+			},
+			*/
+			geohash: {
+				geohash: function (value) {
+					return value;
+				},
+				color: function (value) {
+					return 'hsl(' + (((value.length - 1) * additive + 180) % 360) + ',100%,50%)';
+				}
+			}
+		},
+		
+		layerOptions: {
+			fill: false,
+			opacity: 1,
+			weight: 3,
+			dashArray: [5, 5],
+			color: '#333'
+		}
+	};
+	
+	var layer = new L.GeohashDataLayer(data, options);
+	
+	map.addLayer(layer);
+	
+	var i = 0;
+	var j = 0;
+	
+	var errorLine;
+	var geohashSizeLayer;
+	var geohashTextLayer;
+	
+	var focusPointLayer = new L.LayeredRegularPolygonMarker(focusPoint, {
+		fillOpacity: 0.5,
+		fillColor: '#fff',
+		radius: 20,
+		numberOfSides: 50,
+		stroke: false,
+		levels: 3
+	});
+	
+	map.addLayer(focusPointLayer);
+	
+	layer.eachLayer(function (layer) {
+	if (layer.getBounds) {
+		var func = function (layer, i) {
+			return function () {
+			 	baseLayer.setFilter(function () {
+			 		console.log('hue-rotate: ' + i);
+				 	new L.CombinedFilter(this, {
+				 		cssFilter: function () { new L.CSSFilter(this, {
+							filters: ['brightness(110%)', 'hue-rotate(' + i + 'deg)']
+				 		}).render()},
+				 		channelFilter: L.ImageFilters.Presets.CanvasChannel.ColorizeRed
+					}).render();
+			 	});
+			 	var layerBounds = layer.getBounds();
+			 	var sw = layerBounds.getSouthWest();
+			 	var ne = layerBounds.getNorthEast();
+			 	var error = sw.distanceTo(ne);
+
+			 	if (errorLine) {
+			 		map.removeLayer(errorLine);
+			 	};
+			 	
+			 	if (geohashSizeLayer) {
+			 		map.removeLayer(geohashSizeLayer);
+			 	}
+			 	
+			 	if (geohashTextLayer) {
+			 		map.removeLayer(geohashTextLayer);
+			 	}
+			 	
+			 	errorLine = new L.Polyline([sw, ne], {
+			 		opacity: 1.0,
+			 		weight: 3,
+					dashArray: [5, 5],
+					color: 'hsl(' + ((i + 180) % 360) + ',100%,50%)',
+					text: {
+						text: (error/1000).toFixed(4) + ' km',
+						path: {
+							startOffset: '20%',
+							style: {
+								'font-size': '20px',
+								'fill': 'hsl(' + i + ',100%,85%)',
+								'dominant-baseline': 'text-before-edge'
+							}
+						} 
+					}
+			 	});
+			 	
+			 	map.addLayer(errorLine);
+			 	
+			 	geohashSizeLayer = new L.CircleMarker(layerBounds.getCenter(), {
+			 		fillOpacity: 0.3,
+			 		stroke: false,
+			 		radius: 100,
+			 		fillColor: 'hsl(' + ((i + 180) % 360) + ',100%,50%)',
+			 		text: {
+			 			text: layer.options.geohash.length,
+			 			style: {
+			 				'font-size': '100px',
+			 				'text-rendering': 'optimizeLegibility',
+			 				'fill': 'hsl(' + i + ',100%,85%)'
+			 			}
+			 		}
+			 	});
+			 	
+			 	map.addLayer(geohashSizeLayer);
+			 	
+			 	geohashTextLayer = new L.Rectangle(layerBounds, {
+			 		fill: false,
+			 		stroke: false,
+			 		text: {
+						text: layer.options.geohash,
+						path: {
+							startOffset: '40%',
+							style: {
+								'fill': 'hsl(' + i + ',100%,85%)',
+								'font-size': '40px',
+								'text-rendering': 'optimizeLegibility',
+								'dominant-baseline': 'text-before-edge'
+							}
+						}
+					}
+			 	});
+			 	
+			 	map.addLayer(geohashTextLayer);
+			 	
+			 	map.fitBounds(layer.getBounds());
+			 
+			};
+		};
+		
+		setTimeout(func(layer, i), j * 1000);
+		
+		i += additive;
+		j += 5;
+		i = i % 360;
+		}
+		
+	}, 1000);
+	
+});
+	</script>
+</body>
+</html>

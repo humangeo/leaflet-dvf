@@ -79,6 +79,25 @@ L.RegularPolygon = L.Polygon.extend({
 		lon2 = toDeg(lon2);
 		
 		return new L.LatLng(lat2, lon2);
+	},
+	
+	toGeoJSON: function () {
+		var feature = {
+			type: 'Feature',
+			geometry: {
+				type: 'Polygon',
+				coordinates: [[],[]]
+			},
+			properties: this.options
+		};
+		
+		for (var i = 0; i < this._latlngs.length; ++i) {
+			var latlng = this._latlngs[i];
+			
+			feature.coordinates[0].push([latlng[1], latlng[0]]);
+		}
+		
+		return feature;
 	}
 });
 

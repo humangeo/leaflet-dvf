@@ -249,6 +249,43 @@ L.LocationModes = {
 L.DataLayer = L.LayerGroup.extend({
 	includes: L.Mixin.Events,
 
+	options: {
+		recordsField: 'features',
+		locationMode: L.LocationModes.LATLNG,
+		latitudeField: 'geometry.coordinates.1',
+		longitudeField: 'geometry.coordinates.0',
+		displayField: null,
+		displayOptions: null,
+		layerOptions: {
+			numberOfSides: 4,
+			radius: 10,
+			weight: 1,
+			color: '#000'
+		},
+		showLegendTooltips: true,
+		tooltipOptions: {
+			iconSize: new L.Point(60, 50),
+			iconAnchor: new L.Point(-5, 50),
+			mouseOverExaggeration: 2
+		},
+		setHighlight: function (layerStyle) {
+			layerStyle.weight = layerStyle.weight || 1;
+			layerStyle.fillOpacity = layerStyle.fillOpacity || 0.5;
+			layerStyle.weight *= 2;
+			layerStyle.fillOpacity /= 1.5;
+
+			return layerStyle;
+		},
+		unsetHighlight: function (layerStyle) {
+			layerStyle.weight = layerStyle.weight || 1;
+			layerStyle.fillOpacity = layerStyle.fillOpacity || 0.25;
+			layerStyle.weight /= 2;
+			layerStyle.fillOpacity *= 1.5;
+
+			return layerStyle;
+		}
+	},
+	
 	initialize: function (data, options) {
 		L.Util.setOptions(this, options);
 
@@ -259,12 +296,19 @@ L.DataLayer = L.LayerGroup.extend({
 		this._includeFunction = this.options.filter || this.options.includeLayer;
 		this._markerFunction = this.options.getMarker || this._getMarker;
 
-		this._boundaryLayer = new L.LayerGroup();
-		this.addLayer(this._boundaryLayer);
-
+		this._addChildLayers();
+		
 		this.addData(data);
 	},
 
+	_addChildLayers: function () {
+		this._boundaryLayer = new L.LayerGroup();
+		this.addLayer(this._boundaryLayer);
+		
+		this._trackLayer = new L.LayerGroup();
+		this.addLayer(this._trackLayer);
+	},
+	
 	_zoomFunction: function (e) {
 		var map = this._map;
 		var self = this;
@@ -305,7 +349,31 @@ L.DataLayer = L.LayerGroup.extend({
 
 		map.off('zoomend', this._zoomFunction, this);
 	},
-
+	
+	bringToBack: function () {		
+		this.invoke('bringToBack');
+		
+		if (this._trackLayer) {
+			this._trackLayer.invoke('bringToBack');
+		}
+		
+		if (this._boundaryLayer) {
+			this._boundaryLayer.invoke('bringToBack');
+		}
+	},
+	
+	bringToFront: function () {
+		if (this._boundaryLayer) {
+			this._boundaryLayer.invoke('bringToFront');
+		}
+		
+		if (this._trackLayer) {
+			this._trackLayer.invoke('bringToFront');
+		}
+		
+		this.invoke('bringToFront');
+	},
+	
 	getBounds: function () {
 		var bounds;
 
@@ -323,43 +391,6 @@ L.DataLayer = L.LayerGroup.extend({
 		return bounds;
 	},
 
-	options: {
-		recordsField: 'features',
-		locationMode: L.LocationModes.LATLNG,
-		latitudeField: 'geometry.coordinates.1',
-		longitudeField: 'geometry.coordinates.0',
-		displayField: null,
-		displayOptions: null,
-		layerOptions: {
-			numberOfSides: 4,
-			radius: 10,
-			weight: 1,
-			color: '#000'
-		},
-		showLegendTooltips: true,
-		tooltipOptions: {
-			iconSize: new L.Point(60, 50),
-			iconAnchor: new L.Point(-5, 50),
-			mouseOverExaggeration: 2
-		},
-		setHighlight: function (layerStyle) {
-			layerStyle.weight = layerStyle.weight || 1;
-			layerStyle.fillOpacity = layerStyle.fillOpacity || 0.5;
-			layerStyle.weight *= 2;
-			layerStyle.fillOpacity /= 1.5;
-
-			return layerStyle;
-		},
-		unsetHighlight: function (layerStyle) {
-			layerStyle.weight = layerStyle.weight || 1;
-			layerStyle.fillOpacity = layerStyle.fillOpacity || 0.25;
-			layerStyle.weight /= 2;
-			layerStyle.fillOpacity *= 1.5;
-
-			return layerStyle;
-		}
-	},
-
 	_getLocation: function (record, index) {
 		return this.options.locationMode.call(this, record, index);
 	},
@@ -370,41 +401,57 @@ L.DataLayer = L.LayerGroup.extend({
 		return processedLocation;
 	},
 
+	_styleBoundary: function (layer, options, record) {
+		if (layer.setStyle) {
+			var style;
+			
+			if (this.options.boundaryStyle instanceof Function) {
+				style = this.options.boundaryStyle.call(this, record, layer);
+			}
+			
+			style = style || this.options.boundaryStyle || L.extend({}, options, {
+				fillOpacity: 0.2,
+				clickable: false
+			});
+
+			layer.setStyle(style);
+		}
+		
+		return layer;
+	},
+	
 	_addBoundary: function (location, options, record) {
 		var layer = location.location;
-
+		var boundaryLayer;
+		
 		if (this.options.includeBoundary) {
 			if (layer instanceof L.LatLngBounds) {
 				layer = new L.Rectangle(layer);
 			}
 
-			if (layer.setStyle) {
-				var style;
-				
-				if (this.options.boundaryStyle instanceof Function) {
-					style = this.options.boundaryStyle.call(this, record, layer);
-				}
-				
-				style = style || this.options.boundaryStyle || L.extend({}, options, {
-					fillOpacity: 0.2,
-					clickable: false
-				});
-
-				layer.setStyle(style);
-			}
+			layer = this._styleBoundary(layer, options, record);
 
 			this._boundaryLayer.addLayer(layer);
+			
+			boundaryLayer = layer;
 		}
+		
+		return boundaryLayer;
 	},
 
 	_getLayer: function (location, options, record) {
-		this._addBoundary(location, options, record);
+		var boundaryLayer = this._addBoundary(location, options, record);
 
 		location = this._processLocation(location);
 
+		var markerLayer;
+		
 		if (location) {
-			return this._markerFunction.call(this, location, options, record);
+			markerLayer = this._markerFunction.call(this, location, options, record);
+			markerLayer.boundaryLayer = boundaryLayer;
 		}
+		
+		return markerLayer;
 	},
 
 	// Can be overridden by specifying a getMarker option
@@ -520,7 +567,11 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 
 	reloadData: function () {
-		this.clearLayers();
+		if (!this._layerIndex) {
+			this.clearLayers();
+			
+			this._addChildLayers();
+		}
 
 		if (this._data) {
 			this.addData(this._data);
@@ -534,6 +585,11 @@ L.DataLayer = L.LayerGroup.extend({
 	addData: function (data) {
 		var records = this.options.recordsField !== null && this.options.recordsField.length > 0 ? L.Util.getFieldValue(data, this.options.recordsField) : data;
 
+		if (this.options.getIndexKey && !this._layerIndex) {
+			this._layerIndex = {};
+			this._boundaryIndex = {};
+		}
+		
 		if (this.options.locationMode === L.LocationModes.CUSTOM && this.options.preload) {
 			this._preloadLocations(records);
 		}
@@ -593,6 +649,9 @@ L.DataLayer = L.LayerGroup.extend({
 			if (target.setStyle) {
 				target.setStyle(layerOptions);
 			}
+
+			// Addresses https://github.com/humangeo/leaflet-dvf/issues/30
+			target.isHighlighted = true;
 		};
 
 		var move = function (e) {
@@ -602,6 +661,12 @@ L.DataLayer = L.LayerGroup.extend({
 		};
 
 		var unhighlight = function (e) {
+
+			// Addresses https://github.com/humangeo/leaflet-dvf/issues/30
+			if(!e.target.isHighlighted) {
+				return;
+			}
+			e.target.isHighlighted = false;
 
 			if (self.tooltip) {
 				self.removeLayer(self.tooltip);
@@ -621,6 +686,10 @@ L.DataLayer = L.LayerGroup.extend({
 		};
 
 		var bindLayerEvents = function (layer) {
+			layer.off('mouseover');
+			layer.off('mouseout');
+			layer.off('mousemove');
+			
 			layer.on({
 				mouseover: highlight,
 				mouseout: unhighlight,
@@ -681,17 +750,73 @@ L.DataLayer = L.LayerGroup.extend({
 		};
 	},
 
+	_getIndexedLayer: function (index, location, layerOptions, record) {
+		if (this.options.getIndexKey) {
+			var indexKey = this.options.getIndexKey.call(this, location, record);
+			
+			if (indexKey in index) {
+				// This is an old layer, so let's restyle it
+				layer = index[indexKey];
+				
+				var updateFunction = function (layer) {
+					if (layerOptions.radius && layer instanceof L.CircleMarker) {
+						layer.setRadius(layerOptions.radius);
+					}
+					
+					layer.setStyle(layerOptions);
+					
+					if (layer.setLatLng && layer.getLatLng() !== location.center) {
+						
+						layer.setLatLng(location.center);
+						
+					}
+					else {
+						layer.redraw();
+					}
+				};
+				
+				L.Util.updateLayer(layer, updateFunction);
+				
+				if (layer.boundaryLayer) {
+					layer.boundaryLayer = this._styleBoundary(layer.boundaryLayer, layerOptions, record);
+				}
+			}
+			else {
+				// This is a new layer, so let's add it
+				layer = this._getLayer(location, layerOptions, record);
+				index[indexKey] = layer;
+			}
+			
+			if (this.options.getTrack) {
+				var shouldAdd = !layer.trackLayer;
+				
+				layer.trackLayer = this.options.getTrack.call(this, layer, location, layer.trackLayer);
+				
+				if (shouldAdd) {
+					this._trackLayer.addLayer(layer.trackLayer);
+				}
+			}
+		}
+		else {
+			layer = this._getLayer(location, layerOptions, record);
+		}
+		
+		return layer;
+	},
+	
 	recordToLayer: function (location, record) {
 		var layerOptions = L.Util.extend({},this.options.layerOptions);
 		var layer;
 		var legendDetails = {};
 		var includeLayer = true;
-
+		var me = this;
+		
 		if (this._includeFunction) {
 			includeLayer = this._includeFunction.call(this, record);
 		}
 
 		if (includeLayer) {
+			
 			var dynamicOptions = this._getDynamicOptions(record);
 
 			layerOptions = dynamicOptions.layerOptions;
@@ -700,8 +825,9 @@ L.DataLayer = L.LayerGroup.extend({
 			if (location && layerOptions) {
 				layerOptions.title = location.text;
 
-				layer = this._getLayer(location, layerOptions, record);
-
+				// If layer indexing is being used, then load the existing layer from the index
+				layer = this._getIndexedLayer(this._layerIndex, location, layerOptions, record);
+				
 				if (layer) {
 					if (this.options.showLegendTooltips) {
 						this._bindMouseEvents(layer, layerOptions, legendDetails);
@@ -850,48 +976,51 @@ L.DataLayer = L.LayerGroup.extend({
 		for (var field in displayOptions) {
 
 			var displayProperties = displayOptions[field];
-			var displayName = displayProperties.displayName || field;
+			
+			if (!displayProperties.excludeFromLegend) {
+				var displayName = displayProperties.displayName || field;
 
-			displayText = displayProperties.displayText;
+				displayText = displayProperties.displayText;
 
-			var displayTextFunction = displayText ? displayText : defaultFunction;
+				var displayTextFunction = displayText ? displayText : defaultFunction;
 
-			var styles = displayProperties.styles;
+				var styles = displayProperties.styles;
 
-			L.DomUtil.create('div', 'legend-title', legendElement).innerHTML = displayName;
+				L.DomUtil.create('div', 'legend-title', legendElement).innerHTML = displayName;
 
-			if (styles) {
-				// Generate category legend
-				legendElement.innerHTML += new L.CategoryLegend(styles).generate();
-			}
-			else {
-				// Generate numeric legend
-				var legendItems = L.DomUtil.create('div', 'data-layer-legend');
-				var minValue = L.DomUtil.create('div', 'min-value', legendItems);
-				var scaleBars = L.DomUtil.create('div', 'scale-bars', legendItems);
-				var maxValue = L.DomUtil.create('div', 'max-value', legendItems);
-				var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
-
-				for (var index = 0; index < numSegments; ++index) {
-					var legendParams = {
-						displayProperties: displayProperties,
-						layerOptions: layerOptions,
-						ignoreProperties: ignoreProperties,
-						displayTextFunction: displayTextFunction,
-						index: index,
-						numSegments: numSegments,
-						segmentWidth: segmentWidth,
-						minValue: minValue,
-						maxValue: maxValue,
-						gradient: legendOptions.gradient
-					};
-
-					var element = this._getLegendElement(legendParams);
-
-					scaleBars.appendChild(element);
-
+				if (styles) {
+					// Generate category legend
+					legendElement.innerHTML += new L.CategoryLegend(styles).generate();
 				}
-				legendElement.appendChild(legendItems);
+				else {
+					// Generate numeric legend
+					var legendItems = L.DomUtil.create('div', 'data-layer-legend');
+					var minValue = L.DomUtil.create('div', 'min-value', legendItems);
+					var scaleBars = L.DomUtil.create('div', 'scale-bars', legendItems);
+					var maxValue = L.DomUtil.create('div', 'max-value', legendItems);
+					var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
+
+					for (var index = 0; index < numSegments; ++index) {
+						var legendParams = {
+							displayProperties: displayProperties,
+							layerOptions: layerOptions,
+							ignoreProperties: ignoreProperties,
+							displayTextFunction: displayTextFunction,
+							index: index,
+							numSegments: numSegments,
+							segmentWidth: segmentWidth,
+							minValue: minValue,
+							maxValue: maxValue,
+							gradient: legendOptions.gradient
+						};
+
+						var element = this._getLegendElement(legendParams);
+
+						scaleBars.appendChild(element);
+
+					}
+					legendElement.appendChild(legendItems);
+				}
 			}
 		}
 
@@ -961,14 +1090,16 @@ L.MarkerDataLayer = L.DataLayer.extend({
 	}
 });
 
+/*
+ *
+ */
 L.markerDataLayer = function (data, options) {
 	return new L.MarkerDataLayer(data, options);
 };
 
 /*
- *
+ * Displays the top 50 photos for a given area on the map
  */
-
 L.PanoramioLayer = L.MarkerDataLayer.extend({
 	statics: {
 		UPLOAD_DATE_FORMAT: 'DD MMM YYYY',
@@ -1301,6 +1432,9 @@ L.GeohashDataLayer = L.DataLayer.extend({
 		layerOptions: {
 			weight: 1,
 			color: '#000'
+		},
+		getIndexKey: function (location, record) {
+			return location.text;
 		}
 	},
 
@@ -1371,7 +1505,7 @@ L.ChartDataLayer = L.DataLayer.extend({
 	},
 
 	_getLayer: function (latLng, layerOptions, record) {
-		this._addBoundary(latLng, layerOptions, record);
+		var boundaryLayer = this._addBoundary(latLng, layerOptions, record);
 
 		latLng = this._processLocation(latLng);
 
@@ -1385,7 +1519,7 @@ L.ChartDataLayer = L.DataLayer.extend({
 
 		// Set data property value to the associated value from the record
 		for (var key in this.options.chartOptions) {
-			options.data[key] = L.Util.getFieldValue(record, key);
+			options.data[key] = this.options.getFieldValue ? this.options.getFieldValue.call(this, record, key) : L.Util.getFieldValue(record, key);
 		}
 
 		for (var key in tooltipOptions) {
@@ -1396,6 +1530,7 @@ L.ChartDataLayer = L.DataLayer.extend({
 
 		if (latLng) {
 			marker = this._getMarker(latLng, options);
+			marker.boundaryLayer = boundaryLayer;
 		}
 
 		return marker;
@@ -1498,6 +1633,23 @@ L.StackedRegularPolygonDataLayer = L.ChartDataLayer.extend({
 
 L.stackedRegularPolygonDataLayer = function (data, options) {
 	return new L.StackedRegularPolygonDataLayer(data, options);
+};
+
+/*
+ *
+ */
+L.StackedPieChartDataLayer = L.ChartDataLayer.extend({
+	initialize: function (data, options) {
+		L.ChartDataLayer.prototype.initialize.call(this, data, options);
+	},
+
+	_getMarker: function (latLng, options) {
+		return new L.StackedPieChartMarker(latLng, options);
+	},
+});
+
+L.stackedPieChartDataLayer = function (data, options) {
+	return new L.StackedPieChartDataLayer(data, options);
 };
 
 /*

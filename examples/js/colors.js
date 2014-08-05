@@ -62,15 +62,22 @@ $(document).ready(function() {
 		layerOptions: {
 			fillOpacity: 0.8,
 			opacity: 1,
-			weight: 1
+			weight: 1,
+			numberOfSides: 50
 		},
 		tooltipOptions: {
 			iconSize: new L.Point(80,55),
 			iconAnchor: new L.Point(-5,55)
+		},
+		getIndexKey: function (location, record) {
+			return location.text;
 		}
 	};
 	
 	var index = 0;
+	
+	var electionLayer;
+	var firstLayer;
 	
 	for (var key in colorFunctions) {
 		options = $.extend(true, {}, options);
@@ -78,8 +85,12 @@ $(document).ready(function() {
 		options.displayOptions.electoral.fillColor = colorFunctions[key];
 		options.displayOptions.electoral.color = colorFunctions[key];
 		
-		var electionLayer = new L.ChoroplethDataLayer(electionData,options);
+		electionLayer = new L.ChoroplethDataLayer(electionData,options);
 	
+		if (!firstLayer) {
+			firstLayer = electionLayer;
+		}
+		
 		layerControl.addOverlay(electionLayer, key);
 		
 		if (index === 0) {
@@ -88,5 +99,16 @@ $(document).ready(function() {
 		
 		index++;
 	}
+	
+	// Added for index key testing.  Uncomment if you want to check it out
+	/*
+	$('body').on('mousemove', function (e) {
+		setTimeout(function () {
+		firstLayer.setDisplayOption('electoral', {
+			fillColor: new L.HSLHueFunction(new L.Point(1, Math.random() * 360), new L.Point(55, Math.random() * 360))
+		});
+	}, 1000);
+	});
+	*/
 	
 });

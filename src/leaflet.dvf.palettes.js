@@ -369,137 +369,140 @@ L.Palettes = {
 };
 
 /*
- * Pre-defined color palettes for easy use
+ * Pre-defined color palettes for easy use.  Call getPalette passing a min and max value get a pre-defined LinearFunction
  */
 L.DynamicColorPalettes = {
 	rainbow: {
 		text: 'Rainbow',
-		getPalette: function (min, max) {
-			return L.Palettes.huePalette(min, max, 0, 300);
+		getPalette: function (min, max, options) {
+			return L.Palettes.huePalette(min, max, 0, 300, options);
 		}
 	},
 	greentored: {
 		text: 'Green - Red',
-		getPalette: function (min, max) {
-			return L.Palettes.huePalette(min, max, 120, 0);
+		getPalette: function (min, max, options) {
+			return L.Palettes.huePalette(min, max, 120, 0, options);
 		}
 	},
 	yellowtored: {
 		text: 'Yellow - Red',
-		getPalette: function (min, max) {
-			return L.Palettes.huePalette(min, max, 60, 0);
+		getPalette: function (min, max, options) {
+			return L.Palettes.huePalette(min, max, 60, 0, options);
 		}
 	},
 	orangetored: {
 		text: 'Orange - Red',
-		getPalette: function (min, max) {
-			return L.Palettes.huePalette(min, max, 30, 0);
+		getPalette: function (min, max, options) {
+			return L.Palettes.huePalette(min, max, 30, 0, options);
 		}
 	},
 	redtopurple: {
 		text: 'Red - Purple',
-		getPalette: function (min, max) {
-			return L.Palettes.huePalette(min, max, 360, 270);
+		getPalette: function (min, max, options) {
+			return L.Palettes.huePalette(min, max, 360, 270, options);
 		}
 	},
 	bluetored: {
 		text: 'Blue - Red',
-		getPalette: function (min, max) {
-			return L.Palettes.huePalette(min, max, 210, 360);
+		getPalette: function (min, max, options) {
+			return L.Palettes.huePalette(min, max, 210, 360, options);
 		}
 	},
 	bluetored2: {
 		text: 'Blue - Red 2',
-		getPalette: function (min, max) {
-			return L.Palettes.huePalette(min, max, 180, 0);
+		getPalette: function (min, max, options) {
+			return L.Palettes.huePalette(min, max, 180, 0, options);
 		}
 	},
 	whitetored: {
 		text: 'White - Red',
-		getPalette: function (min, max) {
-			return L.Palettes.luminosityPalette(min, max, 1, 0.5, {outputHue: 0});
+		getPalette: function (min, max, options) {
+			return L.Palettes.luminosityPalette(min, max, 1, 0.5, L.Util.extend(option, {outputHue: 0}));
 		}
 	},
 	whitetoorange: {
 		text: 'White - Orange',
-		getPalette: function (min, max) {
-			return L.Palettes.luminosityPalette(min, max, 1, 0.5, {outputHue: 30});
+		getPalette: function (min, max, options) {
+			return L.Palettes.luminosityPalette(min, max, 1, 0.5, L.Util.extend(option, {outputHue: 30}));
 		}
 	},
 	whitetoyellow: {
 		text: 'White - Yellow',
-		getPalette: function (min, max) {
-			return L.Palettes.luminosityPalette(min, max, 1, 0.5, {outputHue: 60});
+		getPalette: function (min, max, options) {
+			return L.Palettes.luminosityPalette(min, max, 1, 0.5, L.Util.extend(option, {outputHue: 60}));
 		}
 	},
 	whitetogreen: {
 		text: 'White - Green',
-		getPalette: function (min, max) {
-			return L.Palettes.luminosityPalette(min, max, 1, 0.5, {outputHue: 120});
+		getPalette: function (min, max, options) {
+			return L.Palettes.luminosityPalette(min, max, 1, 0.5, L.Util.extend(option, {outputHue: 120}));
 		}
 	},
 	whitetoltblue: {
 		text: 'White - Lt. Blue',
-		getPalette: function (min, max) {
-			return L.Palettes.luminosityPalette(min, max, 1, 0.5, {outputHue: 180});
+		getPalette: function (min, max, options) {
+			return L.Palettes.luminosityPalette(min, max, 1, 0.5, L.Util.extend(option, {outputHue: 180}));
 		}
 	},
 	whitetoblue: {
 		text: 'White - Blue',
-		getPalette: function (min, max) {
-			return L.Palettes.luminosityPalette(min, max, 1, 0.5, {outputHue: 240});
+		getPalette: function (min, max, options) {
+			return L.Palettes.luminosityPalette(min, max, 1, 0.5, L.Util.extend(option, {outputHue: 240}));
 		}
 	},
 	whitetopurple: {
 		text: 'White - Purple',
-		getPalette: function (min, max) {
-			return L.Palettes.luminosityPalette(min, max, 1, 0.5, {outputHue: 270});
+		getPalette: function (min, max, options) {
+			return L.Palettes.luminosityPalette(min, max, 1, 0.5, L.Util.extend(option, {outputHue: 270}));
 		}
 	},
 	graytored: {
 		text: 'Gray - Red',
-		getPalette: function (min, max) {
-			return L.Palettes.saturationPalette(min, max, 0, 1, {outputHue: 0});
+		getPalette: function (min, max, options) {
+			return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {outputHue: 0}));
 		}
 	},
 	graytoorange: {
 		text: 'Gray - Orange',
-		getPalette: function (min, max) {
-			return L.Palettes.saturationPalette(min, max, 0, 1, {outputHue: 30});
+		getPalette: function (min, max, options) {
+			return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {outputHue: 30}));
 		}
 	},
 	graytoyellow: {
 		text: 'Gray - Yellow',
-		getPalette: function (min, max) {
-			return L.Palettes.saturationPalette(min, max, 0, 1, {outputHue: 60});
+		getPalette: function (min, max, options) {
+			return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {outputHue: 60}));
 		}
 	},
 	graytogreen: {
 		text: 'Gray - Green',
-		getPalette: function (min, max) {
-			return L.Palettes.saturationPalette(min, max, 0, 1, {outputHue: 120});
+		getPalette: function (min, max, options) {
+			return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {outputHue: 120}));
 		}
 	},
 	graytoltblue: {
 		text: 'Gray - Lt. Blue',
-		getPalette: function (min, max) {
-			return L.Palettes.saturationPalette(min, max, 0, 1, {outputHue: 180});
+		getPalette: function (min, max, options) {
+			return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {outputHue: 180}));
 		}
 	},
 	graytoblue: {
 		text: 'Gray - Blue',
-		getPalette: function (min, max) {
-			return L.Palettes.saturationPalette(min, max, 0, 1, {outputHue: 240});
+		getPalette: function (min, max, options) {
+			return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {outputHue: 240}));
 		}
 	},
 	graytopurple: {
 		text: 'Gray - Purple',
-		getPalette: function (min, max) {
-			return L.Palettes.saturationPalette(min, max, 0, 1, {outputHue: 270});
+		getPalette: function (min, max, options) {
+			return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {outputHue: 270}));
 		}
 	}
 };
 
+/*
+ *
+ */
 L.DynamicPaletteElement = L.Class.extend({
 	initialize: function (key, dynamicPalette) {
 		this._key = key;

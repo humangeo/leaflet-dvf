@@ -1,6 +1,6 @@
 /*
  @preserve Leaflet Data Visualization Framework, a JavaScript library for creating thematic maps using Leaflet
- (c) 2013, Scott Fairgrieve, HumanGeo
+ (c) 2013-2014, Scott Fairgrieve, HumanGeo
 */
 L.LinearFunction = L.Class.extend({
     initialize: function(minPoint, maxPoint, options) {
@@ -145,12 +145,13 @@ L.ColorFunction = L.LinearFunction.extend({
             }
             return prefix + "(" + parts.join(",") + ")";
         };
+        options = this.options;
         var postProcess = function(y) {
             if (options && options.postProcess) {
                 y = options.postProcess.call(this, y);
             }
             var colorString = this._getColorString(y);
-            if (L.Browser.ie && colorString.indexOf("hsl") > -1) {
+            if (L.Browser.ie && colorString.indexOf("hsl") > -1 || options.rgb) {
                 colorString = L.hslColor(colorString).toRGBString();
             }
             return colorString;
@@ -520,6 +521,36 @@ L.Util.getNumericRange = function(records, fieldName) {
         }
     }
     return [ min, max ];
+};
+
+L.Util.pointToGeoJSON = function() {
+    var feature = {
+        type: "Feature",
+        geometry: {
+            type: "Point",
+            coordinates: [ this._latlng[1], this._latlng[0] ]
+        },
+        properties: {}
+    };
+    for (var key in this.options) {
+        if (this.options.hasOwnProperty(key)) {
+            var value = this.options[key];
+            if (typeof value !== "function") {
+                feature.properties[key] = value;
+            }
+        }
+    }
+    return feature;
+};
+
+L.Util.updateLayer = function(layer, updateFunction) {
+    if (layer.eachLayer && !layer instanceof L.FeatureGroup) {
+        layer.eachLayer(function(layer) {
+            L.Util.updateLayer(layer, updateFunction);
+        });
+    } else {
+        updateFunction.call(this, layer);
+    }
 };
 
 L.CategoryLegend = L.Class.extend({
@@ -1609,156 +1640,156 @@ L.Palettes = {
 L.DynamicColorPalettes = {
     rainbow: {
         text: "Rainbow",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 0, 300);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 0, 300, options);
         }
     },
     greentored: {
         text: "Green - Red",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 120, 0);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 120, 0, options);
         }
     },
     yellowtored: {
         text: "Yellow - Red",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 60, 0);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 60, 0, options);
         }
     },
     orangetored: {
         text: "Orange - Red",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 30, 0);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 30, 0, options);
         }
     },
     redtopurple: {
         text: "Red - Purple",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 360, 270);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 360, 270, options);
         }
     },
     bluetored: {
         text: "Blue - Red",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 210, 360);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 210, 360, options);
         }
     },
     bluetored2: {
         text: "Blue - Red 2",
-        getPalette: function(min, max) {
-            return L.Palettes.huePalette(min, max, 180, 0);
+        getPalette: function(min, max, options) {
+            return L.Palettes.huePalette(min, max, 180, 0, options);
         }
     },
     whitetored: {
         text: "White - Red",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 0
-            });
+            }));
         }
     },
     whitetoorange: {
         text: "White - Orange",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 30
-            });
+            }));
         }
     },
     whitetoyellow: {
         text: "White - Yellow",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 60
-            });
+            }));
         }
     },
     whitetogreen: {
         text: "White - Green",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 120
-            });
+            }));
         }
     },
     whitetoltblue: {
         text: "White - Lt. Blue",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 180
-            });
+            }));
         }
     },
     whitetoblue: {
         text: "White - Blue",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 240
-            });
+            }));
         }
     },
     whitetopurple: {
         text: "White - Purple",
-        getPalette: function(min, max) {
-            return L.Palettes.luminosityPalette(min, max, 1, .5, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.luminosityPalette(min, max, 1, .5, L.Util.extend(option, {
                 outputHue: 270
-            });
+            }));
         }
     },
     graytored: {
         text: "Gray - Red",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 0
-            });
+            }));
         }
     },
     graytoorange: {
         text: "Gray - Orange",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 30
-            });
+            }));
         }
     },
     graytoyellow: {
         text: "Gray - Yellow",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 60
-            });
+            }));
         }
     },
     graytogreen: {
         text: "Gray - Green",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 120
-            });
+            }));
         }
     },
     graytoltblue: {
         text: "Gray - Lt. Blue",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 180
-            });
+            }));
         }
     },
     graytoblue: {
         text: "Gray - Blue",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 240
-            });
+            }));
         }
     },
     graytopurple: {
         text: "Gray - Purple",
-        getPalette: function(min, max) {
-            return L.Palettes.saturationPalette(min, max, 0, 1, {
+        getPalette: function(min, max, options) {
+            return L.Palettes.saturationPalette(min, max, 0, 1, L.Util.extend(option, {
                 outputHue: 270
-            });
+            }));
         }
     }
 };
@@ -1854,6 +1885,21 @@ L.RegularPolygon = L.Polygon.extend({
         lat2 = toDeg(lat2);
         lon2 = toDeg(lon2);
         return new L.LatLng(lat2, lon2);
+    },
+    toGeoJSON: function() {
+        var feature = {
+            type: "Feature",
+            geometry: {
+                type: "Polygon",
+                coordinates: [ [], [] ]
+            },
+            properties: this.options
+        };
+        for (var i = 0; i < this._latlngs.length; ++i) {
+            var latlng = this._latlngs[i];
+            feature.coordinates[0].push([ latlng[1], latlng[0] ]);
+        }
+        return feature;
     }
 });
 
@@ -2004,7 +2050,7 @@ var PathFunctions = PathFunctions || {
                 var stopProperty = stop[key];
                 if (key === "style") {
                     var styleProperty = "";
-                    stopProperty.color = stopProperty.color || this.options.fillColor || this.options.color;
+                    stopProperty.color = stopProperty.color || (this.options.fillColor || this.options.color);
                     stopProperty.opacity = typeof stopProperty.opacity === "undefined" ? 1 : stopProperty.opacity;
                     for (var propKey in stopProperty) {
                         styleProperty += "stop-" + propKey + ":" + stopProperty[propKey] + ";";
@@ -2158,34 +2204,46 @@ var PathFunctions = PathFunctions || {
         this._container.insertBefore(shape, this._defs);
         this._shape = shape;
     },
-    _updateStyle: function() {
-        this.__updateStyle.call(this);
-        if (this.options.stroke) {
-            if (this.options.lineCap) {
-                this._path.setAttribute("stroke-linecap", this.options.lineCap);
+    _updateStyle: function(layer) {
+        this.__updateStyle.call(this, layer);
+        var context = layer ? layer : this;
+        if (context.options.stroke) {
+            if (context.options.lineCap) {
+                context._path.setAttribute("stroke-linecap", context.options.lineCap);
             }
-            if (this.options.lineJoin) {
-                this._path.setAttribute("stroke-linejoin", this.options.lineJoin);
+            if (context.options.lineJoin) {
+                context._path.setAttribute("stroke-linejoin", context.options.lineJoin);
             }
         }
-        if (this.options.gradient) {
-            this._createGradient(this.options.gradient);
-            this._path.setAttribute("fill", "url(#" + this._gradient.getAttribute("id") + ")");
-        } else if (!this.options.fill) {
-            this._path.setAttribute("fill", "none");
+        if (context.options.gradient) {
+            context._createGradient(context.options.gradient);
+            context._path.setAttribute("fill", "url(#" + context._gradient.getAttribute("id") + ")");
+        } else if (!context.options.fill) {
+            context._path.setAttribute("fill", "none");
         }
-        if (this.options.dropShadow) {
-            this._createDropShadow();
-            this._path.setAttribute("filter", "url(#" + this._dropShadow.getAttribute("id") + ")");
+        if (context.options.dropShadow) {
+            context._createDropShadow();
+            context._path.setAttribute("filter", "url(#" + context._dropShadow.getAttribute("id") + ")");
         } else {
-            this._path.removeAttribute("filter");
+            context._path.removeAttribute("filter");
         }
-        if (this.options.fillPattern) {
-            this._createFillPattern(this.options.fillPattern);
+        if (context.options.fillPattern) {
+            context._createFillPattern(context.options.fillPattern);
         }
-        this._applyCustomStyles();
+        context._applyCustomStyles();
     }
 };
+
+if (L.SVG) {
+    var SVGStyleFunctions = L.Util.extend(PathFunctions, {
+        __updateStyle: L.SVG.prototype._updateStyle
+    });
+    var SVGTextFunctions = L.Util.extend(TextFunctions, {
+        __updatePath: L.SVG.prototype._updatePath
+    });
+    L.SVG.include(SVGStyleFunctions);
+    L.SVG.include(SVGTextFunctions);
+}
 
 var LineTextFunctions = L.extend({}, TextFunctions);
 
@@ -2281,15 +2339,33 @@ L.MapMarker = L.Path.extend({
     getLatLng: function() {
         return this._latlng;
     },
+    setRadius: function(radius) {
+        this.options.radius = radius;
+        return this.redraw();
+    },
+    setInnerRadius: function(innerRadius) {
+        this.options.innerRadius = innerRadius;
+        return this.redraw();
+    },
+    setRotation: function(rotation) {
+        this.options.rotation = rotation;
+        return this.redraw();
+    },
+    setNumberOfSides: function(numberOfSides) {
+        this.options.numberOfSides = numberOfSides;
+        return this.redraw();
+    },
     getPathString: function() {
         var anchorPoint = this.getTextAnchor();
         if (this._shape) {
-            if (this._shape.tagName === "circle") {
+            if (this._shape.tagName === "circle" || this._shape.tagName === "ellipse") {
                 this._shape.setAttribute("cx", anchorPoint.x);
                 this._shape.setAttribute("cy", anchorPoint.y);
             } else {
-                this._shape.setAttribute("x", anchorPoint.x);
-                this._shape.setAttribute("y", anchorPoint.y);
+                var width = this._shape.getAttribute("width");
+                var height = this._shape.getAttribute("height");
+                this._shape.setAttribute("x", anchorPoint.x - Number(width) / 2);
+                this._shape.setAttribute("y", anchorPoint.y - Number(height) / 2);
             }
         }
         this._path.setAttribute("shape-rendering", "geometricPrecision");
@@ -2336,6 +2412,9 @@ L.MapMarker = L.Path.extend({
         if (this.options.shapeImage || this.options.imageCircleUrl) {
             this._createShapeImage(this.options.shapeImage);
         }
+    },
+    toGeoJSON: function() {
+        return L.Util.pointToGeoJSON.call(this);
     }
 });
 
@@ -2346,7 +2425,7 @@ L.mapMarker = function(centerLatLng, options) {
 L.RegularPolygonMarker = L.Path.extend({
     includes: TextFunctions,
     initialize: function(centerLatLng, options) {
-        L.Path.prototype.initialize.call(this, options);
+        L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
         this._latlng = centerLatLng;
         this.options.numberOfSides = Math.max(this.options.numberOfSides, 3);
     },
@@ -2380,21 +2459,51 @@ L.RegularPolygonMarker = L.Path.extend({
         var map = this._map, radiusX = this.options.radius || this.options.radiusX, radiusY = this.options.radius || this.options.radiusY, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._latlng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
         return new L.LatLngBounds(sw, ne);
     },
+    setRadius: function(radius) {
+        this.options.radius = radius;
+        return this.redraw();
+    },
+    setRadiusXY: function(radiusX, radiusY) {
+        this.options.radius = null;
+        this.options.radiusX = radiusX;
+        this.options.radiusY = radiusY;
+        return this.redraw();
+    },
+    setInnerRadius: function(innerRadius) {
+        this.options.innerRadius = innerRadius;
+        return this.redraw();
+    },
+    setInnerRadiusXY: function(innerRadiusX, innerRadiusY) {
+        this.options.innerRadius = null;
+        this.options.innerRadiusX = innerRadiusX;
+        this.options.innerRadiusY = innerRadiusY;
+        return this.redraw();
+    },
+    setRotation: function(rotation) {
+        this.options.rotation = rotation;
+        return this.redraw();
+    },
+    setNumberOfSides: function(numberOfSides) {
+        this.options.numberOfSides = numberOfSides;
+        return this.redraw();
+    },
     getLatLng: function() {
         return this._latlng;
     },
     getPathString: function() {
-        this._path.setAttribute("shape-rendering", "geometricPrecision");
         var anchorPoint = this.getTextAnchor();
         if (this._shape) {
-            if (this._shape.tagName === "circle") {
+            if (this._shape.tagName === "circle" || this._shape.tagName === "ellipse") {
                 this._shape.setAttribute("cx", anchorPoint.x);
                 this._shape.setAttribute("cy", anchorPoint.y);
             } else {
-                this._shape.setAttribute("x", anchorPoint.x);
-                this._shape.setAttribute("y", anchorPoint.y);
+                var width = this._shape.getAttribute("width");
+                var height = this._shape.getAttribute("height");
+                this._shape.setAttribute("x", anchorPoint.x - Number(width) / 2);
+                this._shape.setAttribute("y", anchorPoint.y - Number(height) / 2);
             }
         }
+        this._path.setAttribute("shape-rendering", "geometricPrecision");
         return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
     _getPoints: function(inner) {
@@ -2433,6 +2542,9 @@ L.RegularPolygonMarker = L.Path.extend({
         if (this.options.shapeImage || this.options.imageCircleUrl) {
             this._createShapeImage(this.options.shapeImage);
         }
+    },
+    toGeoJSON: function() {
+        return L.Util.pointToGeoJSON.call(this);
     }
 });
 
@@ -2447,6 +2559,10 @@ L.StarMarker = L.RegularPolygonMarker.extend({
         maxDegrees: 360,
         gradient: true,
         dropShadow: true
+    },
+    setNumberOfPoints: function(numberOfPoints) {
+        this.options.numberOfPoints = numberOfPoints;
+        return this.redraw();
     },
     _getPoints: function(inner) {
         var maxDegrees = this.options.maxDegrees || 360;
@@ -2624,6 +2740,9 @@ L.SVGMarker = L.Path.extend({
         } else {
             addSVG();
         }
+    },
+    toGeoJSON: function() {
+        return pointToGeoJSON.call(this);
     }
 });
 
@@ -2631,6 +2750,9 @@ L.MarkerGroup = L.FeatureGroup.extend({
     initialize: function(latlng, markers) {
         L.FeatureGroup.prototype.initialize.call(this, markers);
         this.setLatLng(latlng);
+    },
+    setStyle: function(style) {
+        return this;
     },
     setLatLng: function(latlng) {
         this._latlng = latlng;
@@ -2643,6 +2765,19 @@ L.MarkerGroup = L.FeatureGroup.extend({
     },
     getLatLng: function(latlng) {
         return this._latlng;
+    },
+    toGeoJSON: function() {
+        var featureCollection = {
+            type: "FeatureCollection",
+            features: []
+        };
+        var eachLayerFunction = function(featureCollection) {
+            return function(layer) {
+                featureCollection.features.push(L.Util.pointToGeoJSON.call(layer));
+            };
+        };
+        this.eachLayer(eachLayerFunction(featureCollection));
+        return featureCollection;
     }
 });
 
@@ -2804,6 +2939,9 @@ L.ChartMarker = L.FeatureGroup.extend({
     redraw: function() {
         this.clearLayers();
         this._loadComponents();
+    },
+    toGeoJSON: function() {
+        return L.Util.pointToGeoJSON.call(this);
     }
 });
 
@@ -3206,6 +3344,7 @@ L.StackedRegularPolygonMarker = L.ChartMarker.extend({
         var chartOptions = this.options.chartOptions;
         var chartOption;
         var key;
+        var bars = [];
         for (key in data) {
             value = parseFloat(data[key]);
             chartOption = chartOptions[key];
@@ -3234,7 +3373,18 @@ L.StackedRegularPolygonMarker = L.ChartMarker.extend({
             this._bindMouseEvents(bar);
             lastRadiusX = options.radiusX;
             lastRadiusY = options.radiusY;
-            this.addLayer(bar);
+            if (this.options.drawReverse) {
+                bars.push(bar);
+            } else {
+                this.addLayer(bar);
+            }
+        }
+        if (this.options.drawReverse) {
+            var item = bars.pop();
+            while (item) {
+                this.addLayer(item);
+                item = bars.pop();
+            }
         }
     }
 });
@@ -3502,58 +3652,6 @@ L.LocationModes = {
 
 L.DataLayer = L.LayerGroup.extend({
     includes: L.Mixin.Events,
-    initialize: function(data, options) {
-        L.Util.setOptions(this, options);
-        L.LayerGroup.prototype.initialize.call(this, options);
-        data = data || {};
-        this._includeFunction = this.options.filter || this.options.includeLayer;
-        this._markerFunction = this.options.getMarker || this._getMarker;
-        this._boundaryLayer = new L.LayerGroup();
-        this.addLayer(this._boundaryLayer);
-        this.addData(data);
-    },
-    _zoomFunction: function(e) {
-        var map = this._map;
-        var self = this;
-        var zoom = map.getZoom();
-        if (this.options.maxZoom && zoom > this.options.maxZoom) {
-            this.hiddenLayers = [];
-            this.eachLayer(function(layer) {
-                self.hiddenLayers.push(layer);
-                map.removeLayer(layer);
-            });
-        } else if (this.hiddenLayers) {
-            while (this.hiddenLayers.length > 0) {
-                var layer = this.hiddenLayers.pop();
-                map.addLayer(layer);
-                if (this.options.backgroundLayer && layer.bringToBack) {
-                    layer.bringToBack();
-                }
-            }
-            this.hiddenLayers = null;
-        }
-    },
-    onAdd: function(map) {
-        L.LayerGroup.prototype.onAdd.call(this, map);
-        map.on("zoomend", this._zoomFunction, this);
-    },
-    onRemove: function(map) {
-        L.LayerGroup.prototype.onRemove.call(this, map);
-        map.off("zoomend", this._zoomFunction, this);
-    },
-    getBounds: function() {
-        var bounds;
-        this.eachLayer(function(layer) {
-            if (layer.getBounds) {
-                if (!bounds) {
-                    bounds = layer.getBounds();
-                } else {
-                    bounds.extend(layer.getBounds());
-                }
-            }
-        });
-        return bounds;
-    },
     options: {
         recordsField: "features",
         locationMode: L.LocationModes.LATLNG,
@@ -3588,6 +3686,81 @@ L.DataLayer = L.LayerGroup.extend({
             return layerStyle;
         }
     },
+    initialize: function(data, options) {
+        L.Util.setOptions(this, options);
+        L.LayerGroup.prototype.initialize.call(this, options);
+        data = data || {};
+        this._includeFunction = this.options.filter || this.options.includeLayer;
+        this._markerFunction = this.options.getMarker || this._getMarker;
+        this._addChildLayers();
+        this.addData(data);
+    },
+    _addChildLayers: function() {
+        this._boundaryLayer = new L.LayerGroup();
+        this.addLayer(this._boundaryLayer);
+        this._trackLayer = new L.LayerGroup();
+        this.addLayer(this._trackLayer);
+    },
+    _zoomFunction: function(e) {
+        var map = this._map;
+        var self = this;
+        var zoom = map.getZoom();
+        if (this.options.maxZoom && zoom > this.options.maxZoom) {
+            this.hiddenLayers = [];
+            this.eachLayer(function(layer) {
+                self.hiddenLayers.push(layer);
+                map.removeLayer(layer);
+            });
+        } else if (this.hiddenLayers) {
+            while (this.hiddenLayers.length > 0) {
+                var layer = this.hiddenLayers.pop();
+                map.addLayer(layer);
+                if (this.options.backgroundLayer && layer.bringToBack) {
+                    layer.bringToBack();
+                }
+            }
+            this.hiddenLayers = null;
+        }
+    },
+    onAdd: function(map) {
+        L.LayerGroup.prototype.onAdd.call(this, map);
+        map.on("zoomend", this._zoomFunction, this);
+    },
+    onRemove: function(map) {
+        L.LayerGroup.prototype.onRemove.call(this, map);
+        map.off("zoomend", this._zoomFunction, this);
+    },
+    bringToBack: function() {
+        this.invoke("bringToBack");
+        if (this._trackLayer) {
+            this._trackLayer.invoke("bringToBack");
+        }
+        if (this._boundaryLayer) {
+            this._boundaryLayer.invoke("bringToBack");
+        }
+    },
+    bringToFront: function() {
+        if (this._boundaryLayer) {
+            this._boundaryLayer.invoke("bringToFront");
+        }
+        if (this._trackLayer) {
+            this._trackLayer.invoke("bringToFront");
+        }
+        this.invoke("bringToFront");
+    },
+    getBounds: function() {
+        var bounds;
+        this.eachLayer(function(layer) {
+            if (layer.getBounds) {
+                if (!bounds) {
+                    bounds = layer.getBounds();
+                } else {
+                    bounds.extend(layer.getBounds());
+                }
+            }
+        });
+        return bounds;
+    },
     _getLocation: function(record, index) {
         return this.options.locationMode.call(this, record, index);
     },
@@ -3595,32 +3768,42 @@ L.DataLayer = L.LayerGroup.extend({
         var processedLocation = location.center;
         return processedLocation;
     },
+    _styleBoundary: function(layer, options, record) {
+        if (layer.setStyle) {
+            var style;
+            if (this.options.boundaryStyle instanceof Function) {
+                style = this.options.boundaryStyle.call(this, record, layer);
+            }
+            style = style || this.options.boundaryStyle || L.extend({}, options, {
+                fillOpacity: .2,
+                clickable: false
+            });
+            layer.setStyle(style);
+        }
+        return layer;
+    },
     _addBoundary: function(location, options, record) {
         var layer = location.location;
+        var boundaryLayer;
         if (this.options.includeBoundary) {
             if (layer instanceof L.LatLngBounds) {
                 layer = new L.Rectangle(layer);
             }
-            if (layer.setStyle) {
-                var style;
-                if (this.options.boundaryStyle instanceof Function) {
-                    style = this.options.boundaryStyle.call(this, record, layer);
-                }
-                style = style || this.options.boundaryStyle || L.extend({}, options, {
-                    fillOpacity: .2,
-                    clickable: false
-                });
-                layer.setStyle(style);
-            }
+            layer = this._styleBoundary(layer, options, record);
             this._boundaryLayer.addLayer(layer);
+            boundaryLayer = layer;
         }
+        return boundaryLayer;
     },
     _getLayer: function(location, options, record) {
-        this._addBoundary(location, options, record);
+        var boundaryLayer = this._addBoundary(location, options, record);
         location = this._processLocation(location);
+        var markerLayer;
         if (location) {
-            return this._markerFunction.call(this, location, options, record);
+            markerLayer = this._markerFunction.call(this, location, options, record);
+            markerLayer.boundaryLayer = boundaryLayer;
         }
+        return markerLayer;
     },
     _getMarker: function(location, options, record) {
         var marker;
@@ -3700,7 +3883,10 @@ L.DataLayer = L.LayerGroup.extend({
         this.reloadData();
     },
     reloadData: function() {
-        this.clearLayers();
+        if (!this._layerIndex) {
+            this.clearLayers();
+            this._addChildLayers();
+        }
         if (this._data) {
             this.addData(this._data);
         }
@@ -3709,6 +3895,10 @@ L.DataLayer = L.LayerGroup.extend({
     },
     addData: function(data) {
         var records = this.options.recordsField !== null && this.options.recordsField.length > 0 ? L.Util.getFieldValue(data, this.options.recordsField) : data;
+        if (this.options.getIndexKey && !this._layerIndex) {
+            this._layerIndex = {};
+            this._boundaryIndex = {};
+        }
         if (this.options.locationMode === L.LocationModes.CUSTOM && this.options.preload) {
             this._preloadLocations(records);
         } else {
@@ -3753,6 +3943,7 @@ L.DataLayer = L.LayerGroup.extend({
             if (target.setStyle) {
                 target.setStyle(layerOptions);
             }
+            target.isHighlighted = true;
         };
         var move = function(e) {
             if (self.tooltip) {
@@ -3760,6 +3951,10 @@ L.DataLayer = L.LayerGroup.extend({
             }
         };
         var unhighlight = function(e) {
+            if (!e.target.isHighlighted) {
+                return;
+            }
+            e.target.isHighlighted = false;
             if (self.tooltip) {
                 self.removeLayer(self.tooltip);
                 self.tooltip = null;
@@ -3774,6 +3969,9 @@ L.DataLayer = L.LayerGroup.extend({
             }
         };
         var bindLayerEvents = function(layer) {
+            layer.off("mouseover");
+            layer.off("mouseout");
+            layer.off("mousemove");
             layer.on({
                 mouseover: highlight,
                 mouseout: unhighlight,
@@ -3821,11 +4019,48 @@ L.DataLayer = L.LayerGroup.extend({
             legendDetails: legendDetails
         };
     },
+    _getIndexedLayer: function(index, location, layerOptions, record) {
+        if (this.options.getIndexKey) {
+            var indexKey = this.options.getIndexKey.call(this, location, record);
+            if (indexKey in index) {
+                layer = index[indexKey];
+                var updateFunction = function(layer) {
+                    if (layerOptions.radius && layer instanceof L.CircleMarker) {
+                        layer.setRadius(layerOptions.radius);
+                    }
+                    layer.setStyle(layerOptions);
+                    if (layer.setLatLng && layer.getLatLng() !== location.center) {
+                        layer.setLatLng(location.center);
+                    } else {
+                        layer.redraw();
+                    }
+                };
+                L.Util.updateLayer(layer, updateFunction);
+                if (layer.boundaryLayer) {
+                    layer.boundaryLayer = this._styleBoundary(layer.boundaryLayer, layerOptions, record);
+                }
+            } else {
+                layer = this._getLayer(location, layerOptions, record);
+                index[indexKey] = layer;
+            }
+            if (this.options.getTrack) {
+                var shouldAdd = !layer.trackLayer;
+                layer.trackLayer = this.options.getTrack.call(this, layer, location, layer.trackLayer);
+                if (shouldAdd) {
+                    this._trackLayer.addLayer(layer.trackLayer);
+                }
+            }
+        } else {
+            layer = this._getLayer(location, layerOptions, record);
+        }
+        return layer;
+    },
     recordToLayer: function(location, record) {
         var layerOptions = L.Util.extend({}, this.options.layerOptions);
         var layer;
         var legendDetails = {};
         var includeLayer = true;
+        var me = this;
         if (this._includeFunction) {
             includeLayer = this._includeFunction.call(this, record);
         }
@@ -3835,7 +4070,7 @@ L.DataLayer = L.LayerGroup.extend({
             legendDetails = dynamicOptions.legendDetails;
             if (location && layerOptions) {
                 layerOptions.title = location.text;
-                layer = this._getLayer(location, layerOptions, record);
+                layer = this._getIndexedLayer(this._layerIndex, location, layerOptions, record);
                 if (layer) {
                     if (this.options.showLegendTooltips) {
                         this._bindMouseEvents(layer, layerOptions, legendDetails);
@@ -3938,36 +4173,38 @@ L.DataLayer = L.LayerGroup.extend({
         };
         for (var field in displayOptions) {
             var displayProperties = displayOptions[field];
-            var displayName = displayProperties.displayName || field;
-            displayText = displayProperties.displayText;
-            var displayTextFunction = displayText ? displayText : defaultFunction;
-            var styles = displayProperties.styles;
-            L.DomUtil.create("div", "legend-title", legendElement).innerHTML = displayName;
-            if (styles) {
-                legendElement.innerHTML += new L.CategoryLegend(styles).generate();
-            } else {
-                var legendItems = L.DomUtil.create("div", "data-layer-legend");
-                var minValue = L.DomUtil.create("div", "min-value", legendItems);
-                var scaleBars = L.DomUtil.create("div", "scale-bars", legendItems);
-                var maxValue = L.DomUtil.create("div", "max-value", legendItems);
-                var ignoreProperties = [ "displayName", "displayText", "minValue", "maxValue" ];
-                for (var index = 0; index < numSegments; ++index) {
-                    var legendParams = {
-                        displayProperties: displayProperties,
-                        layerOptions: layerOptions,
-                        ignoreProperties: ignoreProperties,
-                        displayTextFunction: displayTextFunction,
-                        index: index,
-                        numSegments: numSegments,
-                        segmentWidth: segmentWidth,
-                        minValue: minValue,
-                        maxValue: maxValue,
-                        gradient: legendOptions.gradient
-                    };
-                    var element = this._getLegendElement(legendParams);
-                    scaleBars.appendChild(element);
+            if (!displayProperties.excludeFromLegend) {
+                var displayName = displayProperties.displayName || field;
+                displayText = displayProperties.displayText;
+                var displayTextFunction = displayText ? displayText : defaultFunction;
+                var styles = displayProperties.styles;
+                L.DomUtil.create("div", "legend-title", legendElement).innerHTML = displayName;
+                if (styles) {
+                    legendElement.innerHTML += new L.CategoryLegend(styles).generate();
+                } else {
+                    var legendItems = L.DomUtil.create("div", "data-layer-legend");
+                    var minValue = L.DomUtil.create("div", "min-value", legendItems);
+                    var scaleBars = L.DomUtil.create("div", "scale-bars", legendItems);
+                    var maxValue = L.DomUtil.create("div", "max-value", legendItems);
+                    var ignoreProperties = [ "displayName", "displayText", "minValue", "maxValue" ];
+                    for (var index = 0; index < numSegments; ++index) {
+                        var legendParams = {
+                            displayProperties: displayProperties,
+                            layerOptions: layerOptions,
+                            ignoreProperties: ignoreProperties,
+                            displayTextFunction: displayTextFunction,
+                            index: index,
+                            numSegments: numSegments,
+                            segmentWidth: segmentWidth,
+                            minValue: minValue,
+                            maxValue: maxValue,
+                            gradient: legendOptions.gradient
+                        };
+                        var element = this._getLegendElement(legendParams);
+                        scaleBars.appendChild(element);
+                    }
+                    legendElement.appendChild(legendItems);
                 }
-                legendElement.appendChild(legendItems);
             }
         }
         return container.innerHTML;
@@ -4267,6 +4504,9 @@ L.GeohashDataLayer = L.DataLayer.extend({
         layerOptions: {
             weight: 1,
             color: "#000"
+        },
+        getIndexKey: function(location, record) {
+            return location.text;
         }
     },
     _getLayer: function(geohash, layerOptions, record) {
@@ -4319,7 +4559,7 @@ L.ChartDataLayer = L.DataLayer.extend({
         L.DataLayer.prototype.initialize.call(this, data, options);
     },
     _getLayer: function(latLng, layerOptions, record) {
-        this._addBoundary(latLng, layerOptions, record);
+        var boundaryLayer = this._addBoundary(latLng, layerOptions, record);
         latLng = this._processLocation(latLng);
         var chartOptions = this.options.chartOptions;
         var tooltipOptions = this.options.tooltipOptions;
@@ -4328,7 +4568,7 @@ L.ChartDataLayer = L.DataLayer.extend({
         options.data = {};
         options.chartOptions = chartOptions;
         for (var key in this.options.chartOptions) {
-            options.data[key] = L.Util.getFieldValue(record, key);
+            options.data[key] = this.options.getFieldValue ? this.options.getFieldValue.call(this, record, key) : L.Util.getFieldValue(record, key);
         }
         for (var key in tooltipOptions) {
             options[key] = tooltipOptions[key];
@@ -4336,6 +4576,7 @@ L.ChartDataLayer = L.DataLayer.extend({
         var marker;
         if (latLng) {
             marker = this._getMarker(latLng, options);
+            marker.boundaryLayer = boundaryLayer;
         }
         return marker;
     },
@@ -4411,6 +4652,19 @@ L.StackedRegularPolygonDataLayer = L.ChartDataLayer.extend({
 
 L.stackedRegularPolygonDataLayer = function(data, options) {
     return new L.StackedRegularPolygonDataLayer(data, options);
+};
+
+L.StackedPieChartDataLayer = L.ChartDataLayer.extend({
+    initialize: function(data, options) {
+        L.ChartDataLayer.prototype.initialize.call(this, data, options);
+    },
+    _getMarker: function(latLng, options) {
+        return new L.StackedPieChartMarker(latLng, options);
+    }
+});
+
+L.stackedPieChartDataLayer = function(data, options) {
+    return new L.StackedPieChartDataLayer(data, options);
 };
 
 L.RadialMeterMarkerDataLayer = L.DataLayer.extend({
@@ -4712,36 +4966,43 @@ L.FlowLine = L.FlowLine.extend({
         }
     },
     _loadRecords: function(records) {
-        var location;
-        var options = this.options.layerOptions;
         var markers = [];
         for (var recordIndex in records) {
             if (records.hasOwnProperty(recordIndex)) {
                 var record = records[recordIndex];
-                location = this._getLocation(record, recordIndex);
-                if (location) {
-                    var marker = this._getLayer(location, options, record);
-                    var line;
-                    var includeLayer = true;
-                    if (this.options.includeLayer) {
-                        includeLayer = this.options.includeLayer(record);
-                    }
-                    if (this._lastRecord && includeLayer) {
-                        var options = this._getDynamicOptions(this._lastRecord);
-                        line = this.options.getLine.call(this, this._lastMarker.getLatLng(), marker.getLatLng(), options.layerOptions);
-                        this.addLayer(line);
-                        this.onEachSegment(this._lastRecord, record, line);
-                    }
-                    if (includeLayer) {
-                        this._lastRecord = record;
-                        this._lastMarker = marker;
-                    }
-                }
+                markers = this._addRecord(record, recordIndex, markers);
             }
         }
         while (markers.length > 0) {
             this.addLayer(markers.pop());
         }
+    },
+    addRecord: function(record) {
+        this._addRecord(record);
+        return this;
+    },
+    _addRecord: function(record, recordIndex, markers) {
+        var location = this._getLocation(record, recordIndex);
+        var options = this.options.layerOptions;
+        if (location) {
+            var marker = this._getLayer(location, options, record);
+            var line;
+            var includeLayer = true;
+            if (this.options.includeLayer) {
+                includeLayer = this.options.includeLayer(record);
+            }
+            if (this._lastRecord && includeLayer) {
+                var options = this._getDynamicOptions(this._lastRecord);
+                line = this.options.getLine.call(this, this._lastMarker.getLatLng(), marker.getLatLng(), options.layerOptions);
+                this.addLayer(line);
+                this.onEachSegment(this._lastRecord, record, line);
+            }
+            if (includeLayer) {
+                this._lastRecord = record;
+                this._lastMarker = marker;
+            }
+        }
+        return markers;
     }
 });
 

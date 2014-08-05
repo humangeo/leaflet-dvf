@@ -157,6 +157,40 @@ L.Util.getNumericRange = function (records, fieldName) {
 	return [min, max];
 };
 
+L.Util.pointToGeoJSON = function () {
+	var feature = {
+		type: 'Feature',
+		geometry: {
+			type: 'Point',
+			coordinates: [this._latlng[1], this._latlng[0]]
+		},
+		properties: {}
+	}
+	
+	for (var key in this.options) {
+		if (this.options.hasOwnProperty(key)) {
+			var value = this.options[key];
+			
+			if (typeof(value) !== 'function') {
+				feature.properties[key] = value;
+			}
+		}
+	}
+	
+	return feature;
+};
+
+L.Util.updateLayer = function (layer, updateFunction) {
+	if (layer.eachLayer && !layer instanceof L.FeatureGroup) {
+		layer.eachLayer(function (layer) {
+			L.Util.updateLayer(layer, updateFunction);
+		});
+	}
+	else {
+		updateFunction.call(this, layer);
+	}
+};
+
 L.CategoryLegend = L.Class.extend({
 	initialize: function (options) {
 		L.Util.setOptions(this, options);
@@ -965,6 +999,9 @@ L.Color = L.Class.extend({
 	}
 });
 
+/*
+ * A class representing an RGB color - extends L.Color
+ */
 L.RGBColor = L.Color.extend({
 	initialize: function (colorDef) {
 		L.Color.prototype.initialize.call(this, colorDef);

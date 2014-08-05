@@ -210,6 +210,8 @@ L.ColorFunction = L.LinearFunction.extend({
 			return prefix + '(' + parts.join(',') + ')';
 		};
 		
+		options = this.options;
+
 		var postProcess = function (y) {
 			if (options && options.postProcess) {
 				y = options.postProcess.call(this, y);
@@ -217,7 +219,7 @@ L.ColorFunction = L.LinearFunction.extend({
 			
 			var colorString = this._getColorString(y);
 			
-			if ((L.Browser.ie) && colorString.indexOf('hsl') > -1) {
+			if (((L.Browser.ie) && colorString.indexOf('hsl') > -1) || options.rgb) {
 				colorString = L.hslColor(colorString).toRGBString();
 			}
 			

@@ -1069,8 +1069,38 @@ L.LayeredRegularPolygonMarker = L.MarkerGroup.extend({
 		numberOfSides: 50
 	},
 	
-	setStyle: function (style) {
+	setStyle: function (options) {
 		// TODO:  Implement this
+		options.levels = options.levels || 2;
+		var markers = [];
+		var radiusX = options.radiusX || options.radius;
+		var radiusY = options.radiusY || options.radius;
+		var radiusXOffset = radiusX / (0.75 * options.levels);
+		var radiusYOffset = radiusY / (0.75 * options.levels);
+		var markerOptions = L.extend({}, options);
+		
+		radiusX = radiusX + (options.levels - 1) * radiusXOffset;
+		radiusY = radiusY + (options.levels - 1) * radiusYOffset;
+		
+		var fillOpacity = options.fillOpacity || 0.5;
+		var fillOpacityOffset = options.fillOpacity / (1.5 * options.levels);
+		
+		fillOpacity = fillOpacity - options.levels * fillOpacityOffset;
+		
+		for (var i = 0; i < options.levels; ++i) {
+			markerOptions.radius = 0;
+			markerOptions.radiusX = radiusX;
+			markerOptions.radiusY = radiusY;
+			markerOptions.fillOpacity = fillOpacity;
+			
+			this._markers[i].setStyle(markerOptions);
+			
+			radiusX -= radiusXOffset;
+			radiusY -= radiusYOffset;
+			fillOpacity += fillOpacityOffset;
+		}
+		
+		return this;
 	},
 	
 	initialize: function (latlng, options) {
@@ -1104,6 +1134,8 @@ L.LayeredRegularPolygonMarker = L.MarkerGroup.extend({
 			radiusY -= radiusYOffset;
 			fillOpacity += fillOpacityOffset;
 		}
+		
+		this._markers = markers;
 		
 		L.MarkerGroup.prototype.initialize.call(this, latlng, markers);
 	}

@@ -212,6 +212,10 @@ L.ChartMarker = L.FeatureGroup.extend({
 	redraw: function () {
 		this.clearLayers();
 		this._loadComponents();
+	},
+	
+	toGeoJSON: function () {
+		return L.Util.pointToGeoJSON.call(this);
 	}
 });
 
@@ -346,7 +350,7 @@ L.RadialBarMarker = L.Path.extend({
 	getLatLng: function () {
 		return this._latlng;
 	},
-
+	
 	getPathString: function () {
 	
 		var angle = this.options.endAngle - this.options.startAngle;
@@ -731,6 +735,8 @@ L.StackedRegularPolygonMarker = L.ChartMarker.extend({
 		var key;
 		
 		// Iterate through the data values
+		var bars = [];
+		
 		for (key in data) {		
 			value = parseFloat(data[key]);
 			chartOption = chartOptions[key];
@@ -771,8 +777,23 @@ L.StackedRegularPolygonMarker = L.ChartMarker.extend({
 			lastRadiusX = options.radiusX;
 			lastRadiusY = options.radiusY;
 			
-			this.addLayer(bar);
+			if (this.options.drawReverse) {
+				bars.push(bar);
+			}
+			else {
+				this.addLayer(bar);
+			}
 		}
+		
+		if (this.options.drawReverse) {
+			var item = bars.pop();
+		
+			while (item) {
+				this.addLayer(item);
+				item = bars.pop();
+			}
+		}
+		
 	}
 });
 

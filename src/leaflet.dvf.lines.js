@@ -346,49 +346,60 @@ L.FlowLine = L.FlowLine.extend({
 	},
 	
 	_loadRecords: function (records) {
-		var location;
-		var options = this.options.layerOptions;
 		var markers = [];
 		
 		for (var recordIndex in records) {
 			if (records.hasOwnProperty(recordIndex)) {
 				var record = records[recordIndex];
 			
-				location = this._getLocation(record, recordIndex);
-			
-				if (location) {
-					var marker = this._getLayer(location, options, record);
-					var line;
-					
-					var includeLayer = true;
-		
-					if (this.options.includeLayer) {
-						includeLayer = this.options.includeLayer(record);
-					}
-					
-					if (this._lastRecord && includeLayer) {
-						
-						var options = this._getDynamicOptions(this._lastRecord);
-						
-						line = this.options.getLine.call(this, this._lastMarker.getLatLng(), marker.getLatLng(), options.layerOptions);
-					
-						this.addLayer(line);
-						
-						this.onEachSegment(this._lastRecord, record, line);
-						
-					};
-					
-					if (includeLayer) {
-						this._lastRecord = record;
-						this._lastMarker = marker;
-					}
-				}
+				markers = this._addRecord(record, recordIndex, markers);
 			}
 		}
 		
 		while (markers.length > 0) {
 			this.addLayer(markers.pop());
 		}
+	},
+	
+	addRecord: function (record) {
+		this._addRecord(record);
+		
+		return this;
+	},
+	
+	_addRecord: function (record, recordIndex, markers) {
+		var location = this._getLocation(record, recordIndex);
+		var options = this.options.layerOptions;
+		
+		if (location) {
+			var marker = this._getLayer(location, options, record);
+			var line;
+			
+			var includeLayer = true;
+
+			if (this.options.includeLayer) {
+				includeLayer = this.options.includeLayer(record);
+			}
+			
+			if (this._lastRecord && includeLayer) {
+				
+				var options = this._getDynamicOptions(this._lastRecord);
+				
+				line = this.options.getLine.call(this, this._lastMarker.getLatLng(), marker.getLatLng(), options.layerOptions);
+			
+				this.addLayer(line);
+				
+				this.onEachSegment(this._lastRecord, record, line);
+				
+			};
+			
+			if (includeLayer) {
+				this._lastRecord = record;
+				this._lastMarker = marker;
+			}
+		}
+		
+		return markers;
 	}	
 });
 

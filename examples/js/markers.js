@@ -19,7 +19,9 @@ $(document).ready(function() {
 
 	map = L.map('map').setView([-4.0, 13.0], 6);
 
-	var baseLayer = new L.StamenTileLayer('toner');
+	var baseLayer = new L.StamenTileLayer('toner', {
+		detectRetina: true
+	});
 
 	baseLayer.addTo(map);
 

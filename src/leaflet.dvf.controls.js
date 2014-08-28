@@ -29,6 +29,8 @@ L.Control.Legend = L.Control.extend({
 		L.DomEvent
 		.addListener(container, 'mouseover', this.toggleSize)
 		.addListener(container, 'mouseout', this.toggleSize)
+		.addListener(container, 'touchstart', this.toggleSize)
+		.addListener(container, 'touchend', this.toggleSize)
 		.addListener(container, 'click', L.DomEvent.stopPropagation)
 		.addListener(container, 'click', L.DomEvent.preventDefault);
 

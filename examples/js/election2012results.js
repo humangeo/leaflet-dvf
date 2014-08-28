@@ -25,7 +25,9 @@ $(document).ready(function() {
 
 	legendControl.addTo(map);
 
-	var baseLayer = new L.StamenTileLayer('toner');
+	var baseLayer = new L.StamenTileLayer('toner', {
+		detectRetina: true
+	});
 	
 	baseLayer.addTo(map);
 

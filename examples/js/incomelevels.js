@@ -1,7 +1,9 @@
 
 $(document).ready(function() {
 	var map;
-	var baseLayer = new L.StamenTileLayer('toner');
+	var baseLayer = new L.StamenTileLayer('toner', {
+		detectRetina: true
+	});
 
 	var baseMaps = {
 	    "Stamen Toner": baseLayer

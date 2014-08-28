@@ -15,6 +15,11 @@
       	width: 100%;
       	height: 600px;
       }
+      
+      .leaflet-tile-pane {
+      	opacity: 0.3;
+      }
+      
       .options {
       	position: absolute;
       	top: 8px;
@@ -22,7 +27,7 @@
       	z-index: 20000;
       }
     </style>
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
     <link rel="stylesheet" href="http://humangeo.github.com/leaflet-dvf/dist/css/dvf.css" type="text/css" media="screen" />
 </head>
 
@@ -42,9 +47,10 @@
 	<script type="text/javascript" src="../data/us-10m.js"></script>
 	<script type="text/javascript" src="../data/countyStats.js"></script>
 	<script type="text/javascript" src="../data/countyNames.js"></script>
-	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
+	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
 	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
 	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
 	<script type="text/javascript">
@@ -67,8 +73,8 @@
 	
 		resize();
 	
-		var baseLayer = L.tileLayer('http://{s}.tile.cloudmade.com/82e1a1bab27244f0ab6a3dd1770f7d11/61193/256/{z}/{x}/{y}.png', {
-	    	attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>, County Polygons from <a href="https://github.com/mbostock/topojson/blob/master/examples/us-10m.json">Mike Bostock</a> and are derived from <a href="http://www.naturalearthdata.com/">Natural Earth data</a>'
+		var baseLayer = new L.StamenTileLayer('toner', {
+			detectRetina: true
 		});
 	
 		baseLayer.addTo(map);

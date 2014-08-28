@@ -26,7 +26,8 @@ $(document).ready(function() {
 	
 	// Add Mapquest tile layer
 	var baseLayer = L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png', {
-	    attribution: 'Tiles Courtesy of MapQuest <img width="10" height="10" alt="" style="margin-top: -6px;" src="http://developer.mapquest.com/content/osm/mq_logo.png">'
+	    attribution: 'Tiles Courtesy of MapQuest <img width="10" height="10" alt="" style="margin-top: -6px;" src="http://developer.mapquest.com/content/osm/mq_logo.png">',
+	    detectRetina: true
 	});
 	
 	baseLayer.addTo(map);

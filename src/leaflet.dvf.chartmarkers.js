@@ -215,7 +215,11 @@ L.ChartMarker = L.FeatureGroup.extend({
 	},
 	
 	toGeoJSON: function () {
-		return L.Util.pointToGeoJSON.call(this);
+		var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
+		
+		geoJSON.properties = this.options;
+		
+		return geoJSON;
 	}
 });
 

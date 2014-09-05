@@ -476,7 +476,7 @@ if (L.SVG) {
 	var SVGTextFunctions = L.Util.extend(TextFunctions, {
 		__updatePath: L.SVG.prototype._updatePath
 	});
-
+	
 	L.SVG.include(SVGStyleFunctions);
 	L.SVG.include(SVGTextFunctions);
 }
@@ -541,6 +541,23 @@ L.Point.prototype.rotate = function(angle, point) {
 	this.x = point.x + (radius * Math.cos(theta));
 	this.y = point.y + (radius * Math.sin(theta));
 };
+
+/*
+ * Let's override the default behavior of L.GeoJSON.asFeature, since it doesn't handle nested FeatureCollections
+ */
+L.extend(L.GeoJSON, {
+	asFeature: function (geoJSON) {
+		if (geoJSON.type === 'Feature' || geoJSON.type === 'FeatureCollection') {
+			return geoJSON;
+		}
+	
+		return {
+			type: 'Feature',
+			properties: {},
+			geometry: geoJSON
+		};
+	}
+});
 
 /*
  * Draws a Leaflet map marker using SVG rather than an icon, allowing the marker to be dynamically styled
@@ -708,7 +725,11 @@ L.MapMarker = L.Path.extend({
 	},
 	
 	toGeoJSON: function () {
-		return L.Util.pointToGeoJSON.call(this);
+		var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
+		
+		geoJSON.properties = this.options;
+		
+		return geoJSON;
 	}
 });
 
@@ -890,7 +911,11 @@ L.RegularPolygonMarker = L.Path.extend({
 	},
 	
 	toGeoJSON: function () {
-		return L.Util.pointToGeoJSON.call(this);
+		var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
+		
+		geoJSON.properties = this.options;
+		
+		return geoJSON;
 	}
 });
 
@@ -1132,7 +1157,11 @@ L.SVGMarker = L.Path.extend({
 	},
 	
 	toGeoJSON: function () {
-		return pointToGeoJSON.call(this);
+		var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
+		
+		geoJSON.properties = this.options;
+		
+		return geoJSON;
 	}
 
 });

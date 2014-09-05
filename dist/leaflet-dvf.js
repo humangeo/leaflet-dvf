@@ -2309,6 +2309,19 @@ L.Point.prototype.rotate = function(angle, point) {
     this.y = point.y + radius * Math.sin(theta);
 };
 
+L.extend(L.GeoJSON, {
+    asFeature: function(geoJSON) {
+        if (geoJSON.type === "Feature" || geoJSON.type === "FeatureCollection") {
+            return geoJSON;
+        }
+        return {
+            type: "Feature",
+            properties: {},
+            geometry: geoJSON
+        };
+    }
+});
+
 L.MapMarker = L.Path.extend({
     includes: TextFunctions,
     initialize: function(centerLatLng, options) {
@@ -2427,7 +2440,9 @@ L.MapMarker = L.Path.extend({
         }
     },
     toGeoJSON: function() {
-        return L.Util.pointToGeoJSON.call(this);
+        var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
+        geoJSON.properties = this.options;
+        return geoJSON;
     }
 });
 
@@ -2557,7 +2572,9 @@ L.RegularPolygonMarker = L.Path.extend({
         }
     },
     toGeoJSON: function() {
-        return L.Util.pointToGeoJSON.call(this);
+        var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
+        geoJSON.properties = this.options;
+        return geoJSON;
     }
 });
 
@@ -2755,7 +2772,9 @@ L.SVGMarker = L.Path.extend({
         }
     },
     toGeoJSON: function() {
-        return pointToGeoJSON.call(this);
+        var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
+        geoJSON.properties = this.options;
+        return geoJSON;
     }
 });
 
@@ -2954,7 +2973,9 @@ L.ChartMarker = L.FeatureGroup.extend({
         this._loadComponents();
     },
     toGeoJSON: function() {
-        return L.Util.pointToGeoJSON.call(this);
+        var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
+        geoJSON.properties = this.options;
+        return geoJSON;
     }
 });
 
@@ -4221,6 +4242,35 @@ L.DataLayer = L.LayerGroup.extend({
             }
         }
         return container.innerHTML;
+    },
+    toGeoJSON: function() {
+        var type = this.feature && this.feature.geometry && this.feature.geometry.type;
+        if (type === "MultiPoint") {
+            return this.toMultiPoint();
+        }
+        var isGeometryCollection = type === "GeometryCollection", jsons = [];
+        this.eachLayer(function(layer) {
+            if (layer.toGeoJSON) {
+                var json = layer.toGeoJSON();
+                if (json.type === "FeatureCollection" && json.features) {
+                    for (var i = 0; i < json.features.length; ++i) {
+                        jsons.push(json.features[i]);
+                    }
+                } else {
+                    jsons.push(isGeometryCollection ? json.geometry : L.GeoJSON.asFeature(json));
+                }
+            }
+        });
+        if (isGeometryCollection) {
+            return L.GeoJSON.getFeature(this, {
+                geometries: jsons,
+                type: "GeometryCollection"
+            });
+        }
+        return {
+            type: "FeatureCollection",
+            features: jsons
+        };
     }
 });
 

@@ -92,6 +92,7 @@ var eqfeed_callback = function (data) {
 	// Add the data layer to the map
 	map.addLayer(dataLayer);
 
+	console.log(dataLayer.toGeoJSON());
 	lastLayer = dataLayer;
 };
 

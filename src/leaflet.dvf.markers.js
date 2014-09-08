@@ -428,7 +428,7 @@ var PathFunctions = PathFunctions || {
 		this.__updateStyle.call(this, layer);
 
 		var context = layer ? layer : this;
-		
+
 		if (context.options.stroke) {
 			if (context.options.lineCap) {
 				context._path.setAttribute('stroke-linecap', context.options.lineCap);
@@ -460,7 +460,7 @@ var PathFunctions = PathFunctions || {
 		if (context.options.fillPattern) {
 			context._createFillPattern(context.options.fillPattern);
 		}
-		
+
 		context._applyCustomStyles();
 
 	}
@@ -477,7 +477,7 @@ if (L.SVG) {
 	var SVGTextFunctions = L.Util.extend(TextFunctions, {
 		__updatePath: L.SVG.prototype._updatePath
 	});
-	
+
 	L.SVG.include(SVGStyleFunctions);
 	L.SVG.include(SVGTextFunctions);
 }
@@ -556,7 +556,7 @@ L.extend(L.GeoJSON, {
 		if (geoJSON.type === 'Feature' || geoJSON.type === 'FeatureCollection') {
 			return geoJSON;
 		}
-	
+
 		return {
 			type: 'Feature',
 			properties: {},
@@ -573,7 +573,7 @@ L.MapMarker = L.Path.extend({
 	//includes: TextFunctions,
 
 	initialize: function (centerLatLng, options) {
-		//L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
+		L.setOptions(this, options);
 		this._latlng = centerLatLng;
 	},
 
@@ -602,7 +602,7 @@ L.MapMarker = L.Path.extend({
 		return this.redraw();
 	},
 
-	projectLatlngs: function () {
+	projectLatLngs: function () {
 		this._point = this._map.latLngToLayerPoint(this._latlng);
 		this._points = this._getPoints();
 
@@ -612,7 +612,7 @@ L.MapMarker = L.Path.extend({
 	},
 
 	_project: function () {
-		this.projectLatlngs();
+		this.projectLatLngs();
 		this._updateBounds();
 	},
 
@@ -631,7 +631,7 @@ L.MapMarker = L.Path.extend({
 			//this._renderer._updatePath(this);
 		}
 	},
-	
+
 	getBounds: function () {
 		var map = this._map,
 			height = this.options.radius * 3,
@@ -652,22 +652,22 @@ L.MapMarker = L.Path.extend({
 		this.options.radius = radius;
 		return this.redraw();
 	},
-	
+
 	setInnerRadius: function (innerRadius) {
 		this.options.innerRadius = innerRadius;
 		return this.redraw();
 	},
-	
+
 	setRotation: function (rotation) {
 		this.options.rotation = rotation;
 		return this.redraw();
 	},
-	
+
 	setNumberOfSides: function (numberOfSides) {
 		this.options.numberOfSides = numberOfSides;
 		return this.redraw();
 	},
-	
+
 	getPathString: function () {
 		var anchorPoint = this.getTextAnchor();
 
@@ -750,12 +750,12 @@ L.MapMarker = L.Path.extend({
 			this._createShapeImage(this.options.shapeImage);
 		}
 	},
-	
+
 	toGeoJSON: function () {
 		var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
-		
+
 		geoJSON.properties = this.options;
-		
+
 		return geoJSON;
 	}
 });
@@ -777,8 +777,8 @@ L.RegularPolygonMarker = L.Path.extend({
 	includes: TextFunctions,
 
 	initialize: function (centerLatLng, options) {
-		L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
-		
+		L.setOptions(this, options);
+
 		this._latlng = centerLatLng;
 
 		this.options.numberOfSides = Math.max(this.options.numberOfSides, 3);
@@ -805,7 +805,7 @@ L.RegularPolygonMarker = L.Path.extend({
 		return this.redraw();
 	},
 
-	projectLatlngs: function () {
+	projectLatLngs: function () {
 		this._point = this._map.latLngToLayerPoint(this._latlng);
 		this._points = this._getPoints();
 
@@ -815,7 +815,7 @@ L.RegularPolygonMarker = L.Path.extend({
 	},
 
 	_project: function () {
-		this.projectLatlngs();
+		this.projectLatLngs();
 		this._updateBounds();
 	},
 
@@ -837,7 +837,7 @@ L.RegularPolygonMarker = L.Path.extend({
 			//this._renderer._updatePath(this);
 		}
 	},
-	
+
 	getBounds: function () {
 		var map = this._map,
 			radiusX = this.options.radius || this.options.radiusX,
@@ -857,36 +857,36 @@ L.RegularPolygonMarker = L.Path.extend({
 		this.options.radius = radius;
 		return this.redraw();
 	},
-	
+
 	setRadiusXY: function (radiusX, radiusY) {
 		this.options.radius = null;
 		this.options.radiusX = radiusX;
 		this.options.radiusY = radiusY;
 		return this.redraw();
 	},
-	
+
 	setInnerRadius: function (innerRadius) {
 		this.options.innerRadius = innerRadius;
 		return this.redraw();
 	},
-	
+
 	setInnerRadiusXY: function (innerRadiusX, innerRadiusY) {
 		this.options.innerRadius = null;
 		this.options.innerRadiusX = innerRadiusX;
 		this.options.innerRadiusY = innerRadiusY;
 		return this.redraw();
 	},
-	
+
 	setRotation: function (rotation) {
 		this.options.rotation = rotation;
 		return this.redraw();
 	},
-	
+
 	setNumberOfSides: function (numberOfSides) {
 		this.options.numberOfSides = numberOfSides;
 		return this.redraw();
 	},
-	
+
 	getLatLng: function () {
 		return this._latlng;
 	},
@@ -966,12 +966,12 @@ L.RegularPolygonMarker = L.Path.extend({
 			this._createShapeImage(this.options.shapeImage);
 		}
 	},
-	
+
 	toGeoJSON: function () {
 		var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
-		
+
 		geoJSON.properties = this.options;
-		
+
 		return geoJSON;
 	}
 });
@@ -994,7 +994,7 @@ L.StarMarker = L.RegularPolygonMarker.extend({
 		this.options.numberOfPoints = numberOfPoints;
 		return this.redraw();
 	},
-	
+
 	_getPoints: function (inner) {
 		var maxDegrees = this.options.maxDegrees || 360;
 		var angleSize = maxDegrees / this.options.numberOfPoints;
@@ -1113,7 +1113,7 @@ L.octagonMarker = function (centerLatLng, options) {
 L.SVGMarker = L.Path.extend({
 
 	initialize: function (latlng, options) {
-		L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
+		L.setOptions(this, options);
 
 		this._svg = options.svg;
 
@@ -1124,12 +1124,12 @@ L.SVGMarker = L.Path.extend({
 		this._latlng = latlng;
 	},
 
-	projectLatlngs: function () {
+	projectLatLngs: function () {
 		this._point = this._map.latLngToLayerPoint(this._latlng);
 	},
-	
+
 	_project: function () {
-		this.projectLatlngs();
+		this.projectLatLngs();
 		this._updateBounds();
 	},
 
@@ -1151,16 +1151,16 @@ L.SVGMarker = L.Path.extend({
 			//this._renderer._updatePath(this);
 		}
 	},
-	
+
 	setLatLng: function (latlng) {
 		this._latlng = latlng;
 		this.redraw();
 	},
-	
+
 	getLatLng: function () {
 		return this._latlng;
 	},
-	
+
 	getPathString: function () {
 		var me = this;
 
@@ -1172,7 +1172,7 @@ L.SVGMarker = L.Path.extend({
 				g = g.parentNode;
 			}
 			*/
-			
+
 			if (me.options.clickable) {
 				g.setAttribute('class','leaflet-clickable');
 			}
@@ -1238,15 +1238,15 @@ L.SVGMarker = L.Path.extend({
 		else {
 			addSVG();
 		}
-		
+
 		return 'M0 0';
 	},
-	
+
 	toGeoJSON: function () {
 		var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
-		
+
 		geoJSON.properties = this.options;
-		
+
 		return geoJSON;
 	}
 
@@ -1261,11 +1261,11 @@ L.MarkerGroup = L.FeatureGroup.extend({
 
 		this.setLatLng(latlng);
 	},
-	
+
 	setStyle: function (style) {
 		return this;
 	},
-	
+
 	setLatLng: function (latlng) {
 		this._latlng = latlng;
 		this.eachLayer(function (layer) {
@@ -1273,28 +1273,28 @@ L.MarkerGroup = L.FeatureGroup.extend({
 				layer.setLatLng(latlng);
 			}
 		});
-		
+
 		return this;
 	},
-	
+
 	getLatLng: function (latlng) {
 		return this._latlng;
 	},
-	
+
 	toGeoJSON: function () {
 		var featureCollection = {
 			type: 'FeatureCollection',
 			features: []
 		};
-		
+
 		var eachLayerFunction = function (featureCollection) {
 			return function (layer) {
 				featureCollection.features.push(L.Util.pointToGeoJSON.call(layer));
 			}
 		};
-		
+
 		this.eachLayer(eachLayerFunction(featureCollection));
-		
+
 		return featureCollection;
 	}
 });

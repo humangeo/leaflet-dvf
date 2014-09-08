@@ -4,10 +4,10 @@ L.Path.XLINK_NS = 'http://www.w3.org/1999/xlink';
  * Functions that support displaying text on an SVG path
  */
 var TextFunctions = TextFunctions || {
-	__updatePath: L.Path.prototype._updatePath,
+	__updatePath: L.SVG.prototype._updatePath,
 
-	_updatePath: function () {
-		this.__updatePath.call(this);
+	_updatePath: function (layer) {
+		this.__updatePath.call(this, layer);
 
 		if (this.options.text) {
 			this._createText(this.options.text);
@@ -142,7 +142,7 @@ var TextFunctions = TextFunctions || {
  * Functions that support additions to the basic SVG Path features provided by Leaflet
  */
 var PathFunctions = PathFunctions || {
-	__updateStyle: L.Path.prototype._updateStyle,
+	__updateStyle: L.SVG.prototype._updateStyle,
 
 	_createDefs: function () {
 		this._defs = this._createElement('defs');
@@ -467,6 +467,7 @@ var PathFunctions = PathFunctions || {
 
 };
 
+/*
 if (L.SVG) {
 	// Potential fix for working with 0.8
 	var SVGStyleFunctions = L.Util.extend(PathFunctions, {
@@ -480,11 +481,12 @@ if (L.SVG) {
 	L.SVG.include(SVGStyleFunctions);
 	L.SVG.include(SVGTextFunctions);
 }
+*/
 
 // Extend the TextFunctions above and change the __updatePath reference, since
 // _updatePath for a line/polygon is different than for a regular path
 var LineTextFunctions = L.extend({}, TextFunctions);
-LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
+//LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
 
 // Pulled from the Leaflet discussion here:  https://github.com/Leaflet/Leaflet/pull/1586
 // This is useful for getting a centroid/anchor point for centering text or other SVG markup
@@ -515,6 +517,7 @@ LineTextFunctions.getTextAnchor = function () {
 	return this._map.latLngToLayerPoint(center);
 };
 
+/*
 L.Polyline.include(LineTextFunctions);
 L.CircleMarker.include(TextFunctions);
 
@@ -531,6 +534,9 @@ L.CircleMarker = L.CircleMarker.extend({
 		}
 	}
 });
+*/
+
+L.extend(L.SVG, LineTextFunctions, PathFunctions);
 
 /*
  * Rotates a point the provided number of degrees about another point.  Code inspired/borrowed from OpenLayers
@@ -564,10 +570,10 @@ L.extend(L.GeoJSON, {
  */
 L.MapMarker = L.Path.extend({
 
-	includes: TextFunctions,
+	//includes: TextFunctions,
 
 	initialize: function (centerLatLng, options) {
-		L.Path.prototype.initialize.call(this, options);
+		//L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
 		this._latlng = centerLatLng;
 	},
 
@@ -605,6 +611,27 @@ L.MapMarker = L.Path.extend({
 		}
 	},
 
+	_project: function () {
+		this.projectLatlngs();
+		this._updateBounds();
+	},
+
+	_updateBounds: function () {
+		var map = this._map,
+		height = this.options.radius * 3,
+		point = map.project(this._latlng),
+		swPoint = new L.Point(point.x - this.options.radius, point.y),
+		nePoint = new L.Point(point.x + this.options.radius, point.y - height);
+		this._pxBounds = new L.Bounds(swPoint, nePoint);
+	},
+
+	_update: function () {
+		if (this._map) {
+			this._renderer._setPath(this, this.getPathString());
+			//this._renderer._updatePath(this);
+		}
+	},
+	
 	getBounds: function () {
 		var map = this._map,
 			height = this.options.radius * 3,
@@ -737,6 +764,12 @@ L.mapMarker = function (centerLatLng, options) {
 	return new L.MapMarker(centerLatLng, options);
 };
 
+L.extend(L.LatLng, {
+	DEG_TO_RAD: Math.PI / 180,
+	RAD_TO_DEG: 180 / Math.PI,
+	MAX_MARGIN: 1.0E-9 // max margin of error for the "equals" check
+});
+
 /*
  * Draws a regular polygon marker on the map given a radius (or x and y radii) in pixels
  */
@@ -745,7 +778,7 @@ L.RegularPolygonMarker = L.Path.extend({
 
 	initialize: function (centerLatLng, options) {
 		L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
-
+		
 		this._latlng = centerLatLng;
 
 		this.options.numberOfSides = Math.max(this.options.numberOfSides, 3);
@@ -781,6 +814,30 @@ L.RegularPolygonMarker = L.Path.extend({
 		}
 	},
 
+	_project: function () {
+		this.projectLatlngs();
+		this._updateBounds();
+	},
+
+	_updateBounds: function () {
+		var map = this._map,
+		radiusX = this.options.radius || this.options.radiusX,
+		radiusY = this.options.radius || this.options.radiusY,
+		deltaX = radiusX * Math.cos(Math.PI / 4),
+		deltaY = radiusY * Math.sin(Math.PI / 4),
+		point = map.project(this._latlng),
+		swPoint = new L.Point(point.x - deltaX, point.y + deltaY),
+		nePoint = new L.Point(point.x + deltaX, point.y - deltaY);
+		this._pxBounds = new L.Bounds(swPoint, nePoint);
+	},
+
+	_update: function () {
+		if (this._map) {
+			this._renderer._setPath(this, this.getPathString());
+			//this._renderer._updatePath(this);
+		}
+	},
+	
 	getBounds: function () {
 		var map = this._map,
 			radiusX = this.options.radius || this.options.radiusX,
@@ -1056,7 +1113,7 @@ L.octagonMarker = function (centerLatLng, options) {
 L.SVGMarker = L.Path.extend({
 
 	initialize: function (latlng, options) {
-		L.Path.prototype.initialize.call(this, options);
+		L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
 
 		this._svg = options.svg;
 
@@ -1069,6 +1126,30 @@ L.SVGMarker = L.Path.extend({
 
 	projectLatlngs: function () {
 		this._point = this._map.latLngToLayerPoint(this._latlng);
+	},
+	
+	_project: function () {
+		this.projectLatlngs();
+		this._updateBounds();
+	},
+
+	_updateBounds: function () {
+		var map = this._map,
+		radiusX = 5,
+		radiusY = 5,
+		deltaX = radiusX * Math.cos(Math.PI / 4),
+		deltaY = radiusY * Math.sin(Math.PI / 4),
+		point = map.project(this._latlng),
+		swPoint = new L.Point(point.x - deltaX, point.y + deltaY),
+		nePoint = new L.Point(point.x + deltaX, point.y - deltaY);
+		this._pxBounds = new L.Bounds(swPoint, nePoint);
+	},
+
+	_update: function () {
+		if (this._map) {
+			this._renderer._setPath(this, this.getPathString());
+			//this._renderer._updatePath(this);
+		}
 	},
 	
 	setLatLng: function (latlng) {
@@ -1085,10 +1166,13 @@ L.SVGMarker = L.Path.extend({
 
 		var addSVG = function () {
 			var g = me._path.parentNode;
+
+			/*
 			while (g.nodeName.toLowerCase() !== 'g') {
 				g = g.parentNode;
 			}
-
+			*/
+			
 			if (me.options.clickable) {
 				g.setAttribute('class','leaflet-clickable');
 			}
@@ -1137,7 +1221,7 @@ L.SVGMarker = L.Path.extend({
 				transforms.push('rotate(' + me.options.rotation + ' ' + (width/2) + ' ' + (height/2) + ')'); //' ' + -1 * anchor.x + ' ' + -1 * anchor.y + ')');
 			}
 
-			g.setAttribute('transform', transforms.join(' '));
+			svg.setAttribute('transform', transforms.join(' '));
 		};
 
 		if (!this._data) {
@@ -1154,6 +1238,8 @@ L.SVGMarker = L.Path.extend({
 		else {
 			addSVG();
 		}
+		
+		return 'M0 0';
 	},
 	
 	toGeoJSON: function () {

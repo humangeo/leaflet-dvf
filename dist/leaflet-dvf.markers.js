@@ -145,20 +145,22 @@ L.ColorFunction = L.LinearFunction.extend({
             }
             return prefix + "(" + parts.join(",") + ")";
         };
-        options = this.options;
-        var postProcess = function(y) {
-            if (options && options.postProcess) {
-                y = options.postProcess.call(this, y);
-            }
-            var colorString = this._getColorString(y);
-            if (L.Browser.ie && colorString.indexOf("hsl") > -1 || options.rgb) {
-                colorString = L.hslColor(colorString).toRGBString();
-            }
-            return colorString;
+        options = L.extend({}, this.options);
+        var postProcess = function(val) {
+            return function(y) {
+                if (options && options.postProcess) {
+                    y = options.postProcess.call(this, y);
+                }
+                var colorString = this._getColorString(y);
+                if (L.Browser.ie && colorString.indexOf("hsl") > -1 || options.rgb) {
+                    colorString = L.hslColor(colorString).toRGBString();
+                }
+                return colorString;
+            };
         };
         L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
             preProcess: this.options.preProcess,
-            postProcess: postProcess
+            postProcess: postProcess(options)
         });
     }
 });
@@ -1833,9 +1835,9 @@ L.DynamicPaletteElement = L.Class.extend({
 L.Path.XLINK_NS = "http://www.w3.org/1999/xlink";
 
 var TextFunctions = TextFunctions || {
-    __updatePath: L.Path.prototype._updatePath,
-    _updatePath: function() {
-        this.__updatePath.call(this);
+    __updatePath: L.SVG.prototype._updatePath,
+    _updatePath: function(layer) {
+        this.__updatePath.call(this, layer);
         if (this.options.text) {
             this._createText(this.options.text);
         }
@@ -1925,7 +1927,7 @@ var TextFunctions = TextFunctions || {
 };
 
 var PathFunctions = PathFunctions || {
-    __updateStyle: L.Path.prototype._updateStyle,
+    __updateStyle: L.SVG.prototype._updateStyle,
     _createDefs: function() {
         this._defs = this._createElement("defs");
         this._container.appendChild(this._defs);
@@ -2170,20 +2172,7 @@ var PathFunctions = PathFunctions || {
     }
 };
 
-if (L.SVG) {
-    var SVGStyleFunctions = L.Util.extend(PathFunctions, {
-        __updateStyle: L.SVG.prototype._updateStyle
-    });
-    var SVGTextFunctions = L.Util.extend(TextFunctions, {
-        __updatePath: L.SVG.prototype._updatePath
-    });
-    L.SVG.include(SVGStyleFunctions);
-    L.SVG.include(SVGTextFunctions);
-}
-
 var LineTextFunctions = L.extend({}, TextFunctions);
-
-LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
 
 LineTextFunctions.getCenter = function() {
     var latlngs = this._latlngs, len = latlngs.length, i, j, p1, p2, f, center;
@@ -2205,25 +2194,7 @@ LineTextFunctions.getTextAnchor = function() {
     return this._map.latLngToLayerPoint(center);
 };
 
-L.Polyline.include(LineTextFunctions);
-
-L.CircleMarker.include(TextFunctions);
-
-L.Path.include(PathFunctions);
-
-L.Polygon.include(PathFunctions);
-
-L.Polyline.include(PathFunctions);
-
-L.CircleMarker.include(PathFunctions);
-
-L.CircleMarker = L.CircleMarker.extend({
-    _applyCustomStyles: function() {
-        if (this.options.shapeImage || this.options.imageCircleUrl) {
-            this._createShapeImage(this.options.shapeImage);
-        }
-    }
-});
+L.extend(L.SVG, LineTextFunctions, PathFunctions);
 
 L.Point.prototype.rotate = function(angle, point) {
     var radius = this.distanceTo(point);
@@ -2246,9 +2217,7 @@ L.extend(L.GeoJSON, {
 });
 
 L.MapMarker = L.Path.extend({
-    includes: TextFunctions,
     initialize: function(centerLatLng, options) {
-        L.Path.prototype.initialize.call(this, options);
         this._latlng = centerLatLng;
     },
     options: {
@@ -2279,6 +2248,19 @@ L.MapMarker = L.Path.extend({
         this._points = this._getPoints();
         if (this.options.innerRadius > 0) {
             this._innerPoints = this._getPoints(true).reverse();
+        }
+    },
+    _project: function() {
+        this.projectLatlngs();
+        this._updateBounds();
+    },
+    _updateBounds: function() {
+        var map = this._map, height = this.options.radius * 3, point = map.project(this._latlng), swPoint = new L.Point(point.x - this.options.radius, point.y), nePoint = new L.Point(point.x + this.options.radius, point.y - height);
+        this._pxBounds = new L.Bounds(swPoint, nePoint);
+    },
+    _update: function() {
+        if (this._map) {
+            this._renderer._setPath(this, this.getPathString());
         }
     },
     getBounds: function() {
@@ -2373,6 +2355,12 @@ L.mapMarker = function(centerLatLng, options) {
     return new L.MapMarker(centerLatLng, options);
 };
 
+L.extend(L.LatLng, {
+    DEG_TO_RAD: Math.PI / 180,
+    RAD_TO_DEG: 180 / Math.PI,
+    MAX_MARGIN: 1e-9
+});
+
 L.RegularPolygonMarker = L.Path.extend({
     includes: TextFunctions,
     initialize: function(centerLatLng, options) {
@@ -2404,6 +2392,19 @@ L.RegularPolygonMarker = L.Path.extend({
         this._points = this._getPoints();
         if (this.options.innerRadius || this.options.innerRadiusX && this.options.innerRadiusY) {
             this._innerPoints = this._getPoints(true).reverse();
+        }
+    },
+    _project: function() {
+        this.projectLatlngs();
+        this._updateBounds();
+    },
+    _updateBounds: function() {
+        var map = this._map, radiusX = this.options.radius || this.options.radiusX, radiusY = this.options.radius || this.options.radiusY, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._latlng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY);
+        this._pxBounds = new L.Bounds(swPoint, nePoint);
+    },
+    _update: function() {
+        if (this._map) {
+            this._renderer._setPath(this, this.getPathString());
         }
     },
     getBounds: function() {
@@ -2620,7 +2621,7 @@ L.octagonMarker = function(centerLatLng, options) {
 
 L.SVGMarker = L.Path.extend({
     initialize: function(latlng, options) {
-        L.Path.prototype.initialize.call(this, options);
+        L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
         this._svg = options.svg;
         if (this._svg.indexOf("<") === 0) {
             this._data = this._svg;
@@ -2629,6 +2630,19 @@ L.SVGMarker = L.Path.extend({
     },
     projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
+    },
+    _project: function() {
+        this.projectLatlngs();
+        this._updateBounds();
+    },
+    _updateBounds: function() {
+        var map = this._map, radiusX = 5, radiusY = 5, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._latlng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY);
+        this._pxBounds = new L.Bounds(swPoint, nePoint);
+    },
+    _update: function() {
+        if (this._map) {
+            this._renderer._setPath(this, this.getPathString());
+        }
     },
     setLatLng: function(latlng) {
         this._latlng = latlng;
@@ -2641,9 +2655,6 @@ L.SVGMarker = L.Path.extend({
         var me = this;
         var addSVG = function() {
             var g = me._path.parentNode;
-            while (g.nodeName.toLowerCase() !== "g") {
-                g = g.parentNode;
-            }
             if (me.options.clickable) {
                 g.setAttribute("class", "leaflet-clickable");
             }
@@ -2678,7 +2689,7 @@ L.SVGMarker = L.Path.extend({
             if (me.options.rotation) {
                 transforms.push("rotate(" + me.options.rotation + " " + width / 2 + " " + height / 2 + ")");
             }
-            g.setAttribute("transform", transforms.join(" "));
+            svg.setAttribute("transform", transforms.join(" "));
         };
         if (!this._data) {
             var xhr = new XMLHttpRequest();
@@ -2693,6 +2704,7 @@ L.SVGMarker = L.Path.extend({
         } else {
             addSVG();
         }
+        return "M0 0";
     },
     toGeoJSON: function() {
         var geoJSON = L.Marker.prototype.toGeoJSON.call(this);

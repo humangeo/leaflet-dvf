@@ -19,8 +19,7 @@ L.CalloutLine = L.Path.extend({
 
 L.CalloutLine = L.CalloutLine.extend({
 	initialize: function (latlng, options) {
-		L.Util.setOptions(this, options);
-		L.Path.prototype.initialize.call(this, options);
+		L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
 		this._latlng = latlng;
 	},
 	
@@ -44,6 +43,26 @@ L.CalloutLine = L.CalloutLine.extend({
 	projectLatlngs: function () {
 		this._point = this._map.latLngToLayerPoint(this._latlng);
 		this._points = this._getPoints();
+	},
+	
+	_project: function () {
+		this.projectLatlngs();
+		this._updateBounds();
+	},
+
+	_updateBounds: function () {
+		var map = this._map,
+		point = map.project(this._latlng),
+		swPoint = new L.Point(point.x + this.options.position.x, point.y + this.options.position.y),
+		nePoint = new L.Point(swPoint.x + this.options.size.x, swPoint.y - this.options.size.y);
+		this._pxBounds = new L.Bounds(swPoint, nePoint);
+	},
+
+	_update: function () {
+		if (this._map) {
+			this._renderer._setPath(this, this.getPathString());
+			//this._renderer._updatePath(this);
+		}
 	},
 
 	getEndPoint: function () {
@@ -433,7 +452,7 @@ L.ArcedPolyline = L.Path.extend({
 	includes: TextFunctions,
 	
 	initialize: function (latlngs, options) {
-		L.Path.prototype.initialize.call(this, options);
+		L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
 		this._latlngs = latlngs;
 	},
 	

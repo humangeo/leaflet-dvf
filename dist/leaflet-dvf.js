@@ -2295,6 +2295,7 @@ L.extend(L.GeoJSON, {
 
 L.MapMarker = L.Path.extend({
     initialize: function(centerLatLng, options) {
+        L.setOptions(this, options);
         this._latlng = centerLatLng;
     },
     options: {
@@ -2320,7 +2321,7 @@ L.MapMarker = L.Path.extend({
         this._latlng = latlng;
         return this.redraw();
     },
-    projectLatlngs: function() {
+    projectLatLngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
         if (this.options.innerRadius > 0) {
@@ -2328,7 +2329,7 @@ L.MapMarker = L.Path.extend({
         }
     },
     _project: function() {
-        this.projectLatlngs();
+        this.projectLatLngs();
         this._updateBounds();
     },
     _updateBounds: function() {
@@ -2441,7 +2442,7 @@ L.extend(L.LatLng, {
 L.RegularPolygonMarker = L.Path.extend({
     includes: TextFunctions,
     initialize: function(centerLatLng, options) {
-        L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
+        L.setOptions(this, options);
         this._latlng = centerLatLng;
         this.options.numberOfSides = Math.max(this.options.numberOfSides, 3);
     },
@@ -2464,7 +2465,7 @@ L.RegularPolygonMarker = L.Path.extend({
         this._latlng = latlng;
         return this.redraw();
     },
-    projectLatlngs: function() {
+    projectLatLngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
         if (this.options.innerRadius || this.options.innerRadiusX && this.options.innerRadiusY) {
@@ -2472,7 +2473,7 @@ L.RegularPolygonMarker = L.Path.extend({
         }
     },
     _project: function() {
-        this.projectLatlngs();
+        this.projectLatLngs();
         this._updateBounds();
     },
     _updateBounds: function() {
@@ -2698,18 +2699,18 @@ L.octagonMarker = function(centerLatLng, options) {
 
 L.SVGMarker = L.Path.extend({
     initialize: function(latlng, options) {
-        L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
+        L.setOptions(this, options);
         this._svg = options.svg;
         if (this._svg.indexOf("<") === 0) {
             this._data = this._svg;
         }
         this._latlng = latlng;
     },
-    projectLatlngs: function() {
+    projectLatLngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
     },
     _project: function() {
-        this.projectLatlngs();
+        this.projectLatLngs();
         this._updateBounds();
     },
     _updateBounds: function() {
@@ -2827,7 +2828,7 @@ L.MarkerGroup = L.FeatureGroup.extend({
 
 L.BarMarker = L.Path.extend({
     initialize: function(centerLatLng, options) {
-        L.Path.prototype.initialize.call(this, options);
+        L.setOptions(this, options);
         this._latlng = centerLatLng;
     },
     options: {
@@ -2850,9 +2851,17 @@ L.BarMarker = L.Path.extend({
         this._latlng = latlng;
         return this.redraw();
     },
-    projectLatlngs: function() {
+    _project: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
+    },
+    _update: function() {
+        if (!this._map) {
+            return;
+        }
+        if (this._map) {
+            this._renderer._setPath(this, this.getPathString());
+        }
     },
     getBounds: function() {
         var map = this._map, point = map.project(this._latlng), halfWidth = this.options.width / 2, swPoint = new L.Point(point.x - halfWidth, point.y), nePoint = new L.Point(point.x + halfWidth, point.y - this.options.maxHeight), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
@@ -3057,7 +3066,7 @@ L.BarChartMarker = L.ChartMarker.extend({
 
 L.RadialBarMarker = L.Path.extend({
     initialize: function(centerLatLng, options) {
-        L.Path.prototype.initialize.call(this, options);
+        L.setOptions(this, options);
         this._latlng = centerLatLng;
     },
     options: {
@@ -3076,9 +3085,17 @@ L.RadialBarMarker = L.Path.extend({
         this._latlng = latlng;
         return this.redraw();
     },
-    projectLatlngs: function() {
+    _project: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
+    },
+    _update: function() {
+        if (!this._map) {
+            return;
+        }
+        if (this._map) {
+            this._renderer._setPath(this, this.getPathString());
+        }
     },
     getBounds: function() {
         var map = this._map, radiusX = this.options.radiusX || this.options.radius, radiusY = this.options.radiusY || this.options.radius, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._latlng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
@@ -4799,7 +4816,7 @@ L.CalloutLine = L.Path.extend({
 
 L.CalloutLine = L.CalloutLine.extend({
     initialize: function(latlng, options) {
-        L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
+        L.setOptions(this, options);
         this._latlng = latlng;
     },
     options: {
@@ -4818,12 +4835,12 @@ L.CalloutLine = L.CalloutLine.extend({
         lineJoin: "miter",
         arrow: false
     },
-    projectLatlngs: function() {
+    projectLatLngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
     },
     _project: function() {
-        this.projectLatlngs();
+        this.projectLatLngs();
         this._updateBounds();
     },
     _updateBounds: function() {
@@ -4836,7 +4853,7 @@ L.CalloutLine = L.CalloutLine.extend({
         }
     },
     getEndPoint: function() {
-        this.projectLatlngs();
+        this._project();
         return this._points[this._points.length - 1];
     },
     _getPathAngle: function() {
@@ -5115,7 +5132,7 @@ L.arcedFlowLine = function(data, options) {
 L.ArcedPolyline = L.Path.extend({
     includes: TextFunctions,
     initialize: function(latlngs, options) {
-        L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
+        L.setOptions(this, options);
         this._latlngs = latlngs;
     },
     options: {
@@ -5129,7 +5146,7 @@ L.ArcedPolyline = L.Path.extend({
         dropShadow: false,
         optimizeSpeed: false
     },
-    projectLatlngs: function() {
+    _project: function() {
         this._points = [];
         for (var i = 0; i < this._latlngs.length; ++i) {
             this._points.push(this._map.latLngToLayerPoint(this._latlngs[i]));

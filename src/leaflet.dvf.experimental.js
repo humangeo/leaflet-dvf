@@ -218,6 +218,16 @@ L.Line = L.Path.extend({
 		this._points = points;
 	},
 
+	_project: function () {
+    // this._points = this._getPoints();
+	},
+
+  _update: function () {
+    if (this._map) {
+      this._renderer._setPath(this, this.getPathString());
+    }
+  },
+
 	getPathString: function () {
 		var path = new L.SVGPathBuilder(this._points, null, {
 			closePath: false

@@ -4,8 +4,15 @@ L.Path.XLINK_NS = 'http://www.w3.org/1999/xlink';
  * Functions that support displaying text on an SVG path
  */
 var TextFunctions = TextFunctions || {
-  __removePath: L.SVG.prototype._removePath,
+  __addPath: L.SVG.prototype._addPath,
+  _addPath: function(layer) {
+    TextFunctions.__addPath.call(this, layer);
+    if (layer.options.text) {
+      this._createText(layer);
+    }
+  },
 
+  __removePath: L.SVG.prototype._removePath,
   _removePath: function(layer) {
     TextFunctions.__removePath.call(this, layer);
     if (layer._text) {
@@ -17,7 +24,6 @@ var TextFunctions = TextFunctions || {
   },
 
   __updatePath: L.SVG.prototype._updatePath,
-
   _updatePath: function (layer) {
     this.__updatePath.call(this, layer);
 
@@ -69,6 +75,15 @@ var TextFunctions = TextFunctions || {
 
       return element;
     };
+
+    if (layer._text) {
+      L.DomUtil.remove(layer._text);
+      layer.text = null;
+    }
+    if (layer._pathDef) {
+      L.DomUtil.remove(layer._pathDef);
+      layer._pathDef = null;
+    }
 
     layer._text = L.SVG.create('text');
     layer._text.setAttribute('id', L.stamp(layer._text));
@@ -152,9 +167,11 @@ var PathFunctions = PathFunctions || {
     }
   },
 
-  __addPath: L.SVG.prototype._addPath,
+  // __addPath: L.SVG.prototype._addPath,
 	_addPath: function (layer) {
-    this.__addPath(layer);
+    // this.__addPath(layer);
+
+    TextFunctions._addPath.call(this, layer);
 
     if (layer._gradient) {
       this._defs.appendChild(layer._gradient);
@@ -171,11 +188,24 @@ var PathFunctions = PathFunctions || {
     if (layer._shape) {
       this._container.insertBefore(layer._shape, layer._path.nextSibling);
     }
+    if (layer._pathDef) {
+      this._defs.appendChild(layer._pathDef);
+    }
+    if (layer._text) {
+      this._container.appendChild(layer._text);
+    }
 	},
 
-  __removePath: L.SVG.prototype._removePath,
+  // __updatePath: L.SVG.prototype._updatePath,
+	_updatePath: function (layer) {
+    TextFunctions._updateText.call(this, layer);
+  },
+
+  // __removePath: L.SVG.prototype._removePath,
 	_removePath: function (layer) {
-    this.__removePath(layer);
+    // this.__removePath(layer);
+
+    TextFunctions._removePath.call(this, layer);
 
     if (layer._gradient) {
       L.DomUtil.remove(layer._gradient);
@@ -642,7 +672,7 @@ L.extend(L.GeoJSON, {
  */
 L.MapMarker = L.Path.extend({
 
-  //includes: TextFunctions,
+  // includes: TextFunctions,
 
   initialize: function (centerLatLng, options) {
     L.setOptions(this, options);

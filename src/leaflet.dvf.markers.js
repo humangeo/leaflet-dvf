@@ -201,6 +201,7 @@ var PathFunctions = PathFunctions || {
 
     var gradient;
     var gradientOptions;
+
     if (options.gradientType == "radial") {
       gradient = L.SVG.create("radialGradient");
       gradientOptions = options.radial || { cx: '50%', cy: '50%', r: '50%', fx: '50%', fy: '50%' };
@@ -265,6 +266,11 @@ var PathFunctions = PathFunctions || {
       gradient.appendChild(stopElement);
     }
 
+    // remove old gradient
+    if (layer._gradient) {
+      L.DomUtil.remove(layer._gradient);
+    }
+
     layer._gradient = gradient;
     return L.stamp(gradient);
   },
@@ -325,6 +331,9 @@ var PathFunctions = PathFunctions || {
     filter.appendChild(feGaussianBlur);
     filter.appendChild(feBlend);
 
+    if (layer._dropShadow) {
+      L.DomUtil.remove(layer._dropShadow);
+    }
     layer._dropShadow = filter;
 
     return L.stamp(filter);
@@ -368,11 +377,6 @@ var PathFunctions = PathFunctions || {
   _createFillPattern: function (layer) {
     this._createDefs();
 
-    if (layer._fillPattern) {
-      L.DomUtil.remove(layer._fillPattern);
-      delete this._paths[L.stamp(layer._fillPattern)];
-    }
-
     var patternOptions = layer.options.pattern;
 
     patternOptions.patternUnits = patternOptions.patternUnits || 'objectBoundingBox';
@@ -384,7 +388,9 @@ var PathFunctions = PathFunctions || {
 
     pattern.appendChild(image);
 
-    this._defs.appendChild(pattern);
+    if (layer._fillPattern) {
+      L.DomUtil.remove(layer._fillPattern);
+    }
     layer._fillPattern = pattern;
 
     return L.stamp(pattern);
@@ -450,6 +456,13 @@ var PathFunctions = PathFunctions || {
 
     pattern.appendChild(image);
 
+    if (layer._shapePattern) {
+      L.DomUtil.remove(layer._shapePattern);
+    }
+    if (layer._shape) {
+      L.DomUtil.remove(layer._shape);
+    }
+
     layer._shapePattern = pattern;
     layer._shape = shape;
 
@@ -497,6 +510,22 @@ var PathFunctions = PathFunctions || {
 
     if (context._applyCustomStyles) {
       context._applyCustomStyles();
+    }
+
+    if (layer._gradient) {
+      this._defs.appendChild(layer._gradient);
+    }
+    if (layer._dropShadow) {
+      this._defs.appendChild(layer._dropShadow);
+    }
+    if (layer._fillPattern) {
+      this._defs.appendChild(layer._fillPattern);
+    }
+    if (layer._shapePattern) {
+      this._defs.appendChild(layer._shapePattern);
+    }
+    if (layer._shape) {
+      this._container.insertBefore(layer._shape, layer._path.nextSibling);
     }
 
   }
@@ -950,7 +979,7 @@ L.RegularPolygonMarker = L.Path.extend({
   },
 
   getTextAnchor: function () {
-    return new L.Point(this._point.x, this._point.y - 2 * this.options.radius);
+    return this._point;
   },
 
   _getPoints: function (inner) {

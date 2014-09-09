@@ -979,7 +979,7 @@ L.RegularPolygonMarker = L.Path.extend({
   },
 
   getTextAnchor: function () {
-    return new L.Point(this._point.x, this._point.y - 2 * this.options.radius);
+    return this._point;
   },
 
   _getPoints: function (inner) {

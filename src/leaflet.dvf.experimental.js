@@ -33,6 +33,12 @@ L.SeriesMarker = L.Path.extend({
 		this._points = this._getPoints();
 	},
 
+  _update: function () {
+    if (this._map) {
+      this._renderer._setPath(this, this.getPathString());
+    }
+  },
+
 	getBounds: function () {
 		var map = this._map,
 			point = map.project(this._latlng),
@@ -211,6 +217,16 @@ L.Line = L.Path.extend({
 		L.setOptions(this, options);
 		this._points = points;
 	},
+
+	_project: function () {
+    // this._points = this._getPoints();
+	},
+
+  _update: function () {
+    if (this._map) {
+      this._renderer._setPath(this, this.getPathString());
+    }
+  },
 
 	getPathString: function () {
 		var path = new L.SVGPathBuilder(this._points, null, {
@@ -709,6 +725,12 @@ L.WeightedLineSegment = L.Path.extend({
 		this._points = this._getPoints();
 		this._setGradient();
 	},
+
+  _update: function () {
+    if (this._map) {
+      this._renderer._setPath(this, this.getPathString());
+    }
+  },
 
 	_setGradient: function () {
 		var p1 = this._points[1];

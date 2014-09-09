@@ -11,15 +11,15 @@
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
-      
+
       #map {
       	background-image: url('../img/subtlepatterns/grey_wash_wall/grey_wash_wall.png');
       }
-      
+
       #map div.leaflet-tile-pane {
       	opacity: 0.5;
       }
-      
+
       div.leaflet-control-legend {
       	width: 350px;
       }
@@ -34,14 +34,14 @@
       	vertical-align: middle;
       	border-left: none !important;
       }
-      
+
       .line-legend .legend-box {
       	width: 0px;
       	height: 0px !important;
       	border-top: none !important;
       	border-right: none !important;
       }
-      
+
     </style>
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
@@ -77,7 +77,7 @@
 	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.2.1/moment.min.js"></script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+	<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
 	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
 	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
 	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
@@ -91,42 +91,42 @@ $(document).ready(function() {
 	// Function for resizing the map to fill the available space on the screen
 	var resize = function () {
 		var $map = $('#map');
-		
+
 		$map.height($(window).height() - $('div.navbar').outerHeight());
-		
+
 		if (map) {
 			map.invalidateSize();
 		}
 	};
-	
+
 	// Resize the map element on window resize
 	$(window).on('resize', function () {
 		resize();
 	});
-	
+
 	// Resize the map element
 	resize();
-	
+
 	// Initialize the map
 	map = L.map('map').setView([38.895843, -77.043085], 15);
-	
+
 	var baseLayer = new L.StamenTileLayer('toner', {
 		detectRetina: true
 	}).addTo(map);
-	
+
 	baseLayer.addTo(map);
-	
+
 	// Initialize the legend control and add it to the map
 	var legendControl = new L.Control.Legend();
-	
+
 	legendControl.addTo(map);
-	
+
 	var layerControl = new L.Control.Layers({
 		'Stamen Toner': baseLayer
 	});
-	
+
 	layerControl.addTo(map);
-	
+
 	var data = {
 	  "gpx": {
 		"wpt": [
@@ -793,7 +793,7 @@ $(document).ready(function() {
 		]
 	  }
 	};
-	
+
 	var colors = new L.CustomColorFunction(0, 15.02968, [[247, 252, 240], [ 224, 243, 219], [ 204, 235, 197], [ 168, 221, 181], [ 123, 204, 196], [ 78, 179, 211], [ 43, 140, 190], [ 8, 104, 172], [ 8, 64, 129] ], {
 		interpolate: true
 	});
@@ -818,30 +818,30 @@ $(document).ready(function() {
 			opacity: 1.0
 		}
 	});
-	
+
 	// Add the data layer to the layer control
 	layerControl.addOverlay(dataLayer, 'Flow Line');
-		
+
 	var runData = [];
 	var wpts = data.gpx.wpt
 	for (var i = 0; i < wpts.length; ++i) {
 		var wpt = wpts[i];
 		var latlng = new L.LatLng(wpt.lat, wpt.lon);
-		
+
 		latlng.weight = wpt.ele * 2;
-		
+
 		console.log(wpt.ele);
-		
+
 		runData.push(latlng);
 	}
-	
+
 	var weightedPolylineTest = new L.WeightedPolyline(runData, {
 		fill: true,
 		fillColor: '#0033ff',
 		fillOpacity: 1,
 		stroke: false
 	});
-	
+
 	map.addLayer(weightedPolylineTest);
 	layerControl.addOverlay(weightedPolylineTest, 'Weighted Polyline');
 });

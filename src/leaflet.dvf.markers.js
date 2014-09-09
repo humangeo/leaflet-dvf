@@ -4,43 +4,49 @@ L.Path.XLINK_NS = 'http://www.w3.org/1999/xlink';
  * Functions that support displaying text on an SVG path
  */
 var TextFunctions = TextFunctions || {
+  __removePath: L.SVG.prototype._removePath,
+
+  _removePath: function(layer) {
+    TextFunctions.__removePath.call(this, layer);
+    if (layer._text) {
+      L.DomUtil.remove(layer._text);
+    }
+    if (layer._pathDef) {
+      L.DomUtil.remove(layer._pathDef);
+    }
+  },
+
   __updatePath: L.SVG.prototype._updatePath,
 
   _updatePath: function (layer) {
     this.__updatePath.call(this, layer);
 
-    if (this.options.text) {
-      this._createText(this.options.text);
+    if (layer.options.text) {
+      this._createText(layer);
     }
   },
 
-  _initText: function () {
-    if (this.options.text) {
-      this._createText(this.options.text);
+  _initText: function (layer) {
+    if (layer.options.text) {
+      this._createText(layer);
     }
   },
 
-  getTextAnchor: function () {
-    if (this._point) {
-      return this._point;
+  getTextAnchor: function (layer) {
+    if (layer._point) {
+      return layer._point;
     }
   },
 
-  setTextAnchor: function (anchorPoint) {
-    if (this._text) {
-      this._text.setAttribute('x', anchorPoint.x);
-      this._text.setAttribute('y', anchorPoint.y);
+  setTextAnchor: function (layer, anchorPoint) {
+    if (layer._text) {
+      layer._text.setAttribute('x', anchorPoint.x);
+      layer._text.setAttribute('y', anchorPoint.y);
     }
   },
 
-  _createText: function (options) {
-    if (this._text) {
-      this._container.removeChild(this._text);
-    }
-
-    if (this._pathDef) {
-      this._defs.removeChild(this._pathDef);
-    }
+  _createText: function (layer) {
+    var options = layer.options.text || {};
 
     // Set element style
     var setStyle = function (element, style) {
@@ -64,7 +70,8 @@ var TextFunctions = TextFunctions || {
       return element;
     };
 
-    this._text = L.SVG.create('text');
+    layer._text = L.SVG.create('text');
+    layer._text.setAttribute('id', L.stamp(layer._text));
 
     var textNode = document.createTextNode(options.text);
 
@@ -74,20 +81,14 @@ var TextFunctions = TextFunctions || {
 
       var pathOptions = options.path;
 
-      // Generate and set an id for the path - the textPath element will reference this id
-      var pathID = L.Util.guid();
-
       var clonedPath = L.SVG.create('path');
       clonedPath.setAttribute('d', this._path.getAttribute('d'));
-      clonedPath.setAttribute('id', pathID);
+      clonedPath.setAttribute('id', L.stamp(clonedPath));
 
-      if (!this._defs) {
-        this._defs = L.SVG.create('defs');
-        this._container.appendChild(this._defs);
-      }
+      this._createDefs();
 
       this._defs.appendChild(clonedPath);
-      this._pathDef = clonedPath;
+      layer._pathDef = clonedPath;
 
       // Create the textPath element and add attributes to reference this path
       var textPath = L.SVG.create('textPath');
@@ -104,37 +105,37 @@ var TextFunctions = TextFunctions || {
         setStyle(textPath, pathOptions.style);
       }
 
-      textPath.setAttributeNS(L.Path.XLINK_NS, 'xlink:href', '#' + pathID);
+      textPath.setAttributeNS(L.Path.XLINK_NS, 'xlink:href', '#' + L.stamp(clonedPath));
       textPath.appendChild(textNode);
 
       // Add the textPath element to the text element
-      this._text.appendChild(textPath);
+      layer._text.appendChild(textPath);
     }
     else {
-      this._text.appendChild(textNode);
-      var anchorPoint = this.getTextAnchor();
-      this.setTextAnchor(anchorPoint);
+      layer._text.appendChild(textNode);
+      var anchorPoint = this.getTextAnchor(layer);
+      this.setTextAnchor(layer, anchorPoint);
     }
 
     //className
     if (options.className) {
-      this._text.setAttribute('class', options.className);
+      layer._text.setAttribute('class', options.className);
     }
     else {
-      this._text.setAttribute('class', 'leaflet-svg-text');
+      layer._text.setAttribute('class', 'leaflet-svg-text');
     }
 
     //attributes
     if (options.attr) {
-      setAttr(this._text, options.attr);
+      setAttr(layer._text, options.attr);
     }
 
     //style
     if (options.style) {
-      setStyle(this._text, options.style);
+      setStyle(layer._text, options.style);
     }
 
-    this._container.appendChild(this._text);
+    this._container.appendChild(layer._text);
   }
 };
 
@@ -178,23 +179,18 @@ var PathFunctions = PathFunctions || {
 
     if (layer._gradient) {
       L.DomUtil.remove(layer._gradient);
-  		delete this._paths[L.stamp(layer._gradient)];
     }
     if (layer._dropShadow) {
       L.DomUtil.remove(layer._dropShadow);
-  		delete this._paths[L.stamp(layer._dropShadow)];
     }
     if (layer._fillPattern) {
       L.DomUtil.remove(layer._fillPattern);
-  		delete this._paths[L.stamp(layer._fillPattern)];
     }
     if (layer._shapePattern) {
       L.DomUtil.remove(layer._shapePattern);
-  		delete this._paths[L.stamp(layer._shapePattern)];
     }
     if (layer._shape) {
       L.DomUtil.remove(layer._shape);
-  		delete this._paths[L.stamp(layer._shape)];
     }
 	},
 
@@ -530,8 +526,8 @@ var LineTextFunctions = L.extend({}, TextFunctions);
 
 // Pulled from the Leaflet discussion here:  https://github.com/Leaflet/Leaflet/pull/1586
 // This is useful for getting a centroid/anchor point for centering text or other SVG markup
-LineTextFunctions.getCenter = function () {
-    var latlngs = this._latlngs,
+LineTextFunctions.getCenter = function (layer) {
+    var latlngs = layer._latlngs,
         len = latlngs.length,
         i, j, p1, p2, f, center;
 
@@ -551,12 +547,14 @@ LineTextFunctions.getCenter = function () {
 };
 
 // Sets the text anchor to the centroid of a line/polygon
-LineTextFunctions.getTextAnchor = function () {
-  var center = this.getCenter();
+/*
+ * TODO: this breaks dcmetrobus example when hovering
+LineTextFunctions.getTextAnchor = function (layer) {
+  var center = this.getCenter(layer);
 
-  return this._map.latLngToLayerPoint(center);
+  return layer._map.latLngToLayerPoint(center);
 };
-
+*/
 /*
 L.Polyline.include(LineTextFunctions);
 L.CircleMarker.include(TextFunctions);
@@ -949,6 +947,10 @@ L.RegularPolygonMarker = L.Path.extend({
 
     this._path.setAttribute('shape-rendering', 'geometricPrecision');
     return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
+  },
+
+  getTextAnchor: function () {
+    return new L.Point(this._point.x, this._point.y - 2 * this.options.radius);
   },
 
   _getPoints: function (inner) {

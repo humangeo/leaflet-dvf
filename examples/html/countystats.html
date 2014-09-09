@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
-    <style>
+    <style>     
       body {
       	margin: 0;
       	padding: 0;
@@ -15,11 +15,11 @@
       	width: 100%;
       	height: 600px;
       }
-
+      
       .leaflet-tile-pane {
       	opacity: 0.3;
       }
-
+      
       .options {
       	position: absolute;
       	top: 8px;
@@ -47,88 +47,88 @@
 	<script type="text/javascript" src="../data/us-10m.js"></script>
 	<script type="text/javascript" src="../data/countyStats.js"></script>
 	<script type="text/javascript" src="../data/countyNames.js"></script>
-	<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
 	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
 	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
 	<script type="text/javascript">
-
+		
 		var map = L.map('map').setView([39.8282, -98.5795], 5);
 
 		var resize = function () {
 			var $map = $('#map');
-
+		
 			$map.height($(window).height());
-
+		
 			if (map) {
 				map.invalidateSize();
 			}
 		};
-
+	
 		$(window).on('resize', function () {
 			resize();
 		});
-
+	
 		resize();
-
+	
 		var baseLayer = new L.StamenTileLayer('toner', {
 			detectRetina: true
 		});
-
+	
 		baseLayer.addTo(map);
-
+		
 		var layerControl = new L.Control.Layers({
 			'Dark Grey': baseLayer
 		});
-
+		
 		layerControl.addTo(map);
-
+		
 		var legendControl = new L.Control.Legend();
-
+		
 		legendControl.addTo(map);
-
+		
 		// Convert the TopoJSON polygons to GeoJSON and assign some additional properties to each polygon
 		// This is probably a common task for county related visualizations, so this might be moved into a
 		// countyData.js file in the future (similar to stateData and countryData)
 		var countyPolygons = topojson.feature(counties, counties.objects.counties);
 		var features = countyPolygons.features;
-
+		
 		var nameLookup = L.GeometryUtils.arrayToMap(countyNameLookup, 'FIPS');
-
+		
 		for (var i = 0; i < features.length; ++i) {
 			features[i].properties.FIPS = features[i].id.toString();
-
+			
 			var countyInfo = nameLookup[features[i].id];
-
+			
 			if (countyInfo) {
 				features[i].properties.county = countyInfo.County;
 				features[i].properties.state = countyInfo.State;
 				features[i].properties.name = countyInfo.County + ', ' + countyInfo.State;
 			}
 		}
-
+		
 		var field = 'Population';
 		var range = L.Util.getNumericRange(countyStats, field);
-
+		
 		// Specify an option of interpolate: false to use only discrete colors rather than interpolating between colors
 		var fillColor = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse(), {
 			interpolate: false
 		});
-
+		
 		var color = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse(), {
 			postProcess: function (y) {
 				var newColor = new L.RGBColor(y);
-
+				
 				newColor.l(0.2);
-
+				
 				return newColor.toRGBString();
 			}
 		});
-
+		
 		var radius = new L.LinearFunction([range[0], 5], [range[1], 20]);
-
+		
 		var options = {
 			locationMode: L.LocationModes.LOOKUP,
 			recordsField: null,
@@ -148,107 +148,107 @@
 				iconAnchor: new L.Point(-5, 60)
 			},
 			legendOptions: {
-				numSegments: 11,
+				numSegments: 11, 
 				gradient: false // Use this option to specify whether or not a gradient will be used when displaying the legend
 			},
 			displayOptions: {}
 		};
-
+		
 		options.displayOptions[field] = {
 			fillColor: fillColor,
 			color: color
 		};
-
+		
 		var countyChoropleth = new L.ChoroplethDataLayer(countyStats, options);
-
+		
 		var symbolOptions = $.extend(true, {}, options);
-
+		
 		symbolOptions.layerOptions.gradient = true;
 		symbolOptions.displayOptions[field].radius = radius;
-
+		
 		var countySymbols = new L.DataLayer(countyStats, symbolOptions);
 
 		layerControl.addOverlay(countyChoropleth, 'Choropleth');
 		layerControl.addOverlay(countySymbols, 'Symbols');
-
+		
 		map.addLayer(countyChoropleth);
-
+		
 		var $fieldSelect = $('#field-select');
 		var $fieldSelect2 = $('#field-select2');
-
+		
 		var firstObject = countyStats[0];
 		var ignoreFields = {'FIPS':null, '95% CI - High':null, '95% CI - Low':null, '':null, 'MPH Ratio':null};
-
+		
 		$fieldSelect2.append('<option>None</option>');
-
+		
 		for (var key in firstObject) {
 			if (!(key in ignoreFields)) {
 				$fieldSelect.append('<option>' + key + '</option>');
 				$fieldSelect2.append('<option>' + key + '</option>');
 			}
 		}
-
+		
 		$fieldSelect.on('change', function (e) {
 			var field = $fieldSelect.val();
 			var displayOptions = {};
 			var range = L.Util.getNumericRange(countyStats, field);
-
+		
 			var fillColor = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse(), {
 				interpolate: false
 			});
-
+		
 			var color = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse(), {
 				postProcess: function (y) {
 					var newColor = new L.RGBColor(y);
-
+				
 					newColor.l(0.2);
-
+				
 					return newColor.toRGBString();
 				}
 			});
-
+		
 			var radius = new L.LinearFunction([range[0], 5], [range[1], 20]);
-
+		
 			displayOptions[field] = {
 				fillColor: fillColor,
 				color: color
 			}
-
+			
 			countyChoropleth.setDisplayOptions(displayOptions);
 		});
-
+		
 		$fieldSelect2.on('change', function (e) {
 			var field = $fieldSelect2.val();
 			var displayOptions = {};
-
+			
 			if (field !== 'None') {
-
+				
 				var range = L.Util.getNumericRange(countyStats, field);
-
+		
 				var fillColor = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse(), {
 					interpolate: false
 				});
-
+		
 				var color = new L.CustomColorFunction(range[0], range[1], L.ColorBrewer.Diverging.RdYlGn['11'].slice(0).reverse(), {
 					postProcess: function (y) {
 						var newColor = new L.RGBColor(y);
-
+				
 						newColor.l(0.2);
-
+				
 						return newColor.toRGBString();
 					}
 				});
-
+		
 				var radius = new L.LinearFunction([range[0], 5], [range[1], 20]);
-
+		
 				displayOptions[field] = {
 					fillColor: fillColor,
 					color: color,
 					radius: radius
 				}
-
+			
 				countySymbols.setDisplayOptions(displayOptions);
-
+	
 				if (!map.hasLayer(countySymbols)) {
 					map.addLayer(countySymbols);
 				}

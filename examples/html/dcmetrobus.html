@@ -17,11 +17,11 @@
 		  line-height: 10px;
 		  color: rgba(0, 0, 0, 0.8);
 	  }
-
+	  
 	  .leaflet-tile-pane {
 	  	  opacity: 0.3;
 	  }
-
+	  
 	  #map {
 		  background-color: #090920;
 	  }
@@ -68,7 +68,7 @@
 	</script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
 	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
 	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
 	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
@@ -124,18 +124,18 @@ $(document).ready(function() {
 				// Setup a new data layer
 				if (!lastLayer){
 					var deviationFunction = new L.HSLHueFunction([-60, 0], [60, 240]);
-
+	
 					var dataLayer = new L.DataLayer(data,{
 						recordsField: 'BusPositions',
 						latitudeField: 'Lat',
 						longitudeField: 'Lon',
 						locationMode: L.LocationModes.LATLNG,
-
+		
 						displayOptions: {
 							'Deviation': {
 								displayName: 'Deviation (minutes)',
 								fillColor: deviationFunction,
-
+				
 								displayText: function (value) {
 									return value;
 								}
@@ -155,7 +155,7 @@ $(document).ready(function() {
 						legendOptions: {
 							numSegments: 19
 						},
-
+		
 						layerOptions: {
 							levels: 2,
 							numberOfSides: 50,
@@ -207,7 +207,7 @@ $(document).ready(function() {
 				else {
 					lastLayer.setData(data);
 				}
-
+				
 				setTimeout(getData, 5000);
 			}
 		});

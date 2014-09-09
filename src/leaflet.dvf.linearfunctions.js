@@ -210,25 +210,8 @@ L.ColorFunction = L.LinearFunction.extend({
 			return prefix + '(' + parts.join(',') + ')';
 		};
 		
-		options = L.extend({},this.options);
+		options = this.options;
 
-		var postProcess = function (val) {
-			return function (y) {
-				if (options && options.postProcess) {
-					y = options.postProcess.call(this, y);
-				}
-				
-				var colorString = this._getColorString(y);
-				
-				if (((L.Browser.ie) && colorString.indexOf('hsl') > -1) || options.rgb) {
-					colorString = L.hslColor(colorString).toRGBString();
-				}
-				
-				return colorString;
-			};
-		}
-		
-		/*
 		var postProcess = function (y) {
 			if (options && options.postProcess) {
 				y = options.postProcess.call(this, y);
@@ -242,16 +225,11 @@ L.ColorFunction = L.LinearFunction.extend({
 			
 			return colorString;
 		};
-		*/
-		
 		
 		L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
 			preProcess: this.options.preProcess,
-			postProcess: postProcess(options)
+			postProcess: postProcess
 		});
-		
-		
-		//this.options.postProcess = postProcess(options);
 	}
 });
 

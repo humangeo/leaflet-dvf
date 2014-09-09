@@ -145,22 +145,20 @@ L.ColorFunction = L.LinearFunction.extend({
             }
             return prefix + "(" + parts.join(",") + ")";
         };
-        options = L.extend({}, this.options);
-        var postProcess = function(val) {
-            return function(y) {
-                if (options && options.postProcess) {
-                    y = options.postProcess.call(this, y);
-                }
-                var colorString = this._getColorString(y);
-                if (L.Browser.ie && colorString.indexOf("hsl") > -1 || options.rgb) {
-                    colorString = L.hslColor(colorString).toRGBString();
-                }
-                return colorString;
-            };
+        options = this.options;
+        var postProcess = function(y) {
+            if (options && options.postProcess) {
+                y = options.postProcess.call(this, y);
+            }
+            var colorString = this._getColorString(y);
+            if (L.Browser.ie && colorString.indexOf("hsl") > -1 || options.rgb) {
+                colorString = L.hslColor(colorString).toRGBString();
+            }
+            return colorString;
         };
         L.LinearFunction.prototype.initialize.call(this, minPoint, maxPoint, {
             preProcess: this.options.preProcess,
-            postProcess: postProcess(options)
+            postProcess: postProcess
         });
     }
 });
@@ -1912,41 +1910,36 @@ L.regularPolygon = function(centerLatLng, options) {
 L.Path.XLINK_NS = "http://www.w3.org/1999/xlink";
 
 var TextFunctions = TextFunctions || {
-    __removePath: L.SVG.prototype._removePath,
-    _removePath: function(layer) {
-        TextFunctions.__removePath.call(this, layer);
-        if (layer._text) {
-            L.DomUtil.remove(layer._text);
-        }
-        if (layer._pathDef) {
-            L.DomUtil.remove(layer._pathDef);
+    __updatePath: L.Path.prototype._updatePath,
+    _updatePath: function() {
+        this.__updatePath.call(this);
+        if (this.options.text) {
+            this._createText(this.options.text);
         }
     },
-    __updatePath: L.SVG.prototype._updatePath,
-    _updatePath: function(layer) {
-        this.__updatePath.call(this, layer);
-        if (layer.options.text) {
-            this._createText(layer);
+    _initText: function() {
+        if (this.options.text) {
+            this._createText(this.options.text);
         }
     },
-    _initText: function(layer) {
-        if (layer.options.text) {
-            this._createText(layer);
+    getTextAnchor: function() {
+        if (this._point) {
+            return this._point;
         }
     },
-    getTextAnchor: function(layer) {
-        if (layer._point) {
-            return layer._point;
+    setTextAnchor: function(anchorPoint) {
+        if (this._text) {
+            this._text.setAttribute("x", anchorPoint.x);
+            this._text.setAttribute("y", anchorPoint.y);
         }
     },
-    setTextAnchor: function(layer, anchorPoint) {
-        if (layer._text) {
-            layer._text.setAttribute("x", anchorPoint.x);
-            layer._text.setAttribute("y", anchorPoint.y);
+    _createText: function(options) {
+        if (this._text) {
+            this._container.removeChild(this._text);
         }
-    },
-    _createText: function(layer) {
-        var options = layer.options.text || {};
+        if (this._pathDef) {
+            this._defs.removeChild(this._pathDef);
+        }
         var setStyle = function(element, style) {
             var styleString = "";
             for (var key in style) {
@@ -1961,18 +1954,21 @@ var TextFunctions = TextFunctions || {
             }
             return element;
         };
-        layer._text = L.SVG.create("text");
-        layer._text.setAttribute("id", L.stamp(layer._text));
+        this._text = this._createElement("text");
         var textNode = document.createTextNode(options.text);
         if (options.path) {
             var pathOptions = options.path;
-            var clonedPath = L.SVG.create("path");
+            var pathID = L.Util.guid();
+            var clonedPath = this._createElement("path");
             clonedPath.setAttribute("d", this._path.getAttribute("d"));
-            clonedPath.setAttribute("id", L.stamp(clonedPath));
-            this._createDefs();
+            clonedPath.setAttribute("id", pathID);
+            if (!this._defs) {
+                this._defs = this._createElement("defs");
+                this._container.appendChild(this._defs);
+            }
             this._defs.appendChild(clonedPath);
-            layer._pathDef = clonedPath;
-            var textPath = L.SVG.create("textPath");
+            this._pathDef = clonedPath;
+            var textPath = this._createElement("textPath");
             if (pathOptions.startOffset) {
                 textPath.setAttribute("startOffset", pathOptions.startOffset);
             }
@@ -1982,83 +1978,50 @@ var TextFunctions = TextFunctions || {
             if (pathOptions.style) {
                 setStyle(textPath, pathOptions.style);
             }
-            textPath.setAttributeNS(L.Path.XLINK_NS, "xlink:href", "#" + L.stamp(clonedPath));
+            textPath.setAttributeNS(L.Path.XLINK_NS, "xlink:href", "#" + pathID);
             textPath.appendChild(textNode);
-            layer._text.appendChild(textPath);
+            this._text.appendChild(textPath);
         } else {
-            layer._text.appendChild(textNode);
-            var anchorPoint = this.getTextAnchor(layer);
-            this.setTextAnchor(layer, anchorPoint);
+            this._text.appendChild(textNode);
+            var anchorPoint = this.getTextAnchor();
+            this.setTextAnchor(anchorPoint);
         }
         if (options.className) {
-            layer._text.setAttribute("class", options.className);
+            this._text.setAttribute("class", options.className);
         } else {
-            layer._text.setAttribute("class", "leaflet-svg-text");
+            this._text.setAttribute("class", "leaflet-svg-text");
         }
         if (options.attr) {
-            setAttr(layer._text, options.attr);
+            setAttr(this._text, options.attr);
         }
         if (options.style) {
-            setStyle(layer._text, options.style);
+            setStyle(this._text, options.style);
         }
-        this._container.appendChild(layer._text);
+        this._container.appendChild(this._text);
     }
 };
 
 var PathFunctions = PathFunctions || {
-    __updateStyle: L.SVG.prototype._updateStyle,
+    __updateStyle: L.Path.prototype._updateStyle,
     _createDefs: function() {
+        this._defs = this._createElement("defs");
+        this._container.appendChild(this._defs);
+    },
+    _createGradient: function(options) {
         if (!this._defs) {
-            this._defs = L.SVG.create("defs");
-            this._container.appendChild(this._defs);
+            this._createDefs();
         }
-    },
-    __addPath: L.SVG.prototype._addPath,
-    _addPath: function(layer) {
-        this.__addPath(layer);
-        if (layer._gradient) {
-            this._defs.appendChild(layer._gradient);
+        if (this._gradient) {
+            this._defs.removeChild(this._gradient);
         }
-        if (layer._dropShadow) {
-            this._defs.appendChild(layer._dropShadow);
-        }
-        if (layer._fillPattern) {
-            this._defs.appendChild(layer._fillPattern);
-        }
-        if (layer._shapePattern) {
-            this._defs.appendChild(layer._shapePattern);
-        }
-        if (layer._shape) {
-            this._container.insertBefore(layer._shape, layer._path.nextSibling);
-        }
-    },
-    __removePath: L.SVG.prototype._removePath,
-    _removePath: function(layer) {
-        this.__removePath(layer);
-        if (layer._gradient) {
-            L.DomUtil.remove(layer._gradient);
-        }
-        if (layer._dropShadow) {
-            L.DomUtil.remove(layer._dropShadow);
-        }
-        if (layer._fillPattern) {
-            L.DomUtil.remove(layer._fillPattern);
-        }
-        if (layer._shapePattern) {
-            L.DomUtil.remove(layer._shapePattern);
-        }
-        if (layer._shape) {
-            L.DomUtil.remove(layer._shape);
-        }
-    },
-    _createGradient: function(layer) {
-        this._createDefs();
-        var options = layer.options !== true ? L.extend({}, layer.options) : {};
+        options = options !== true ? L.extend({}, options) : {};
+        var gradientGuid = L.Util.guid();
+        this._gradientGuid = gradientGuid;
         var gradient;
         var gradientOptions;
         if (options.gradientType == "radial") {
-            gradient = L.SVG.create("radialGradient");
-            gradientOptions = options.radial || {
+            gradient = this._createElement("radialGradient");
+            var gradientOptions = options.radial || {
                 cx: "50%",
                 cy: "50%",
                 r: "50%",
@@ -2066,16 +2029,16 @@ var PathFunctions = PathFunctions || {
                 fy: "50%"
             };
         } else {
-            gradient = L.SVG.create("linearGradient");
+            gradient = this._createElement("linearGradient");
             var vector = options.vector || [ [ "0%", "0%" ], [ "100%", "100%" ] ];
-            gradientOptions = {
+            var gradientOptions = {
                 x1: vector[0][0],
                 x2: vector[1][0],
                 y1: vector[0][1],
                 y2: vector[1][1]
             };
         }
-        gradientOptions.id = L.stamp(gradient);
+        gradientOptions.id = "grad" + gradientGuid;
         var stops = options.stops || [ {
             offset: "0%",
             style: {
@@ -2085,7 +2048,7 @@ var PathFunctions = PathFunctions || {
         }, {
             offset: "60%",
             style: {
-                color: options.fillColor || options.color,
+                color: this.options.fillColor || this.options.color,
                 opacity: 1
             }
         } ];
@@ -2094,13 +2057,13 @@ var PathFunctions = PathFunctions || {
         }
         for (var i = 0; i < stops.length; ++i) {
             var stop = stops[i];
-            var stopElement = L.SVG.create("stop");
+            var stopElement = this._createElement("stop");
             stop.style = stop.style || {};
-            for (key in stop) {
+            for (var key in stop) {
                 var stopProperty = stop[key];
                 if (key === "style") {
                     var styleProperty = "";
-                    stopProperty.color = stopProperty.color || (options.fillColor || options.color);
+                    stopProperty.color = stopProperty.color || (this.options.fillColor || this.options.color);
                     stopProperty.opacity = typeof stopProperty.opacity === "undefined" ? 1 : stopProperty.opacity;
                     for (var propKey in stopProperty) {
                         styleProperty += "stop-" + propKey + ":" + stopProperty[propKey] + ";";
@@ -2111,20 +2074,26 @@ var PathFunctions = PathFunctions || {
             }
             gradient.appendChild(stopElement);
         }
-        layer._gradient = gradient;
-        return L.stamp(gradient);
+        this._gradient = gradient;
+        this._defs.appendChild(gradient);
     },
-    _createDropShadow: function(layer) {
-        this._createDefs();
-        var filter = L.SVG.create("filter");
-        var feOffset = L.SVG.create("feOffset");
-        var feGaussianBlur = L.SVG.create("feGaussianBlur");
-        var feBlend = L.SVG.create("feBlend");
-        var options = layer.options || {
+    _createDropShadow: function(options) {
+        if (!this._defs) {
+            this._createDefs();
+        }
+        if (this._dropShadow) {
+            this._defs.removeChild(this._dropShadow);
+        }
+        var filterGuid = L.Util.guid();
+        var filter = this._createElement("filter");
+        var feOffset = this._createElement("feOffset");
+        var feGaussianBlur = this._createElement("feGaussianBlur");
+        var feBlend = this._createElement("feBlend");
+        options = options || {
             width: "200%",
             height: "200%"
         };
-        options.id = L.stamp(filter);
+        options.id = "filter" + filterGuid;
         for (var key in options) {
             filter.setAttribute(key, options[key]);
         }
@@ -2144,24 +2113,23 @@ var PathFunctions = PathFunctions || {
             in2: "blurOut",
             mode: "lighten"
         };
-        for (key in offsetOptions) {
+        for (var key in offsetOptions) {
             feOffset.setAttribute(key, offsetOptions[key]);
         }
-        for (key in blurOptions) {
+        for (var key in blurOptions) {
             feGaussianBlur.setAttribute(key, blurOptions[key]);
         }
-        for (key in blendOptions) {
+        for (var key in blendOptions) {
             feBlend.setAttribute(key, blendOptions[key]);
         }
         filter.appendChild(feOffset);
         filter.appendChild(feGaussianBlur);
         filter.appendChild(feBlend);
-        layer._dropShadow = filter;
-        return L.stamp(filter);
+        this._dropShadow = filter;
+        this._defs.appendChild(filter);
     },
     _createCustomElement: function(tag, attributes) {
-        var element = L.SVG.create(tag);
-        element.setAttribute("id", L.stamp(element));
+        var element = this._createElement(tag);
         for (var key in attributes) {
             if (attributes.hasOwnProperty(key)) {
                 element.setAttribute(key, attributes[key]);
@@ -2170,8 +2138,7 @@ var PathFunctions = PathFunctions || {
         return element;
     },
     _createImage: function(imageOptions) {
-        var image = L.SVG.create("image");
-        image.setAttribute("id", L.stamp(image));
+        var image = this._createElement("image");
         image.setAttribute("width", imageOptions.width);
         image.setAttribute("height", imageOptions.height);
         image.setAttribute("x", imageOptions.x || 0);
@@ -2187,30 +2154,30 @@ var PathFunctions = PathFunctions || {
         var shape = this._createCustomElement(type, shapeOptions);
         return shape;
     },
-    _createFillPattern: function(layer) {
-        this._createDefs();
-        if (layer._fillPattern) {
-            L.DomUtil.remove(layer._fillPattern);
-            delete this._paths[L.stamp(layer._fillPattern)];
-        }
-        var patternOptions = layer.options.pattern;
+    _applyCustomStyles: function() {},
+    _createFillPattern: function(imageOptions) {
+        var patternGuid = L.Util.guid();
+        var patternOptions = imageOptions.pattern;
+        patternOptions.id = patternGuid;
         patternOptions.patternUnits = patternOptions.patternUnits || "objectBoundingBox";
         var pattern = this._createPattern(patternOptions);
         var image = this._createImage(imageOptions.image);
         image.setAttributeNS(L.Path.XLINK_NS, "xlink:href", imageOptions.url);
         pattern.appendChild(image);
+        if (!this._defs) {
+            this._createDefs();
+        }
         this._defs.appendChild(pattern);
-        layer._fillPattern = pattern;
-        return L.stamp(pattern);
+        this._path.setAttribute("fill", "url(#" + patternGuid + ")");
     },
     _getDefaultDiameter: function(radius) {
         return 1.75 * radius;
     },
-    _createShapeImage: function(layer) {
-        this._createDefs();
-        var imageOptions = layer.options.shapeImage || {};
-        var radius = layer.options.radius || Math.max(layer.options.radiusX, layer.options.radiusY);
-        var diameter = layer._getDefaultDiameter ? layer._getDefaultDiameter(radius) : this._getDefaultDiameter(radius);
+    _createShapeImage: function(imageOptions) {
+        imageOptions = imageOptions || {};
+        var patternGuid = L.Util.guid();
+        var radius = this.options.radius || Math.max(this.options.radiusX, this.options.radiusY);
+        var diameter = this._getDefaultDiameter(radius);
         var imageSize = imageOptions.imageSize || new L.Point(diameter, diameter);
         var circleSize = imageOptions.radius || diameter / 2;
         var shapeOptions = imageOptions.shape || {
@@ -2226,34 +2193,33 @@ var PathFunctions = PathFunctions || {
             x: 0,
             y: 0
         };
-        patternOptions.patternUnits = patternOptions.patternUnits || "objectBoundingBox";
-        var pattern = this._createPattern(patternOptions);
-        L.stamp(pattern);
         var shapeKeys = Object.keys(shapeOptions);
         var shapeType = shapeKeys.length > 0 ? shapeKeys[0] : "circle";
-        shapeOptions[shapeType].fill = "url(#" + L.stamp(pattern) + ")";
+        shapeOptions[shapeType].fill = "url(#" + patternGuid + ")";
         var shape = this._createShape(shapeType, shapeOptions[shapeType]);
-        if (layer.options.clickable) {
+        if (this.options.clickable) {
             shape.setAttribute("class", "leaflet-clickable");
         }
-        imageOptions = imageOptions.image || {
+        patternOptions.id = patternGuid;
+        patternOptions.patternUnits = patternOptions.patternUnits || "objectBoundingBox";
+        var pattern = this._createPattern(patternOptions);
+        var imageOptions = imageOptions.image || {
             width: imageSize.x,
             height: imageSize.y,
             x: 0,
             y: 0,
-            url: layer.options.imageCircleUrl
+            url: this.options.imageCircleUrl
         };
         var image = this._createImage(imageOptions);
         image.setAttributeNS(L.Path.XLINK_NS, "xlink:href", imageOptions.url);
         pattern.appendChild(image);
-        layer._shapePattern = pattern;
-        layer._shape = shape;
-        return L.stamp(pattern);
+        this._defs.appendChild(pattern);
+        this._container.insertBefore(shape, this._defs);
+        this._shape = shape;
     },
     _updateStyle: function(layer) {
         this.__updateStyle.call(this, layer);
         var context = layer ? layer : this;
-        var guid;
         if (context.options.stroke) {
             if (context.options.lineCap) {
                 context._path.setAttribute("stroke-linecap", context.options.lineCap);
@@ -2263,31 +2229,41 @@ var PathFunctions = PathFunctions || {
             }
         }
         if (context.options.gradient) {
-            guid = this._createGradient(context);
-            context._path.setAttribute("fill", "url(#" + guid + ")");
+            context._createGradient(context.options.gradient);
+            context._path.setAttribute("fill", "url(#" + context._gradient.getAttribute("id") + ")");
         } else if (!context.options.fill) {
             context._path.setAttribute("fill", "none");
         }
         if (context.options.dropShadow) {
-            guid = this._createDropShadow(context);
-            context._path.setAttribute("filter", "url(#" + guid + ")");
+            context._createDropShadow();
+            context._path.setAttribute("filter", "url(#" + context._dropShadow.getAttribute("id") + ")");
         } else {
             context._path.removeAttribute("filter");
         }
         if (context.options.fillPattern) {
-            guid = this._createFillPattern(context);
-            context._path.setAttribute("fill", "url(#" + guid + ")");
+            context._createFillPattern(context.options.fillPattern);
         }
-        if (context._applyCustomStyles) {
-            context._applyCustomStyles();
-        }
+        context._applyCustomStyles();
     }
 };
 
+if (L.SVG) {
+    var SVGStyleFunctions = L.Util.extend(PathFunctions, {
+        __updateStyle: L.SVG.prototype._updateStyle
+    });
+    var SVGTextFunctions = L.Util.extend(TextFunctions, {
+        __updatePath: L.SVG.prototype._updatePath
+    });
+    L.SVG.include(SVGStyleFunctions);
+    L.SVG.include(SVGTextFunctions);
+}
+
 var LineTextFunctions = L.extend({}, TextFunctions);
 
-LineTextFunctions.getCenter = function(layer) {
-    var latlngs = layer._latlngs, len = latlngs.length, i, j, p1, p2, f, center;
+LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
+
+LineTextFunctions.getCenter = function() {
+    var latlngs = this._latlngs, len = latlngs.length, i, j, p1, p2, f, center;
     for (i = 0, j = len - 1, area = 0, lat = 0, lng = 0; i < len; j = i++) {
         p1 = latlngs[i];
         p2 = latlngs[j];
@@ -2301,7 +2277,30 @@ LineTextFunctions.getCenter = function(layer) {
     return center;
 };
 
-L.extend(L.SVG.prototype, LineTextFunctions, PathFunctions);
+LineTextFunctions.getTextAnchor = function() {
+    var center = this.getCenter();
+    return this._map.latLngToLayerPoint(center);
+};
+
+L.Polyline.include(LineTextFunctions);
+
+L.CircleMarker.include(TextFunctions);
+
+L.Path.include(PathFunctions);
+
+L.Polygon.include(PathFunctions);
+
+L.Polyline.include(PathFunctions);
+
+L.CircleMarker.include(PathFunctions);
+
+L.CircleMarker = L.CircleMarker.extend({
+    _applyCustomStyles: function() {
+        if (this.options.shapeImage || this.options.imageCircleUrl) {
+            this._createShapeImage(this.options.shapeImage);
+        }
+    }
+});
 
 L.Point.prototype.rotate = function(angle, point) {
     var radius = this.distanceTo(point);
@@ -2310,22 +2309,10 @@ L.Point.prototype.rotate = function(angle, point) {
     this.y = point.y + radius * Math.sin(theta);
 };
 
-L.extend(L.GeoJSON, {
-    asFeature: function(geoJSON) {
-        if (geoJSON.type === "Feature" || geoJSON.type === "FeatureCollection") {
-            return geoJSON;
-        }
-        return {
-            type: "Feature",
-            properties: {},
-            geometry: geoJSON
-        };
-    }
-});
-
 L.MapMarker = L.Path.extend({
+    includes: TextFunctions,
     initialize: function(centerLatLng, options) {
-        L.setOptions(this, options);
+        L.Path.prototype.initialize.call(this, options);
         this._latlng = centerLatLng;
     },
     options: {
@@ -2351,24 +2338,11 @@ L.MapMarker = L.Path.extend({
         this._latlng = latlng;
         return this.redraw();
     },
-    projectLatLngs: function() {
+    projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
         if (this.options.innerRadius > 0) {
             this._innerPoints = this._getPoints(true).reverse();
-        }
-    },
-    _project: function() {
-        this.projectLatLngs();
-        this._updateBounds();
-    },
-    _updateBounds: function() {
-        var map = this._map, height = this.options.radius * 3, point = map.project(this._latlng), swPoint = new L.Point(point.x - this.options.radius, point.y), nePoint = new L.Point(point.x + this.options.radius, point.y - height);
-        this._pxBounds = new L.Bounds(swPoint, nePoint);
-    },
-    _update: function() {
-        if (this._map) {
-            this._renderer._setPath(this, this.getPathString());
         }
     },
     getBounds: function() {
@@ -2449,13 +2423,11 @@ L.MapMarker = L.Path.extend({
     },
     _applyCustomStyles: function() {
         if (this.options.shapeImage || this.options.imageCircleUrl) {
-            this._renderer._createShapeImage(this);
+            this._createShapeImage(this.options.shapeImage);
         }
     },
     toGeoJSON: function() {
-        var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
-        geoJSON.properties = this.options;
-        return geoJSON;
+        return L.Util.pointToGeoJSON.call(this);
     }
 });
 
@@ -2463,16 +2435,10 @@ L.mapMarker = function(centerLatLng, options) {
     return new L.MapMarker(centerLatLng, options);
 };
 
-L.extend(L.LatLng, {
-    DEG_TO_RAD: Math.PI / 180,
-    RAD_TO_DEG: 180 / Math.PI,
-    MAX_MARGIN: 1e-9
-});
-
 L.RegularPolygonMarker = L.Path.extend({
     includes: TextFunctions,
     initialize: function(centerLatLng, options) {
-        L.setOptions(this, options);
+        L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
         this._latlng = centerLatLng;
         this.options.numberOfSides = Math.max(this.options.numberOfSides, 3);
     },
@@ -2495,24 +2461,11 @@ L.RegularPolygonMarker = L.Path.extend({
         this._latlng = latlng;
         return this.redraw();
     },
-    projectLatLngs: function() {
+    projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
         if (this.options.innerRadius || this.options.innerRadiusX && this.options.innerRadiusY) {
             this._innerPoints = this._getPoints(true).reverse();
-        }
-    },
-    _project: function() {
-        this.projectLatLngs();
-        this._updateBounds();
-    },
-    _updateBounds: function() {
-        var map = this._map, radiusX = this.options.radius || this.options.radiusX, radiusY = this.options.radius || this.options.radiusY, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._latlng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY);
-        this._pxBounds = new L.Bounds(swPoint, nePoint);
-    },
-    _update: function() {
-        if (this._map) {
-            this._renderer._setPath(this, this.getPathString());
         }
     },
     getBounds: function() {
@@ -2566,9 +2519,6 @@ L.RegularPolygonMarker = L.Path.extend({
         this._path.setAttribute("shape-rendering", "geometricPrecision");
         return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
-    getTextAnchor: function() {
-        return new L.Point(this._point.x, this._point.y - 2 * this.options.radius);
-    },
     _getPoints: function(inner) {
         var maxDegrees = this.options.maxDegrees || 360;
         var angleSize = maxDegrees / Math.max(this.options.numberOfSides, 3);
@@ -2603,13 +2553,11 @@ L.RegularPolygonMarker = L.Path.extend({
     },
     _applyCustomStyles: function() {
         if (this.options.shapeImage || this.options.imageCircleUrl) {
-            this._renderer._createShapeImage(this);
+            this._createShapeImage(this.options.shapeImage);
         }
     },
     toGeoJSON: function() {
-        var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
-        geoJSON.properties = this.options;
-        return geoJSON;
+        return L.Util.pointToGeoJSON.call(this);
     }
 });
 
@@ -2732,28 +2680,15 @@ L.octagonMarker = function(centerLatLng, options) {
 
 L.SVGMarker = L.Path.extend({
     initialize: function(latlng, options) {
-        L.setOptions(this, options);
+        L.Path.prototype.initialize.call(this, options);
         this._svg = options.svg;
         if (this._svg.indexOf("<") === 0) {
             this._data = this._svg;
         }
         this._latlng = latlng;
     },
-    projectLatLngs: function() {
+    projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
-    },
-    _project: function() {
-        this.projectLatLngs();
-        this._updateBounds();
-    },
-    _updateBounds: function() {
-        var map = this._map, radiusX = 5, radiusY = 5, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._latlng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY);
-        this._pxBounds = new L.Bounds(swPoint, nePoint);
-    },
-    _update: function() {
-        if (this._map) {
-            this._renderer._setPath(this, this.getPathString());
-        }
     },
     setLatLng: function(latlng) {
         this._latlng = latlng;
@@ -2766,6 +2701,9 @@ L.SVGMarker = L.Path.extend({
         var me = this;
         var addSVG = function() {
             var g = me._path.parentNode;
+            while (g.nodeName.toLowerCase() !== "g") {
+                g = g.parentNode;
+            }
             if (me.options.clickable) {
                 g.setAttribute("class", "leaflet-clickable");
             }
@@ -2800,7 +2738,7 @@ L.SVGMarker = L.Path.extend({
             if (me.options.rotation) {
                 transforms.push("rotate(" + me.options.rotation + " " + width / 2 + " " + height / 2 + ")");
             }
-            svg.setAttribute("transform", transforms.join(" "));
+            g.setAttribute("transform", transforms.join(" "));
         };
         if (!this._data) {
             var xhr = new XMLHttpRequest();
@@ -2815,12 +2753,9 @@ L.SVGMarker = L.Path.extend({
         } else {
             addSVG();
         }
-        return "M0 0";
     },
     toGeoJSON: function() {
-        var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
-        geoJSON.properties = this.options;
-        return geoJSON;
+        return pointToGeoJSON.call(this);
     }
 });
 
@@ -2861,7 +2796,7 @@ L.MarkerGroup = L.FeatureGroup.extend({
 
 L.BarMarker = L.Path.extend({
     initialize: function(centerLatLng, options) {
-        L.setOptions(this, options);
+        L.Path.prototype.initialize.call(this, options);
         this._latlng = centerLatLng;
     },
     options: {
@@ -2884,17 +2819,9 @@ L.BarMarker = L.Path.extend({
         this._latlng = latlng;
         return this.redraw();
     },
-    _project: function() {
+    projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
-    },
-    _update: function() {
-        if (!this._map) {
-            return;
-        }
-        if (this._map) {
-            this._renderer._setPath(this, this.getPathString());
-        }
     },
     getBounds: function() {
         var map = this._map, point = map.project(this._latlng), halfWidth = this.options.width / 2, swPoint = new L.Point(point.x - halfWidth, point.y), nePoint = new L.Point(point.x + halfWidth, point.y - this.options.maxHeight), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
@@ -3027,9 +2954,7 @@ L.ChartMarker = L.FeatureGroup.extend({
         this._loadComponents();
     },
     toGeoJSON: function() {
-        var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
-        geoJSON.properties = this.options;
-        return geoJSON;
+        return L.Util.pointToGeoJSON.call(this);
     }
 });
 
@@ -3099,7 +3024,7 @@ L.BarChartMarker = L.ChartMarker.extend({
 
 L.RadialBarMarker = L.Path.extend({
     initialize: function(centerLatLng, options) {
-        L.setOptions(this, options);
+        L.Path.prototype.initialize.call(this, options);
         this._latlng = centerLatLng;
     },
     options: {
@@ -3118,17 +3043,9 @@ L.RadialBarMarker = L.Path.extend({
         this._latlng = latlng;
         return this.redraw();
     },
-    _project: function() {
+    projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
-    },
-    _update: function() {
-        if (!this._map) {
-            return;
-        }
-        if (this._map) {
-            this._renderer._setPath(this, this.getPathString());
-        }
     },
     getBounds: function() {
         var map = this._map, radiusX = this.options.radiusX || this.options.radius, radiusY = this.options.radiusY || this.options.radius, deltaX = radiusX * Math.cos(Math.PI / 4), deltaY = radiusY * Math.sin(Math.PI / 4), point = map.project(this._latlng), swPoint = new L.Point(point.x - deltaX, point.y + deltaY), nePoint = new L.Point(point.x + deltaX, point.y - deltaY), sw = map.unproject(swPoint), ne = map.unproject(nePoint);
@@ -4304,35 +4221,6 @@ L.DataLayer = L.LayerGroup.extend({
             }
         }
         return container.innerHTML;
-    },
-    toGeoJSON: function() {
-        var type = this.feature && this.feature.geometry && this.feature.geometry.type;
-        if (type === "MultiPoint") {
-            return this.toMultiPoint();
-        }
-        var isGeometryCollection = type === "GeometryCollection", jsons = [];
-        this.eachLayer(function(layer) {
-            if (layer.toGeoJSON) {
-                var json = layer.toGeoJSON();
-                if (json.type === "FeatureCollection" && json.features) {
-                    for (var i = 0; i < json.features.length; ++i) {
-                        jsons.push(json.features[i]);
-                    }
-                } else {
-                    jsons.push(isGeometryCollection ? json.geometry : L.GeoJSON.asFeature(json));
-                }
-            }
-        });
-        if (isGeometryCollection) {
-            return L.GeoJSON.getFeature(this, {
-                geometries: jsons,
-                type: "GeometryCollection"
-            });
-        }
-        return {
-            type: "FeatureCollection",
-            features: jsons
-        };
     }
 });
 
@@ -4849,7 +4737,8 @@ L.CalloutLine = L.Path.extend({
 
 L.CalloutLine = L.CalloutLine.extend({
     initialize: function(latlng, options) {
-        L.setOptions(this, options);
+        L.Util.setOptions(this, options);
+        L.Path.prototype.initialize.call(this, options);
         this._latlng = latlng;
     },
     options: {
@@ -4868,25 +4757,12 @@ L.CalloutLine = L.CalloutLine.extend({
         lineJoin: "miter",
         arrow: false
     },
-    projectLatLngs: function() {
+    projectLatlngs: function() {
         this._point = this._map.latLngToLayerPoint(this._latlng);
         this._points = this._getPoints();
     },
-    _project: function() {
-        this.projectLatLngs();
-        this._updateBounds();
-    },
-    _updateBounds: function() {
-        var map = this._map, point = map.project(this._latlng), swPoint = new L.Point(point.x + this.options.position.x, point.y + this.options.position.y), nePoint = new L.Point(swPoint.x + this.options.size.x, swPoint.y - this.options.size.y);
-        this._pxBounds = new L.Bounds(swPoint, nePoint);
-    },
-    _update: function() {
-        if (this._map) {
-            this._renderer._setPath(this, this.getPathString());
-        }
-    },
     getEndPoint: function() {
-        this._project();
+        this.projectLatlngs();
         return this._points[this._points.length - 1];
     },
     _getPathAngle: function() {
@@ -5165,7 +5041,7 @@ L.arcedFlowLine = function(data, options) {
 L.ArcedPolyline = L.Path.extend({
     includes: TextFunctions,
     initialize: function(latlngs, options) {
-        L.setOptions(this, options);
+        L.Path.prototype.initialize.call(this, options);
         this._latlngs = latlngs;
     },
     options: {
@@ -5179,15 +5055,10 @@ L.ArcedPolyline = L.Path.extend({
         dropShadow: false,
         optimizeSpeed: false
     },
-    _project: function() {
+    projectLatlngs: function() {
         this._points = [];
         for (var i = 0; i < this._latlngs.length; ++i) {
             this._points.push(this._map.latLngToLayerPoint(this._latlngs[i]));
-        }
-    },
-    _update: function() {
-        if (this._map) {
-            this._renderer._setPath(this, this.getPathString());
         }
     },
     getBounds: function() {

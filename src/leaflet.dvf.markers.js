@@ -526,8 +526,8 @@ var LineTextFunctions = L.extend({}, TextFunctions);
 
 // Pulled from the Leaflet discussion here:  https://github.com/Leaflet/Leaflet/pull/1586
 // This is useful for getting a centroid/anchor point for centering text or other SVG markup
-LineTextFunctions.getCenter = function () {
-    var latlngs = this._latlngs,
+LineTextFunctions.getCenter = function (layer) {
+    var latlngs = layer._latlngs,
         len = latlngs.length,
         i, j, p1, p2, f, center;
 
@@ -547,10 +547,10 @@ LineTextFunctions.getCenter = function () {
 };
 
 // Sets the text anchor to the centroid of a line/polygon
-LineTextFunctions.getTextAnchor = function () {
-  var center = this.getCenter();
+LineTextFunctions.getTextAnchor = function (layer) {
+  var center = this.getCenter(layer);
 
-  return this._map.latLngToLayerPoint(center);
+  return layer._map.latLngToLayerPoint(center);
 };
 
 /*
@@ -945,6 +945,10 @@ L.RegularPolygonMarker = L.Path.extend({
 
     this._path.setAttribute('shape-rendering', 'geometricPrecision');
     return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
+  },
+
+  getTextAnchor: function () {
+    return new L.Point(this._point.x, this._point.y - 2 * this.options.radius);
   },
 
   _getPoints: function (inner) {

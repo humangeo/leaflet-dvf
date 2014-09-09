@@ -11,19 +11,19 @@
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
-      
+
       #map {
       	background-image: url('../img/subtlepatterns/irongrip/irongrip.png');
       }
-      
+
       #map div.leaflet-tile-pane {
       	opacity: 0.5;
       }
-      
+
       div.leaflet-control-legend {
       	max-height: 200px;
       }
-      
+
       .leaflet-control-layers-overlays {
       	*max-height: 200px;
       	overflow-x: scroll;
@@ -72,7 +72,7 @@
 	</script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+	<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
 	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
 	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
 	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
@@ -90,72 +90,72 @@ $(document).ready(function() {
 	// Function for resizing the map to fill the available space on the screen
 	var resize = function () {
 		var $map = $('#map');
-		
+
 		$map.height($(window).height() - $('div.navbar').outerHeight());
-		
+
 		if (map) {
 			map.invalidateSize();
 		}
 	};
-	
+
 	// Resize the map element on window resize
 	$(window).on('resize', function () {
 		resize();
 	});
-	
+
 	// Resize the map element
 	resize();
-	
+
 	// Initialize the map
 	map = L.map('map').setView([0.0, 0.0], 2);
-	
+
 	var baseLayer = new L.StamenTileLayer('toner', {
 		detectRetina: true
 	}).addTo(map);
-	
+
 	baseLayer.addTo(map);
-	
+
 	// Initialize the legend control and add it to the map
 	var legendControl = new L.Control.Legend();
-	
+
 	legendControl.addTo(map);
-	
+
 	var layerControl = new L.Control.Layers({
 		'Stamen Toner': baseLayer
 	});
-	
+
 	layerControl.addTo(map);
-	
+
 	var deathsByLocation = _.pairs(_.groupBy(battleDeaths, function (value) {
 		var gwnoa = value.gwnoa;
-		
+
 		if (gwnoa.length > 3) {
 			gwnoa = gwnoa.substring(0, Math.sqrt(gwnoa.length))
 		}
 		return gwnoa;
 	}));
-	
+
 	_.each(deathsByLocation, function (location) {
 		location[1].counts = _.countBy(location[1], function (value) {
 			return value.year
 		});
-		
+
 		location[1].years = _.groupBy(location[1], function (value) {
 			return value.year
 		});
-		
+
 		location[1].deaths = {};
 		location[1].deathsPerConflict = {};
-		
+
 		location[1].total = 0;
-		
+
 		for (var year in location[1].years) {
 			location[1].deaths[year] = Number(_.reduce(_.pluck(location[1].years[year],'bdeadhig'), function (memo, value) {
 				return Number(memo) + Number(value);
 			}));
-			
+
 			location[1].total = location[1].total + location[1].deaths[year];
-			
+
 			location[1].deathsPerConflict[year] = location[1].deaths[year]/location[1].counts[year];
 		}
 	});
@@ -163,10 +163,10 @@ $(document).ready(function() {
 	var deathsByYear = _.groupBy(battleDeaths, function (value) {
 		return value.year;
 	});
-	
+
 	var dataLayer;
 	var linkLayer;
-	
+
 	var min = _.min(deathsByLocation, function (value) {
 		return value[1].total;
 	})[1].total;
@@ -174,7 +174,7 @@ $(document).ready(function() {
 	var max = _.max(deathsByLocation, function (value) {
 		return value[1].total;
 	})[1].total;
-	
+
 	dataLayer = new L.ChoroplethDataLayer(deathsByLocation,{
 		recordsField: null,
 		locationMode: L.LocationModes.GWCOUNTRY,
@@ -202,9 +202,9 @@ $(document).ready(function() {
 			iconAnchor: new L.Point(-5, 100)
 		}
 	});
-	
+
 	map.addLayer(dataLayer);
-	
+
 	var sparklines = new L.SparklineDataLayer(deathsByLocation,{
 		recordsField: null,
 		locationMode: L.LocationModes.GWCOUNTRY,
@@ -254,19 +254,19 @@ $(document).ready(function() {
 			iconAnchor: new L.Point(-5, 100)
 		}
 	});
-	
+
 	map.addLayer(sparklines);
-	
+
 	/*
 	for (var key in deathsByYear) {
 		var min = Number(_.min(deathsByYear[key], function (value) {
 			return Number(value.bdeadhig);
 		}).bdeadhig);
-	
+
 		var max = Number(_.max(deathsByYear[key], function (value) {
 			return Number(value.bdeadhig);
 		}).bdeadhig);
-	
+
 		// Setup a new data layer
 		dataLayer = new L.ChoroplethDataLayer(deathsByYear[key],{
 			recordsField: null,
@@ -293,7 +293,7 @@ $(document).ready(function() {
 				iconAnchor: new L.Point(-5, 100)
 			}
 		});
-	
+
 		linkLayer = new L.Graph(deathsByYear[key],{
 			recordsField: null,
 			locationMode: L.LocationModes.COUNTRY,
@@ -307,7 +307,7 @@ $(document).ready(function() {
 				weight: 2
 			}
 		});
-	
+
 		layerControl.addOverlay(linkLayer, key + ' Links');
 		layerControl.addOverlay(dataLayer, key);
 	}

@@ -4,7 +4,7 @@
  */
 L.SeriesMarker = L.Path.extend({
 	initialize: function (centerLatLng, options) {
-		L.Path.prototype.initialize.call(this, options);
+		L.setOptions(this, options);
 
 		L.Util.setOptions(this, options);
 
@@ -28,10 +28,16 @@ L.SeriesMarker = L.Path.extend({
 		return this.redraw();
 	},
 
-	projectLatlngs: function () {
+	_project: function () {
 		this._point = this._map.latLngToLayerPoint(this._latlng);
 		this._points = this._getPoints();
 	},
+
+  _update: function () {
+    if (this._map) {
+      this._renderer._setPath(this, this.getPathString());
+    }
+  },
 
 	getBounds: function () {
 		var map = this._map,
@@ -208,9 +214,19 @@ L.SeriesMarker = L.Path.extend({
 
 L.Line = L.Path.extend({
 	initialize: function (points, options) {
-		L.Path.prototype.initialize.call(this, options);
+		L.setOptions(this, options);
 		this._points = points;
 	},
+
+	_project: function () {
+    // this._points = this._getPoints();
+	},
+
+  _update: function () {
+    if (this._map) {
+      this._renderer._setPath(this, this.getPathString());
+    }
+  },
 
 	getPathString: function () {
 		var path = new L.SVGPathBuilder(this._points, null, {
@@ -377,7 +393,7 @@ L.SparklineMarker = L.ChartMarker.extend({
 			if (data.hasOwnProperty(key)) {
 				series = data[key];
 				chartOption = chartOptions[key];
-				
+
 				chartOption = L.Util.extend({}, this.options, chartOption);
 
 				chartOption.xField = "0";
@@ -423,13 +439,13 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 				var includeLayer = includeFunction ? includeFunction.call(this, record) : true;
 
 				if (includeLayer) {
-					
+
 					// If there's a seriesField option specified, then navigate to the property specified by the seriesField
 					if (seriesField) {
-					
+
 						// Get the seriesField property
 						series = L.Util.getFieldValue(record, seriesField);
-						
+
 						// If the seriesField is an object then break it into pairs
 						// [[1, 2], [2, 3], ... [9, 10]]
 						if (_.isObject(series)) {
@@ -437,12 +453,12 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 						}
 
 						var seriesPoint;
-						
+
 						// Iterate through keys in chartOptions
 						for (var key in this.options.chartOptions) {
 							var points = {};
 							var chartOptions = this.options.chartOptions[key];
-							
+
 							// Need to sort x's numerically before plotting
 							for (var pointIndex in series) {
 								if (series.hasOwnProperty(pointIndex)) {
@@ -450,7 +466,7 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 
 									x = L.Util.getFieldValue(seriesPoint, chartOptions.xField || xField);
 									y = L.Util.getFieldValue(seriesPoint, chartOptions.yField || yField);
-								
+
 									// If x is a date string, then parse it
 									if (isNaN(x)) {
 										x = moment(x).unix();
@@ -469,7 +485,7 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 							}
 
 							seriesObjects[index] = seriesObjects[index] || record;
-							
+
 							// Add the key and points to the record.
 							// TODO:  make sure this doesn't overwrite existing record properties
 							L.Util.setFieldValue(seriesObjects[index], key, points);
@@ -478,10 +494,10 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 					else {
 						// Iterate through the keys in chartOptions
 						for (var key in this.options.chartOptions) {
-							
+
 							// Get the key property from the record
 							series = L.Util.getFieldValue(record, key);
-							
+
 							if (_.isObject(series)) {
 								series = _.pairs(series);
 							}
@@ -489,7 +505,7 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 							var seriesPoint;
 							var points = {};
 							var chartOption = this.options.chartOptions[key];
-							
+
 							// Need to sort x's numerically before plotting
 							for (var pointIndex in series) {
 								if (series.hasOwnProperty(pointIndex)) {
@@ -696,7 +712,7 @@ L.Graph = L.Graph.extend({
  */
 L.WeightedLineSegment = L.Path.extend({
 	initialize: function (weightedPoint1, weightedPoint2, options) {
-		L.Path.prototype.initialize.call(this, options);
+		L.setOptions(this, options);
 
 		L.Util.setOptions(this, options);
 
@@ -705,10 +721,16 @@ L.WeightedLineSegment = L.Path.extend({
 		this._latlngs = [];
 	},
 
-	projectLatlngs: function () {
+	_project: function () {
 		this._points = this._getPoints();
 		this._setGradient();
 	},
+
+  _update: function () {
+    if (this._map) {
+      this._renderer._setPath(this, this.getPathString());
+    }
+  },
 
 	_setGradient: function () {
 		var p1 = this._points[1];
@@ -716,7 +738,7 @@ L.WeightedLineSegment = L.Path.extend({
 
 		var deltaX = p2.x - p1.x;
 		var deltaY = p2.y - p1.y;
-		
+
 		if (deltaX != 0 || deltaY != 0) {
 			var angle = Math.atan(deltaY/deltaX);
 			var directionX = deltaX/Math.abs(deltaX);
@@ -758,12 +780,12 @@ L.WeightedLineSegment = L.Path.extend({
 
 			this.setStyle(this.options);
 		}
-		
+
 	},
 
 	_weightedPointToPoint: function (weightedPoint) {
 		this._latlngs.push(weightedPoint.latlng);
-		
+
 		var point1 = this._map.latLngToLayerPoint(weightedPoint.latlng);
 		var weight = weightedPoint.weight;
 		var angle1 = weightedPoint.angle;
@@ -794,7 +816,7 @@ L.WeightedLineSegment = L.Path.extend({
 				points2 = points2.reverse();
 			}
 		}
-		
+
 		points = points.concat(points1, points2);
 
 		return points;
@@ -803,14 +825,14 @@ L.WeightedLineSegment = L.Path.extend({
 	getBounds: function () {
 		var bounds = new L.LatLngBounds();
 		var point;
-		
+
 		for (var i = 0; i < this._latlngs.length; ++i) {
-			bounds.extend(this._latlngs[i]);		
+			bounds.extend(this._latlngs[i]);
 		}
-		
+
 		return bounds;
 	},
-	
+
 	getPathString: function () {
 		return new L.SVGPathBuilder(this._points, []).build(6);
 	}
@@ -842,7 +864,7 @@ L.WeightedPolyline = L.FeatureGroup.extend({
 
 		return bounds;
 	},
-	
+
 	setLatLngs: function (latlngs) {
 		this._latlngs = latlngs;
 		this._loadComponents();
@@ -915,7 +937,7 @@ L.WeightedPolyline = L.FeatureGroup.extend({
 				angle: angles[0].angle,
 				weight: p2.weight
 			});
-			
+
 			this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));
 		}
 	}
@@ -993,10 +1015,10 @@ L.StackedPieChartMarker = L.ChartMarker.extend({
         scale = options.barThickness / allValueMax;
         if (sum > 0) {
             circle = new L.CircleMarker(this._latlng, {
-            	color: options.color, 
-            	radius: barThickness, 
-            	fillColor: options.fillColor, 
-            	fill:true, 
+            	color: options.color,
+            	radius: barThickness,
+            	fillColor: options.fillColor,
+            	fill:true,
             	iconSize: new L.Point(50, 40)
             });
 			this._bindMouseEvents(circle);
@@ -1011,7 +1033,7 @@ L.StackedPieChartMarker = L.ChartMarker.extend({
                 options.endAngle = lastAngle + angle;
             	for(var i = 0; i < data[key].length; ++i){
             		value = parseFloat(data[key][i]);
-            		
+
             		valueSum += value;
             		options.radius = valueSum * dataScale[j];
             		options.barThickness = value * dataScale[j];
@@ -1068,7 +1090,7 @@ L.LayeredRegularPolygonMarker = L.MarkerGroup.extend({
 		levels: 2,
 		numberOfSides: 50
 	},
-	
+
 	setStyle: function (options) {
 		// TODO:  Implement this
 		options.levels = options.levels || 2;
@@ -1078,34 +1100,34 @@ L.LayeredRegularPolygonMarker = L.MarkerGroup.extend({
 		var radiusXOffset = radiusX / (0.75 * options.levels);
 		var radiusYOffset = radiusY / (0.75 * options.levels);
 		var markerOptions = L.extend({}, options);
-		
+
 		radiusX = radiusX + (options.levels - 1) * radiusXOffset;
 		radiusY = radiusY + (options.levels - 1) * radiusYOffset;
-		
+
 		var fillOpacity = options.fillOpacity || 0.5;
 		var fillOpacityOffset = options.fillOpacity / (1.5 * options.levels);
-		
+
 		fillOpacity = fillOpacity - options.levels * fillOpacityOffset;
-		
+
 		for (var i = 0; i < options.levels; ++i) {
 			markerOptions.radius = 0;
 			markerOptions.radiusX = radiusX;
 			markerOptions.radiusY = radiusY;
 			markerOptions.fillOpacity = fillOpacity;
-			
+
 			this._markers[i].setStyle(markerOptions);
-			
+
 			radiusX -= radiusXOffset;
 			radiusY -= radiusYOffset;
 			fillOpacity += fillOpacityOffset;
 		}
-		
+
 		return this;
 	},
-	
+
 	initialize: function (latlng, options) {
 		L.Util.setOptions(this, options);
-		
+
 		options.levels = options.levels || 2;
 		var markers = [];
 		var radiusX = options.radiusX || options.radius;
@@ -1113,30 +1135,30 @@ L.LayeredRegularPolygonMarker = L.MarkerGroup.extend({
 		var radiusXOffset = radiusX / (0.75 * options.levels);
 		var radiusYOffset = radiusY / (0.75 * options.levels);
 		var markerOptions = L.extend({}, options);
-		
+
 		radiusX = radiusX + (options.levels - 1) * radiusXOffset;
 		radiusY = radiusY + (options.levels - 1) * radiusYOffset;
-		
+
 		var fillOpacity = options.fillOpacity || 0.5;
 		var fillOpacityOffset = options.fillOpacity / (1.5 * options.levels);
-		
+
 		fillOpacity = fillOpacity - options.levels * fillOpacityOffset;
-		
+
 		for (var i = 0; i < options.levels; ++i) {
 			markerOptions.radius = 0;
 			markerOptions.radiusX = radiusX;
 			markerOptions.radiusY = radiusY;
 			markerOptions.fillOpacity = fillOpacity;
-			
+
 			markers.push(new L.RegularPolygonMarker(latlng, markerOptions));
-			
+
 			radiusX -= radiusXOffset;
 			radiusY -= radiusYOffset;
 			fillOpacity += fillOpacityOffset;
 		}
-		
+
 		this._markers = markers;
-		
+
 		L.MarkerGroup.prototype.initialize.call(this, latlng, markers);
 	}
 });

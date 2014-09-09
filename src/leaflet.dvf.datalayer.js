@@ -1025,6 +1025,48 @@ L.DataLayer = L.LayerGroup.extend({
 		}
 
 		return container.innerHTML;
+	},
+	
+	/**
+	 * Override the default L.LayerGroup handling of GeoJSON to provide support for nested layer groups.
+	 */
+	toGeoJSON: function () {
+
+		var type = this.feature && this.feature.geometry && this.feature.geometry.type;
+
+		if (type === 'MultiPoint') {
+			return this.toMultiPoint();
+		}
+
+		var isGeometryCollection = type === 'GeometryCollection',
+			jsons = [];
+
+		this.eachLayer(function (layer) {
+			if (layer.toGeoJSON) {
+				var json = layer.toGeoJSON();
+				
+				if (json.type === 'FeatureCollection' && json.features) {
+					for (var i = 0; i < json.features.length; ++i) {
+						jsons.push(json.features[i]);
+					}
+				}
+				else {
+					jsons.push(isGeometryCollection ? json.geometry : L.GeoJSON.asFeature(json));
+				}
+			}
+		});
+
+		if (isGeometryCollection) {
+			return L.GeoJSON.getFeature(this, {
+				geometries: jsons,
+				type: 'GeometryCollection'
+			});
+		}
+
+		return {
+			type: 'FeatureCollection',
+			features: jsons
+		};
 	}
 });
 

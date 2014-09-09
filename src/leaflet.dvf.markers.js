@@ -359,13 +359,19 @@ var PathFunctions = PathFunctions || {
     image.setAttribute('height', imageOptions.height);
     image.setAttribute('x', imageOptions.x || 0);
     image.setAttribute('y', imageOptions.y || 0);
-        image.setAttributeNS(L.Path.XLINK_NS, 'xlink:href', imageOptions.url);
+    image.setAttributeNS(L.Path.XLINK_NS, 'xlink:href', imageOptions.url);
 
     return image;
   },
 
   _createPattern: function (patternOptions) {
-    var pattern = this._createCustomElement('pattern', patternOptions);
+    var pattern = L.SVG.create('pattern');
+    pattern.setAttribute('id', L.stamp(pattern));
+    pattern.setAttribute('width', patternOptions.width);
+    pattern.setAttribute('height', patternOptions.height);
+    pattern.setAttribute('x', patternOptions.x || 0);
+    pattern.setAttribute('y', patternOptions.y || 0);
+    pattern.setAttribute('patternUnits', patternOptions.patternUnits || 'objectBoundingBox');
     return pattern;
   },
 
@@ -377,14 +383,13 @@ var PathFunctions = PathFunctions || {
   _createFillPattern: function (layer) {
     this._createDefs();
 
-    var patternOptions = layer.options.pattern;
+    var patternOptions = L.extend({}, layer.options.fillPattern);
+    var pattern = this._createPattern(patternOptions.pattern);
 
-    patternOptions.patternUnits = patternOptions.patternUnits || 'objectBoundingBox';
-
-    var pattern = this._createPattern(patternOptions);
-
-    var image = this._createImage(imageOptions.image);
-    image.setAttributeNS(L.Path.XLINK_NS, 'xlink:href', imageOptions.url);
+    var imageOptions = L.extend({
+      url: patternOptions.url
+    }, patternOptions.image);
+    var image = this._createImage(imageOptions);
 
     pattern.appendChild(image);
 

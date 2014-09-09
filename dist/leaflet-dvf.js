@@ -2286,8 +2286,8 @@ var PathFunctions = PathFunctions || {
 
 var LineTextFunctions = L.extend({}, TextFunctions);
 
-LineTextFunctions.getCenter = function() {
-    var latlngs = this._latlngs, len = latlngs.length, i, j, p1, p2, f, center;
+LineTextFunctions.getCenter = function(layer) {
+    var latlngs = layer._latlngs, len = latlngs.length, i, j, p1, p2, f, center;
     for (i = 0, j = len - 1, area = 0, lat = 0, lng = 0; i < len; j = i++) {
         p1 = latlngs[i];
         p2 = latlngs[j];
@@ -2301,9 +2301,9 @@ LineTextFunctions.getCenter = function() {
     return center;
 };
 
-LineTextFunctions.getTextAnchor = function() {
-    var center = this.getCenter();
-    return this._map.latLngToLayerPoint(center);
+LineTextFunctions.getTextAnchor = function(layer) {
+    var center = this.getCenter(layer);
+    return layer._map.latLngToLayerPoint(center);
 };
 
 L.extend(L.SVG.prototype, LineTextFunctions, PathFunctions);
@@ -2570,6 +2570,9 @@ L.RegularPolygonMarker = L.Path.extend({
         }
         this._path.setAttribute("shape-rendering", "geometricPrecision");
         return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
+    },
+    getTextAnchor: function() {
+        return new L.Point(this._point.x, this._point.y - 2 * this.options.radius);
     },
     _getPoints: function(inner) {
         var maxDegrees = this.options.maxDegrees || 360;

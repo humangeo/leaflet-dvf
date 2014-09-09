@@ -33,6 +33,12 @@ L.SeriesMarker = L.Path.extend({
 		this._points = this._getPoints();
 	},
 
+  _update: function () {
+    if (this._map) {
+      this._renderer._setPath(this, this.getPathString());
+    }
+  },
+
 	getBounds: function () {
 		var map = this._map,
 			point = map.project(this._latlng),

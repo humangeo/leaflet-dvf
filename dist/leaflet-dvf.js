@@ -2015,6 +2015,7 @@ var PathFunctions = PathFunctions || {
     },
     __addPath: L.SVG.prototype._addPath,
     _addPath: function(layer) {
+        this._removePath(layer);
         this.__addPath(layer);
         if (layer._gradient) {
             this._defs.appendChild(layer._gradient);
@@ -4111,7 +4112,7 @@ L.DataLayer = L.LayerGroup.extend({
         bindEvents(layer);
     },
     _getDynamicOptions: function(record) {
-        var layerOptions = L.Util.extend({}, this.options.layerOptions);
+        var layerOptions = L.extend({}, this.options.layerOptions);
         var displayOptions = this.options.displayOptions;
         var legendDetails = {};
         if (displayOptions) {
@@ -4125,7 +4126,7 @@ L.DataLayer = L.LayerGroup.extend({
                     value: displayText
                 };
                 if (propertyOptions.styles) {
-                    layerOptions = L.Util.extend(layerOptions, propertyOptions.styles[fieldValue]);
+                    layerOptions = L.extend(layerOptions, propertyOptions.styles[fieldValue]);
                     propertyOptions.styles[fieldValue] = layerOptions;
                 } else {
                     for (var layerProperty in propertyOptions) {
@@ -4177,7 +4178,7 @@ L.DataLayer = L.LayerGroup.extend({
         return layer;
     },
     recordToLayer: function(location, record) {
-        var layerOptions = L.Util.extend({}, this.options.layerOptions);
+        var layerOptions = L.extend({}, this.options.layerOptions);
         var layer;
         var legendDetails = {};
         var includeLayer = true;

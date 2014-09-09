@@ -1938,6 +1938,7 @@ var PathFunctions = PathFunctions || {
     },
     __addPath: L.SVG.prototype._addPath,
     _addPath: function(layer) {
+        this._removePath(layer);
         this.__addPath(layer);
         if (layer._gradient) {
             this._defs.appendChild(layer._gradient);

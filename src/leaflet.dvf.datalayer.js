@@ -713,7 +713,7 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 
 	_getDynamicOptions: function (record) {
-		var layerOptions = L.Util.extend({},this.options.layerOptions);
+		var layerOptions = L.extend({},this.options.layerOptions);
 		var displayOptions = this.options.displayOptions;
 		var legendDetails = {};
 
@@ -731,7 +731,7 @@ L.DataLayer = L.LayerGroup.extend({
 				};
 
 				if (propertyOptions.styles) {
-					layerOptions = L.Util.extend(layerOptions, propertyOptions.styles[fieldValue]);
+					layerOptions = L.extend(layerOptions, propertyOptions.styles[fieldValue]);
 					propertyOptions.styles[fieldValue] = layerOptions;
 				}
 				else {
@@ -805,7 +805,7 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 	
 	recordToLayer: function (location, record) {
-		var layerOptions = L.Util.extend({},this.options.layerOptions);
+		var layerOptions = L.extend({},this.options.layerOptions);
 		var layer;
 		var legendDetails = {};
 		var includeLayer = true;

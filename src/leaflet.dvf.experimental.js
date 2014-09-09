@@ -6,8 +6,6 @@ L.SeriesMarker = L.Path.extend({
 	initialize: function (centerLatLng, options) {
 		L.setOptions(this, options);
 
-		L.Util.setOptions(this, options);
-
 		this._latlng = centerLatLng;
 	},
 
@@ -242,7 +240,7 @@ L.Line = L.Path.extend({
  */
 L.SparklineMarker = L.ChartMarker.extend({
 	initialize: function (centerLatLng, options) {
-		L.Util.setOptions(this, options);
+		L.setOptions(this, options);
 
 		L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
 	},
@@ -607,7 +605,7 @@ L.sparklineDataLayer = function (data, options) {
  */
 L.WordCloudMarker = L.ChartMarker.extend({
 	initialize: function (centerLatLng, options) {
-		L.Util.setOptions(this, options);
+		L.setOptions(this, options);
 
 		L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
 	},
@@ -713,9 +711,7 @@ L.Graph = L.Graph.extend({
 L.WeightedLineSegment = L.Path.extend({
 	initialize: function (weightedPoint1, weightedPoint2, options) {
 		L.setOptions(this, options);
-
-		L.Util.setOptions(this, options);
-
+		
 		this._weightedPoint1 = weightedPoint1;
 		this._weightedPoint2 = weightedPoint2;
 		this._latlngs = [];
@@ -846,7 +842,7 @@ L.WeightedLineSegment = L.Path.extend({
 L.WeightedPolyline = L.FeatureGroup.extend({
 	initialize: function (latlngs, options) {
 		L.FeatureGroup.prototype.initialize.call(this, options);
-		L.Util.setOptions(this, options);
+		L.setOptions(this, options);
 		this._latlngs = latlngs;
 	},
 
@@ -953,7 +949,7 @@ L.weightedPolyline = function (latlngs, options) {
  */
 L.StackedPieChartMarker = L.ChartMarker.extend({
     initialize: function(centerLatLng, options) {
-        L.Util.setOptions(this, options);
+        L.setOptions(this, options);
         L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
     },
 
@@ -1126,7 +1122,7 @@ L.LayeredRegularPolygonMarker = L.MarkerGroup.extend({
 	},
 
 	initialize: function (latlng, options) {
-		L.Util.setOptions(this, options);
+		L.setOptions(this, options);
 
 		options.levels = options.levels || 2;
 		var markers = [];

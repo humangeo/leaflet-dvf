@@ -102,7 +102,8 @@ $(document).ready(function() {
 	var baseLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		maxZoom: 32,
 		maxNativeZoom: 18,
-		detectRetina: true
+		detectRetina: true,
+		crossOrigin: true
 	});
 
 	//L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png', {maxZoom: 18}); //new L.StamenTileLayer('watercolor');

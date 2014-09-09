@@ -46,7 +46,7 @@ var TextFunctions = TextFunctions || {
   },
 
   _createText: function (layer) {
-    var options = layer.options || {};
+    var options = layer.options.text || {};
 
     // Set element style
     var setStyle = function (element, style) {
@@ -547,12 +547,14 @@ LineTextFunctions.getCenter = function (layer) {
 };
 
 // Sets the text anchor to the centroid of a line/polygon
+/*
+ * TODO: this breaks dcmetrobus example when hovering
 LineTextFunctions.getTextAnchor = function (layer) {
   var center = this.getCenter(layer);
 
   return layer._map.latLngToLayerPoint(center);
 };
-
+*/
 /*
 L.Polyline.include(LineTextFunctions);
 L.CircleMarker.include(TextFunctions);

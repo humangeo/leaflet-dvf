@@ -1869,7 +1869,7 @@ var TextFunctions = TextFunctions || {
         }
     },
     _createText: function(layer) {
-        var options = layer.options || {};
+        var options = layer.options.text || {};
         var setStyle = function(element, style) {
             var styleString = "";
             for (var key in style) {
@@ -2222,11 +2222,6 @@ LineTextFunctions.getCenter = function(layer) {
     center = area ? new L.LatLng(lat / (6 * area), lng / (6 * area)) : latlngs[0];
     center.area = area;
     return center;
-};
-
-LineTextFunctions.getTextAnchor = function(layer) {
-    var center = this.getCenter(layer);
-    return layer._map.latLngToLayerPoint(center);
 };
 
 L.extend(L.SVG.prototype, LineTextFunctions, PathFunctions);

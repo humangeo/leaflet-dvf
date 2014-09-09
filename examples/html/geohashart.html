@@ -14,7 +14,7 @@
         padding: 0px;
         margin: 0px;
       }
-      
+
       .leaflet-tile-pane {
       	opacity: 1.0;
       }
@@ -41,31 +41,31 @@
 	</script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+	<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
 	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
 	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
 	<script type="text/javascript" src="../lib/date.format.js"></script>
 	<script type="text/javascript" src="../lib/geohash.js"></script>
 	<script type="text/javascript" src="../lib/tilefilter/TileLayer.Filter.js"></script>
 	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
+	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
 	<script>
-		
+
 $(document).ready(function() {
 	var map;
 
 	var queryString = window.location.search.substring(1);
     var queryParams = queryString.split('&');
     var params = {};
-    
+
     for (var i = 0; i < queryParams.length; ++i) {
     	var paramString = queryParams[i];
     	var parts = paramString.split('=');
-    	
+
     	params[parts[0]] = parts[1];
     }
-    
+
 	var resize = function () {
 		var $map = $('#map');
 
@@ -91,39 +91,39 @@ $(document).ready(function() {
 		attributionControl: false,
 		detectRetina: true
 	}).setView([0.0, 0.0], 2);
-	
+
 	/*
 	var baseLayer = new L.StamenTileLayer('toner', {
 		maxZoom: 32,
 		maxNativeZoom: 18
 	});
 	*/
-	
+
 	var baseLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		maxZoom: 32,
 		maxNativeZoom: 18,
 		detectRetina: true
-	}); 
+	});
 
 	//L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png', {maxZoom: 18}); //new L.StamenTileLayer('watercolor');
-	
+
 	baseLayer.addTo(map);
-	
+
 	var data = [];
 	var focusPoint = [params.latitude ? Number(params.latitude) : 38.881547, params.longitude ? Number(params.longitude) : -77.113475]
 	var geohashValue = encodeGeoHash(focusPoint[0], focusPoint[1]);
-	
+
 	for (var i = 0; i < 8; ++i) {
 		data.push({
 			geohash: geohashValue.substring(0, i + 1),
 			length: i + 1
 		});
 	}
-	
+
 	var colorFunction = new L.HSLHueFunction(new L.Point(1,0), new L.Point(12,240), {outputSaturation: '100%', outputLuminosity: '25%'});
 	var fillColorFunction = new L.HSLHueFunction(new L.Point(1,0), new L.Point(12,240), {outputSaturation: '100%', outputLuminosity: '50%'});
 	var additive = 40;
-		
+
 	var options = {
 		recordsField: null,
 		geohashField: 'geohash',
@@ -144,7 +144,7 @@ $(document).ready(function() {
 				}
 			}
 		},
-		
+
 		layerOptions: {
 			fill: false,
 			opacity: 1,
@@ -153,18 +153,18 @@ $(document).ready(function() {
 			color: '#333'
 		}
 	};
-	
+
 	var layer = new L.GeohashDataLayer(data, options);
-	
+
 	map.addLayer(layer);
-	
+
 	var i = 0;
 	var j = 0;
-	
+
 	var errorLine;
 	var geohashSizeLayer;
 	var geohashTextLayer;
-	
+
 	var focusPointLayer = new L.LayeredRegularPolygonMarker(focusPoint, {
 		fillOpacity: 0.5,
 		fillColor: '#fff',
@@ -173,14 +173,14 @@ $(document).ready(function() {
 		stroke: false,
 		levels: 3
 	});
-	
+
 	map.addLayer(focusPointLayer);
-	
+
 	layer.eachLayer(function (layer) {
 		if (layer.getBounds) {
 			var func = function (layer, i) {
 				return function () {
-					
+
 					/*
 					baseLayer.setFilter(function () {
 						console.log('hue-rotate: ' + i);
@@ -216,15 +216,15 @@ $(document).ready(function() {
 					if (errorLine) {
 						map.removeLayer(errorLine);
 					};
-				
+
 					if (geohashSizeLayer) {
 						map.removeLayer(geohashSizeLayer);
 					}
-				
+
 					if (geohashTextLayer) {
 						map.removeLayer(geohashTextLayer);
 					}
-				
+
 					errorLine = new L.Polyline([sw, ne], {
 						opacity: 1.0,
 						weight: 3,
@@ -239,12 +239,12 @@ $(document).ready(function() {
 									'fill': 'hsl(' + i + ',100%,85%)',
 									'dominant-baseline': 'text-before-edge'
 								}
-							} 
+							}
 						}
 					});
-				
+
 					map.addLayer(errorLine);
-				
+
 					geohashSizeLayer = new L.CircleMarker(layerBounds.getCenter(), {
 						fillOpacity: 0.5,
 						stroke: false,
@@ -259,9 +259,9 @@ $(document).ready(function() {
 							}
 						}
 					});
-				
+
 					map.addLayer(geohashSizeLayer);
-				
+
 					geohashTextLayer = new L.Rectangle(layerBounds, {
 						fill: false,
 						stroke: false,
@@ -278,14 +278,14 @@ $(document).ready(function() {
 							}
 						}
 					});
-				
+
 					map.addLayer(geohashTextLayer);
-				
+
 					map.fitBounds(layer.getBounds());
-			 
+
 				};
 			};
-		
+
 			if (params.length) {
 				var index = (Number(params.length) - 1) * additive;
 				if (i === index) {
@@ -295,14 +295,14 @@ $(document).ready(function() {
 			else {
 				setTimeout(func(layer, i), j * 1000);
 			}
-			
+
 			i += additive;
 			j += 5;
 			i = i % 360;
 		}
-		
+
 	});
-	
+
 });
 	</script>
 </body>

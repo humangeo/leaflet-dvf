@@ -197,8 +197,8 @@ L.CanvasFilter = L.ImageFilter.extend({
             ctx.putImageData(imgd, 0, 0);
             this._image.onload = null;
             this._image.removeAttribute("crossorigin");
-            if (this._image._layer.options.canvasFilter) {
-                this._image._layer.options.canvasFilter.call(this);
+            if (this._image.options.canvasFilter) {
+                this._image.options.canvasFilter.call(this);
             } else {
                 this._image.src = canvas.toDataURL();
             }
@@ -580,7 +580,7 @@ L.ImageFilters.Presets = {
 };
 
 L.ImageFilterFunctions = {
-    __loadTile: L.TileLayer.prototype._loadTile,
+    __loadTile: L.TileLayer.prototype.createTile,
     __tileOnLoad: L.TileLayer.prototype._tileOnLoad,
     setFilter: function(filter) {
         this.options.filter = filter;
@@ -590,12 +590,13 @@ L.ImageFilterFunctions = {
         this.options.filter = null;
         return this.redraw();
     },
-    _tileOnLoad: function() {
-        var filter = this._layer.options.filter;
+    _tileOnLoad: function(done, tile) {
+        var filter = this.options.filter;
         if (filter) {
-            filter.call(this);
+          tile._layer = this;
+          filter.call(tile);
         }
-        this._layer.__tileOnLoad.call(this);
+        this.__tileOnLoad.apply(this, Array.prototype.slice.call(arguments, 0));
     },
     _loadTile: function(tile, tilePoint) {
         tile.setAttribute("crossorigin", "anonymous");

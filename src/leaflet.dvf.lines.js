@@ -476,6 +476,12 @@ L.ArcedPolyline = L.Path.extend({
 		}
 	},
 
+  _update: function () {
+    if (this._map) {
+      this._renderer._setPath(this, this.getPathString());
+    }
+  },
+
 	getBounds: function () {
 		var bounds = new L.LatLngBounds();
 

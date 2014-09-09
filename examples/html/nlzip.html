@@ -6,16 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
-    <style>     
+    <style>
       body {
       	margin: 0;
       	padding: 0;
       }
-      
+
       .leaflet-tile-pane {
       	opacity: 0.1;
       }
-      
+
       #map {
       	width: 100%;
       	height: 600px;
@@ -39,48 +39,48 @@
 	</script>
 	<script type="text/javascript" src="../data/NETPOPZ2.js"></script>
 	<script type="text/javascript" src="../data/NETZIP2.js"></script>
-	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+	<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
 	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
 	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
 	<script type="text/javascript">
-		
+
 		var map = L.map('map').setView([52.21, 5.50], 8);
 
 		var resize = function () {
 			var $map = $('#map');
-		
+
 			$map.height($(window).height());
-		
+
 			if (map) {
 				map.invalidateSize();
 			}
 		};
-	
+
 		$(window).on('resize', function () {
 			resize();
 		});
-	
+
 		resize();
-	
+
 		var baseLayer = new L.StamenTileLayer('toner', {
 			detectRetina: true
 		});
-	
+
 		baseLayer.addTo(map);
-		
+
 		var layerControl = new L.Control.Layers({
 			'Dark Grey': baseLayer
 		});
-		
+
 		layerControl.addTo(map);
-		
+
 		var legendControl = new L.Control.Legend();
-		
+
 		legendControl.addTo(map);
-		
+
 		var options = {
 			locationMode: L.LocationModes.LOOKUP,
 			recordsField: null,
@@ -106,10 +106,10 @@
 				}
 			}
 		};
-		
+
 		var nlPopLayerChoropleth = new L.ChoroplethDataLayer(NLpopdens, options);
 		layerControl.addOverlay(nlPopLayerChoropleth, 'Choropleth');
-		
+
 		var symbolOptions = $.extend(true, {}, options, {
 			layerOptions: {
 				numberOfSides: 50,
@@ -133,18 +133,18 @@
 				return location.text;
 			}
 		});
-		
+
 		var nlPopLayerSymbol = new L.DataLayer(NLpopdens, symbolOptions);
-		
+
 		// Added for index key testing - should change layer styling after 5 seconds
 		setTimeout(function () {
 			var func = new L.HSLHueFunction(new L.Point(90000, 200), new L.Point(635100, 330));
 			nlPopLayerSymbol.setDisplayOption('POPU', {
-				fillColor:func, 
+				fillColor:func,
 				color: func
 			});
 		}, 5000);
-		
+
 		map.addLayer(nlPopLayerSymbol);
 		layerControl.addOverlay(nlPopLayerSymbol, 'Proportional Symbol');
 

@@ -1835,6 +1835,13 @@ L.DynamicPaletteElement = L.Class.extend({
 L.Path.XLINK_NS = "http://www.w3.org/1999/xlink";
 
 var TextFunctions = TextFunctions || {
+    __addPath: L.SVG.prototype._addPath,
+    _addPath: function(layer) {
+        TextFunctions.__addPath.call(this, layer);
+        if (layer.options.text) {
+            this._createText(layer);
+        }
+    },
     __removePath: L.SVG.prototype._removePath,
     _removePath: function(layer) {
         TextFunctions.__removePath.call(this, layer);
@@ -1848,6 +1855,13 @@ var TextFunctions = TextFunctions || {
     __updatePath: L.SVG.prototype._updatePath,
     _updatePath: function(layer) {
         this.__updatePath.call(this, layer);
+        if (layer.options.text) {
+            this._createText(layer);
+        }
+    },
+    __setPath: L.SVG.prototype._setPath,
+    _setPath: function(layer, path) {
+        this.__setPath.call(this, layer, path);
         if (layer.options.text) {
             this._createText(layer);
         }
@@ -1884,6 +1898,14 @@ var TextFunctions = TextFunctions || {
             }
             return element;
         };
+        if (layer._text) {
+            L.DomUtil.remove(layer._text);
+            layer.text = null;
+        }
+        if (layer._pathDef) {
+            L.DomUtil.remove(layer._pathDef);
+            layer._pathDef = null;
+        }
         layer._text = L.SVG.create("text");
         layer._text.setAttribute("id", L.stamp(layer._text));
         var textNode = document.createTextNode(options.text);
@@ -1910,6 +1932,7 @@ var TextFunctions = TextFunctions || {
             layer._text.appendChild(textPath);
         } else {
             layer._text.appendChild(textNode);
+            layer._project();
             var anchorPoint = this.getTextAnchor(layer);
             this.setTextAnchor(layer, anchorPoint);
         }
@@ -1936,10 +1959,8 @@ var PathFunctions = PathFunctions || {
             this._container.appendChild(this._defs);
         }
     },
-    __addPath: L.SVG.prototype._addPath,
     _addPath: function(layer) {
-        this._removePath(layer);
-        this.__addPath(layer);
+        TextFunctions._addPath.call(this, layer);
         if (layer._gradient) {
             this._defs.appendChild(layer._gradient);
         }
@@ -1955,10 +1976,18 @@ var PathFunctions = PathFunctions || {
         if (layer._shape) {
             this._container.insertBefore(layer._shape, layer._path.nextSibling);
         }
+        if (layer._pathDef) {
+            this._defs.appendChild(layer._pathDef);
+        }
+        if (layer._text) {
+            this._container.appendChild(layer._text);
+        }
     },
-    __removePath: L.SVG.prototype._removePath,
+    _updatePath: function(layer) {
+        TextFunctions._updatePath.call(this, layer);
+    },
     _removePath: function(layer) {
-        this.__removePath(layer);
+        TextFunctions._removePath.call(this, layer);
         if (layer._gradient) {
             L.DomUtil.remove(layer._gradient);
         }
@@ -2110,7 +2139,13 @@ var PathFunctions = PathFunctions || {
         return image;
     },
     _createPattern: function(patternOptions) {
-        var pattern = this._createCustomElement("pattern", patternOptions);
+        var pattern = L.SVG.create("pattern");
+        pattern.setAttribute("id", L.stamp(pattern));
+        pattern.setAttribute("width", patternOptions.width);
+        pattern.setAttribute("height", patternOptions.height);
+        pattern.setAttribute("x", patternOptions.x || 0);
+        pattern.setAttribute("y", patternOptions.y || 0);
+        pattern.setAttribute("patternUnits", patternOptions.patternUnits || "objectBoundingBox");
         return pattern;
     },
     _createShape: function(type, shapeOptions) {
@@ -2119,11 +2154,12 @@ var PathFunctions = PathFunctions || {
     },
     _createFillPattern: function(layer) {
         this._createDefs();
-        var patternOptions = layer.options.pattern;
-        patternOptions.patternUnits = patternOptions.patternUnits || "objectBoundingBox";
-        var pattern = this._createPattern(patternOptions);
-        var image = this._createImage(imageOptions.image);
-        image.setAttributeNS(L.Path.XLINK_NS, "xlink:href", imageOptions.url);
+        var patternOptions = L.extend({}, layer.options.fillPattern);
+        var pattern = this._createPattern(patternOptions.pattern);
+        var imageOptions = L.extend({
+            url: patternOptions.url
+        }, patternOptions.image);
+        var image = this._createImage(imageOptions);
         pattern.appendChild(image);
         if (layer._fillPattern) {
             L.DomUtil.remove(layer._fillPattern);
@@ -2186,6 +2222,9 @@ var PathFunctions = PathFunctions || {
     },
     _updateStyle: function(layer) {
         this.__updateStyle.call(this, layer);
+        if (layer.options.text) {
+            layer._renderer._createText(layer);
+        }
         var context = layer ? layer : this;
         var guid;
         if (context.options.stroke) {

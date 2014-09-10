@@ -133,8 +133,27 @@ $(document).ready(function() {
 
 	//fields=medals_historical_by_year,medals,id,name,flag,abbr&limit=200
 	//$.getJSON("http://sochi.kimonolabs.com/api/countries?apikey=02f5cef421e2c6c2f57454e7a0898204&fields=medals_historical_by_year,medals,id,name,flag,abbr&limit=200", null, function (data) {
-	$.getJSON("http://sochi.kimonolabs.com/api/countries?apikey=02f5cef421e2c6c2f57454e7a0898204&limit=100", null, function (data) {
+	//$.getJSON("http://sochi.kimonolabs.com/api/countries?apikey=02f5cef421e2c6c2f57454e7a0898204&limit=100", null, function (data) {
+	$.getJSON('../data/countries_historical.json', null, function(data) {
+			var statsData = data.data;
 
+			for (var i = 0; i < statsData.length; ++i) {
+				var abbr = statsData[i].abbr;
+
+				abbr = abbr === 'IRI' ? 'IRN' : abbr;
+				abbr = abbr === 'IVB' ? 'VGB' : abbr;
+				abbr = abbr === 'ISV' ? 'VIR' : abbr;
+				
+				if (abbr in L.alpha3Lookup) {
+					var lookup = L.isoFipsLookup[abbr].toLowerCase();
+
+					statsData[i].flag = 'https://www.cia.gov/library/publications/the-world-factbook/graphics/flags/large/' + lookup + '-lgflag.gif'
+				}
+				else {
+					console.log(statsData[i]);
+				}
+			}
+			
 			var countLayer = new L.StackedRegularPolygonDataLayer(data, {
 				recordsField: 'data',
 				locationMode: L.LocationModes.COUNTRY,
@@ -145,14 +164,14 @@ $(document).ready(function() {
 						fillPattern: {
 							url: record.flag,
 							pattern: {
-								width: '100px',
-								height: '66px',
+								width: '150px',
+								height: '100px',
 								patternUnits: 'userSpaceOnUse',
 								patternContentUnits: 'Default'
 							},
 							image: {
-								width: '113px',
-								height: '87px'
+								width: '150px',
+								height: '100px'
 							}
 						},
 						fillOpacity: 0.7,

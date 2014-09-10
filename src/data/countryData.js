@@ -5128,6 +5128,7 @@ L.fipsLookup = [
                 	  }
                 	];
 L.fips2Lookup = L.GeometryUtils.arrayToMap(L.fipsLookup, 'FIPS', 'ISO 3');
+L.isoFipsLookup = L.GeometryUtils.arrayToMap(L.fipsLookup, 'ISO 3', 'FIPS');
 L.gwNoLookup = L.GeometryUtils.arrayToMap(L.gwLookup, 'gw', 'iso3');
 
 var lookups = L.GeometryUtils.arrayToMaps(L.countryLookup, [{
@@ -5139,11 +5140,15 @@ var lookups = L.GeometryUtils.arrayToMaps(L.countryLookup, [{
 },{
 	from: 'country-code',
 	to: 'alpha-3'
+},{
+	from: 'alpha-3',
+	to: 'alpha-2'
 }]);
 
 L.alpha2Lookup = lookups[0];//L.GeometryUtils.arrayToMap(L.countryLookup, 'alpha-2', 'alpha-3');
 L.fullLookup = lookups[1];  //L.GeometryUtils.arrayToMap(L.countryLookup, 'alpha-2', 'name');
 L.codeLookup = lookups[2];  //L.GeometryUtils.arrayToMap(L.countryLookup, 'country-code', 'alpha-3');
+L.alpha3Lookup = lookups[3];
 
 L.countries = {
 	    "AGO": {

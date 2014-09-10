@@ -2830,7 +2830,12 @@ L.SVGMarker = L.Path.extend({
     getPathString: function() {
         var me = this;
         var addSVG = function() {
-            var g = me._path.parentNode;
+            if (me._g) {
+                L.DomUtil.remove(me._g);
+            }
+            var g = L.SVG.create("g");
+            me._path.parentNode.appendChild(g);
+            me._g = g;
             if (me.options.clickable) {
                 g.setAttribute("class", "leaflet-clickable");
             }
@@ -2865,7 +2870,7 @@ L.SVGMarker = L.Path.extend({
             if (me.options.rotation) {
                 transforms.push("rotate(" + me.options.rotation + " " + width / 2 + " " + height / 2 + ")");
             }
-            svg.setAttribute("transform", transforms.join(" "));
+            g.setAttribute("transform", transforms.join(" "));
         };
         if (!this._data) {
             var xhr = new XMLHttpRequest();

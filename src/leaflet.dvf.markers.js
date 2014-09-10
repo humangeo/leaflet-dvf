@@ -35,12 +35,12 @@ var TextFunctions = TextFunctions || {
   __setPath: L.SVG.prototype._setPath,
   _setPath: function (layer, path) {
 	  this.__setPath.call(this, layer, path);
-	  
+
 	  if (layer.options.text) {
 		  this._createText(layer);
 	  }
   },
-  
+
   _initText: function (layer) {
     if (layer.options.text) {
       this._createText(layer);
@@ -517,11 +517,11 @@ var PathFunctions = PathFunctions || {
 
   _updateStyle: function (layer) {
     this.__updateStyle.call(this, layer);
-    
+
     if (layer.options.text) {
         layer._renderer._createText(layer);
     }
-    
+
     var context = layer ? layer : this;
     var guid;
 
@@ -1285,7 +1285,12 @@ L.SVGMarker = L.Path.extend({
     var me = this;
 
     var addSVG = function () {
-      var g = me._path.parentNode;
+      if (me._g) {
+        L.DomUtil.remove(me._g);
+      }
+      var g = L.SVG.create('g');
+      me._path.parentNode.appendChild(g);
+      me._g = g;
 
       /*
       while (g.nodeName.toLowerCase() !== 'g') {
@@ -1341,7 +1346,7 @@ L.SVGMarker = L.Path.extend({
         transforms.push('rotate(' + me.options.rotation + ' ' + (width/2) + ' ' + (height/2) + ')'); //' ' + -1 * anchor.x + ' ' + -1 * anchor.y + ')');
       }
 
-      svg.setAttribute('transform', transforms.join(' '));
+      g.setAttribute('transform', transforms.join(' '));
     };
 
     if (!this._data) {

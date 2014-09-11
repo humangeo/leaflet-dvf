@@ -1,0 +1,3143 @@
+{
+  "object": "list",
+  "count": 87,
+  "data": [
+    {
+      "_id": "52f4ba2e02387b0800000018",
+      "abbr": "ALB",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/alb.png",
+      "id": "albania",
+      "name": "Albania",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000019",
+      "abbr": "AND",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/and.png",
+      "id": "andorra",
+      "name": "Andorra",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000009",
+      "abbr": "ARG",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/arg.png",
+      "id": "argentina",
+      "name": "Argentina",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000001a",
+      "abbr": "ARM",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/arm.png",
+      "id": "armenia",
+      "name": "Armenia",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000005e",
+      "abbr": "AUS",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/aus.png",
+      "id": "australia",
+      "medals_historical_by_year": {
+        "1994": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1998": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "2002": {
+          "gold": 2,
+          "silver": 0,
+          "broze": 0,
+          "total": 2
+        },
+        "2006": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 1,
+          "total": 2
+        },
+        "2010": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 0,
+          "total": 3
+        }
+      },
+      "name": "Australia",
+      "medals": {
+        "bronze": 1,
+        "gold": 0,
+        "silver": 2,
+        "total": 3
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000001b",
+      "abbr": "AUT",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/aut.png",
+      "id": "austria",
+      "medals_historical_by_year": {
+        "1924": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 0,
+          "total": 3
+        },
+        "1928": {
+          "gold": 0,
+          "silver": 3,
+          "broze": 1,
+          "total": 4
+        },
+        "1932": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 0,
+          "total": 2
+        },
+        "1936": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 2,
+          "total": 4
+        },
+        "1948": {
+          "gold": 1,
+          "silver": 3,
+          "broze": 4,
+          "total": 8
+        },
+        "1952": {
+          "gold": 2,
+          "silver": 4,
+          "broze": 2,
+          "total": 8
+        },
+        "1956": {
+          "gold": 4,
+          "silver": 3,
+          "broze": 4,
+          "total": 11
+        },
+        "1960": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 3,
+          "total": 6
+        },
+        "1964": {
+          "gold": 4,
+          "silver": 5,
+          "broze": 3,
+          "total": 12
+        },
+        "1968": {
+          "gold": 3,
+          "silver": 4,
+          "broze": 4,
+          "total": 11
+        },
+        "1972": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 2,
+          "total": 5
+        },
+        "1976": {
+          "gold": 2,
+          "silver": 2,
+          "broze": 2,
+          "total": 6
+        },
+        "1980": {
+          "gold": 3,
+          "silver": 2,
+          "broze": 2,
+          "total": 7
+        },
+        "1984": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1988": {
+          "gold": 3,
+          "silver": 5,
+          "broze": 2,
+          "total": 10
+        },
+        "1992": {
+          "gold": 6,
+          "silver": 7,
+          "broze": 8,
+          "total": 21
+        },
+        "1994": {
+          "gold": 2,
+          "silver": 3,
+          "broze": 4,
+          "total": 9
+        },
+        "1998": {
+          "gold": 3,
+          "silver": 5,
+          "broze": 9,
+          "total": 17
+        },
+        "2002": {
+          "gold": 3,
+          "silver": 4,
+          "broze": 10,
+          "total": 17
+        },
+        "2006": {
+          "gold": 9,
+          "silver": 7,
+          "broze": 7,
+          "total": 23
+        },
+        "2010": {
+          "gold": 4,
+          "silver": 6,
+          "broze": 6,
+          "total": 16
+        }
+      },
+      "name": "Austria",
+      "medals": {
+        "bronze": 5,
+        "gold": 4,
+        "silver": 8,
+        "total": 17
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000001c",
+      "abbr": "AZE",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/aze.png",
+      "id": "azerbaijan",
+      "name": "Azerbaijan",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000001d",
+      "abbr": "BLR",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/blr.png",
+      "id": "belarus",
+      "medals_historical_by_year": {
+        "1994": {
+          "gold": 0,
+          "silver": 2,
+          "broze": 0,
+          "total": 2
+        },
+        "1998": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 2,
+          "total": 2
+        },
+        "2002": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "2006": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        },
+        "2010": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 1,
+          "total": 3
+        }
+      },
+      "name": "Belarus",
+      "medals": {
+        "bronze": 1,
+        "gold": 5,
+        "silver": 0,
+        "total": 6
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000001e",
+      "abbr": "BEL",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/bel.png",
+      "id": "belgium",
+      "medals_historical_by_year": {
+        "1924": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1928": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1948": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 0,
+          "total": 2
+        },
+        "1998": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        }
+      },
+      "name": "Belgium",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000000a",
+      "abbr": "BMU",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/ber.png",
+      "id": "bermuda",
+      "name": "Bermuda",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000001f",
+      "abbr": "BIH",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/bih.png",
+      "id": "bosnia_and_herzegovina",
+      "name": "Bosnia And Herzegovina",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000000b",
+      "abbr": "BRA",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/bra.png",
+      "id": "brazil",
+      "name": "Brazil",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000020",
+      "abbr": "BGR",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/bul.png",
+      "id": "bulgaria",
+      "medals_historical_by_year": {
+        "1980": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1998": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "2002": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 2,
+          "total": 3
+        },
+        "2006": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        }
+      },
+      "name": "Bulgaria",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000000c",
+      "abbr": "CAN",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/can.png",
+      "id": "canada",
+      "medals_historical_by_year": {
+        "1920": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1924": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1928": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1932": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 5,
+          "total": 7
+        },
+        "1936": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        },
+        "1948": {
+          "gold": 2,
+          "silver": 0,
+          "broze": 1,
+          "total": 3
+        },
+        "1952": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 1,
+          "total": 2
+        },
+        "1956": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 2,
+          "total": 3
+        },
+        "1960": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 1,
+          "total": 4
+        },
+        "1964": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 1,
+          "total": 3
+        },
+        "1968": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 1,
+          "total": 3
+        },
+        "1972": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        },
+        "1976": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 1,
+          "total": 3
+        },
+        "1980": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 1,
+          "total": 2
+        },
+        "1984": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 1,
+          "total": 4
+        },
+        "1988": {
+          "gold": 0,
+          "silver": 2,
+          "broze": 3,
+          "total": 5
+        },
+        "1992": {
+          "gold": 2,
+          "silver": 3,
+          "broze": 2,
+          "total": 7
+        },
+        "1994": {
+          "gold": 3,
+          "silver": 6,
+          "broze": 4,
+          "total": 13
+        },
+        "1998": {
+          "gold": 6,
+          "silver": 5,
+          "broze": 4,
+          "total": 15
+        },
+        "2002": {
+          "gold": 7,
+          "silver": 3,
+          "broze": 7,
+          "total": 17
+        },
+        "2006": {
+          "gold": 7,
+          "silver": 10,
+          "broze": 7,
+          "total": 24
+        },
+        "2010": {
+          "gold": 14,
+          "silver": 7,
+          "broze": 5,
+          "total": 26
+        }
+      },
+      "name": "Canada",
+      "medals": {
+        "bronze": 5,
+        "gold": 10,
+        "silver": 10,
+        "total": 25
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000000d",
+      "abbr": "CYM",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/cay.png",
+      "id": "cayman_islands",
+      "name": "Cayman Islands",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000000e",
+      "abbr": "CHL",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/chi.png",
+      "id": "chile",
+      "name": "Chile",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000004a",
+      "abbr": "CHN",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/chn.png",
+      "id": "china",
+      "medals_historical_by_year": {
+        "1992": {
+          "gold": 0,
+          "silver": 3,
+          "broze": 0,
+          "total": 3
+        },
+        "1994": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 2,
+          "total": 3
+        },
+        "1998": {
+          "gold": 0,
+          "silver": 6,
+          "broze": 2,
+          "total": 8
+        },
+        "2002": {
+          "gold": 2,
+          "silver": 2,
+          "broze": 4,
+          "total": 8
+        },
+        "2006": {
+          "gold": 2,
+          "silver": 4,
+          "broze": 5,
+          "total": 11
+        },
+        "2010": {
+          "gold": 5,
+          "silver": 2,
+          "broze": 4,
+          "total": 11
+        }
+      },
+      "name": "China",
+      "medals": {
+        "bronze": 2,
+        "gold": 3,
+        "silver": 4,
+        "total": 9
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000004b",
+      "abbr": "TWN",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/tpe.png",
+      "id": "chinese_taipei",
+      "name": "Chinese Taipei",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000021",
+      "abbr": "HRV",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/cro.png",
+      "id": "croatia",
+      "medals_historical_by_year": {
+        "2002": {
+          "gold": 3,
+          "silver": 1,
+          "broze": 0,
+          "total": 4
+        },
+        "2006": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 0,
+          "total": 3
+        },
+        "2010": {
+          "gold": 0,
+          "silver": 2,
+          "broze": 1,
+          "total": 3
+        }
+      },
+      "name": "Croatia",
+      "medals": {
+        "bronze": 0,
+        "gold": 0,
+        "silver": 1,
+        "total": 1
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000022",
+      "abbr": "CYP",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/cyp.png",
+      "id": "cyprus",
+      "name": "Cyprus",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000023",
+      "abbr": "CZE",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/cze.png",
+      "id": "czech_republic",
+      "medals_historical_by_year": {
+        "1998": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 1,
+          "total": 3
+        },
+        "2002": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 0,
+          "total": 3
+        },
+        "2006": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 1,
+          "total": 4
+        },
+        "2010": {
+          "gold": 2,
+          "silver": 0,
+          "broze": 4,
+          "total": 6
+        }
+      },
+      "name": "Czech Republic",
+      "medals": {
+        "bronze": 2,
+        "gold": 2,
+        "silver": 4,
+        "total": 8
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000024",
+      "abbr": "DNK",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/den.png",
+      "id": "denmark",
+      "medals_historical_by_year": {
+        "1998": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        }
+      },
+      "name": "Denmark",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000000f",
+      "abbr": "DMA",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/dma.png",
+      "id": "dominica",
+      "name": "Dominica",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000025",
+      "abbr": "EST",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/est.png",
+      "id": "estonia",
+      "medals_historical_by_year": {
+        "2002": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 1,
+          "total": 3
+        },
+        "2006": {
+          "gold": 3,
+          "silver": 0,
+          "broze": 0,
+          "total": 3
+        },
+        "2010": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        }
+      },
+      "name": "Estonia",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000026",
+      "abbr": "FIN",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/fin.png",
+      "id": "finland",
+      "medals_historical_by_year": {
+        "1920": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1924": {
+          "gold": 4,
+          "silver": 4,
+          "broze": 3,
+          "total": 11
+        },
+        "1928": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 1,
+          "total": 4
+        },
+        "1932": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 1,
+          "total": 3
+        },
+        "1936": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 3,
+          "total": 6
+        },
+        "1948": {
+          "gold": 1,
+          "silver": 3,
+          "broze": 2,
+          "total": 6
+        },
+        "1952": {
+          "gold": 3,
+          "silver": 4,
+          "broze": 2,
+          "total": 9
+        },
+        "1956": {
+          "gold": 3,
+          "silver": 3,
+          "broze": 1,
+          "total": 7
+        },
+        "1960": {
+          "gold": 2,
+          "silver": 3,
+          "broze": 3,
+          "total": 8
+        },
+        "1964": {
+          "gold": 3,
+          "silver": 4,
+          "broze": 3,
+          "total": 10
+        },
+        "1968": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 2,
+          "total": 5
+        },
+        "1972": {
+          "gold": 0,
+          "silver": 4,
+          "broze": 1,
+          "total": 5
+        },
+        "1976": {
+          "gold": 2,
+          "silver": 4,
+          "broze": 1,
+          "total": 7
+        },
+        "1980": {
+          "gold": 1,
+          "silver": 5,
+          "broze": 3,
+          "total": 9
+        },
+        "1984": {
+          "gold": 4,
+          "silver": 3,
+          "broze": 6,
+          "total": 13
+        },
+        "1988": {
+          "gold": 4,
+          "silver": 1,
+          "broze": 2,
+          "total": 7
+        },
+        "1992": {
+          "gold": 3,
+          "silver": 1,
+          "broze": 3,
+          "total": 7
+        },
+        "1994": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 5,
+          "total": 6
+        },
+        "1998": {
+          "gold": 2,
+          "silver": 4,
+          "broze": 6,
+          "total": 12
+        },
+        "2002": {
+          "gold": 4,
+          "silver": 2,
+          "broze": 1,
+          "total": 7
+        },
+        "2006": {
+          "gold": 0,
+          "silver": 6,
+          "broze": 3,
+          "total": 9
+        },
+        "2010": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 4,
+          "total": 5
+        }
+      },
+      "name": "Finland",
+      "medals": {
+        "bronze": 1,
+        "gold": 1,
+        "silver": 3,
+        "total": 5
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000027",
+      "abbr": "FRA",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/fra.png",
+      "id": "france",
+      "medals_historical_by_year": {
+        "1924": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 3,
+          "total": 3
+        },
+        "1928": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1932": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1936": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1948": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 2,
+          "total": 5
+        },
+        "1952": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1960": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 2,
+          "total": 3
+        },
+        "1964": {
+          "gold": 3,
+          "silver": 4,
+          "broze": 0,
+          "total": 7
+        },
+        "1968": {
+          "gold": 4,
+          "silver": 3,
+          "broze": 2,
+          "total": 9
+        },
+        "1972": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 2,
+          "total": 3
+        },
+        "1976": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1980": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1984": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 2,
+          "total": 3
+        },
+        "1988": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 1,
+          "total": 2
+        },
+        "1992": {
+          "gold": 3,
+          "silver": 5,
+          "broze": 1,
+          "total": 9
+        },
+        "1994": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 4,
+          "total": 5
+        },
+        "1998": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 5,
+          "total": 8
+        },
+        "2002": {
+          "gold": 4,
+          "silver": 5,
+          "broze": 2,
+          "total": 11
+        },
+        "2006": {
+          "gold": 3,
+          "silver": 2,
+          "broze": 4,
+          "total": 9
+        },
+        "2010": {
+          "gold": 2,
+          "silver": 3,
+          "broze": 6,
+          "total": 11
+        }
+      },
+      "name": "France",
+      "medals": {
+        "bronze": 7,
+        "gold": 4,
+        "silver": 4,
+        "total": 15
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000028",
+      "abbr": "GEO",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/geo.png",
+      "id": "georgia",
+      "name": "Georgia",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000029",
+      "abbr": "DEU",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/ger.png",
+      "id": "germany",
+      "medals_historical_by_year": {
+        "1908": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 0,
+          "total": 2
+        },
+        "1928": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1932": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 2,
+          "total": 2
+        },
+        "1936": {
+          "gold": 3,
+          "silver": 3,
+          "broze": 0,
+          "total": 6
+        },
+        "1952": {
+          "gold": 3,
+          "silver": 2,
+          "broze": 2,
+          "total": 7
+        },
+        "1992": {
+          "gold": 10,
+          "silver": 10,
+          "broze": 6,
+          "total": 26
+        },
+        "1994": {
+          "gold": 9,
+          "silver": 7,
+          "broze": 8,
+          "total": 24
+        },
+        "1998": {
+          "gold": 12,
+          "silver": 9,
+          "broze": 8,
+          "total": 29
+        },
+        "2002": {
+          "gold": 12,
+          "silver": 16,
+          "broze": 8,
+          "total": 36
+        },
+        "2006": {
+          "gold": 11,
+          "silver": 12,
+          "broze": 6,
+          "total": 29
+        },
+        "2010": {
+          "gold": 10,
+          "silver": 13,
+          "broze": 7,
+          "total": 30
+        }
+      },
+      "name": "Germany",
+      "medals": {
+        "bronze": 5,
+        "gold": 8,
+        "silver": 6,
+        "total": 19
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000002a",
+      "abbr": "GBR",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/gbr.png",
+      "id": "great_britain",
+      "medals_historical_by_year": {
+        "1908": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 3,
+          "total": 6
+        },
+        "1920": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1924": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 2,
+          "total": 4
+        },
+        "1928": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1936": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 1,
+          "total": 3
+        },
+        "1948": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 2,
+          "total": 2
+        },
+        "1952": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1964": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1976": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1980": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1984": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1994": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 2,
+          "total": 2
+        },
+        "1998": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "2002": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 1,
+          "total": 2
+        },
+        "2006": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        },
+        "2010": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        }
+      },
+      "name": "Great Britain",
+      "medals": {
+        "bronze": 2,
+        "gold": 1,
+        "silver": 1,
+        "total": 4
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000002b",
+      "abbr": "GRC",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/gre.png",
+      "id": "greece",
+      "name": "Greece",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000004c",
+      "abbr": "HKG",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/hkg.png",
+      "id": "hong_kong",
+      "name": "Hong Kong",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000002c",
+      "abbr": "HUN",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/hun.png",
+      "id": "hungary",
+      "medals_historical_by_year": {
+        "1932": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1936": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1948": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        },
+        "1952": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1956": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1980": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        }
+      },
+      "name": "Hungary",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000002d",
+      "abbr": "ISL",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/isl.png",
+      "id": "iceland",
+      "name": "Iceland",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000004d",
+      "abbr": "IRI",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/iri.png",
+      "id": "ir_iran",
+      "name": "Ir Iran",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000002e",
+      "abbr": "IRL",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/irl.png",
+      "id": "ireland",
+      "name": "Ireland",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000002f",
+      "abbr": "ISR",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/isr.png",
+      "id": "israel",
+      "name": "Israel",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000030",
+      "abbr": "ITA",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/ita.png",
+      "id": "italy",
+      "medals_historical_by_year": {
+        "1948": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1952": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 1,
+          "total": 2
+        },
+        "1956": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 0,
+          "total": 3
+        },
+        "1960": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1964": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 3,
+          "total": 4
+        },
+        "1968": {
+          "gold": 4,
+          "silver": 0,
+          "broze": 0,
+          "total": 4
+        },
+        "1972": {
+          "gold": 2,
+          "silver": 2,
+          "broze": 1,
+          "total": 5
+        },
+        "1976": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 1,
+          "total": 4
+        },
+        "1980": {
+          "gold": 0,
+          "silver": 2,
+          "broze": 0,
+          "total": 2
+        },
+        "1984": {
+          "gold": 2,
+          "silver": 0,
+          "broze": 0,
+          "total": 2
+        },
+        "1988": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 2,
+          "total": 5
+        },
+        "1992": {
+          "gold": 4,
+          "silver": 6,
+          "broze": 4,
+          "total": 14
+        },
+        "1994": {
+          "gold": 7,
+          "silver": 5,
+          "broze": 8,
+          "total": 20
+        },
+        "1998": {
+          "gold": 2,
+          "silver": 6,
+          "broze": 2,
+          "total": 10
+        },
+        "2002": {
+          "gold": 4,
+          "silver": 4,
+          "broze": 5,
+          "total": 13
+        },
+        "2006": {
+          "gold": 5,
+          "silver": 0,
+          "broze": 6,
+          "total": 11
+        },
+        "2010": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 3,
+          "total": 5
+        }
+      },
+      "name": "Italy",
+      "medals": {
+        "bronze": 6,
+        "gold": 0,
+        "silver": 2,
+        "total": 8
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000010",
+      "abbr": "JAM",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/jam.png",
+      "id": "jamaica",
+      "name": "Jamaica",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000004e",
+      "abbr": "JPN",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/jpn.png",
+      "id": "japan",
+      "medals_historical_by_year": {
+        "1956": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        },
+        "1972": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 1,
+          "total": 3
+        },
+        "1980": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        },
+        "1984": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        },
+        "1988": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1992": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 4,
+          "total": 7
+        },
+        "1994": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 2,
+          "total": 5
+        },
+        "1998": {
+          "gold": 5,
+          "silver": 1,
+          "broze": 4,
+          "total": 10
+        },
+        "2002": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 1,
+          "total": 2
+        },
+        "2006": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "2010": {
+          "gold": 0,
+          "silver": 3,
+          "broze": 2,
+          "total": 5
+        }
+      },
+      "name": "Japan",
+      "medals": {
+        "bronze": 3,
+        "gold": 1,
+        "silver": 4,
+        "total": 8
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000004f",
+      "abbr": "KAZ",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/kaz.png",
+      "id": "kazakhstan",
+      "medals_historical_by_year": {
+        "1994": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 0,
+          "total": 3
+        },
+        "1998": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 2,
+          "total": 2
+        },
+        "2010": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        }
+      },
+      "name": "Kazakhstan",
+      "medals": {
+        "bronze": 1,
+        "gold": 0,
+        "silver": 0,
+        "total": 1
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000050",
+      "abbr": "KOR",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/kor.png",
+      "id": "korea",
+      "medals_historical_by_year": {
+        "1992": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 1,
+          "total": 4
+        },
+        "1994": {
+          "gold": 4,
+          "silver": 1,
+          "broze": 1,
+          "total": 6
+        },
+        "1998": {
+          "gold": 3,
+          "silver": 1,
+          "broze": 2,
+          "total": 6
+        },
+        "2002": {
+          "gold": 2,
+          "silver": 2,
+          "broze": 0,
+          "total": 4
+        },
+        "2006": {
+          "gold": 6,
+          "silver": 3,
+          "broze": 2,
+          "total": 11
+        },
+        "2010": {
+          "gold": 6,
+          "silver": 6,
+          "broze": 2,
+          "total": 14
+        }
+      },
+      "name": "Korea",
+      "medals": {
+        "bronze": 2,
+        "gold": 3,
+        "silver": 3,
+        "total": 8
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000051",
+      "abbr": "KGZ",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/kgz.png",
+      "id": "kyrgyzstan",
+      "name": "Kyrgyzstan",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000031",
+      "abbr": "LVA",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/lat.png",
+      "id": "latvia",
+      "medals_historical_by_year": {
+        "2006": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "2010": {
+          "gold": 0,
+          "silver": 2,
+          "broze": 0,
+          "total": 2
+        }
+      },
+      "name": "Latvia",
+      "medals": {
+        "bronze": 2,
+        "gold": 0,
+        "silver": 1,
+        "total": 3
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000052",
+      "abbr": "LBN",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/lib.png",
+      "id": "lebanon",
+      "name": "Lebanon",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000032",
+      "abbr": "LIE",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/lie.png",
+      "id": "liechtenstein",
+      "medals_historical_by_year": {
+        "1976": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 2,
+          "total": 2
+        },
+        "1980": {
+          "gold": 2,
+          "silver": 2,
+          "broze": 0,
+          "total": 4
+        },
+        "1984": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 2,
+          "total": 2
+        },
+        "1988": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        }
+      },
+      "name": "Liechtenstein",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000033",
+      "abbr": "LTU",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/ltu.png",
+      "id": "lithuania",
+      "name": "Lithuania",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000034",
+      "abbr": "LUX",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/lux.png",
+      "id": "luxembourg",
+      "medals_historical_by_year": {
+        "1992": {
+          "gold": 0,
+          "silver": 2,
+          "broze": 0,
+          "total": 2
+        }
+      },
+      "name": "Luxembourg",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000035",
+      "abbr": "MLT",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/mlt.png",
+      "id": "malta",
+      "name": "Malta",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000011",
+      "abbr": "MEX",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/mex.png",
+      "id": "mexico",
+      "name": "Mexico",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000036",
+      "abbr": "MCO",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/mon.png",
+      "id": "monaco",
+      "name": "Monaco",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000053",
+      "abbr": "MNG",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/mgl.png",
+      "id": "mongolia",
+      "name": "Mongolia",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000037",
+      "abbr": "MNE",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/mne.png",
+      "id": "montenegro",
+      "name": "Montenegro",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000005b",
+      "abbr": "MAR",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/mar.png",
+      "id": "morocco",
+      "name": "Morocco",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000054",
+      "abbr": "NPL",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/nep.png",
+      "id": "nepal",
+      "name": "Nepal",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000038",
+      "abbr": "NLD",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/ned.png",
+      "id": "netherlands",
+      "medals_historical_by_year": {
+        "1952": {
+          "gold": 0,
+          "silver": 3,
+          "broze": 0,
+          "total": 3
+        },
+        "1960": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 1,
+          "total": 2
+        },
+        "1964": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 0,
+          "total": 2
+        },
+        "1968": {
+          "gold": 3,
+          "silver": 3,
+          "broze": 3,
+          "total": 9
+        },
+        "1972": {
+          "gold": 4,
+          "silver": 3,
+          "broze": 2,
+          "total": 9
+        },
+        "1976": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 3,
+          "total": 6
+        },
+        "1980": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 1,
+          "total": 4
+        },
+        "1988": {
+          "gold": 3,
+          "silver": 2,
+          "broze": 2,
+          "total": 7
+        },
+        "1992": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 2,
+          "total": 4
+        },
+        "1994": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 3,
+          "total": 4
+        },
+        "1998": {
+          "gold": 5,
+          "silver": 4,
+          "broze": 2,
+          "total": 11
+        },
+        "2002": {
+          "gold": 3,
+          "silver": 5,
+          "broze": 0,
+          "total": 8
+        },
+        "2006": {
+          "gold": 3,
+          "silver": 2,
+          "broze": 4,
+          "total": 9
+        },
+        "2010": {
+          "gold": 4,
+          "silver": 1,
+          "broze": 3,
+          "total": 8
+        }
+      },
+      "name": "Netherlands",
+      "medals": {
+        "bronze": 9,
+        "gold": 8,
+        "silver": 7,
+        "total": 24
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000005f",
+      "abbr": "NZL",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/nzl.png",
+      "id": "new_zealand",
+      "medals_historical_by_year": {
+        "1992": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        }
+      },
+      "name": "New Zealand",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000039",
+      "abbr": "NOR",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/nor.png",
+      "id": "norway",
+      "medals_historical_by_year": {
+        "1920": {
+          "gold": 0,
+          "silver": 2,
+          "broze": 1,
+          "total": 3
+        },
+        "1924": {
+          "gold": 4,
+          "silver": 7,
+          "broze": 6,
+          "total": 17
+        },
+        "1928": {
+          "gold": 6,
+          "silver": 4,
+          "broze": 5,
+          "total": 15
+        },
+        "1932": {
+          "gold": 3,
+          "silver": 4,
+          "broze": 3,
+          "total": 10
+        },
+        "1936": {
+          "gold": 7,
+          "silver": 5,
+          "broze": 3,
+          "total": 15
+        },
+        "1948": {
+          "gold": 4,
+          "silver": 3,
+          "broze": 3,
+          "total": 10
+        },
+        "1952": {
+          "gold": 7,
+          "silver": 3,
+          "broze": 6,
+          "total": 16
+        },
+        "1956": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 1,
+          "total": 4
+        },
+        "1960": {
+          "gold": 3,
+          "silver": 3,
+          "broze": 0,
+          "total": 6
+        },
+        "1964": {
+          "gold": 3,
+          "silver": 6,
+          "broze": 6,
+          "total": 15
+        },
+        "1968": {
+          "gold": 6,
+          "silver": 6,
+          "broze": 2,
+          "total": 14
+        },
+        "1972": {
+          "gold": 2,
+          "silver": 5,
+          "broze": 5,
+          "total": 12
+        },
+        "1976": {
+          "gold": 3,
+          "silver": 3,
+          "broze": 1,
+          "total": 7
+        },
+        "1980": {
+          "gold": 1,
+          "silver": 3,
+          "broze": 6,
+          "total": 10
+        },
+        "1984": {
+          "gold": 3,
+          "silver": 2,
+          "broze": 4,
+          "total": 9
+        },
+        "1988": {
+          "gold": 0,
+          "silver": 3,
+          "broze": 2,
+          "total": 5
+        },
+        "1992": {
+          "gold": 9,
+          "silver": 6,
+          "broze": 5,
+          "total": 20
+        },
+        "1994": {
+          "gold": 10,
+          "silver": 11,
+          "broze": 5,
+          "total": 26
+        },
+        "1998": {
+          "gold": 10,
+          "silver": 10,
+          "broze": 5,
+          "total": 25
+        },
+        "2002": {
+          "gold": 13,
+          "silver": 5,
+          "broze": 7,
+          "total": 25
+        },
+        "2006": {
+          "gold": 2,
+          "silver": 8,
+          "broze": 9,
+          "total": 19
+        },
+        "2010": {
+          "gold": 9,
+          "silver": 8,
+          "broze": 6,
+          "total": 23
+        }
+      },
+      "name": "Norway",
+      "medals": {
+        "bronze": 9,
+        "gold": 10,
+        "silver": 4,
+        "total": 23
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000055",
+      "abbr": "PAK",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/pak.png",
+      "id": "pakistan",
+      "name": "Pakistan",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000012",
+      "abbr": "PRY",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/par.png",
+      "id": "paraguay",
+      "name": "Paraguay",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000013",
+      "abbr": "PER",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/per.png",
+      "id": "peru",
+      "name": "Peru",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000056",
+      "abbr": "PHL",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/phi.png",
+      "id": "philippines",
+      "name": "Philippines",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000003a",
+      "abbr": "POL",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/pol.png",
+      "id": "poland",
+      "medals_historical_by_year": {
+        "1956": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1960": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 1,
+          "total": 2
+        },
+        "1972": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "2002": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 1,
+          "total": 2
+        },
+        "2006": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 1,
+          "total": 2
+        },
+        "2010": {
+          "gold": 1,
+          "silver": 3,
+          "broze": 2,
+          "total": 6
+        }
+      },
+      "name": "Poland",
+      "medals": {
+        "bronze": 1,
+        "gold": 4,
+        "silver": 1,
+        "total": 6
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000003b",
+      "abbr": "PRT",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/por.png",
+      "id": "portugal",
+      "name": "Portugal",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000003c",
+      "abbr": "MDA",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/mda.png",
+      "id": "rep_of_moldova",
+      "name": "Rep. Of Moldova",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000003d",
+      "abbr": "ROU",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/rou.png",
+      "id": "romania",
+      "medals_historical_by_year": {
+        "1968": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        }
+      },
+      "name": "Romania",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000003e",
+      "abbr": "RUS",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/rus.png",
+      "id": "russian_fed",
+      "medals_historical_by_year": {
+        "1994": {
+          "gold": 11,
+          "silver": 8,
+          "broze": 4,
+          "total": 23
+        },
+        "1998": {
+          "gold": 9,
+          "silver": 6,
+          "broze": 3,
+          "total": 18
+        },
+        "2002": {
+          "gold": 5,
+          "silver": 4,
+          "broze": 4,
+          "total": 13
+        },
+        "2006": {
+          "gold": 8,
+          "silver": 6,
+          "broze": 8,
+          "total": 22
+        },
+        "2010": {
+          "gold": 3,
+          "silver": 5,
+          "broze": 7,
+          "total": 15
+        }
+      },
+      "name": "Russian Fed.",
+      "medals": {
+        "bronze": 9,
+        "gold": 12,
+        "silver": 11,
+        "total": 32
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000003f",
+      "abbr": "SMR",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/smr.png",
+      "id": "san_marino",
+      "name": "San Marino",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000040",
+      "abbr": "SRB",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/srb.png",
+      "id": "serbia",
+      "name": "Serbia",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000041",
+      "abbr": "SVK",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/svk.png",
+      "id": "slovakia",
+      "medals_historical_by_year": {
+        "2006": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        },
+        "2010": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 1,
+          "total": 3
+        }
+      },
+      "name": "Slovakia",
+      "medals": {
+        "bronze": 0,
+        "gold": 1,
+        "silver": 0,
+        "total": 1
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000042",
+      "abbr": "SVN",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/slo.png",
+      "id": "slovenia",
+      "medals_historical_by_year": {
+        "1994": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 3,
+          "total": 3
+        },
+        "2002": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "2010": {
+          "gold": 0,
+          "silver": 2,
+          "broze": 1,
+          "total": 3
+        }
+      },
+      "name": "Slovenia",
+      "medals": {
+        "bronze": 4,
+        "gold": 2,
+        "silver": 2,
+        "total": 8
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000043",
+      "abbr": "ESP",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/esp.png",
+      "id": "spain",
+      "medals_historical_by_year": {
+        "1972": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        },
+        "1992": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        }
+      },
+      "name": "Spain",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000044",
+      "abbr": "SWE",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/swe.png",
+      "id": "sweden",
+      "medals_historical_by_year": {
+        "1908": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 1,
+          "total": 3
+        },
+        "1920": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 0,
+          "total": 3
+        },
+        "1924": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 0,
+          "total": 2
+        },
+        "1928": {
+          "gold": 2,
+          "silver": 2,
+          "broze": 1,
+          "total": 5
+        },
+        "1932": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 0,
+          "total": 3
+        },
+        "1936": {
+          "gold": 2,
+          "silver": 2,
+          "broze": 3,
+          "total": 7
+        },
+        "1948": {
+          "gold": 4,
+          "silver": 3,
+          "broze": 3,
+          "total": 10
+        },
+        "1952": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 4,
+          "total": 4
+        },
+        "1956": {
+          "gold": 2,
+          "silver": 4,
+          "broze": 4,
+          "total": 10
+        },
+        "1960": {
+          "gold": 3,
+          "silver": 2,
+          "broze": 2,
+          "total": 7
+        },
+        "1964": {
+          "gold": 3,
+          "silver": 3,
+          "broze": 1,
+          "total": 7
+        },
+        "1968": {
+          "gold": 3,
+          "silver": 2,
+          "broze": 3,
+          "total": 8
+        },
+        "1972": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 2,
+          "total": 4
+        },
+        "1976": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 2,
+          "total": 2
+        },
+        "1980": {
+          "gold": 3,
+          "silver": 0,
+          "broze": 1,
+          "total": 4
+        },
+        "1984": {
+          "gold": 4,
+          "silver": 2,
+          "broze": 2,
+          "total": 8
+        },
+        "1988": {
+          "gold": 4,
+          "silver": 0,
+          "broze": 2,
+          "total": 6
+        },
+        "1992": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 3,
+          "total": 4
+        },
+        "1994": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 0,
+          "total": 3
+        },
+        "1998": {
+          "gold": 0,
+          "silver": 2,
+          "broze": 1,
+          "total": 3
+        },
+        "2002": {
+          "gold": 0,
+          "silver": 2,
+          "broze": 5,
+          "total": 7
+        },
+        "2006": {
+          "gold": 7,
+          "silver": 2,
+          "broze": 5,
+          "total": 14
+        },
+        "2010": {
+          "gold": 5,
+          "silver": 2,
+          "broze": 4,
+          "total": 11
+        }
+      },
+      "name": "Sweden",
+      "medals": {
+        "bronze": 4,
+        "gold": 2,
+        "silver": 7,
+        "total": 13
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000045",
+      "abbr": "CHE",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/sui.png",
+      "id": "switzerland",
+      "medals_historical_by_year": {
+        "1924": {
+          "gold": 2,
+          "silver": 0,
+          "broze": 1,
+          "total": 3
+        },
+        "1928": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 1,
+          "total": 1
+        },
+        "1932": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        },
+        "1936": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 0,
+          "total": 3
+        },
+        "1948": {
+          "gold": 3,
+          "silver": 4,
+          "broze": 3,
+          "total": 10
+        },
+        "1952": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 2,
+          "total": 2
+        },
+        "1956": {
+          "gold": 3,
+          "silver": 2,
+          "broze": 1,
+          "total": 6
+        },
+        "1960": {
+          "gold": 2,
+          "silver": 0,
+          "broze": 0,
+          "total": 2
+        },
+        "1968": {
+          "gold": 0,
+          "silver": 2,
+          "broze": 4,
+          "total": 6
+        },
+        "1972": {
+          "gold": 4,
+          "silver": 3,
+          "broze": 3,
+          "total": 10
+        },
+        "1976": {
+          "gold": 1,
+          "silver": 3,
+          "broze": 1,
+          "total": 5
+        },
+        "1980": {
+          "gold": 1,
+          "silver": 1,
+          "broze": 3,
+          "total": 5
+        },
+        "1984": {
+          "gold": 2,
+          "silver": 2,
+          "broze": 1,
+          "total": 5
+        },
+        "1988": {
+          "gold": 5,
+          "silver": 5,
+          "broze": 5,
+          "total": 15
+        },
+        "1992": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 2,
+          "total": 3
+        },
+        "1994": {
+          "gold": 3,
+          "silver": 4,
+          "broze": 2,
+          "total": 9
+        },
+        "1998": {
+          "gold": 2,
+          "silver": 2,
+          "broze": 3,
+          "total": 7
+        },
+        "2002": {
+          "gold": 3,
+          "silver": 2,
+          "broze": 6,
+          "total": 11
+        },
+        "2006": {
+          "gold": 5,
+          "silver": 4,
+          "broze": 5,
+          "total": 14
+        },
+        "2010": {
+          "gold": 6,
+          "silver": 0,
+          "broze": 3,
+          "total": 9
+        }
+      },
+      "name": "Switzerland",
+      "medals": {
+        "bronze": 2,
+        "gold": 6,
+        "silver": 3,
+        "total": 11
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000057",
+      "abbr": "TJK",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/tjk.png",
+      "id": "tajikistan",
+      "name": "Tajikistan",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000058",
+      "abbr": "THA",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/tha.png",
+      "id": "thailand",
+      "name": "Thailand",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000046",
+      "abbr": "MKD",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/mkd.png",
+      "id": "the_former_yugoslav_republic_of_macedonia",
+      "name": "The Former Yugoslav Republic Of Macedonia",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000059",
+      "abbr": "TLS",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/tls.png",
+      "id": "timor-leste",
+      "name": "Timor-leste",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000005c",
+      "abbr": "TGO",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/tog.png",
+      "id": "togo",
+      "name": "Togo",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000060",
+      "abbr": "TON",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/tga.png",
+      "id": "tonga",
+      "name": "Tonga",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000047",
+      "abbr": "TUR",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/tur.png",
+      "id": "turkey",
+      "name": "Turkey",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000048",
+      "abbr": "UKR",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/ukr.png",
+      "id": "ukraine",
+      "medals_historical_by_year": {
+        "1994": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 1,
+          "total": 2
+        },
+        "1998": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 0,
+          "total": 1
+        },
+        "2006": {
+          "gold": 0,
+          "silver": 0,
+          "broze": 2,
+          "total": 2
+        }
+      },
+      "name": "Ukraine",
+      "medals": {
+        "bronze": 1,
+        "gold": 1,
+        "silver": 0,
+        "total": 2
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000014",
+      "abbr": "USA",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/usa.png",
+      "id": "united_states",
+      "medals_historical_by_year": {
+        "1920": {
+          "gold": 0,
+          "silver": 1,
+          "broze": 1,
+          "total": 2
+        },
+        "1924": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 1,
+          "total": 4
+        },
+        "1928": {
+          "gold": 2,
+          "silver": 2,
+          "broze": 2,
+          "total": 6
+        },
+        "1932": {
+          "gold": 6,
+          "silver": 4,
+          "broze": 2,
+          "total": 12
+        },
+        "1936": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 3,
+          "total": 4
+        },
+        "1948": {
+          "gold": 3,
+          "silver": 4,
+          "broze": 2,
+          "total": 9
+        },
+        "1952": {
+          "gold": 4,
+          "silver": 6,
+          "broze": 1,
+          "total": 11
+        },
+        "1956": {
+          "gold": 2,
+          "silver": 3,
+          "broze": 2,
+          "total": 7
+        },
+        "1960": {
+          "gold": 3,
+          "silver": 4,
+          "broze": 3,
+          "total": 10
+        },
+        "1964": {
+          "gold": 1,
+          "silver": 2,
+          "broze": 4,
+          "total": 7
+        },
+        "1968": {
+          "gold": 1,
+          "silver": 5,
+          "broze": 1,
+          "total": 7
+        },
+        "1972": {
+          "gold": 3,
+          "silver": 2,
+          "broze": 3,
+          "total": 8
+        },
+        "1976": {
+          "gold": 3,
+          "silver": 3,
+          "broze": 4,
+          "total": 10
+        },
+        "1980": {
+          "gold": 6,
+          "silver": 4,
+          "broze": 2,
+          "total": 12
+        },
+        "1984": {
+          "gold": 4,
+          "silver": 4,
+          "broze": 0,
+          "total": 8
+        },
+        "1988": {
+          "gold": 2,
+          "silver": 1,
+          "broze": 3,
+          "total": 6
+        },
+        "1992": {
+          "gold": 5,
+          "silver": 4,
+          "broze": 2,
+          "total": 11
+        },
+        "1994": {
+          "gold": 6,
+          "silver": 5,
+          "broze": 2,
+          "total": 13
+        },
+        "1998": {
+          "gold": 6,
+          "silver": 3,
+          "broze": 4,
+          "total": 13
+        },
+        "2002": {
+          "gold": 10,
+          "silver": 13,
+          "broze": 11,
+          "total": 34
+        },
+        "2006": {
+          "gold": 9,
+          "silver": 9,
+          "broze": 7,
+          "total": 25
+        },
+        "2010": {
+          "gold": 9,
+          "silver": 15,
+          "broze": 13,
+          "total": 37
+        }
+      },
+      "name": "United States",
+      "medals": {
+        "bronze": 11,
+        "gold": 9,
+        "silver": 7,
+        "total": 27
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000005a",
+      "abbr": "UZB",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/uzb.png",
+      "id": "uzbekistan",
+      "medals_historical_by_year": {
+        "1994": {
+          "gold": 1,
+          "silver": 0,
+          "broze": 0,
+          "total": 1
+        }
+      },
+      "name": "Uzbekistan",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000015",
+      "abbr": "VEN",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/ven.png",
+      "id": "venezuela",
+      "name": "Venezuela",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000016",
+      "abbr": "IVB",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/ivb.png",
+      "id": "virgin_isl_b",
+      "name": "Virgin Isl, B",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b0800000017",
+      "abbr": "ISV",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/isv.png",
+      "id": "virgin_isl_us",
+      "name": "Virgin Isl, Us",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    },
+    {
+      "_id": "52f4ba2e02387b080000005d",
+      "abbr": "ZWE",
+      "flag": "http://gtcdn.sochi2014.com/flag/large/zim.png",
+      "id": "zimbabwe",
+      "name": "Zimbabwe",
+      "medals": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "total": 0
+      }
+    }
+  ]
+}

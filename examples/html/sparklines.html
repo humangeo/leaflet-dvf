@@ -1575,7 +1575,15 @@ $(document).ready(function() {
 			opacity: 1,
 			weight: 0.4,
 			gradient: true,
-			dropShadow: true
+			dropShadow: false,
+			dataPointHighlightStyle: {
+				weight: 2.0,
+				opacity: 1.0,
+				color: '#333',
+				lineCap: 'square',
+				dropShadow: false,
+				dashArray: [5, 5]
+			}
 		},
 		tooltipOptions: {
 			iconSize: new L.Point(100, 60),

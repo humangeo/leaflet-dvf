@@ -104,7 +104,7 @@ $(document).ready(function() {
 		}
 		
 		$.ajax({
-			url: 'http://openweathermap.org/data/2.0/find/city',
+			url: 'http://api.openweathermap.org/data/2.5/box/city',
 			data: data,
 			type: 'GET',
 			dataType: 'jsonp'

@@ -287,7 +287,7 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 	
 	initialize: function (data, options) {
-		L.Util.setOptions(this, options);
+		L.setOptions(this, options);
 
 		L.LayerGroup.prototype.initialize.call(this, options);
 

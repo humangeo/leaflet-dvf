@@ -106,7 +106,7 @@ var TextFunctions = TextFunctions || {
       var pathOptions = options.path;
 
       var clonedPath = L.SVG.create('path');
-      clonedPath.setAttribute('d', this._path.getAttribute('d'));
+      clonedPath.setAttribute('d', layer._path.getAttribute('d'));
       clonedPath.setAttribute('id', L.stamp(clonedPath));
 
       this._createDefs();
@@ -138,7 +138,7 @@ var TextFunctions = TextFunctions || {
     else {
       layer._text.appendChild(textNode);
       layer._project();
-      var anchorPoint = this.getTextAnchor(layer);
+      var anchorPoint = layer.getTextAnchor ? layer.getTextAnchor() : this.getTextAnchor(layer);
       this.setTextAnchor(layer, anchorPoint);
     }
 
@@ -599,11 +599,12 @@ if (L.SVG) {
 
 // Extend the TextFunctions above and change the __updatePath reference, since
 // _updatePath for a line/polygon is different than for a regular path
-var LineTextFunctions = L.extend({}, TextFunctions);
+//var LineTextFunctions = L.extend({}, TextFunctions);
 //LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
 
 // Pulled from the Leaflet discussion here:  https://github.com/Leaflet/Leaflet/pull/1586
 // This is useful for getting a centroid/anchor point for centering text or other SVG markup
+/*
 LineTextFunctions.getCenter = function (layer) {
     var latlngs = layer._latlngs,
         len = latlngs.length,
@@ -623,6 +624,7 @@ LineTextFunctions.getCenter = function (layer) {
 
     return center;
 };
+*/
 
 // Sets the text anchor to the centroid of a line/polygon
 /*
@@ -633,6 +635,31 @@ LineTextFunctions.getTextAnchor = function (layer) {
   return layer._map.latLngToLayerPoint(center);
 };
 */
+
+/**
+ * Extend L.Polyline with an alternative getCenter method.  The current getCenter method
+ * doesn't account for the case where you have a line with the same starting/ending point
+ */
+var PolylineFunctions = {
+	_getCenter: L.Polyline.prototype.getCenter,
+	getCenter: function () {
+		var centerPoint = this._getCenter.call(this);
+		
+		if (!centerPoint) {
+			centerPoint = this._latlngs[0];
+		}
+		
+		return centerPoint;
+	}
+}
+
+L.extend(L.Polyline.prototype, PolylineFunctions);
+
+L.Polyline.prototype.getTextAnchor = function () {
+	var center = this.getCenter();
+
+	return this._map.latLngToLayerPoint(center);
+}
 /*
 L.Polyline.include(LineTextFunctions);
 L.CircleMarker.include(TextFunctions);
@@ -652,7 +679,7 @@ L.CircleMarker = L.CircleMarker.extend({
 });
 */
 
-L.extend(L.SVG.prototype, LineTextFunctions, PathFunctions);
+L.extend(L.SVG.prototype, TextFunctions, PathFunctions);
 
 /*
  * Rotates a point the provided number of degrees about another point.  Code inspired/borrowed from OpenLayers

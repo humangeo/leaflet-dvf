@@ -577,7 +577,14 @@ $(document).ready(function() {
 		survivors: {
 			weight: weightFunction,
 			color: colorFunction,
-			displayName: 'Survivors over Time'
+			displayName: 'Survivors over Time' //,
+				/*
+			text: function (value) {
+				return {
+					text: value
+				}
+			}
+				*/
 		}
 	};
 
@@ -637,7 +644,7 @@ $(document).ready(function() {
 			fillColor: '#0F0F0F',
 			color: '#000000',
 			opacity: 1.0,
-			dropShadow: true,
+			dropShadow: false,
 			gradient: true,
 			numberOfSides: 50,
 			weight: 0.5,

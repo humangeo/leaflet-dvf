@@ -48,7 +48,8 @@ var weatherfeed_callback = function (data) {
 			fillOpacity: 0.8,
 			opacity: 1.0,
 			radius: 6,
-			dropShadow: false
+			dropShadow: false,
+			rotation: 0.0
 		},
 		tooltipOptions: {
 			iconSize: new L.Point(100,55),

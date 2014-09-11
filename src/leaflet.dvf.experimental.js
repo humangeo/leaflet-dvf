@@ -722,11 +722,11 @@ L.WeightedLineSegment = L.Path.extend({
 		this._setGradient();
 	},
 
-  _update: function () {
-    if (this._map) {
-      this._renderer._setPath(this, this.getPathString());
-    }
-  },
+	  _update: function () {
+	    if (this._map) {
+	      this._renderer._setPath(this, this.getPathString());
+	    }
+	  },
 
 	_setGradient: function () {
 		var p1 = this._points[1];

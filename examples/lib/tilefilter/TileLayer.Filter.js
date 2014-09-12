@@ -2,6 +2,10 @@
  @preserve Leaflet Tile Filters, a JavaScript plugin for apply image filters to tile images
  (c) 2014, Scott Fairgrieve, HumanGeo
 */
+/*
+ @preserve Leaflet Tile Filters, a JavaScript plugin for apply image filters to tile images
+ (c) 2014, Scott Fairgrieve, HumanGeo
+*/
 L.Color = L.Class.extend({
     initialize: function(colorDef) {
         this._rgb = [ 0, 0, 0 ];
@@ -203,7 +207,9 @@ L.CanvasFilter = L.ImageFilter.extend({
     }
 });
 
-L.CanvasChannelFilter = L.Class.extend({
+L.ChannelFilters = {};
+
+L.AlphaChannelFilter = L.Class.extend({
     options: {
         opacity: 255
     },
@@ -230,117 +236,7 @@ L.CanvasChannelFilter = L.Class.extend({
     }
 });
 
-L.CanvasChannelFilters = {};
-
-L.CanvasChannelFilters.Grayscale = L.CanvasChannelFilter.extend({
-    options: {
-        channelWeights: [ 3, 4, 1 ]
-    },
-    initialize: function(imageData, options) {
-        L.CanvasChannelFilter.prototype.initialize.call(this, imageData, options);
-        this.sumWeights();
-    },
-    sumWeights: function() {
-        var sum = 0;
-        for (var i = 0; i < 3; ++i) {
-            sum += this.options.channelWeights[i];
-        }
-        this._summedWeight = sum;
-    },
-    updateChannels: function(channels) {
-        channels = L.CanvasChannelFilter.prototype.updateChannels.call(this, channels);
-        var channelWeights = this.options.channelWeights;
-        channels[0] = channels[1] = channels[2] = (channelWeights[0] * channels[0] + channelWeights[1] * channels[1] + channelWeights[2] * channels[2]) / this._summedWeight;
-        return channels;
-    }
-});
-
-L.CanvasChannelFilters.Threshold = L.CanvasChannelFilters.Grayscale.extend({
-    options: {
-        channelWeights: [ 3, 4, 1 ],
-        thresholds: [ 128, 128, 128, 128 ],
-        trueValues: [ 255, 255, 255, 255 ],
-        falseValues: [ 0, 0, 0, 255 ]
-    },
-    initialize: function(imageData, options) {
-        L.CanvasChannelFilters.Grayscale.prototype.initialize.call(this, imageData, options);
-    },
-    updateChannels: function(channels) {
-        channels = L.CanvasChannelFilters.Grayscale.prototype.updateChannels.call(this, channels);
-        for (var i = 0; i < 4; ++i) {
-            channels[i] = channels[i] >= this.options.thresholds[i] ? this.options.trueValues[i] : this.options.falseValues[i];
-        }
-        return channels;
-    }
-});
-
-L.CanvasChannelFilters.Contrast = L.CanvasChannelFilter.extend({
-    options: {
-        contrast: 0,
-        factor: function(contrast) {
-            return 255 * (255 + contrast) / (255 * (255 - contrast));
-        }
-    },
-    initialize: function(imageData, options) {
-        L.CanvasChannelFilter.prototype.initialize.call(this, imageData, options);
-        this._factor = this.options.factor.call(this, this.options.contrast);
-    },
-    updateChannels: function(channels) {
-        channels = L.CanvasChannelFilter.prototype.updateChannels.call(this, channels);
-        for (var i = 0; i < 3; ++i) {
-            channels[i] = this._factor * (channels[i] - 128) + 128;
-        }
-        return channels;
-    }
-});
-
-L.CanvasChannelFilters.Invert = L.CanvasChannelFilter.extend({
-    updateChannels: function(channels) {
-        L.CanvasChannelFilter.prototype.updateChannels.call(this, channels);
-        for (var i = 0; i < 3; ++i) {
-            channels[i] = 255 - channels[i];
-        }
-        return channels;
-    }
-});
-
-L.CanvasChannelFilters.ChannelSwap = L.CanvasChannelFilter.extend({
-    options: {
-        positions: [ 0, 1 ]
-    },
-    updateChannels: function(channels) {
-        channels = L.CanvasChannelFilter.prototype.updateChannels.call(this, channels);
-        var tmp = channels[this.options.positions[0]];
-        channels[this.options.positions[0]] = channels[this.options.positions[1]];
-        channels[this.options.positions[1]] = tmp;
-        return channels;
-    }
-});
-
-L.CanvasChannelFilters.Matrix = L.CanvasChannelFilter.extend({
-    options: {
-        matrix: [ .393, .769, .189, .349, .686, .168, .272, .534, .131 ]
-    },
-    updateChannels: function(channels) {
-        channels = L.CanvasChannelFilter.prototype.updateChannels.call(this, channels);
-        var matrix = this.options.matrix;
-        var r = channels[0];
-        var g = channels[1];
-        var b = channels[2];
-        for (var i = 0; i < 3; ++i) {
-            channels[i] = r * matrix[3 * i] + g * matrix[3 * i + 1] + b * matrix[3 * i + 2];
-        }
-        return channels;
-    }
-});
-
-L.CanvasChannelFilters.Sepia = L.CanvasChannelFilters.Matrix.extend({
-    options: {
-        matrix: [ .393, .769, .189, .349, .686, .168, .272, .534, .131 ]
-    }
-});
-
-L.CanvasChannelFilters.FilterChain = L.CanvasChannelFilter.extend({
+L.CanvasChannelFilter = L.AlphaChannelFilter.extend({
     options: {
         filters: []
     },
@@ -353,21 +249,127 @@ L.CanvasChannelFilters.FilterChain = L.CanvasChannelFilter.extend({
         return this;
     },
     updateChannels: function(channels) {
-        channels = L.CanvasChannelFilter.prototype.updateChannels.call(this, channels);
+        channels = L.AlphaChannelFilter.prototype.updateChannels.call(this, channels);
         var filters = this.options.filters;
         for (var i = 0; i < filters.length; ++i) {
-            channels = filters[i].call(this, channels);
+            channels = filters[i].updateChannels(channels);
         }
         return channels;
     }
 });
 
-L.CanvasChannelFilters.Adjust = L.CanvasChannelFilter.extend({
+L.ChannelFilter = L.Class.extend({
+    initialize: function(options) {
+        L.Util.setOptions(this, options);
+    },
+    updateChannels: function(channels) {
+        return channels;
+    }
+});
+
+L.ChannelFilters.Grayscale = L.ChannelFilter.extend({
+    options: {
+        channelWeights: [ 3, 4, 1 ]
+    },
+    initialize: function(options) {
+        this.sumWeights();
+    },
+    sumWeights: function() {
+        var sum = 0;
+        for (var i = 0; i < 3; ++i) {
+            sum += this.options.channelWeights[i];
+        }
+        this._summedWeight = sum;
+    },
+    updateChannels: function(channels) {
+        var channelWeights = this.options.channelWeights;
+        channels[0] = channels[1] = channels[2] = (channelWeights[0] * channels[0] + channelWeights[1] * channels[1] + channelWeights[2] * channels[2]) / this._summedWeight;
+        return channels;
+    }
+});
+
+L.ChannelFilters.Threshold = L.ChannelFilters.Grayscale.extend({
+    options: {
+        channelWeights: [ 3, 4, 1 ],
+        thresholds: [ 128, 128, 128, 128 ],
+        trueValues: [ 255, 255, 255, 255 ],
+        falseValues: [ 0, 0, 0, 255 ]
+    },
+    updateChannels: function(channels) {
+        channels = L.ChannelFilters.Grayscale.updateChannels.call(this, channels);
+        for (var i = 0; i < 4; ++i) {
+            channels[i] = channels[i] >= this.options.thresholds[i] ? this.options.trueValues[i] : this.options.falseValues[i];
+        }
+        return channels;
+    }
+});
+
+L.ChannelFilters.Contrast = L.ChannelFilter.extend({
+    options: {
+        contrast: 0,
+        factor: function(contrast) {
+            return 255 * (255 + contrast) / (255 * (255 - contrast));
+        }
+    },
+    initialize: function(imageData, options) {
+        this._factor = this.options.factor.call(this, this.options.contrast);
+    },
+    updateChannels: function(channels) {
+        for (var i = 0; i < 3; ++i) {
+            channels[i] = this._factor * (channels[i] - 128) + 128;
+        }
+        return channels;
+    }
+});
+
+L.ChannelFilters.Invert = L.ChannelFilter.extend({
+    updateChannels: function(channels) {
+        for (var i = 0; i < 3; ++i) {
+            channels[i] = 255 - channels[i];
+        }
+        return channels;
+    }
+});
+
+L.ChannelFilters.ChannelSwap = L.ChannelFilter.extend({
+    options: {
+        positions: [ 0, 1 ]
+    },
+    updateChannels: function(channels) {
+        var tmp = channels[this.options.positions[0]];
+        channels[this.options.positions[0]] = channels[this.options.positions[1]];
+        channels[this.options.positions[1]] = tmp;
+        return channels;
+    }
+});
+
+L.ChannelFilters.Matrix = L.ChannelFilter.extend({
+    options: {
+        matrix: [ .393, .769, .189, .349, .686, .168, .272, .534, .131 ]
+    },
+    updateChannels: function(channels) {
+        var matrix = this.options.matrix;
+        var r = channels[0];
+        var g = channels[1];
+        var b = channels[2];
+        for (var i = 0; i < 3; ++i) {
+            channels[i] = r * matrix[3 * i] + g * matrix[3 * i + 1] + b * matrix[3 * i + 2];
+        }
+        return channels;
+    }
+});
+
+L.ChannelFilters.Sepia = L.ChannelFilters.Matrix.extend({
+    options: {
+        matrix: [ .393, .769, .189, .349, .686, .168, .272, .534, .131 ]
+    }
+});
+
+L.ChannelFilters.Adjust = L.ChannelFilter.extend({
     options: {
         adjustments: [ 20, 20, 20 ]
     },
     updateChannels: function(channels) {
-        channels = L.CanvasChannelFilter.prototype.updateChannels.call(this, channels);
         for (var i = 0; i < 3; ++i) {
             channels[i] = Math.min(Math.max(channels[i] + this.options.adjustments[i], 0), 255);
         }
@@ -375,12 +377,11 @@ L.CanvasChannelFilters.Adjust = L.CanvasChannelFilter.extend({
     }
 });
 
-L.CanvasChannelFilters.HSLAdjust = L.CanvasChannelFilter.extend({
+L.ChannelFilters.HSLAdjust = L.ChannelFilter.extend({
     options: {
         adjustments: [ 30, 0, 0 ]
     },
     updateChannels: function(channels) {
-        channels = L.CanvasChannelFilter.prototype.updateChannels.call(this, channels);
         var color = new L.RGBColor([ channels[0], channels[1], channels[2], channels[3] ]);
         color.setHSL((color._hsl[0] * 360 + this.options.adjustments[0]) / 360, color._hsl[1] + this.options.adjustments[1], color._hsl[2] + this.options.adjustments[2]);
         for (var i = 0; i < 3; ++i) {
@@ -394,13 +395,12 @@ L.CanvasChannelFilters.HSLAdjust = L.CanvasChannelFilter.extend({
     }
 });
 
-L.CanvasChannelFilters.Colorize = L.CanvasChannelFilter.extend({
+L.ChannelFilters.Colorize = L.ChannelFilter.extend({
     options: {
         channel: 0,
         values: [ 0, 0 ]
     },
     updateChannels: function(channels) {
-        channels = L.CanvasChannelFilter.prototype.updateChannels.call(this, channels);
         var channelIndices = [ 0, 1, 2 ];
         channelIndices.splice(this.options.channel, 1);
         var r = channels[0];
@@ -426,7 +426,7 @@ L.CSSFilter = L.ImageFilter.extend({
 
 L.CombinedFilter = L.ImageFilter.extend({
     setCanvasFilter: function(filter) {
-        this.options.channelFilter = filter;
+        this.options.canvasFilter = filter;
         return this.render();
     },
     setCSSFilter: function(filter) {
@@ -434,9 +434,11 @@ L.CombinedFilter = L.ImageFilter.extend({
         return this.render();
     },
     render: function() {
-        var image = L.CanvasFilter.prototype.render.call(this);
+        if (this.options.canvasFilter) {
+            this.options.canvasFilter.call(this._image);
+        }
         if (this.options.cssFilter) {
-            this.options.cssFilter.call(image._image);
+            this.options.cssFilter.call(this._image);
         }
     }
 });
@@ -447,6 +449,18 @@ L.ImageFilters.GenerateCSSFilter = function(filters) {
     return function() {
         return new L.CSSFilter(this, {
             filters: filters
+        }).render();
+    };
+};
+
+L.ImageFilters.GenerateChannelFilter = function(filters) {
+    return function() {
+        return new L.CanvasFilter(this, {
+            channelFilter: function(imageData) {
+                return new L.CanvasChannelFilter(imageData, {
+                    filters: filters
+                }).render();
+            }
         }).render();
     };
 };
@@ -505,101 +519,63 @@ L.ImageFilters.Presets = {
         HueRotate330: L.ImageFilters.GenerateCSSFilter([ "hue-rotate(330deg)" ])
     },
     CanvasChannel: {
-        None: function(imageData) {
-            return imageData;
+        None: function() {
+            return this;
         },
-        Grayscale1: function(imageData) {
-            return new L.CanvasChannelFilters.Grayscale(imageData).render();
-        },
-        Grayscale2: function(imageData) {
-            return new L.CanvasChannelFilters.Grayscale(imageData, {
-                weights: [ 1, 1, 1 ]
-            }).render();
-        },
-        Grayscale3: function(imageData) {
-            return new L.CanvasChannelFilters.Grayscale(imageData, {
-                weights: [ 1, 2, 3 ]
-            }).render();
-        },
-        HueRotate30: function(imageData) {
-            return new L.CanvasChannelFilters.HSLAdjust(imageData, {
-                adjustments: [ 30, 0, 0 ]
-            }).render();
-        },
-        HueRotate60: function(imageData) {
-            return new L.CanvasChannelFilters.HSLAdjust(imageData, {
-                adjustments: [ 60, 0, 0 ]
-            }).render();
-        },
-        HueRotate90: function(imageData) {
-            return new L.CanvasChannelFilters.HSLAdjust(imageData, {
-                adjustments: [ 90, 0, 0 ]
-            }).render();
-        },
-        HueRotate120: function(imageData) {
-            return new L.CanvasChannelFilters.HSLAdjust(imageData, {
-                adjustments: [ 120, 0, 0 ]
-            }).render();
-        },
-        HueRotate150: function(imageData) {
-            return new L.CanvasChannelFilters.HSLAdjust(imageData, {
-                adjustments: [ 150, 0, 0 ]
-            }).render();
-        },
-        HueRotate180: function(imageData) {
-            return new L.CanvasChannelFilters.HSLAdjust(imageData, {
-                adjustments: [ 180, 0, 0 ]
-            }).render();
-        },
-        HueRotate210: function(imageData) {
-            return new L.CanvasChannelFilters.HSLAdjust(imageData, {
-                adjustments: [ 210, 0, 0 ]
-            }).render();
-        },
-        HueRotate240: function(imageData) {
-            return new L.CanvasChannelFilters.HSLAdjust(imageData, {
-                adjustments: [ 240, 0, 0 ]
-            }).render();
-        },
-        HueRotate270: function(imageData) {
-            return new L.CanvasChannelFilters.HSLAdjust(imageData, {
-                adjustments: [ 270, 0, 0 ]
-            }).render();
-        },
-        HueRotate300: function(imageData) {
-            return new L.CanvasChannelFilters.HSLAdjust(imageData, {
-                adjustments: [ 300, 0, 0 ]
-            }).render();
-        },
-        HueRotate330: function(imageData) {
-            return new L.CanvasChannelFilters.HSLAdjust(imageData, {
-                adjustments: [ 330, 0, 0 ]
-            }).render();
-        },
-        Sepia1: function(imageData) {
-            return new L.CanvasChannelFilters.Sepia(imageData).render();
-        },
-        Invert: function(imageData) {
-            return new L.CanvasChannelFilters.Invert(imageData).render();
-        },
-        ColorizeRed: function(imageData) {
-            return new L.CanvasChannelFilters.Colorize(imageData, {
-                channel: 0,
-                values: [ 0, 0 ]
-            }).render();
-        },
-        ColorizeGreen: function(imageData) {
-            return new L.CanvasChannelFilters.Colorize(imageData, {
-                channel: 1,
-                values: [ 0, 0 ]
-            }).render();
-        },
-        ColorizeBlue: function(imageData) {
-            return new L.CanvasChannelFilters.Colorize(imageData, {
-                channel: 2,
-                values: [ 0, 0 ]
-            }).render();
-        }
+        Grayscale1: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.Grayscale() ]),
+        Grayscale2: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.Grayscale({
+            weights: [ 1, 1, 1 ]
+        }) ]),
+        Grayscale3: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.Grayscale({
+            weights: [ 1, 2, 3 ]
+        }) ]),
+        HueRotate30: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.HSLAdjust({
+            adjustments: [ 30, 0, 0 ]
+        }) ]),
+        HueRotate60: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.HSLAdjust({
+            adjustments: [ 60, 0, 0 ]
+        }) ]),
+        HueRotate90: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.HSLAdjust({
+            adjustments: [ 90, 0, 0 ]
+        }) ]),
+        HueRotate120: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.HSLAdjust({
+            adjustments: [ 120, 0, 0 ]
+        }) ]),
+        HueRotate150: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.HSLAdjust({
+            adjustments: [ 150, 0, 0 ]
+        }) ]),
+        HueRotate180: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.HSLAdjust({
+            adjustments: [ 180, 0, 0 ]
+        }) ]),
+        HueRotate210: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.HSLAdjust({
+            adjustments: [ 210, 0, 0 ]
+        }) ]),
+        HueRotate240: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.HSLAdjust({
+            adjustments: [ 240, 0, 0 ]
+        }) ]),
+        HueRotate270: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.HSLAdjust({
+            adjustments: [ 270, 0, 0 ]
+        }) ]),
+        HueRotate300: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.HSLAdjust({
+            adjustments: [ 300, 0, 0 ]
+        }) ]),
+        HueRotate330: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.HSLAdjust({
+            adjustments: [ 330, 0, 0 ]
+        }) ]),
+        Sepia1: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.Sepia() ]),
+        Invert: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.Invert() ]),
+        ColorizeRed: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.Colorize({
+            channel: 0,
+            values: [ 0, 0 ]
+        }) ]),
+        ColorizeGreen: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.Colorize({
+            channel: 1,
+            values: [ 0, 0 ]
+        }) ]),
+        ColorizeBlue: L.ImageFilters.GenerateChannelFilter([ new L.ChannelFilters.Colorize({
+            channel: 2,
+            values: [ 0, 0 ]
+        }) ])
     }
 };
 

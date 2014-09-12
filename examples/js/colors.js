@@ -20,7 +20,9 @@ $(document).ready(function() {
 	// create a map in the "map" div, set the view to a given place and zoom
 	map = L.map('map').setView([45.0, -110.0], 3);
 	
-	var baseLayer = new L.StamenTileLayer('toner');
+	var baseLayer = new L.StamenTileLayer('toner', {
+		detectRetina: true
+	});
 	
 	baseLayer.addTo(map);
 	

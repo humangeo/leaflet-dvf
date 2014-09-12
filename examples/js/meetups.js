@@ -5,7 +5,9 @@ $(document).ready(function() {
 
 	map = L.map('map').setView([0.0, 0.0], 2);
 
-	var baseLayer = new L.StamenTileLayer('toner');
+	var baseLayer = new L.StamenTileLayer('toner', {
+		detectRetina: true
+	});
 	
 	baseLayer.addTo(map);
 

@@ -42,7 +42,7 @@
 
     </style>
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
@@ -84,7 +84,7 @@
 	</script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
+	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
 	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
 	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
 	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
@@ -113,7 +113,9 @@ $(document).ready(function() {
 	map.attributionControl.addAttribution('Original idea from <a href="http://en.wikipedia.org/wiki/Charles_Joseph_Minard" target="_blank">Charles Minard</a> and his famous <a href="http://upload.wikimedia.org/wikipedia/commons/2/29/Minard.png" style="font-style: italic;" target="_blank">Carte figurative des pertes successives en hommes de l\'Armée Française dans la campagne de Russie 1812-1813</a>.  Minard troop data courtesy of <a href="http://www-958.ibm.com/software/data/cognos/manyeyes/datasets/minard-troops/versions/1" target="_blank">IBM Many Eyes</a>.  Background image from Albrecht Adam\'s <a style="font-style: italic;" href="http://upload.wikimedia.org/wikipedia/commons/d/d4/Battle_of_Moscow_7_Septembr_1812_year.jpg" target="_blank">Battle of Moscow on 7 September 1812</a>');
 
 	// Add the Stamen toner tiles as a base layer
-	var baseLayer = new L.StamenTileLayer('toner').addTo(map);
+	var baseLayer = new L.StamenTileLayer('toner', {
+		detectRetina: true
+	}).addTo(map);
 
 	// Add a layer control
 	var layerControl = L.control.layers({

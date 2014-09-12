@@ -20,7 +20,7 @@
       }
     </style>
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
 
@@ -41,7 +41,7 @@
 	</script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
 	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
 	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
 	<script type="text/javascript" src="../lib/date.format.js"></script>
@@ -55,6 +55,17 @@
 $(document).ready(function() {
 	var map;
 
+	var queryString = window.location.search.substring(1);
+    var queryParams = queryString.split('&');
+    var params = {};
+    
+    for (var i = 0; i < queryParams.length; ++i) {
+    	var paramString = queryParams[i];
+    	var parts = paramString.split('=');
+    	
+    	params[parts[0]] = parts[1];
+    }
+    
 	var resize = function () {
 		var $map = $('#map');
 
@@ -70,14 +81,15 @@ $(document).ready(function() {
 	});
 
 	resize();
-	
+
 	// create a map in the "map" div, set the view to a given place and zoom
 	map = L.map('map', {
 		maxZoom: 32,
 		zoom: 18,
 		maxNativeZoom: 18,
 		zoomControl: false,
-		attributionControl: false
+		attributionControl: false,
+		detectRetina: true
 	}).setView([0.0, 0.0], 2);
 	
 	/*
@@ -89,7 +101,8 @@ $(document).ready(function() {
 	
 	var baseLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		maxZoom: 32,
-		maxNativeZoom: 18
+		maxNativeZoom: 18,
+		detectRetina: true
 	}); 
 
 	//L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png', {maxZoom: 18}); //new L.StamenTileLayer('watercolor');
@@ -97,7 +110,7 @@ $(document).ready(function() {
 	baseLayer.addTo(map);
 	
 	var data = [];
-	var focusPoint = [38.881547, -77.113475]
+	var focusPoint = [params.latitude ? Number(params.latitude) : 38.881547, params.longitude ? Number(params.longitude) : -77.113475]
 	var geohashValue = encodeGeoHash(focusPoint[0], focusPoint[1]);
 	
 	for (var i = 0; i < 8; ++i) {
@@ -164,104 +177,131 @@ $(document).ready(function() {
 	map.addLayer(focusPointLayer);
 	
 	layer.eachLayer(function (layer) {
-	if (layer.getBounds) {
-		var func = function (layer, i) {
-			return function () {
-			 	baseLayer.setFilter(function () {
-			 		console.log('hue-rotate: ' + i);
-				 	new L.CombinedFilter(this, {
-				 		cssFilter: function () { new L.CSSFilter(this, {
-							filters: ['brightness(110%)', 'hue-rotate(' + i + 'deg)']
-				 		}).render()},
-				 		channelFilter: L.ImageFilters.Presets.CanvasChannel.ColorizeRed
-					}).render();
-			 	});
-			 	var layerBounds = layer.getBounds();
-			 	var sw = layerBounds.getSouthWest();
-			 	var ne = layerBounds.getNorthEast();
-			 	var error = sw.distanceTo(ne);
+		if (layer.getBounds) {
+			var func = function (layer, i) {
+				return function () {
+					
+					/*
+					baseLayer.setFilter(function () {
+						console.log('hue-rotate: ' + i);
+						new L.CombinedFilter(this, {
+							cssFilter: function () { new L.CSSFilter(this, {
+								filters: ['brightness(110%)', 'hue-rotate(' + i + 'deg)']
+							}).render()},
+							channelFilter: L.ImageFilters.Presets.CanvasChannel.ColorizeRed
+						}).render();
+					});
+					*/
 
-			 	if (errorLine) {
-			 		map.removeLayer(errorLine);
-			 	};
-			 	
-			 	if (geohashSizeLayer) {
-			 		map.removeLayer(geohashSizeLayer);
-			 	}
-			 	
-			 	if (geohashTextLayer) {
-			 		map.removeLayer(geohashTextLayer);
-			 	}
-			 	
-			 	errorLine = new L.Polyline([sw, ne], {
-			 		opacity: 1.0,
-			 		weight: 3,
-					dashArray: [5, 5],
-					color: 'hsl(' + ((i + 180) % 360) + ',100%,50%)',
-					text: {
-						text: (error/1000).toFixed(4) + ' km',
-						path: {
-							startOffset: '20%',
-							style: {
-								'font-size': '20px',
-								'fill': 'hsl(' + i + ',100%,85%)',
-								'dominant-baseline': 'text-before-edge'
+					baseLayer.setFilter(function () {
+						return new L.CanvasFilter(this, {
+							channelFilter: function (imageData) {
+								return new L.CanvasChannelFilter(imageData, {
+									filters: [
+										new L.ChannelFilters.Colorize(),
+										new L.ChannelFilters.HSLAdjust({
+											adjustments: [i, -0.4, 0.0]
+										})
+									]
+								}).render();
 							}
-						} 
+						}).render();
+					});
+
+					var layerBounds = layer.getBounds();
+					var sw = layerBounds.getSouthWest();
+					var ne = layerBounds.getNorthEast();
+					var error = sw.distanceTo(ne);
+
+					if (errorLine) {
+						map.removeLayer(errorLine);
+					};
+				
+					if (geohashSizeLayer) {
+						map.removeLayer(geohashSizeLayer);
 					}
-			 	});
-			 	
-			 	map.addLayer(errorLine);
-			 	
-			 	geohashSizeLayer = new L.CircleMarker(layerBounds.getCenter(), {
-			 		fillOpacity: 0.3,
-			 		stroke: false,
-			 		radius: 100,
-			 		fillColor: 'hsl(' + ((i + 180) % 360) + ',100%,50%)',
-			 		text: {
-			 			text: layer.options.geohash.length,
-			 			style: {
-			 				'font-size': '100px',
-			 				'text-rendering': 'optimizeLegibility',
-			 				'fill': 'hsl(' + i + ',100%,85%)'
-			 			}
-			 		}
-			 	});
-			 	
-			 	map.addLayer(geohashSizeLayer);
-			 	
-			 	geohashTextLayer = new L.Rectangle(layerBounds, {
-			 		fill: false,
-			 		stroke: false,
-			 		text: {
-						text: layer.options.geohash,
-						path: {
-							startOffset: '40%',
+				
+					if (geohashTextLayer) {
+						map.removeLayer(geohashTextLayer);
+					}
+				
+					errorLine = new L.Polyline([sw, ne], {
+						opacity: 1.0,
+						weight: 3,
+						dashArray: [5, 5],
+						color: 'hsl(' + ((i + 180) % 360) + ',100%,50%)',
+						text: {
+							text: (error/1000).toFixed(4) + ' km',
+							path: {
+								startOffset: '20%',
+								style: {
+									'font-size': '20px',
+									'fill': 'hsl(' + i + ',100%,85%)',
+									'dominant-baseline': 'text-before-edge'
+								}
+							} 
+						}
+					});
+				
+					map.addLayer(errorLine);
+				
+					geohashSizeLayer = new L.CircleMarker(layerBounds.getCenter(), {
+						fillOpacity: 0.5,
+						stroke: false,
+						radius: 100,
+						fillColor: 'hsl(' + ((i + 180) % 360) + ',100%,50%)',
+						text: {
+							text: layer.options.geohash.length,
 							style: {
-								'fill': 'hsl(' + i + ',100%,85%)',
-								'font-size': '40px',
+								'font-size': '100px',
 								'text-rendering': 'optimizeLegibility',
-								'dominant-baseline': 'text-before-edge'
+								'fill': 'hsl(' + i + ',100%,85%)'
 							}
 						}
-					}
-			 	});
-			 	
-			 	map.addLayer(geohashTextLayer);
-			 	
-			 	map.fitBounds(layer.getBounds());
+					});
+				
+					map.addLayer(geohashSizeLayer);
+				
+					geohashTextLayer = new L.Rectangle(layerBounds, {
+						fill: false,
+						stroke: false,
+						text: {
+							text: layer.options.geohash,
+							path: {
+								startOffset: '40%',
+								style: {
+									'fill': 'hsl(' + i + ',100%,85%)',
+									'font-size': '40px',
+									'text-rendering': 'optimizeLegibility',
+									'dominant-baseline': 'text-before-edge'
+								}
+							}
+						}
+					});
+				
+					map.addLayer(geohashTextLayer);
+				
+					map.fitBounds(layer.getBounds());
 			 
+				};
 			};
-		};
 		
-		setTimeout(func(layer, i), j * 1000);
-		
-		i += additive;
-		j += 5;
-		i = i % 360;
+			if (params.length) {
+				var index = (Number(params.length) - 1) * additive;
+				if (i === index) {
+					setTimeout(func(layer, i), 2000);
+				}
+			}
+			else {
+				setTimeout(func(layer, i), j * 1000);
+			}
+			
+			i += additive;
+			j += 5;
+			i = i % 360;
 		}
 		
-	}, 1000);
+	});
 	
 });
 	</script>

@@ -253,7 +253,7 @@ L.SparklineMarker = L.ChartMarker.extend({
 			opacity: 1.0,
 			color: '#1E90FF',
 			lineCap: 'square',
-			dropShadow: true,
+			dropShadow: false,
 			dashArray: [5, 2]
 		}
 	},

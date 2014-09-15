@@ -2009,6 +2009,7 @@ var PathFunctions = PathFunctions || {
         var options = layer.options !== true ? L.extend({}, layer.options) : {};
         var gradient;
         var gradientOptions;
+        options = options.gradient || {};
         if (options.gradientType == "radial") {
             gradient = L.SVG.create("radialGradient");
             gradientOptions = options.radial || {

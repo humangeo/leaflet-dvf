@@ -2086,6 +2086,7 @@ var PathFunctions = PathFunctions || {
         var options = layer.options !== true ? L.extend({}, layer.options) : {};
         var gradient;
         var gradientOptions;
+        options = options.gradient || {};
         if (options.gradientType == "radial") {
             gradient = L.SVG.create("radialGradient");
             gradientOptions = options.radial || {
@@ -3854,7 +3855,7 @@ L.DataLayer = L.LayerGroup.extend({
         }
     },
     initialize: function(data, options) {
-        L.Util.setOptions(this, options);
+        L.setOptions(this, options);
         L.LayerGroup.prototype.initialize.call(this, options);
         data = data || {};
         this._includeFunction = this.options.filter || this.options.includeLayer;

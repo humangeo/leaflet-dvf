@@ -243,6 +243,8 @@ var PathFunctions = PathFunctions || {
     var gradient;
     var gradientOptions;
 
+    options = options.gradient || {};
+    
     if (options.gradientType == "radial") {
       gradient = L.SVG.create("radialGradient");
       gradientOptions = options.radial || { cx: '50%', cy: '50%', r: '50%', fx: '50%', fy: '50%' };
@@ -256,6 +258,7 @@ var PathFunctions = PathFunctions || {
         y2: vector[1][1]
       };
     }
+    
     gradientOptions.id = L.stamp(gradient);
 
     var stops = options.stops || [

@@ -2086,10 +2086,11 @@ var PathFunctions = PathFunctions || {
         var options = layer.options !== true ? L.extend({}, layer.options) : {};
         var gradient;
         var gradientOptions;
-        options = options.gradient || {};
-        if (options.gradientType == "radial") {
+        var vectorOptions;
+        gradientOptions = options.gradient || {};
+        if (gradientOptions.gradientType == "radial") {
             gradient = L.SVG.create("radialGradient");
-            gradientOptions = options.radial || {
+            vectorOptions = gradientOptions.radial || {
                 cx: "50%",
                 cy: "50%",
                 r: "50%",
@@ -2098,16 +2099,15 @@ var PathFunctions = PathFunctions || {
             };
         } else {
             gradient = L.SVG.create("linearGradient");
-            var vector = options.vector || [ [ "0%", "0%" ], [ "100%", "100%" ] ];
-            gradientOptions = {
+            var vector = gradientOptions.vector || [ [ "0%", "0%" ], [ "100%", "100%" ] ];
+            vectorOptions = {
                 x1: vector[0][0],
                 x2: vector[1][0],
                 y1: vector[0][1],
                 y2: vector[1][1]
             };
         }
-        gradientOptions.id = L.stamp(gradient);
-        var stops = options.stops || [ {
+        var stops = gradientOptions.stops || [ {
             offset: "0%",
             style: {
                 color: "rgb(255, 255, 255)",
@@ -2120,8 +2120,9 @@ var PathFunctions = PathFunctions || {
                 opacity: 1
             }
         } ];
-        for (var key in gradientOptions) {
-            gradient.setAttribute(key, gradientOptions[key]);
+        gradient.setAttribute("id", L.stamp(gradient));
+        for (var key in vectorOptions) {
+            gradient.setAttribute(key, vectorOptions[key]);
         }
         for (var i = 0; i < stops.length; ++i) {
             var stop = stops[i];

@@ -233,6 +233,10 @@ var PathFunctions = PathFunctions || {
     if (layer._shape) {
       L.DomUtil.remove(layer._shape);
     }
+
+    if (layer._g) {
+      L.DomUtil.remove(layer._g);
+    }
 	},
 
   _createGradient: function (layer) {

@@ -2804,9 +2804,9 @@ L.octagonMarker = function(centerLatLng, options) {
 L.SVGMarker = L.Path.extend({
     initialize: function(latlng, options) {
         L.setOptions(this, options);
-        this._svg = options.svg;
+        this._svg = options.svg || '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>';
         if (this._svg.indexOf("<") === 0) {
-            this._data = this._svg;
+            this._data = new DOMParser().parseFromString(this._svg, "text/xml");
         }
         this._latlng = latlng;
     },
@@ -2840,7 +2840,7 @@ L.SVGMarker = L.Path.extend({
                 L.DomUtil.remove(me._g);
             }
             var g = L.SVG.create("g");
-            me._path.parentNode.appendChild(g);
+            me._renderer._container.appendChild(g);
             me._g = g;
             if (me.options.clickable) {
                 g.setAttribute("class", "leaflet-clickable");

@@ -159,14 +159,14 @@ $(document).ready(function() {
 						layerOptions: {
 							levels: 2,
 							numberOfSides: 50,
-							radius: 10,
+							radius: 12,
 							weight: 0.3,
 							color: '#000',
 							opacity: 0.5,
-							stroke: false,
+							stroke: true,
 							fillOpacity: 0.8,
-							dropShadow: true,
-							gradient: true
+							dropShadow: false,
+							gradient: false
 						},
 						tooltipOptions: {
 							iconSize: new L.Point(90,90),
@@ -195,6 +195,7 @@ $(document).ready(function() {
 								weight: 2
 							});
 							trackLayer.addLatLng(location.center);
+
 							return trackLayer;
 						}
 					});

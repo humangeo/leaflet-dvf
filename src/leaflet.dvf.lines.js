@@ -177,6 +177,12 @@ L.Callout = L.LayerGroup.extend({
 		this.addLayers();
 	},
 	
+	onRemove: function (map) {
+		L.LayerGroup.prototype.onRemove.call(this, map);
+		
+		this.clearLayers();
+	},
+	
 	addArrow: function (angle, direction, position) {
 		if (this.options.arrow) {
 			var angle = L.LatLng.RAD_TO_DEG * angle;

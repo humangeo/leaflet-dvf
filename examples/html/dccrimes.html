@@ -171,7 +171,7 @@ $(document).ready(function() {
 			weight: 1,
 			stroke: true,
 			color: '#777',
-			dropShadow: true
+			dropShadow: false
 		},
 		tooltipOptions: {
 			iconSize: new L.Point(80,60),
@@ -198,12 +198,12 @@ $(document).ready(function() {
 			stroke: true, //true
 			fillOpacity: 1.0,
 			opacity: 1,
-			weight: 0.2,
+			weight: 0.6,
 			//radius: 20,
 			barWidth: 4,
 			width: 4,
 			gradient: true, //true
-			dropShadow: true, //true
+			dropShadow: false, //true
 			drawReverse: true,
 			numberOfSides: 50
 		},
@@ -229,7 +229,7 @@ $(document).ready(function() {
 		
 		if (type.term !== 'THEFT/OTHER') {
 			crimeOptions.chartOptions[type.term] = {
-				color: colorFunction.evaluate(type.term),
+				//color: colorFunction.evaluate(type.term),
 				fillColor: colorFunction.evaluate(type.term),
 				minValue: 0,
 				maxValue: 100,

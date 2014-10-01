@@ -306,7 +306,7 @@ var PathFunctions = PathFunctions || {
 				element.setAttribute(key, attributes[key]);
 			}
 		}
-
+		
 		return element;
 	},
 
@@ -322,13 +322,25 @@ var PathFunctions = PathFunctions || {
 	},
 
 	_createPattern: function (patternOptions) {
+		
+		if (this._pattern) {
+			this._defs.removeChild(this._pattern);
+		}
+		
 		var pattern = this._createCustomElement('pattern', patternOptions);
+		
+		this._pattern = pattern;
+		
 		return pattern;
 	},
 
 	_createShape: function (type, shapeOptions) {
+		if (this._shape) {
+			this._container.removeChild(this._shape);
+		}
+		
 		var shape = this._createCustomElement(type, shapeOptions);
-
+		
 		return shape;
 	},
 
@@ -422,6 +434,35 @@ var PathFunctions = PathFunctions || {
 		this._container.insertBefore(shape, this._defs);
 
 		this._shape = shape;
+		
+		var me = this;
+		
+		this._shape.addEventListener('mouseover', function () {
+			me.fire('mouseover');
+		});
+		
+		this._shape.addEventListener('mouseout', function () {
+			me.fire('mouseout');
+		});
+		
+		this._shape.addEventListener('mousemove', function () {
+			me.fire('mousemove');
+		});
+		
+		var anchorPoint = this.getTextAnchor();
+
+		if (this._shape && anchorPoint) {
+			if (this._shape.tagName === 'circle' || this._shape.tagName === 'ellipse') {
+				this._shape.setAttribute('cx', anchorPoint.x);
+				this._shape.setAttribute('cy', anchorPoint.y);
+			}
+			else {
+				var width = this._shape.getAttribute('width');
+				var height = this._shape.getAttribute('height');
+				this._shape.setAttribute('x', anchorPoint.x - Number(width)/2);
+				this._shape.setAttribute('y', anchorPoint.y - Number(height)/2);
+			}
+		}
 	},
 
 	_updateStyle: function (layer) {
@@ -529,6 +570,16 @@ L.CircleMarker = L.CircleMarker.extend({
 		if (this.options.shapeImage || this.options.imageCircleUrl) {
 			this._createShapeImage(this.options.shapeImage);
 		}
+	},
+	
+	getTextAnchor: function () {
+		var point = null;
+		
+		if (this._point) {
+			point = new L.Point(this._point.x, this._point.y);
+		}
+		
+		return point;
 	}
 });
 
@@ -645,7 +696,13 @@ L.MapMarker = L.Path.extend({
 	},
 
 	getTextAnchor: function () {
-		return new L.Point(this._point.x, this._point.y - 2 * this.options.radius);
+		var point = null;
+		
+		if (this._point) {
+			point = new L.Point(this._point.x, this._point.y - 2 * this.options.radius);
+		}
+		
+		return point;
 	},
 
 	_getPoints: function (inner) {

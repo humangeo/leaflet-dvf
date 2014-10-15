@@ -707,7 +707,10 @@ L.WeightedLineSegment = L.Path.extend({
 
 	projectLatlngs: function () {
 		this._points = this._getPoints();
-		this._setGradient();
+		
+		if (typeof this.options.fill !== 'undefined' && this.options.fill && this.options.gradient) {
+			this._setGradient();
+		}
 	},
 
 	_setGradient: function () {
@@ -758,26 +761,30 @@ L.WeightedLineSegment = L.Path.extend({
 
 			this.setStyle(this.options);
 		}
-		
 	},
 
 	_weightedPointToPoint: function (weightedPoint) {
+		var points = [];
+		
 		this._latlngs.push(weightedPoint.latlng);
 		
 		var point1 = this._map.latLngToLayerPoint(weightedPoint.latlng);
+
 		var weight = weightedPoint.weight;
 		var angle1 = weightedPoint.angle;
 		var angle2 = angle1 + Math.PI;
 		var coord1 = new L.Point(point1.x + Math.cos(angle1) * weight, point1.y + Math.sin(angle1) * weight);
 		var coord2 = new L.Point(point1.x + Math.cos(angle2) * weight, point1.y + Math.sin(angle2) * weight);
-
-		return [coord1, point1, coord2];
+		
+		points = [coord1, point1, coord2];
+		
+		return points;
 	},
 
 	_getPoints: function () {
 		var points = [];
 		var points1 = this._weightedPointToPoint(this._weightedPoint1);
-		var points2 = this._weightedPointToPoint(this._weightedPoint2); //.reverse();
+		var points2 = this._weightedPointToPoint(this._weightedPoint2);
 
 		var line0 = new L.LinearFunction(points1[0], points2[0]);
 		var line1 = new L.LinearFunction(points1[1], points2[1]);
@@ -785,7 +792,6 @@ L.WeightedLineSegment = L.Path.extend({
 
 		// TODO:  Make this an angled or curved polygon if the angle difference is greater than some value
 		// Interpolate the weight and get the mid point angle
-
 		var intersectionPoint = line2.getIntersectionPoint(line0);
 		var bounds = new L.Bounds([].concat(points1, points2));
 
@@ -794,9 +800,17 @@ L.WeightedLineSegment = L.Path.extend({
 				points2 = points2.reverse();
 			}
 		}
+		else if (line0._slope === line2._slope) {
+			points2 = points2.reverse();
+		}
 		
 		points = points.concat(points1, points2);
-
+		
+		line0 = null;
+		line1 = null;
+		line2 = null;
+		intersectionPoint = null;
+		
 		return points;
 	},
 
@@ -869,6 +883,11 @@ L.WeightedPolyline = L.FeatureGroup.extend({
 
 	_getAngles: function (p1, p2) {
 		var angleRadians = this._getAngle(p1, p2);
+		
+		if (isNaN(angleRadians)) {
+			angleRadians = 0; //Math.PI/2;
+		}
+		
 		var angle1 = angleRadians + Math.PI/2;
 		var angle2 = angle1 + Math.PI;
 

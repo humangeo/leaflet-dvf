@@ -354,6 +354,8 @@ L.FlowLine = L.FlowLine.extend({
 	_loadRecords: function (records) {
 		var markers = [];
 		
+		this._lastRecord = null;
+		
 		for (var recordIndex in records) {
 			if (records.hasOwnProperty(recordIndex)) {
 				var record = records[recordIndex];

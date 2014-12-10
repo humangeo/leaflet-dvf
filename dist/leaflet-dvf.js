@@ -4350,6 +4350,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
             layer.on("click", function(e) {
                 var container = document.createElement("div");
                 var content = L.DomUtil.create("div", "", container);
+                L.DomUtil.addClass(content, "panoramio-content");
                 var photo = L.DomUtil.create("img", "photo", content);
                 photo.setAttribute("onload", "this.style.opacity=1;");
                 photo.setAttribute("src", photoUrl);
@@ -4591,6 +4592,8 @@ L.ChoroplethDataLayer = L.DataLayer.extend({
     _getLayer: function(location, layerOptions, record) {
         if (location.location instanceof L.LatLng) {
             location.location = this._markerFunction.call(this, location.location, layerOptions, record);
+        } else if (location.location instanceof L.LatLngBounds) {
+            location.location = new L.Rectangle(location.location, layerOptions);
         }
         if (location.location.setStyle) {
             layerOptions.gradient = location.location instanceof L.Polyline ? false : layerOptions.gradient;
@@ -4984,7 +4987,18 @@ L.FlowLine = L.FlowLine.extend({
         L.DataLayer.prototype.initialize.call(this, data, options);
     },
     options: {
-        getLine: L.FlowLine.LINE_FUNCTION
+        getLine: L.FlowLine.LINE_FUNCTION,
+        showLegendTooltips: true,
+        setHighlight: function(layerStyle) {
+            layerStyle.opacity = layerStyle.opacity || 1;
+            layerStyle.opacity /= 1.5;
+            return layerStyle;
+        },
+        unsetHighlight: function(layerStyle) {
+            layerStyle.opacity = layerStyle.opacity || .66;
+            layerStyle.opacity *= 1.5;
+            return layerStyle;
+        }
     },
     onEachSegment: function(record1, record2, line) {
         var deltas = {};
@@ -5024,9 +5038,11 @@ L.FlowLine = L.FlowLine.extend({
     },
     _loadRecords: function(records) {
         var markers = [];
+        this._lastRecord = null;
         for (var recordIndex in records) {
             if (records.hasOwnProperty(recordIndex)) {
                 var record = records[recordIndex];
+                record = this.options.deriveProperties ? this.options.deriveProperties(record) : record;
                 markers = this._addRecord(record, recordIndex, markers);
             }
         }
@@ -5052,6 +5068,9 @@ L.FlowLine = L.FlowLine.extend({
                 var options = this._getDynamicOptions(this._lastRecord);
                 line = this.options.getLine.call(this, this._lastMarker.getLatLng(), marker.getLatLng(), options.layerOptions);
                 this.addLayer(line);
+                if (this.options.showLegendTooltips) {
+                    this._bindMouseEvents(line, options.layerOptions, options.legendDetails);
+                }
                 this.onEachSegment(this._lastRecord, record, line);
             }
             if (includeLayer) {

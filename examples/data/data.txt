@@ -1,0 +1,2 @@
+Sample GPX files from:  https://github.com/benjamin-chan/ForestParkTrailRuns
+Other sample data from a variety of sources online

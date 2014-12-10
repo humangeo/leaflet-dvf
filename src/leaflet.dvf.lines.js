@@ -302,7 +302,20 @@ L.FlowLine = L.FlowLine.extend({
 	},
 	
 	options: {
-		getLine: L.FlowLine.LINE_FUNCTION
+		getLine: L.FlowLine.LINE_FUNCTION,
+		showLegendTooltips: true,
+		setHighlight: function (layerStyle) {
+			layerStyle.opacity = layerStyle.opacity || 1.0;
+			layerStyle.opacity /= 1.5;
+
+			return layerStyle;
+		},
+		unsetHighlight: function (layerStyle) {
+			layerStyle.opacity = layerStyle.opacity || 0.66;
+			layerStyle.opacity *= 1.5;
+
+			return layerStyle;
+		}
 	},
 	
 	onEachSegment: function (record1, record2, line) {
@@ -354,10 +367,14 @@ L.FlowLine = L.FlowLine.extend({
 	_loadRecords: function (records) {
 		var markers = [];
 		
+		this._lastRecord = null;
+		
 		for (var recordIndex in records) {
 			if (records.hasOwnProperty(recordIndex)) {
 				var record = records[recordIndex];
 			
+				record = this.options.deriveProperties ? this.options.deriveProperties(record) : record;
+				
 				markers = this._addRecord(record, recordIndex, markers);
 			}
 		}
@@ -394,6 +411,10 @@ L.FlowLine = L.FlowLine.extend({
 				line = this.options.getLine.call(this, this._lastMarker.getLatLng(), marker.getLatLng(), options.layerOptions);
 			
 				this.addLayer(line);
+				
+				if (this.options.showLegendTooltips) {
+					this._bindMouseEvents(line, options.layerOptions, options.legendDetails);
+				}
 				
 				this.onEachSegment(this._lastRecord, record, line);
 				

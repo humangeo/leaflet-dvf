@@ -15,4 +15,6 @@ Leaflet DVF is made possible by contributions from:
 * Matthew Sabol [Xal3ph](https://github.com/Xal3ph)
 * Ulrich Lehner [ulrichson](https://github.com/ulrichson)
 * Sylvain Caillot [sylvaincaillot](https://github.com/sylvaincaillot)
+* Clint Harris [clintharris](https://github.com/clintharris)
+* Michiel Leegwater [mleegwt](https://github.com/mleegwt)
 

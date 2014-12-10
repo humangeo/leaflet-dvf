@@ -823,23 +823,29 @@ $(document).ready(function() {
 	layerControl.addOverlay(dataLayer, 'Flow Line');
 		
 	var runData = [];
-	var wpts = data.gpx.wpt
+	var wpts = data.gpx.wpt;
+	var minEle = 1000;
+	var maxEle = -1000;
 	for (var i = 0; i < wpts.length; ++i) {
 		var wpt = wpts[i];
 		var latlng = new L.LatLng(wpt.lat, wpt.lon);
 		
 		latlng.weight = wpt.ele * 2;
-		
-		console.log(wpt.ele);
+
+		maxEle = wpt.ele * 2 > maxEle ? wpt.ele * 2 : maxEle;
+		minEle = wpt.ele * 2 < minEle ? wpt.ele * 2 : minEle;
 		
 		runData.push(latlng);
 	}
-	
+
 	var weightedPolylineTest = new L.WeightedPolyline(runData, {
 		fill: true,
 		fillColor: '#0033ff',
-		fillOpacity: 1,
-		stroke: false
+		fillOpacity: 0.8,
+		stroke: false,
+		dropShadow: true,
+		gradient: true,
+		weightToColor: new L.HSLHueFunction([minEle, 60], [maxEle, -30])
 	});
 	
 	map.addLayer(weightedPolylineTest);

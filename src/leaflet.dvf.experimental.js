@@ -694,9 +694,9 @@ L.Graph = L.Graph.extend({
  * Needs two points with associated weights and the next point with weight in order to determine the join angles.  May need to
  * include angles as well...
  */
-L.WeightedLineSegment = L.Path.extend({
+L.WeightedLineSegment = L.Polyline.extend({
 	initialize: function (weightedPoint1, weightedPoint2, options) {
-		L.Path.prototype.initialize.call(this, options);
+		L.Polyline.prototype.initialize.call(this, options);
 
 		L.Util.setOptions(this, options);
 
@@ -705,6 +705,16 @@ L.WeightedLineSegment = L.Path.extend({
 		this._latlngs = [];
 	},
 
+	getLatLngs: function () {
+		var points1 = this._weightedPointToPoint(this._weightedPoint1);
+		var points2 = this._weightedPointToPoint(this._weightedPoint2);
+		
+		var midPoint1 = points1[1];
+		var midPoint2 = points2[1];
+		
+		return [this._map.layerPointToLatLng(midPoint1), this._map.layerPointToLatLng(midPoint2)];
+	},
+	
 	projectLatlngs: function () {
 		this._points = this._getPoints();
 		
@@ -734,10 +744,10 @@ L.WeightedLineSegment = L.Path.extend({
 				p2 = temp;
 			}
 
-			var color1 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint1.weight) : null;
-			var color2 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint2.weight) : null;
-			var opacity1 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint1.weight) : 1;
-			var opacity2 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint2.weight) : 1;
+			var color1 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint1.lineWeight) : this._weightedPoint1.fillColor;
+			var color2 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint2.lineWeight) : this._weightedPoint2.fillColor;
+			var opacity1 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint1.lineWeight) : 1;
+			var opacity2 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint2.lineWeight) : 1;
 
 			this.options.gradient = {
 				vector: [[p1.x.toFixed(2) + '%', p1.y.toFixed(2) + '%'],[p2.x.toFixed(2) + '%', p2.y.toFixed(2) + '%']],
@@ -770,7 +780,7 @@ L.WeightedLineSegment = L.Path.extend({
 		
 		var point1 = this._map.latLngToLayerPoint(weightedPoint.latlng);
 
-		var weight = weightedPoint.weight;
+		var weight = weightedPoint.lineWeight/2;
 		var angle1 = weightedPoint.angle;
 		var angle2 = angle1 + Math.PI;
 		var coord1 = new L.Point(point1.x + Math.cos(angle1) * weight, point1.y + Math.sin(angle1) * weight);
@@ -811,6 +821,7 @@ L.WeightedLineSegment = L.Path.extend({
 		line2 = null;
 		intersectionPoint = null;
 		
+		this._originalPoints = points;
 		return points;
 	},
 
@@ -830,8 +841,115 @@ L.WeightedLineSegment = L.Path.extend({
 	}
 });
 
+L.WeightedLineSegment.include(LineTextFunctions);
+
 /*
- * Incomplete - A WORK IN PROGRESS
+ * 
+ */
+L.WeightedFlowLine = L.FlowLine.extend({
+	initialize: function (data, options) {
+		L.Util.setOptions(this, options);
+		L.FlowLine.prototype.initialize.call(this, data, options);
+		this._loaded = false;
+	},
+	
+	_getAngle: function (p1, p2) {
+		var point1 = this._map.latLngToLayerPoint(p1);
+		var point2 = this._map.latLngToLayerPoint(p2);
+		var deltaX = point2.x - point1.x;
+		var deltaY = point2.y - point1.y;
+		var angleRadians = Math.atan(deltaY/deltaX);
+
+		return angleRadians;
+	},
+
+	_getAngles: function (p1, p2) {
+		var angleRadians = this._getAngle(p1, p2);
+		
+		if (isNaN(angleRadians)) {
+			angleRadians = 0; //Math.PI/2;
+		}
+		
+		var angle1 = angleRadians + Math.PI/2;
+		var angle2 = angle1 + Math.PI;
+
+		return [angle1, angle2];
+	},
+
+	onAdd: function (map) {
+		L.FlowLine.prototype.onAdd.call(this, map);
+		
+		if (this._data && !this._loaded) {
+			this._loadRecords(this._data);
+		}
+	},
+	
+	_addLineSegment: function (p1, p2, angles, records, keys, index) {
+		var angleValues = this._getAngles(p1, p2);
+		
+		var options1 = this._getDynamicOptions(records[keys[index - 1]]);
+		var options2 = this._getDynamicOptions(records[keys[index]]);
+		
+		angles.push(L.extend({
+			latlng: p1,
+			angle: (angleValues[0] + angles[angles.length - 1].angle)/2
+		}, options2.layerOptions));
+
+		var line = new L.WeightedLineSegment(angles[0], angles[1], options2.layerOptions);
+		this.addLayer(line);
+
+		if (this.options.showLegendTooltips) {
+			this._bindMouseEvents(line, options2.layerOptions, options2.legendDetails);
+		}
+		
+		this.onEachSegment(records[keys[index - 1]], records[keys[index]], line);
+		
+		return angles;
+	},
+	
+	_loadRecords: function (records) {
+		if (this._map) {
+			var angles = [];
+			var keys = Object.keys(records);
+			
+			if (keys.length > 0) {
+				
+				keys = keys.length === 1 ? keys.push(keys[0]) : keys;
+				
+				var p1 = this._getLocation(records[keys[0]], keys[0]).center;
+				var p2 = this._getLocation(records[keys[1]], keys[1]).center;
+				var angleValues = this._getAngles(p1, p2);
+				var options = this._getDynamicOptions(records[keys[0]]);
+				
+				if (angleValues.length > 0) {
+					
+					angles.push(L.extend({
+						latlng: p1,
+						angle: angleValues[0]
+					}, options.layerOptions));
+					
+					for (var i = 1; i < keys.length - 1; ++i) {
+						p1 = p2;
+						p2 = this._getLocation(records[keys[i + 1]], keys[i + 1]).center;
+		
+						angles = this._addLineSegment(p1, p2, angles, records, keys, i);
+						angles = angles.slice(1);
+					}
+		
+					p1 = p2;
+					p2 = this._getLocation(records[keys[keys.length - 1]]).center;
+		
+					this._addLineSegment(p1, p2, angles, records, keys, keys.length - 1);
+				}
+				
+				this._loaded = true;
+			}
+		}
+	}
+});
+
+/*
+ * Incomplete - A WORK IN PROGRESS - NOTE:  This is now obsolete - replaced by the L.WeightedFlowLine class
  * Takes a set of weighted points as input.  Iterates through those points, creating WeightedLineSegment
  * objects.
  */
@@ -905,7 +1023,7 @@ L.WeightedPolyline = L.FeatureGroup.extend({
 			angles.push({
 				latlng: p1,
 				angle: angleValues[0],
-				weight: p1.weight
+				lineWeight: p1.weight
 			});
 
 			for (var i = 1; i < this._latlngs.length - 1; ++i) {
@@ -918,7 +1036,7 @@ L.WeightedPolyline = L.FeatureGroup.extend({
 				angles.push({
 					latlng: p1,
 					angle: angleValues[0],
-					weight: p1.weight
+					lineWeight: p1.weight
 				});
 
 				this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));
@@ -932,7 +1050,7 @@ L.WeightedPolyline = L.FeatureGroup.extend({
 			angles.push({
 				latlng: p1,
 				angle: angles[0].angle,
-				weight: p2.weight
+				lineWeight: p2.weight
 			});
 			
 			this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));

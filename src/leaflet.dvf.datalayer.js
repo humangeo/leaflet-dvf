@@ -1145,6 +1145,8 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 				var container = document.createElement('div');
 				var content = L.DomUtil.create('div', '', container);
 
+				L.DomUtil.addClass(content, 'panoramio-content');
+				
 				var photo = L.DomUtil.create('img', 'photo', content);
 				photo.setAttribute('onload', 'this.style.opacity=1;');
 				photo.setAttribute('src', photoUrl);
@@ -1473,6 +1475,9 @@ L.ChoroplethDataLayer = L.DataLayer.extend({
 
 		if (location.location instanceof L.LatLng) {
 			location.location = this._markerFunction.call(this, location.location, layerOptions, record);
+		}
+		else if (location.location instanceof L.LatLngBounds) {
+			location.location = new L.Rectangle(location.location, layerOptions);
 		}
 
 		if (location.location.setStyle) {

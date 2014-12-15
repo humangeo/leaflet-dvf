@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Examples - Sochi Medal Counts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+      
+      #map {
+      	background: url(http://subtlepatterns.com/patterns/paper.png);
+      }
+      
+      .leaflet-tile-pane {
+      	opacity: 0.5;
+      }
+      
+      div.legend {
+      	background: url(http://upload.wikimedia.org/wikipedia/de/thumb/0/08/Logo_Sochi_2014.svg/608px-Logo_Sochi_2014.svg.png);
+		background-size: 50%;
+		background-repeat: no-repeat;
+		background-position: 100px 20px;
+      }
+      
+      div.leaflet-control-legend {
+      	max-height: 500px;
+      }
+    </style>
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
+</head>
+
+<body>
+	<div class="navbar">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">Sochi Medal Counts</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+    	<div class="row-fluid">
+			<div id="map"></div>
+		</div>
+	</div>
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-42733116-1', 'humangeo.github.io');
+	  ga('send', 'pageview');
+	</script>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
+	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
+	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
+	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
+	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+	<script type="text/javascript" src="../../dist/data/countryData.min.js"></script>
+	<script type="text/javascript">
+map = null;
+var lastLayer;
+var legendControl;
+
+$(document).ready(function() {
+
+	// Function for resizing the map to fill the available space on the screen
+	var resize = function () {
+		var $map = $('#map');
+
+		$map.height($(window).height() - $('div.navbar').outerHeight());
+
+		if (map) {
+			map.invalidateSize();
+		}
+	};
+
+	// Resize the map element on window resize
+	$(window).on('resize', function () {
+		resize();
+	});
+
+	// Resize the map element
+	resize();
+
+	// Initialize the map
+	map = L.map('map').setView([0.0, 0.0], 2);
+	map.attributionControl.addAttribution('Medal counts from the <a href="http://www.kimonolabs.com/sochi/docs">Kimono Labs Sochi API</a>');
+	
+	// Add a CloudMade tile layer with style #999
+	// Add the Stamen toner tiles as a base layer
+	var baseLayer = new L.StamenTileLayer('toner', {
+		detectRetina: true
+	}).addTo(map);
+
+	baseLayer.addTo(map);
+
+	var layerControl = new L.Control.Layers({
+		'Cloudmade': baseLayer,
+	});
+
+	layerControl.addTo(map);
+		
+	$.getJSON('../data/countries_historical.json', null, function(data) {
+			var statsData = data.data;
+
+			var fillColorFunction = new L.HSLHueFunction([0, 120], [10, 0]);
+			var boundaryColorFunction = new L.HSLHueFunction([0, 120], [30, 0]);
+			
+			var countLayer = new L.BarChartDataLayer(data, {
+				recordsField: 'data',
+				locationMode: L.LocationModes.COUNTRY,
+				codeField: 'abbr',
+				includeBoundary: true,
+				boundaryStyle: function (record, layer) {
+					return {
+						color: 'black',
+						fillOpacity: 0.5,
+						fillColor: boundaryColorFunction.evaluate(record.medals.total),
+						weight: 3,
+						opacity: 1.0
+					}
+				},
+				legendOptions: {
+					title: 'Medals'
+				},
+				tooltipOptions: {
+					iconSize: new L.Point(100, 70),
+					iconAnchor: new L.Point(-5, 70)
+				},
+				chartOptions: {
+					'medals.gold':{
+						color: 'black',
+						fillColor: 'gold',
+						minValue: 0,
+						maxValue: 30,
+						minRadius: 0,
+						maxRadius: 100,
+						displayName: 'Gold'
+					},
+					'medals.silver':{
+						color: 'black',
+						fillColor: 'silver',
+						minValue: 0,
+						maxValue: 30,
+						minRadius: 0,
+						maxRadius: 100,
+						displayName: 'Silver'
+					},
+					'medals.bronze':{
+						color: 'black',
+						fillColor: '#8C7853',
+						minValue: 0,
+						maxValue: 30,
+						minRadius: 0,
+						maxRadius: 100,
+						displayName: 'Bronze'
+					}
+				},
+				layerOptions: {
+					fillOpacity: 0.9,
+					color: 'black',
+					opacity: 1,
+					weight: 1,
+					width: 8,
+					numberOfSides: 100,
+					gradient: false,
+					dropShadow: false,
+					stroke: true
+				},
+				onEachRecord: function (layer, record) {
+					layer.options.chartOptions = 
+					{
+						'medals.gold':{
+							color: 'black',
+							fillColor: fillColorFunction.evaluate(record.medals.gold),
+							minValue: 0,
+							maxValue: 30,
+							maxHeight: 80,
+							displayName: 'Gold'
+						},
+						'medals.silver':{
+							color: 'black',
+							fillColor: fillColorFunction.evaluate(record.medals.silver),
+							minValue: 0,
+							maxValue: 30,
+							maxHeight: 80,
+							displayName: 'Silver'
+						},
+						'medals.bronze':{
+							color: 'black',
+							fillColor: fillColorFunction.evaluate(record.medals.bronze),
+							minValue: 0,
+							maxValue: 30,
+							maxHeight: 80,
+							displayName: 'Bronze'
+						}
+					};
+					layer.redraw();
+				}
+				
+			});
+			
+			map.addLayer(countLayer);
+			
+		});
+
+});
+	</script>
+</body>
+</html>

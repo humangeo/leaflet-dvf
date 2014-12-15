@@ -366,11 +366,9 @@ $(document).ready(function() {
 
 	baseLayer.setFilter(function () {
         return new L.CSSFilter(this, {
-            filters: ['invert(100%)'] //,'brightness(0.3)']
+            filters: ['invert(100%)']
         }).render();
 	});
-	
-	baseLayer.addTo(map);
 
 	var terrainLayer = new L.StamenTileLayer('terrain', {
 		detectRetina: true
@@ -378,7 +376,7 @@ $(document).ready(function() {
 
 	terrainLayer.setFilter(function () {
         return new L.CSSFilter(this, {
-            filters: ['grayscale(100%)', 'invert(100%)'] //,'brightness(0.3)']
+            filters: ['grayscale(100%)', 'invert(100%)']
         }).render();
 	});
 
@@ -386,9 +384,11 @@ $(document).ready(function() {
 
 	osmLayer.setFilter(function () {
         return new L.CSSFilter(this, {
-            filters: ['grayscale(100%)', 'invert(100%)'] //,'brightness(0.3)']
+            filters: ['grayscale(100%)', 'invert(100%)']
         }).render();
 	});
+
+	osmLayer.addTo(map);
 	
 	var groups = new vis.DataSet();
     groups.add({
@@ -397,10 +397,9 @@ $(document).ready(function() {
         className: 'customStyle1',
         options: {
             drawPoints: false,
-            //yAxisOrientation: 'right',
             shaded: {
                 enabled: true,
-                orientation: 'bottom' // top, bottom
+                orientation: 'bottom'
             }
         }
     });

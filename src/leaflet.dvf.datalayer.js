@@ -27,12 +27,12 @@ L.LocationModes = {
 		var location = getLocation(this.options.latitudeField, this.options.longitudeField);
 
 		if (!location && this.options.fallbackLocationFields) {
-			var index = 0;
+			var fallbackIndex = 0;
 			var fallbackLocationFields;
-			while (!location && index < this.options.fallbackLocationFields.length) {
-				fallbackLocationFields = this.options.fallbackLocationFields[index];
+			while (!location && fallbackIndex < this.options.fallbackLocationFields.length) {
+				fallbackLocationFields = this.options.fallbackLocationFields[fallbackIndex];
 				location = getLocation(fallbackLocationFields.latitudeField, fallbackLocationFields.longitudeField);
-				index++;
+				fallbackIndex++;
 			}
 		}
 
@@ -556,7 +556,7 @@ L.DataLayer = L.LayerGroup.extend({
 		this.options.filter = filterFunction;
 
 		// Re-load data
-		this.reloadData()
+		this.reloadData();
 
 		return this;
 	},
@@ -1134,11 +1134,11 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 			opacity: 1.0
 		},
 		onEachRecord: function (layer, record) {
-			var photoUrl = record['photo_file_url'];
-			var title = record['photo_title'];
+			var photoUrl = record.photo_file_url;
+			var title = record.photo_title;
 			var me = this;
-			var width = record['width'];
-			var height = record['height'];
+			var width = record.width;
+			var height = record.height;
 			var offset = 20000;
 
 			layer.on('click', function (e) {
@@ -1155,14 +1155,14 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 				var photoInfo = L.DomUtil.create('div', 'photo-info', content);
 				photoInfo.style.width = (width - 20) + 'px';
 				photoInfo.innerHTML = '<span>' + title + '</span>' +
-						      '<a class="photo-link" target="_blank" href="' + record['photo_url'] + '">' +
+						      '<a class="photo-link" target="_blank" href="' + record.photo_url + '">' +
 						      '<img src="http://www.panoramio.com/img/glass/components/logo_bar/panoramio.png" style="height: 14px;"/>' +
 						      '</a>';
 
 				var authorLink = L.DomUtil.create('a', 'author-link', content);
 				authorLink.setAttribute('target', '_blank');
-				authorLink.setAttribute('href', record['owner_url']);
-				authorLink.innerHTML = 'by ' + record['owner_name'];
+				authorLink.setAttribute('href', record.owner_url);
+				authorLink.innerHTML = 'by ' + record.owner_name;
 
 				var icon = new L.DivIcon({
 					className: 'photo-details',
@@ -1200,7 +1200,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 			}
 
 			var iconSize = size ? new L.Point(size, size) : L.PanoramioLayer.SIZES[this.options.size];
-			var url = record['photo_file_url'].replace('/medium/', '/' + this.options.size + '/');
+			var url = record.photo_file_url.replace('/medium/', '/' + this.options.size + '/');
 			var icon = new L.DivIcon({
 				iconSize: iconSize,
 				className: '',
@@ -1239,7 +1239,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 
 			var request = function () {
 				me.requestPhotos();
-			}
+			};
 
 			me._call = setTimeout(request, 1000);
 		};
@@ -1276,7 +1276,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 		// moment js
 		for (var i = 0; i < photos.length; ++i) {
 			var photo = photos[i];
-			var timestamp = moment(photo['upload_date'], L.PanoramioLayer.UPLOAD_DATE_FORMAT);
+			var timestamp = moment(photo.upload_date, L.PanoramioLayer.UPLOAD_DATE_FORMAT);
 
 			timestamps.push(timestamp);
 
@@ -1327,7 +1327,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 
 		data.callback = 'window.LeafletDvfJsonpCallbacks.' + key;
 
-		for (property in data) {
+		for (var property in data) {
 			if (data.hasOwnProperty(property)) {
 				params.push(property + '=' + encodeURIComponent(data[property]));
 			}
@@ -1361,7 +1361,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 				if (key in window.LeafletDvfJsonpCallbacks) {
 					window.LeafletDvfJsonpCallbacks[key] = function () {
 						delete window.LeafletDvfJsonpCallbacks[key];
-					}
+					};
 				}
 			}
 		};
@@ -1527,7 +1527,7 @@ L.ChartDataLayer = L.DataLayer.extend({
 			options.data[key] = this.options.getFieldValue ? this.options.getFieldValue.call(this, record, key) : L.Util.getFieldValue(record, key);
 		}
 
-		for (var key in tooltipOptions) {
+		for (key in tooltipOptions) {
 			options[key] = tooltipOptions[key];
 		}
 
@@ -1689,7 +1689,7 @@ L.RadialMeterMarkerDataLayer = L.DataLayer.extend({
 			options.data[key] = L.Util.getFieldValue(record, key);
 		}
 
-		for (var key in tooltipOptions) {
+		for (key in tooltipOptions) {
 			options[key] = tooltipOptions[key];
 		}
 

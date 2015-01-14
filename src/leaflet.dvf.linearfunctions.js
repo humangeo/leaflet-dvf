@@ -22,7 +22,7 @@ L.LinearFunction = L.Class.extend({
 		return {
 			x: array[0],
 			y: array[1]
-		}
+		};
 	},
 	
 	setOptions: function (options) {
@@ -124,7 +124,7 @@ L.LinearFunction = L.Class.extend({
 		var segmentCount = count - 1;
 		var segmentSize = this._xRange / segmentCount;
 		var x = this._minPoint.x;
-		var points = []
+		var points = [];
 		
 		while (x <= this._maxPoint.x) {
 			points.push(new L.Point(x, this.evaluate(x)));
@@ -139,7 +139,7 @@ L.LinearFunction = L.Class.extend({
 		var point = null;
 		
 		if (this._slope !== otherFunction._slope) {
-			var x = (this._b - otherFunction._b)/(otherFunction._slope - this._slope)
+			var x = (this._b - otherFunction._b)/(otherFunction._slope - this._slope);
 			var y = this.evaluate(x);
 			
 			point = new L.Point(x, y);
@@ -175,7 +175,7 @@ L.ColorFunction = L.LinearFunction.extend({
 		// Override this as necessary
 		this._formatOutput = function (y) {
 			return y.toFixed(this._outputPrecision);
-		},
+		};
 	
 		this._mapOutput = function (parts) {
 			var outputParts = [];

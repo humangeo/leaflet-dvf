@@ -185,7 +185,7 @@ L.Callout = L.LayerGroup.extend({
 	
 	addArrow: function (angle, direction, position) {
 		if (this.options.arrow) {
-			var angle = L.LatLng.RAD_TO_DEG * angle;
+			angle = L.LatLng.RAD_TO_DEG * angle;
 			var numberOfSides = this.options.numberOfSides || 3;
 			var radius = this.options.radius || 6;
 			
@@ -406,8 +406,8 @@ L.FlowLine = L.FlowLine.extend({
 			
 			if (this._lastRecord && includeLayer) {
 				
-				var options = this._getDynamicOptions(this._lastRecord);
-				
+				options = this._getDynamicOptions(this._lastRecord);
+
 				line = this.options.getLine.call(this, this._lastMarker.getLatLng(), marker.getLatLng(), options.layerOptions);
 			
 				this.addLayer(line);
@@ -418,7 +418,7 @@ L.FlowLine = L.FlowLine.extend({
 				
 				this.onEachSegment(this._lastRecord, record, line);
 				
-			};
+			}
 			
 			if (includeLayer) {
 				this._lastRecord = record;

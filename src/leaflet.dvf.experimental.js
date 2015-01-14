@@ -295,7 +295,7 @@ L.SparklineMarker = L.ChartMarker.extend({
 				value = {
 					x: closestPoint.x,
 					y: closestPoint.y
-				}
+				};
 
 				newPoint = new L.Point(-offset, iconSize.y + offset);
 
@@ -414,8 +414,13 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 		var yField = this.options.yField || 'y';
 		var seriesField = this.options.seriesField;
 		var includeFunction = this.options.filter || this.options.includeLayer;
-
-		for (var index in records) {
+		var key;
+		var seriesPoint;
+		var points = {};
+		var pointIndex;
+		var index;
+		
+		for (index in records) {
 			if (records.hasOwnProperty(index)) {
 
 				record = records[index];
@@ -436,15 +441,13 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 							series = _.pairs(series);
 						}
 
-						var seriesPoint;
-						
 						// Iterate through keys in chartOptions
-						for (var key in this.options.chartOptions) {
-							var points = {};
+						for (key in this.options.chartOptions) {
+							
 							var chartOptions = this.options.chartOptions[key];
 							
 							// Need to sort x's numerically before plotting
-							for (var pointIndex in series) {
+							for (pointIndex in series) {
 								if (series.hasOwnProperty(pointIndex)) {
 									seriesPoint = series[pointIndex];
 
@@ -477,7 +480,7 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 					}
 					else {
 						// Iterate through the keys in chartOptions
-						for (var key in this.options.chartOptions) {
+						for (key in this.options.chartOptions) {
 							
 							// Get the key property from the record
 							series = L.Util.getFieldValue(record, key);
@@ -486,12 +489,10 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 								series = _.pairs(series);
 							}
 
-							var seriesPoint;
-							var points = {};
 							var chartOption = this.options.chartOptions[key];
 							
 							// Need to sort x's numerically before plotting
-							for (var pointIndex in series) {
+							for (pointIndex in series) {
 								if (series.hasOwnProperty(pointIndex)) {
 									seriesPoint = series[pointIndex];
 
@@ -543,11 +544,11 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 			return value;
 		});
 
-		for (var index in seriesObjects) {
+		for (index in seriesObjects) {
 
 			var seriesObject = seriesObjects[index];
 
-			for (var key in this.options.chartOptions) {
+			for (key in this.options.chartOptions) {
 
 				var seriesData = L.Util.getFieldValue(seriesObject, key);
 
@@ -560,7 +561,7 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 				}
 
 				L.Util.setFieldValue(seriesObjects[index], key, _.chain(seriesData).pairs().sortBy(function(value) {
-					return value
+					return value;
 				}).value());
 
 			}
@@ -730,13 +731,13 @@ L.WeightedLineSegment = L.Polyline.extend({
 		var deltaX = p2.x - p1.x;
 		var deltaY = p2.y - p1.y;
 		
-		if (deltaX != 0 || deltaY != 0) {
+		if (deltaX !== 0 || deltaY !== 0) {
 			var angle = Math.atan(deltaY/deltaX);
 			var directionX = deltaX/Math.abs(deltaX);
 			var directionY = deltaY/Math.abs(deltaY);
 
-			var p1 = new L.Point(50 + 50 * Math.cos(angle + Math.PI), 50 + 50 * Math.sin(angle + Math.PI));
-			var p2 = new L.Point(50 + 50 * Math.cos(angle), 50 + 50 * Math.sin(angle));
+			p1 = new L.Point(50 + 50 * Math.cos(angle + Math.PI), 50 + 50 * Math.sin(angle + Math.PI));
+			p2 = new L.Point(50 + 50 * Math.cos(angle), 50 + 50 * Math.sin(angle));
 
 			if (directionX < 0) {
 				var temp = p1;
@@ -767,7 +768,7 @@ L.WeightedLineSegment = L.Polyline.extend({
 						}
 					}
 				]
-			}
+			};
 
 			this.setStyle(this.options);
 		}
@@ -1110,14 +1111,17 @@ L.StackedPieChartMarker = L.ChartMarker.extend({
             }
             return value;
         };
+        var i;
         var j = 0;
         var dataValueSum = [];
         var dataScale = [];
+        var valueSum;
+        
         for (key in data) {
             value = getValue(data, key);
             //sum += value;
-            var valueSum = 0;
-            for(var i = 0; i < data[key].length; ++i){
+            valueSum = 0;
+            for(i = 0; i < data[key].length; ++i){
         		value = parseFloat(data[key][i]);
         		valueSum += value;
         	}
@@ -1139,14 +1143,14 @@ L.StackedPieChartMarker = L.ChartMarker.extend({
 			this._bindMouseEvents(circle);
 			this.addLayer(circle);
 
-        	var j = 0;
+        	j = 0;
             for (key in data) {
-            	var valueSum = 0.0;
+            	valueSum = 0.0;
                 percentage = options.values[j]/sum;
                 angle = percentage * maxDegrees;
                 options.startAngle = lastAngle;
                 options.endAngle = lastAngle + angle;
-            	for(var i = 0; i < data[key].length; ++i){
+            	for(i = 0; i < data[key].length; ++i){
             		value = parseFloat(data[key][i]);
             		
             		valueSum += value;
@@ -1174,7 +1178,10 @@ L.StackedPieChartMarker = L.ChartMarker.extend({
                 lastAngle = options.endAngle;
                 j++;
             }
-            for(var i = 0.2; i < 1.0; i+=0.2){
+            
+            var displayText = function(v){ return parseInt(100*v)+"%";};
+            
+            for(i = 0.2; i < 1.0; i+=0.2){
 	            circle = new L.CircleMarker(this._latlng, {
 	            	value: i,
 	            	color: options.color,
@@ -1184,7 +1191,7 @@ L.StackedPieChartMarker = L.ChartMarker.extend({
 	            	fill:false,
 	            	iconSize: new L.Point(50, 40),
 	            	displayName: "percent",
-	            	displayText: function(v){ return parseInt(100*v)+"%";}
+	            	displayText: displayText
 	            });
 				this._bindMouseEvents(circle);
 				this.addLayer(circle);

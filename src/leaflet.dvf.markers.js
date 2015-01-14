@@ -152,7 +152,7 @@ var PathFunctions = PathFunctions || {
 	_createGradient: function (options) {
 		if (!this._defs) {
 			this._createDefs();
-		};
+		}
 
 		if (this._gradient) {
 			this._defs.removeChild(this._gradient);
@@ -166,11 +166,11 @@ var PathFunctions = PathFunctions || {
 		var gradientOptions;
 		if (options.gradientType == "radial") {
 			gradient = this._createElement("radialGradient");
-			var gradientOptions = options.radial || { cx: '50%', cy: '50%', r: '50%', fx: '50%', fy: '50%' };
+			gradientOptions = options.radial || { cx: '50%', cy: '50%', r: '50%', fx: '50%', fy: '50%' };
 		} else {
 			gradient = this._createElement("linearGradient");
 			var vector = options.vector || [ [ "0%", "0%" ], [ "100%", "100%" ] ];
-			var gradientOptions = {
+			gradientOptions = {
 				x1: vector[0][0],
 				x2: vector[1][0],
 				y1: vector[0][1],
@@ -196,7 +196,9 @@ var PathFunctions = PathFunctions || {
 			}
 		];
 
-		for (var key in gradientOptions) {
+		var key;
+		
+		for (key in gradientOptions) {
 			gradient.setAttribute(key, gradientOptions[key]);
 		}
 
@@ -206,7 +208,7 @@ var PathFunctions = PathFunctions || {
 
 			stop.style = stop.style || {};
 
-			for (var key in stop) {
+			for (key in stop) {
 				var stopProperty = stop[key];
 
 				if (key === 'style') {
@@ -236,7 +238,7 @@ var PathFunctions = PathFunctions || {
 
 		if (!this._defs) {
 			this._createDefs();
-		};
+		}
 
 		if (this._dropShadow) {
 			this._defs.removeChild(this._dropShadow);
@@ -255,7 +257,9 @@ var PathFunctions = PathFunctions || {
 
 		options.id = 'filter' + filterGuid;
 
-		for (var key in options) {
+		var key;
+		
+		for (key in options) {
 			filter.setAttribute(key, options[key]);
 		}
 
@@ -278,15 +282,15 @@ var PathFunctions = PathFunctions || {
 			mode: 'lighten'
 		};
 
-		for (var key in offsetOptions) {
+		for (key in offsetOptions) {
 			feOffset.setAttribute(key, offsetOptions[key]);
 		}
 
-		for (var key in blurOptions) {
+		for (key in blurOptions) {
 			feGaussianBlur.setAttribute(key, blurOptions[key]);
 		}
 
-		for (var key in blendOptions) {
+		for (key in blendOptions) {
 			feBlend.setAttribute(key, blendOptions[key]);
 		}
 
@@ -364,7 +368,7 @@ var PathFunctions = PathFunctions || {
 
 		if (!this._defs) {
 			this._createDefs();
-		};
+		}
 
 		this._defs.appendChild(pattern);
 		this._path.setAttribute('fill', 'url(#' + patternGuid + ')');
@@ -418,7 +422,7 @@ var PathFunctions = PathFunctions || {
 
 		var pattern = this._createPattern(patternOptions);
 
-		var imageOptions = imageOptions.image || {
+		imageOptions = imageOptions.image || {
 			width: imageSize.x,
 			height: imageSize.y,
 			x: 0,
@@ -780,7 +784,7 @@ L.RegularPolygonMarker = L.Path.extend({
 	includes: TextFunctions,
 
 	initialize: function (centerLatLng, options) {
-		L.Path.prototype.initialize ? L.Path.prototype.initialize.call(this, options) : L.setOptions(this, options);
+		L.Path.prototype.initialize.call(this, options);
 
 		this._latlng = centerLatLng;
 
@@ -934,7 +938,7 @@ L.RegularPolygonMarker = L.Path.extend({
 
 	_getDefaultDiameter: function (radius) {
 		var angle = Math.PI/this.options.numberOfSides;
-		var minLength = radius * Math.cos(angle)
+		var minLength = radius * Math.cos(angle);
 
 		return 1.75 * minLength;
 	},
@@ -1179,7 +1183,7 @@ L.SVGMarker = L.Path.extend({
 					me._data = this.responseXML;
 					addSVG();
 				}
-			}
+			};
 			xhr.open('GET', this._svg, true);
 			xhr.send(null);
 		}
@@ -1232,7 +1236,7 @@ L.MarkerGroup = L.FeatureGroup.extend({
 		var eachLayerFunction = function (featureCollection) {
 			return function (layer) {
 				featureCollection.features.push(L.Util.pointToGeoJSON.call(layer));
-			}
+			};
 		};
 		
 		this.eachLayer(eachLayerFunction(featureCollection));

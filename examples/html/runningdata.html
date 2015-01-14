@@ -645,7 +645,7 @@ $(document).ready(function() {
 			interpolate: true
 		});
 		*/
-		var weightFunction = new L.LinearFunction([0,0], [maxSpeed, 40]);
+		var weightFunction = new L.LinearFunction([0,0.5], [maxSpeed, 40]);
 		var colorFunction = new L.HSLHueFunction([0,120], [maxSpeed, -60]);
 
 		var weightedPolylineTest = new L.FlowLine(data, {

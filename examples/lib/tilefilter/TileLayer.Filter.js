@@ -1,5 +1,5 @@
 /*
- @preserve Leaflet Tile Filters, a JavaScript plugin for apply image filters to tile images
+ @preserve Leaflet Tile Filters, a JavaScript plugin for applying image filters to tile images
  (c) 2014, Scott Fairgrieve, HumanGeo
 */
 /*
@@ -181,9 +181,11 @@ L.ImageFilter = L.Class.extend({
 L.CanvasFilter = L.ImageFilter.extend({
     render: function() {
         var canvas;
+        var m = L.Browser.retina ? 2 : 1;
+        var size = Math.min(this._image._layer.options.tileSize * m, 256);
         if (!this._image.canvasContext) {
             canvas = document.createElement("canvas");
-            canvas.width = canvas.height = this._image._layer.options.tileSize;
+            canvas.width = canvas.height = size;
             this._image.canvasContext = canvas.getContext("2d");
         }
         var ctx = this._image.canvasContext;
@@ -192,7 +194,7 @@ L.CanvasFilter = L.ImageFilter.extend({
                 return imageData;
             };
             ctx.drawImage(this._image, 0, 0);
-            var imgd = ctx.getImageData(0, 0, this._image._layer.options.tileSize, this._image._layer.options.tileSize);
+            var imgd = ctx.getImageData(0, 0, size, size);
             imgd = filter.call(this._image, imgd);
             ctx.putImageData(imgd, 0, 0);
             this._image.onload = null;

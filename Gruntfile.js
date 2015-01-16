@@ -21,6 +21,7 @@ module.exports = function(grunt) {
     uglify: {
     	all: {
 			options: {
+				preserveComments: 'some',
 				banner: '/*! <%= pkg.name %> <%= grunt.template.today("dd-mm-yyyy") %> */\n'
 			},
 	        files: {
@@ -29,6 +30,7 @@ module.exports = function(grunt) {
     	},
     	markers: {
 			options: {
+				preserveComments: 'some',
 				banner: '/*! <%= pkg.name %> <%= grunt.template.today("dd-mm-yyyy") %> */\n'
 			},
   	        files: {

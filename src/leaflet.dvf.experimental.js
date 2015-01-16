@@ -444,6 +444,7 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 						// Iterate through keys in chartOptions
 						for (key in this.options.chartOptions) {
 							
+							points = {};
 							var chartOptions = this.options.chartOptions[key];
 							
 							// Need to sort x's numerically before plotting
@@ -489,6 +490,7 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
 								series = _.pairs(series);
 							}
 
+							points = {};
 							var chartOption = this.options.chartOptions[key];
 							
 							// Need to sort x's numerically before plotting

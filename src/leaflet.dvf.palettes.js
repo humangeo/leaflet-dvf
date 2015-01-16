@@ -517,7 +517,7 @@ L.DynamicPaletteElement = L.Class.extend({
 
 		var showText = true;
 
-		if (options.showText != undefined) {
+		if (options.showText) {
 			showText = options.showText;
 		}
 
@@ -537,20 +537,20 @@ L.DynamicPaletteElement = L.Class.extend({
 		}
 
 		for (var i = 0; i < count; ++i) {
-			var i = L.DomUtil.create('i', 'palette-element');
+			var iElement = L.DomUtil.create('i', 'palette-element');
 
 			for (var styleKey in palette) {
 
 				var styleValue = palette[styleKey];
 				var style = styleValue.evaluate ? styleValue.evaluate(i) : styleValue;
 
-				L.StyleConverter.setCSSProperty(i, styleKey, style);
+				L.StyleConverter.setCSSProperty(iElement, styleKey, style);
 
 			}
 
-			i.style.width = elementWidth + 'px';
+			iElement.style.width = elementWidth + 'px';
 
-			paletteElement.appendChild(i);
+			paletteElement.appendChild(iElement);
 
 		}
 		return paletteElement;

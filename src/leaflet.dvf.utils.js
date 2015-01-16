@@ -6,7 +6,7 @@ if (!Array.prototype.indexOf) {
 			 if (this[i] === obj) { return i; }
 		 }
 		 return -1;
-	}
+	};
 }
 
 // Add the keys method to the Object class if it doesn't exist
@@ -165,7 +165,7 @@ L.Util.pointToGeoJSON = function () {
 			coordinates: [this._latlng[1], this._latlng[0]]
 		},
 		properties: {}
-	}
+	};
 	
 	for (var key in this.options) {
 		if (this.options.hasOwnProperty(key)) {
@@ -315,7 +315,7 @@ L.GeometryUtils = {
 
 	// Merges a set of properties into the properties of each feature of a GeoJSON FeatureCollection
 	mergeProperties: function (properties, featureCollection, mergeKey) {
-		var features = featureCollection['features'];
+		var features = featureCollection.features;
 		var featureIndex = L.GeometryUtils.indexFeatureCollection(features, mergeKey);
 		var property;
 		var mergeValue;
@@ -372,7 +372,7 @@ L.GeometryUtils = {
 							type: 'GeometryCollection',
 							geometries: [feature.geometry, existingFeature.geometry]
 						}
-					}
+					};
 				}
 				else {
 					existingFeature.geometry.geometries.push(feature.geometry);
@@ -516,7 +516,9 @@ L.SVGPathBuilder = L.Class.extend({
 		if (points.length > 0) {
 
 			var point = points[0];
-			var digits = digits !== null ? digits : 2;
+			
+			digits = digits !== null ? digits : 2;
+			
 			var startChar = 'M';
 			var lineToChar = 'L';
 			var closePath = 'Z';
@@ -545,7 +547,12 @@ L.SVGPathBuilder = L.Class.extend({
 	},
 
 	addPoint: function (point, inner) {
-		inner ? this._innerPoints.push(point) : this._points.push(point);
+		if (inner) {
+			this._innerPoints.push(point);
+		}
+		else {
+			this._points.push(point);
+		}
 	},
 
 	build: function (digits) {
@@ -636,7 +643,8 @@ L.StyleConverter = {
 	},
 
 	setCSSProperty: function (element, key, value, keyMap) {
-		var keyMap = keyMap || L.StyleConverter.keyMap;
+		keyMap = keyMap || L.StyleConverter.keyMap;
+		
 		var cssProperty = keyMap[key];
 		var cssText = '';
 
@@ -775,7 +783,7 @@ L.AnimationUtils = {
 		var frames = options.frames || 30;
 		var duration = options.duration || 500;
 		var linearFunctions = {};
-		var easeFunction = options.easeFunction || function (step) { return step };
+		var easeFunction = options.easeFunction || function (step) { return step; };
 		var complete = options.complete;
 		var step = duration / frames;
 
@@ -847,7 +855,10 @@ L.Color = L.Class.extend({
 	 * @return  Array           The HSL representation
 	 */
 	rgbToHSL: function(r, g, b){
-	    r /= 255, g /= 255, b /= 255;
+	    r /= 255;
+	    g /= 255; 
+	    b /= 255;
+	    
 	    var max = Math.max(r, g, b), min = Math.min(r, g, b);
 	    var h, s, l = (max + min) / 2;
 
@@ -880,19 +891,18 @@ L.Color = L.Class.extend({
 	 */
 	hslToRGB: function(h, s, l){
 	    var r, g, b;
-
-	    if(s == 0){
+	    var hue2rgb = function (p, q, t){
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+        
+	    if(s === 0){
 	        r = g = b = l; // achromatic
 	    }else{
-	        function hue2rgb(p, q, t){
-	            if(t < 0) t += 1;
-	            if(t > 1) t -= 1;
-	            if(t < 1/6) return p + (q - p) * 6 * t;
-	            if(t < 1/2) return q;
-	            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-	            return p;
-	        }
-
 	        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
 	        var p = 2 * l - q;
 	        r = hue2rgb(p, q, h + 1/3);

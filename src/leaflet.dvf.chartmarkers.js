@@ -358,10 +358,10 @@ L.RadialBarMarker = L.Path.extend({
 		var radiusX = this.options.radiusX || this.options.radius;
 		var radiusY = this.options.radiusY || this.options.radius;
 		var path = 'M' + this._points[0].x.toFixed(2) + ',' + this._points[0].y.toFixed(2) + 'A' + radiusX.toFixed(2) + ',' + radiusY.toFixed(2) + ' 0 ' + largeArc + ',1 ' + this._points[1].x.toFixed(2) + ',' + this._points[1].y.toFixed(2) + 'L'; 
-		
+
 		if (this._innerPoints) {
 			path = path + this._innerPoints[0].x.toFixed(2) + ',' + this._innerPoints[0].y.toFixed(2);
-			path = path + 'A' + (radiusX - this.options.barThickness).toFixed(2) + ',' + (radiusY - this.options.barThickness).toFixed(2) + ' 0 ' + largeArc + ',0 ' + this._innerPoints[1].x.toFixed(2) + ',' + this._innerPoints[1].y.toFixed(2) + 'z';;
+			path = path + 'A' + (radiusX - this.options.barThickness).toFixed(2) + ',' + (radiusY - this.options.barThickness).toFixed(2) + ' 0 ' + largeArc + ',0 ' + this._innerPoints[1].x.toFixed(2) + ',' + this._innerPoints[1].y.toFixed(2) + 'z';
 		}
 		else {
 			path = path + this._point.x.toFixed(2) + ',' + this._point.y.toFixed(2) + 'z';
@@ -389,6 +389,9 @@ L.RadialBarMarker = L.Path.extend({
 			return number * L.LatLng.DEG_TO_RAD;
 		};
 
+		// Make sure degrees is defined
+		degrees = degrees || 0;
+		
 		if (angleDelta === 360.0) {
 			degrees = degrees - 0.1;
 		}
@@ -491,7 +494,7 @@ L.PieChartMarker = L.ChartMarker.extend({
 		// Iterate through the data values
 		if (sum > 0) {
 			for (key in data) {		
-				value = parseFloat(data[key]);
+				value = parseFloat(data[key]) || 0;
 				chartOption = chartOptions[key];
 				percentage = value / sum;
 			
@@ -499,6 +502,7 @@ L.PieChartMarker = L.ChartMarker.extend({
 			
 				options.startAngle = lastAngle;
 				options.endAngle = lastAngle + angle;
+				
 				options.fillColor = chartOption.fillColor;
 				options.color = chartOption.color || '#000';
 				options.radiusX = this.options.radiusX || this.options.radius;
@@ -575,13 +579,17 @@ L.CoxcombChartMarker = L.CoxcombChartMarker.extend({
 		
 		angle = maxDegrees / count;
 		
+		var postProcess = function (value) {
+			return Math.sqrt(count * value / Math.PI);
+		};
+		
 		// Iterate through the data values
 		for (var key in data) {
-			value = parseFloat(data[key]);
+			value = parseFloat(data[key]) || 0;
 			chartOption = chartOptions[key];
 			
-			var minValue = chartOption.minValue || 0;
-			var maxValue = chartOption.maxValue;
+			minValue = chartOption.minValue || 0;
+			maxValue = chartOption.maxValue;
 			
 			// If the size mode is radius, then we'll just vary the radius proportionally to the value
 			if (this.options.sizeMode === L.CoxcombChartMarker.SIZE_MODE_RADIUS) {
@@ -596,9 +604,7 @@ L.CoxcombChartMarker = L.CoxcombChartMarker.extend({
 				var maxArea = (Math.PI * Math.pow(radius, 2)) / count;
 				
 				var evalFunctionArea = new L.LinearFunction(new L.Point(minValue, 0), new L.Point(maxValue, maxArea), {
-					postProcess: function (value) {
-						return Math.sqrt(count * value / Math.PI);
-					}
+					postProcess: postProcess
 				});
 				
 				options.radiusX = evalFunctionArea.evaluate(value);
@@ -862,11 +868,12 @@ L.RadialMeterMarker = L.ChartMarker.extend({
 			var maxAngle = startAngle + maxDegrees;
 			
 			var evalFunction = new L.LinearFunction(new L.Point(startAngle, minValue), new L.Point(maxAngle, maxValue));
+			var delta, evalValue;
 			
 			while (lastAngle < endAngle) {
 				options.startAngle = lastAngle;
 				
-				var delta = Math.min(angleDelta, endAngle - lastAngle);
+				delta = Math.min(angleDelta, endAngle - lastAngle);
 				
 				options.endAngle = lastAngle + delta;
 				options.fillColor = chartOption.fillColor;
@@ -879,7 +886,7 @@ L.RadialMeterMarker = L.ChartMarker.extend({
 				options.displayName = chartOption.displayName;
 				options.displayText = chartOption.displayText;
 				
-				var evalValue = evalFunction.evaluate(lastAngle + delta);
+				evalValue = evalFunction.evaluate(lastAngle + delta);
 				
 				for (var displayKey in displayOptions) {
 					options[displayKey] = displayOptions[displayKey].evaluate ? displayOptions[displayKey].evaluate(evalValue) : displayOptions[displayKey];
@@ -897,7 +904,7 @@ L.RadialMeterMarker = L.ChartMarker.extend({
 			// Add a background
 			if (this.options.backgroundStyle) {
 				if (lastAngle < maxAngle) {
-					var delta = maxAngle - lastAngle;
+					delta = maxAngle - lastAngle;
 				
 					options.endAngle = lastAngle + delta;
 					options.radiusX = radiusX;
@@ -917,7 +924,7 @@ L.RadialMeterMarker = L.ChartMarker.extend({
 						options[property] = this.options.backgroundStyle[property];
 					}
 					
-					var evalValue = evalFunction.evaluate(lastAngle + delta);
+					evalValue = evalFunction.evaluate(lastAngle + delta);
 				
 					bar = new L.RadialBarMarker(this._latlng, options);
 

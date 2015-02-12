@@ -2,6 +2,10 @@
  * Class for interpolating values along a line using a linear equation
  */
 L.LinearFunction = L.Class.extend({
+	options: {
+		constrainX: false
+	},
+	
 	initialize: function (minPoint, maxPoint, options) {
 		this.setOptions(options);
 		this.setRange(minPoint, maxPoint);
@@ -76,6 +80,17 @@ L.LinearFunction = L.Class.extend({
 		this._postProcess = postProcess;
 		
 		return this;
+	},
+	
+	constrainX: function (x) {
+		x = Number(x);
+
+		if (this.options.constrainX) {
+			x = Math.max(x, this._minPoint.x);
+			x = Math.min(x, this._maxPoint.x);
+		}
+		
+		return x;
 	},
 	
 	evaluate: function (x) {
@@ -442,6 +457,10 @@ L.HSLColorBlendFunction = L.LinearFunction.extend({
  * Allows you to combine multiple linear functions into a single linear function
  */
 L.PiecewiseFunction = L.LinearFunction.extend({
+	options: {
+		constrainX: true
+	},
+	
 	initialize: function (functions, options) {
 		
 		L.Util.setOptions(this, options);
@@ -464,29 +483,36 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 		var bounds;
 		var startPoint;
 		var endPoint;
-		var found = false;
 		var currentFunction;
 		
-		for (var index = 0; index < this._functions.length; ++index) {
-			currentFunction = this._functions[index];
-			bounds = currentFunction.getBounds();
-			
-			startPoint = bounds[0];
-			endPoint = bounds[1];
-			
-			if (x >= startPoint.x && x < endPoint.x) {
-				found = true;
-				break;
+		if (x < this._minPoint.x) {
+			currentFunction = this._functions[0];
+		}
+		else if (x >= this._maxPoint.x) {
+			currentFunction = this._functions[this._functions.length - 1];
+		}
+		else {
+			for (var index = 0; index < this._functions.length; ++index) {
+				currentFunction = this._functions[index];
+				bounds = currentFunction.getBounds();
+				
+				startPoint = bounds[0];
+				endPoint = bounds[1];
+				
+				if (x >= startPoint.x && x < endPoint.x) {
+					break;
+				}
 			}
 		}
-		
-		// If found return the found function; otherwise return the last function
-		return found ? currentFunction : this._functions[this._functions.length - 1];
+
+		return currentFunction;
 	},
 	
 	evaluate: function (x) {
 		var currentFunction;
 		var y = null;
+		
+		x = this.constrainX(x);
 		
 		if (this._preProcess) {
 			x = this._preProcess(x);
@@ -528,6 +554,7 @@ L.CustomColorFunction = L.PiecewiseFunction.extend({
 		
 		L.PiecewiseFunction.prototype.initialize.call(this, functions);
 	}
+	
 });
 
 

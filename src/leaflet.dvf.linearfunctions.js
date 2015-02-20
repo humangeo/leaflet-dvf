@@ -532,6 +532,35 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 	}
 });
 
+/*
+ * Specific an array of x values to break on along with a set of colors (breaks.length - 1)
+ */
+L.ColorClassFunction = L.PiecewiseFunction.extend({
+	options: {
+		interpolate: true
+	},
+	
+	initialize: function (classBreaks, colors, options) {
+		var functions = [];
+		var colorFunction;
+		
+		L.Util.setOptions(this, options);
+		
+		for (var i = 0; i < classBreaks.length - 1; ++i) {
+			var start = classBreaks[i],
+				end = classBreaks[i + 1],
+				startColor = colors[i],
+				endColor = this.options.interpolate ? colors[Math.min(colors.length -1, i + 1)] : colors[i];
+			
+			colorFunction = new L.RGBColorBlendFunction(start, end, startColor, endColor);
+			
+			functions.push(colorFunction);	
+		}
+		
+		L.PiecewiseFunction.prototype.initialize.call(this, functions);
+	}
+});
+
 L.CustomColorFunction = L.PiecewiseFunction.extend({
 	options: {
 		interpolate: true

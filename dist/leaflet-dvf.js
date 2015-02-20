@@ -535,6 +535,35 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 	}
 });
 
+/*
+ * Specific an array of x values to break on along with a set of colors (breaks.length - 1)
+ */
+L.ColorClassFunction = L.PiecewiseFunction.extend({
+	options: {
+		interpolate: true
+	},
+	
+	initialize: function (classBreaks, colors, options) {
+		var functions = [];
+		var colorFunction;
+		
+		L.Util.setOptions(this, options);
+		
+		for (var i = 0; i < classBreaks.length - 1; ++i) {
+			var start = classBreaks[i],
+				end = classBreaks[i + 1],
+				startColor = colors[i],
+				endColor = this.options.interpolate ? colors[Math.min(colors.length -1, i + 1)] : colors[i];
+			
+			colorFunction = new L.RGBColorBlendFunction(start, end, startColor, endColor);
+			
+			functions.push(colorFunction);	
+		}
+		
+		L.PiecewiseFunction.prototype.initialize.call(this, functions);
+	}
+});
+
 L.CustomColorFunction = L.PiecewiseFunction.extend({
 	options: {
 		interpolate: true
@@ -1339,7 +1368,13 @@ L.HTMLUtils = {
 		var table = L.DomUtil.create('table', className);
 		var thead = L.DomUtil.create('thead', '', table);
 		var tbody = L.DomUtil.create('tbody', '', table);
-		thead.innerHTML = '<tr><th>Name</th><th>Value</th></tr>';
+		
+		var thead_tr = L.DomUtil.create('tr', '', thead);
+        var thead_values = ['Name','Value'];
+        for (var i = 0, l = thead_values.length; i < l; i++) {
+            var thead_th = L.DomUtil.create('th', '', thead_tr);
+            thead_th.innerHTML = thead_values[i];
+        }
 
 		ignoreFields = ignoreFields || [];
 
@@ -1360,7 +1395,13 @@ L.HTMLUtils = {
 					container.appendChild(L.HTMLUtils.buildTable(value, ignoreFields));
 					value = container.innerHTML;
 				}
-				tbody.innerHTML += '<tr><td>' + property + '</td><td>' + value + '</td></tr>';
+				
+				var tbody_tr = L.DomUtil.create('tr', '', tbody);
+                var tbody_values = [property, value];
+                for (i = 0, l = tbody_values.length; i < l; i++) {
+                    var tbody_td = L.DomUtil.create('td', '', tbody_tr);
+                    tbody_td.innerHTML = tbody_values[i];
+                }
 			}
 		}
 

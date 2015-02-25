@@ -55,7 +55,7 @@ var eqfeed_callback = function (data) {
 				displayName: 'Magnitude',
 				color: magnitudeColorFunction,
 				fillColor: magnitudeFillColorFunction,
-				//radius: magnitudeRadiusFunction,
+				radius: magnitudeRadiusFunction,
 				text: textFunction
 			},
 			'properties.time': {

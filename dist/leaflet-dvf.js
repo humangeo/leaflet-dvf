@@ -5676,6 +5676,7 @@ L.DataLayer = L.LayerGroup.extend({
 								displayTextFunction: displayTextFunction,
 								index: index,
 								numSegments: numSegments,
+								segmentWidth: segmentWidth,
 								minValue: minValue,
 								maxValue: maxValue,
 								gradient: legendOptions.gradient

@@ -47,9 +47,6 @@ var eqfeed_callback = function (data) {
 		latitudeField: 'geometry.coordinates.1',
 		longitudeField: 'geometry.coordinates.0',
 		locationMode: L.LocationModes.LATLNG,
-		legendOptions: {
-			breaks: breaks
-		},
 		displayOptions: {
 			'properties.mag': {
 				displayName: 'Magnitude',

@@ -890,7 +890,7 @@ L.DataLayer = L.LayerGroup.extend({
 						maxValue.innerHTML = displayMax;
 					}
 
-					var segmentSize = (maxX - minX) / numSegments;
+					var segmentSize = params.segmentWidth || (maxX - minX) / numSegments;
 					var x = binFunction.evaluate(index);
 					var nextX = binFunction.evaluate(index + 1);
 					var value = valueFunction.evaluate ? valueFunction.evaluate(x) : valueFunction(x);
@@ -926,8 +926,8 @@ L.DataLayer = L.LayerGroup.extend({
 								   'border-right-width:' + nextValue + ';';
 					}
 
-					var min = (segmentSize * index) + minX;
-					var max = min + segmentSize;
+					var min = params.minX || (segmentSize * index) + minX;
+					var max = params.maxX || min + segmentSize;
 
 					if (displayTextFunction && valueFunction) {
 						min = displayTextFunction(min);
@@ -960,7 +960,26 @@ L.DataLayer = L.LayerGroup.extend({
 		var segmentWidth = (legendWidth / numSegments) - 2 * weight;
 		var displayText;
 		var displayOptions = this.options.displayOptions || {};
-
+		var breaks = legendOptions.breaks;
+		var segmentWidths = [];
+		
+		// If breaks have been specified, then use those values to calculate segment widths and provide x ranges
+		// for each segment
+		if (breaks) {
+			// Scale the break numbers relative to the width of the legend
+			var scaleFunction = new L.LinearFunction([breaks[0], 0], [breaks[breaks.length - 1], legendWidth]);
+			var lastWidth = 0;
+			var width = 0;
+			for (var i = 1; i < breaks.length; ++i) {
+				width = scaleFunction.evaluate(breaks[i]);
+				segmentWidths.push(width - lastWidth);
+				lastWidth = width;
+			}
+			
+			// Update numSegments to match the number of calculated segments based on breaks
+			numSegments = segmentWidths.length;
+		}
+		
 		if (className) {
 			L.DomUtil.addClass(legendElement, className);
 		}
@@ -973,53 +992,71 @@ L.DataLayer = L.LayerGroup.extend({
 			return value;
 		};
 
+		// Create a different legend section for each field specified in displayOptions
+		// Iterate through the fields
 		for (var field in displayOptions) {
-
-			var displayProperties = displayOptions[field];
-			
-			if (!displayProperties.excludeFromLegend) {
-				var displayName = displayProperties.displayName || field;
-
-				displayText = displayProperties.displayText;
-
-				var displayTextFunction = displayText ? displayText : defaultFunction;
-
-				var styles = displayProperties.styles;
-
-				L.DomUtil.create('div', 'legend-title', legendElement).innerHTML = displayName;
-
-				if (styles) {
-					// Generate category legend
-					legendElement.innerHTML += new L.CategoryLegend(styles).generate();
-				}
-				else {
-					// Generate numeric legend
-					var legendItems = L.DomUtil.create('div', 'data-layer-legend');
-					var minValue = L.DomUtil.create('div', 'min-value', legendItems);
-					var scaleBars = L.DomUtil.create('div', 'scale-bars', legendItems);
-					var maxValue = L.DomUtil.create('div', 'max-value', legendItems);
-					var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
-
-					for (var index = 0; index < numSegments; ++index) {
-						var legendParams = {
-							displayProperties: displayProperties,
-							layerOptions: layerOptions,
-							ignoreProperties: ignoreProperties,
-							displayTextFunction: displayTextFunction,
-							index: index,
-							numSegments: numSegments,
-							segmentWidth: segmentWidth,
-							minValue: minValue,
-							maxValue: maxValue,
-							gradient: legendOptions.gradient
-						};
-
-						var element = this._getLegendElement(legendParams);
-
-						scaleBars.appendChild(element);
-
+			if (displayOptions.hasOwnProperty(field)) {
+				
+				// Get the properties associated with a given field
+				var displayProperties = displayOptions[field];
+				
+				// If the field should not be excluded from the legend, then continue...
+				if (!displayProperties.excludeFromLegend) {
+					
+					// Use the provided name or use the field key
+					var displayName = displayProperties.displayName || field;
+	
+					// Determine the function used to print out y values
+					displayText = displayProperties.displayText;
+	
+					var displayTextFunction = displayText ? displayText : defaultFunction;
+	
+					var styles = displayProperties.styles;
+	
+					L.DomUtil.create('div', 'legend-title', legendElement).innerHTML = displayName;
+	
+					// If styles have been specified (e.g. a key/value mapping b/w a given input value and a given output value),
+					// then use those
+					if (styles) {
+						// Generate category legend
+						legendElement.innerHTML += new L.CategoryLegend(styles).generate();
 					}
-					legendElement.appendChild(legendItems);
+					else {
+						// Generate numeric legend
+						var legendItems = L.DomUtil.create('div', 'data-layer-legend');
+						var minValue = L.DomUtil.create('div', 'min-value', legendItems);
+						var scaleBars = L.DomUtil.create('div', 'scale-bars', legendItems);
+						var maxValue = L.DomUtil.create('div', 'max-value', legendItems);
+						var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
+	
+						// Add each segment to the legend
+						for (var index = 0; index < numSegments; ++index) {
+							var legendParams = {
+								displayProperties: displayProperties,
+								layerOptions: layerOptions,
+								ignoreProperties: ignoreProperties,
+								displayTextFunction: displayTextFunction,
+								index: index,
+								numSegments: numSegments,
+								minValue: minValue,
+								maxValue: maxValue,
+								gradient: legendOptions.gradient
+							};
+	
+							// If there are segmentWidths, then use those
+							if (breaks && segmentWidths.length > 0) {
+								legendParams.segmentWidth = segmentWidths[index];
+								legendParams.minX = breaks[index];
+								legendParams.maxX = breaks[index + 1];
+							}
+							
+							var element = this._getLegendElement(legendParams);
+	
+							scaleBars.appendChild(element);
+	
+						}
+						legendElement.appendChild(legendItems);
+					}
 				}
 			}
 		}

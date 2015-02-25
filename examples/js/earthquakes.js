@@ -10,7 +10,7 @@ var eqfeed_callback = function (data) {
 	var magnitudeColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '25%'});
 	var magnitudeFillColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '50%'});
 	var magnitudeRadiusFunction = new L.LinearFunction(new L.Point(0,10), new L.Point(10,30));
-	
+
 	// Color scale - white to orange to red using a PiecewiseFunction
 	// NOTE:  Uncomment these lines to see the difference
 	/*
@@ -47,12 +47,15 @@ var eqfeed_callback = function (data) {
 		latitudeField: 'geometry.coordinates.1',
 		longitudeField: 'geometry.coordinates.0',
 		locationMode: L.LocationModes.LATLNG,
+		legendOptions: {
+			breaks: breaks
+		},
 		displayOptions: {
 			'properties.mag': {
 				displayName: 'Magnitude',
 				color: magnitudeColorFunction,
 				fillColor: magnitudeFillColorFunction,
-				radius: magnitudeRadiusFunction,
+				//radius: magnitudeRadiusFunction,
 				text: textFunction
 			},
 			'properties.time': {

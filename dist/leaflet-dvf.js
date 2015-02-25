@@ -5598,25 +5598,6 @@ L.DataLayer = L.LayerGroup.extend({
 		var segmentWidth = (legendWidth / numSegments) - 2 * weight;
 		var displayText;
 		var displayOptions = this.options.displayOptions || {};
-		var breaks = legendOptions.breaks;
-		var segmentWidths = [];
-		
-		// If breaks have been specified, then use those values to calculate segment widths and provide x ranges
-		// for each segment
-		if (breaks) {
-			// Scale the break numbers relative to the width of the legend
-			var scaleFunction = new L.LinearFunction([breaks[0], 0], [breaks[breaks.length - 1], legendWidth]);
-			var lastWidth = 0;
-			var width = 0;
-			for (var i = 1; i < breaks.length; ++i) {
-				width = scaleFunction.evaluate(breaks[i]);
-				segmentWidths.push(width - lastWidth);
-				lastWidth = width;
-			}
-			
-			// Update numSegments to match the number of calculated segments based on breaks
-			numSegments = segmentWidths.length;
-		}
 		
 		if (className) {
 			L.DomUtil.addClass(legendElement, className);
@@ -5666,7 +5647,27 @@ L.DataLayer = L.LayerGroup.extend({
 						var scaleBars = L.DomUtil.create('div', 'scale-bars', legendItems);
 						var maxValue = L.DomUtil.create('div', 'max-value', legendItems);
 						var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
-	
+						var breaks = displayProperties.breaks;
+						var segmentWidths = [];
+						
+						numSegments = legendOptions.numSegments || 10;
+						
+						// If breaks have been specified, then use those values to calculate segment widths and provide x ranges
+						// for each segment
+						if (breaks) {
+							// Scale the break numbers relative to the width of the legend
+							var scaleFunction = new L.LinearFunction([breaks[0], 0], [breaks[breaks.length - 1], legendWidth]);
+							var lastWidth = 0;
+							var width = 0;
+							for (var i = 1; i < breaks.length; ++i) {
+								width = scaleFunction.evaluate(breaks[i]);
+								segmentWidths.push(width - lastWidth - 2 * weight);
+								lastWidth = width;
+							}
+							
+							numSegments = segmentWidths.length;
+						}
+						
 						// Add each segment to the legend
 						for (var index = 0; index < numSegments; ++index) {
 							var legendParams = {

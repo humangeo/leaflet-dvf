@@ -890,7 +890,7 @@ L.DataLayer = L.LayerGroup.extend({
 						maxValue.innerHTML = displayMax;
 					}
 
-					var segmentSize = params.segmentWidth || (maxX - minX) / numSegments;
+					var segmentSize = (maxX - minX) / numSegments;
 					var x = binFunction.evaluate(index);
 					var nextX = binFunction.evaluate(index + 1);
 					var value = valueFunction.evaluate ? valueFunction.evaluate(x) : valueFunction(x);
@@ -1048,6 +1048,7 @@ L.DataLayer = L.LayerGroup.extend({
 							// If there are segmentWidths, then use those
 							if (breaks && segmentWidths.length > 0) {
 								legendParams.segmentWidth = segmentWidths[index];
+								legendParams.segmentSize = segmentWidths[index];
 								legendParams.minX = breaks[index];
 								legendParams.maxX = breaks[index + 1];
 							}

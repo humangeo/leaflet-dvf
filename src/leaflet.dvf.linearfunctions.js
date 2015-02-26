@@ -537,7 +537,7 @@ L.PiecewiseFunction = L.LinearFunction.extend({
  */
 L.ColorClassFunction = L.PiecewiseFunction.extend({
 	options: {
-		interpolate: true
+		interpolate: false
 	},
 	
 	initialize: function (classBreaks, colors, options) {

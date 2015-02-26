@@ -540,7 +540,7 @@ L.PiecewiseFunction = L.LinearFunction.extend({
  */
 L.ColorClassFunction = L.PiecewiseFunction.extend({
 	options: {
-		interpolate: true
+		interpolate: false
 	},
 	
 	initialize: function (classBreaks, colors, options) {
@@ -822,7 +822,7 @@ L.CategoryLegend = L.Class.extend({
 	generate: function (options) {
 		options = options || {};
 
-		var container = document.createElement('div');
+		var container = document.createDocumenFragment();
 		var legend = L.DomUtil.create('div', 'legend', container);
 		var className = options.className;
 		var legendOptions = this.options;
@@ -856,7 +856,8 @@ L.CategoryLegend = L.Class.extend({
  */
 L.LegendIcon = L.DivIcon.extend({
 	initialize: function (fields, layerOptions, options) {
-		var container = document.createElement('div');
+		var fragment = document.createDocumentFragment();
+		var container = document.createElement('div', '', fragment);
 		var legendContent = L.DomUtil.create('div', 'legend', container);
 		var legendTitle = L.DomUtil.create('div', 'title', legendContent);
 		var legendBox = L.DomUtil.create('div', 'legend-box', legendContent);
@@ -1365,7 +1366,8 @@ L.HTMLUtils = {
 	buildTable: function (obj, className, ignoreFields) {
 		className = className || 'table table-condensed table-striped table-bordered';
 
-		var table = L.DomUtil.create('table', className);
+		var fragment = document.createDocumentFragment();
+		var table = L.DomUtil.create('table', className, fragment);
 		var thead = L.DomUtil.create('thead', '', table);
 		var tbody = L.DomUtil.create('tbody', '', table);
 		
@@ -5528,7 +5530,7 @@ L.DataLayer = L.LayerGroup.extend({
 						maxValue.innerHTML = displayMax;
 					}
 
-					var segmentSize = params.segmentWidth || (maxX - minX) / numSegments;
+					var segmentSize = (maxX - minX) / numSegments;
 					var x = binFunction.evaluate(index);
 					var nextX = binFunction.evaluate(index + 1);
 					var value = valueFunction.evaluate ? valueFunction.evaluate(x) : valueFunction(x);
@@ -5686,6 +5688,7 @@ L.DataLayer = L.LayerGroup.extend({
 							// If there are segmentWidths, then use those
 							if (breaks && segmentWidths.length > 0) {
 								legendParams.segmentWidth = segmentWidths[index];
+								legendParams.segmentSize = segmentWidths[index];
 								legendParams.minX = breaks[index];
 								legendParams.maxX = breaks[index + 1];
 							}

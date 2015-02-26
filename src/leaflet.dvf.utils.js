@@ -199,7 +199,7 @@ L.CategoryLegend = L.Class.extend({
 	generate: function (options) {
 		options = options || {};
 
-		var container = document.createElement('div');
+		var container = document.createDocumenFragment();
 		var legend = L.DomUtil.create('div', 'legend', container);
 		var className = options.className;
 		var legendOptions = this.options;
@@ -233,7 +233,8 @@ L.CategoryLegend = L.Class.extend({
  */
 L.LegendIcon = L.DivIcon.extend({
 	initialize: function (fields, layerOptions, options) {
-		var container = document.createElement('div');
+		var fragment = document.createDocumentFragment();
+		var container = document.createElement('div', '', fragment);
 		var legendContent = L.DomUtil.create('div', 'legend', container);
 		var legendTitle = L.DomUtil.create('div', 'title', legendContent);
 		var legendBox = L.DomUtil.create('div', 'legend-box', legendContent);
@@ -742,7 +743,8 @@ L.HTMLUtils = {
 	buildTable: function (obj, className, ignoreFields) {
 		className = className || 'table table-condensed table-striped table-bordered';
 
-		var table = L.DomUtil.create('table', className);
+		var fragment = document.createDocumentFragment();
+		var table = L.DomUtil.create('table', className, fragment);
 		var thead = L.DomUtil.create('thead', '', table);
 		var tbody = L.DomUtil.create('tbody', '', table);
 		

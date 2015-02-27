@@ -11,10 +11,13 @@ var eqfeed_callback = function (data) {
 	var magnitudeFillColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '50%'});
 	var magnitudeRadiusFunction = new L.LinearFunction(new L.Point(0,10), new L.Point(10,30));
 
-	//var breaks = [0, 5, 6, 7, 10];
-	//magnitudeFillColorFunction = new L.ColorClassFunction(breaks, L.ColorBrewer.Diverging['Spectral'][4].slice(0).reverse(), {
-	//	interpolate: false
-	//});
+	/*
+	var breaks = [0, 5, 6, 7, 10];
+	var colors = L.ColorBrewer.Diverging['Spectral'][4].slice(0).reverse()
+	magnitudeFillColorFunction = new L.ColorClassFunction(breaks, colors, {
+		interpolate: false
+	});
+	*/
 	
 	// Color scale - white to orange to red using a PiecewiseFunction
 	// NOTE:  Uncomment these lines to see the difference

@@ -5504,6 +5504,12 @@ L.DataLayer = L.LayerGroup.extend({
 
 		L.StyleConverter.applySVGStyle(i, layerOptions);
 
+		var breakFunction = {
+			evaluate: function (value) {
+				return params.breaks[value];
+			}
+		};
+		
 		for (var property in displayProperties) {
 
 			if (ignoreProperties.indexOf(property) === -1) {
@@ -5515,7 +5521,7 @@ L.DataLayer = L.LayerGroup.extend({
 					var minX = bounds ? bounds[0].x : displayProperties.minValue;
 					var maxX = bounds ? bounds[1].x : displayProperties.maxValue;
 
-					var binFunction = new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
+					var binFunction = params.breaks ? breakFunction : new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
 
 					displayMin = minX;
 					displayMax = maxX;
@@ -5548,7 +5554,8 @@ L.DataLayer = L.LayerGroup.extend({
 										   'background-image:-webkit-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);';
 						}
 						else {
-							i.style.cssText += 'background-color:' + nextValue + ';';
+							var backgroundColor = params.breaks ? value : nextValue;
+							i.style.cssText += 'background-color:' + backgroundColor + ';';
 						}
 					}
 
@@ -5691,6 +5698,7 @@ L.DataLayer = L.LayerGroup.extend({
 								legendParams.segmentSize = segmentWidths[index];
 								legendParams.minX = breaks[index];
 								legendParams.maxX = breaks[index + 1];
+								legendParams.breaks = breaks;
 							}
 							
 							var element = this._getLegendElement(legendParams);

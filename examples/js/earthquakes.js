@@ -12,8 +12,8 @@ var eqfeed_callback = function (data) {
 	var magnitudeRadiusFunction = new L.LinearFunction(new L.Point(0,10), new L.Point(10,30));
 
 	/*
-	var breaks = [0, 5, 6, 7, 10];
-	var colors = L.ColorBrewer.Diverging['Spectral'][4].slice(0).reverse()
+	var breaks = [0, 2, 4, 6, 8, 10];
+	var colors = L.ColorBrewer.Diverging['Spectral'][5].slice(0).reverse()
 	magnitudeFillColorFunction = new L.ColorClassFunction(breaks, colors, {
 		interpolate: false
 	});

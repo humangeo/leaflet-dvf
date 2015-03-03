@@ -914,8 +914,7 @@ L.DataLayer = L.LayerGroup.extend({
 										   'background-image:-webkit-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);';
 						}
 						else {
-							var backgroundColor = params.breaks ? value : nextValue;
-							i.style.cssText += 'background-color:' + backgroundColor + ';';
+							i.style.cssText += 'background-color:' + value + ';';
 						}
 					}
 

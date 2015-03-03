@@ -495,11 +495,13 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 			for (var index = 0; index < this._functions.length; ++index) {
 				currentFunction = this._functions[index];
 				bounds = currentFunction.getBounds();
+				console.log(bounds);
 				
 				startPoint = bounds[0];
 				endPoint = bounds[1];
 				
-				if (x >= startPoint.x && x < endPoint.x) {
+				//if (x >= startPoint.x && x < endPoint.x) {
+				if (x >= currentFunction._minX && x < currentFunction._maxX) {
 					break;
 				}
 			}

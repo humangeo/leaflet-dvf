@@ -10,14 +10,6 @@ var eqfeed_callback = function (data) {
 	var magnitudeColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '25%'});
 	var magnitudeFillColorFunction = new L.HSLHueFunction(new L.Point(0,90), new L.Point(10,0), {outputSaturation: '100%', outputLuminosity: '50%'});
 	var magnitudeRadiusFunction = new L.LinearFunction(new L.Point(0,10), new L.Point(10,30));
-
-	/*
-	var breaks = [0, 2, 4, 6, 8, 10];
-	var colors = L.ColorBrewer.Diverging['Spectral'][5].slice(0).reverse()
-	magnitudeFillColorFunction = new L.ColorClassFunction(breaks, colors, {
-		interpolate: false
-	});
-	*/
 	
 	// Color scale - white to orange to red using a PiecewiseFunction
 	// NOTE:  Uncomment these lines to see the difference
@@ -61,8 +53,7 @@ var eqfeed_callback = function (data) {
 				color: magnitudeColorFunction,
 				fillColor: magnitudeFillColorFunction,
 				radius: magnitudeRadiusFunction,
-				text: textFunction,
-				//breaks: breaks
+				text: textFunction
 			},
 			'properties.time': {
 				displayName: 'Time',

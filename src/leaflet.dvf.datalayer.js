@@ -872,7 +872,7 @@ L.DataLayer = L.LayerGroup.extend({
 		
 		for (var property in displayProperties) {
 
-			if (ignoreProperties.indexOf(property) === -1) {
+			if (displayProperties.hasOwnProperty(property) && ignoreProperties.indexOf(property) === -1) {
 
 				valueFunction = displayProperties[property];
 

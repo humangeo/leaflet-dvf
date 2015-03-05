@@ -498,13 +498,11 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 			for (var index = 0; index < this._functions.length; ++index) {
 				currentFunction = this._functions[index];
 				bounds = currentFunction.getBounds();
-				console.log(bounds);
 				
 				startPoint = bounds[0];
 				endPoint = bounds[1];
 				
-				//if (x >= startPoint.x && x < endPoint.x) {
-				if (x >= currentFunction._minX && x < currentFunction._maxX) {
+				if (x >= startPoint.x && x < endPoint.x) {
 					break;
 				}
 			}
@@ -573,18 +571,25 @@ L.CustomColorFunction = L.PiecewiseFunction.extend({
 	
 	initialize: function (minX, maxX, colors, options) {
 		var range = maxX - minX;
-		var xRange = range/(colors.length - 1);
+		var count = options.interpolate ? colors.length - 1 : colors.length;
+		var xRange = range/count;
 		var functions = [];
 		var colorFunction;
+		var next;
 		
 		L.Util.setOptions(this, options);
 		
-		for (var i = 0; i < colors.length; ++i) {
-			var next = Math.min(i + 1, colors.length - 1);
-			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+		var func = new L.LinearFunction([0, minX], [count, maxX]);
+		
+		for (var i = 0; i < count; ++i) {
+			next = i + 1;
+			//colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(func.evaluate(i), func.evaluate(next), colors[i], colors[next]) : new L.RGBColorBlendFunction(func.evaluate(i), func.evaluate(next), colors[i], colors[i]);
 			
 			functions.push(colorFunction);	
 		}
+		
+		func = null;
 		
 		L.PiecewiseFunction.prototype.initialize.call(this, functions);
 	}
@@ -5514,7 +5519,7 @@ L.DataLayer = L.LayerGroup.extend({
 		
 		for (var property in displayProperties) {
 
-			if (ignoreProperties.indexOf(property) === -1) {
+			if (displayProperties.hasOwnProperty(property) && ignoreProperties.indexOf(property) === -1) {
 
 				valueFunction = displayProperties[property];
 

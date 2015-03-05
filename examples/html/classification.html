@@ -88,8 +88,12 @@ var eqfeed_callback = function (data) {
 	});
 	
 	var breaks2 = [0, 1, 1.5, 2.6, 3.7, 8, 9.5, 10];
-	var colors2 = L.ColorBrewer.Diverging['RdYlGn'][7].slice(0).reverse();
+	var colors2 = L.ColorBrewer.Diverging['RdYlGn'][5].slice(0).reverse();
 	var magnitudeFillColorFunction2 = new L.ColorClassFunction(breaks2, colors2, {
+		interpolate: false
+	});
+
+	magnitudeFillColorFunction2 = new L.CustomColorFunction(0, 10, colors2, {
 		interpolate: false
 	});
 	
@@ -122,8 +126,8 @@ var eqfeed_callback = function (data) {
 		displayOptions: {
 			'properties.mag': {
 				displayName: 'Magnitude',
-				fillColor: magnitudeFillColorFunction,
-				breaks: breaks,
+				fillColor: magnitudeFillColorFunction2,
+				//breaks: breaks,
 				text: textFunction
 			},
 			'properties.time': {
@@ -146,6 +150,9 @@ var eqfeed_callback = function (data) {
 			fillOpacity: 0.8,
 			dropShadow: false,
 			gradient: true
+		},
+		legendOptions: {
+			numSegments: 5
 		},
 		tooltipOptions: {
 			iconSize: new L.Point(90,76),

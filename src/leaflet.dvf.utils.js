@@ -199,7 +199,7 @@ L.CategoryLegend = L.Class.extend({
 	generate: function (options) {
 		options = options || {};
 
-		var container = document.createElement('div');
+		var container = document.createDocumenFragment();
 		var legend = L.DomUtil.create('div', 'legend', container);
 		var className = options.className;
 		var legendOptions = this.options;
@@ -233,7 +233,8 @@ L.CategoryLegend = L.Class.extend({
  */
 L.LegendIcon = L.DivIcon.extend({
 	initialize: function (fields, layerOptions, options) {
-		var container = document.createElement('div');
+		var fragment = document.createDocumentFragment();
+		var container = document.createElement('div', '', fragment);
 		var legendContent = L.DomUtil.create('div', 'legend', container);
 		var legendTitle = L.DomUtil.create('div', 'title', legendContent);
 		var legendBox = L.DomUtil.create('div', 'legend-box', legendContent);
@@ -742,10 +743,17 @@ L.HTMLUtils = {
 	buildTable: function (obj, className, ignoreFields) {
 		className = className || 'table table-condensed table-striped table-bordered';
 
-		var table = L.DomUtil.create('table', className);
+		var fragment = document.createDocumentFragment();
+		var table = L.DomUtil.create('table', className, fragment);
 		var thead = L.DomUtil.create('thead', '', table);
 		var tbody = L.DomUtil.create('tbody', '', table);
-		thead.innerHTML = '<tr><th>Name</th><th>Value</th></tr>';
+		
+		var thead_tr = L.DomUtil.create('tr', '', thead);
+        var thead_values = ['Name','Value'];
+        for (var i = 0, l = thead_values.length; i < l; i++) {
+            var thead_th = L.DomUtil.create('th', '', thead_tr);
+            thead_th.innerHTML = thead_values[i];
+        }
 
 		ignoreFields = ignoreFields || [];
 
@@ -766,7 +774,13 @@ L.HTMLUtils = {
 					container.appendChild(L.HTMLUtils.buildTable(value, ignoreFields));
 					value = container.innerHTML;
 				}
-				tbody.innerHTML += '<tr><td>' + property + '</td><td>' + value + '</td></tr>';
+				
+				var tbody_tr = L.DomUtil.create('tr', '', tbody);
+                var tbody_values = [property, value];
+                for (i = 0, l = tbody_values.length; i < l; i++) {
+                    var tbody_td = L.DomUtil.create('td', '', tbody_tr);
+                    tbody_td.innerHTML = tbody_values[i];
+                }
 			}
 		}
 

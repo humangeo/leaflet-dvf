@@ -532,6 +532,35 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 	}
 });
 
+/*
+ * Specific an array of x values to break on along with a set of colors (breaks.length - 1)
+ */
+L.ColorClassFunction = L.PiecewiseFunction.extend({
+	options: {
+		interpolate: false
+	},
+	
+	initialize: function (classBreaks, colors, options) {
+		var functions = [];
+		var colorFunction;
+		
+		L.Util.setOptions(this, options);
+		
+		for (var i = 0; i < classBreaks.length - 1; ++i) {
+			var start = classBreaks[i],
+				end = classBreaks[i + 1],
+				startColor = colors[i],
+				endColor = this.options.interpolate ? colors[Math.min(colors.length -1, i + 1)] : colors[i];
+			
+			colorFunction = new L.RGBColorBlendFunction(start, end, startColor, endColor);
+			
+			functions.push(colorFunction);	
+		}
+		
+		L.PiecewiseFunction.prototype.initialize.call(this, functions);
+	}
+});
+
 L.CustomColorFunction = L.PiecewiseFunction.extend({
 	options: {
 		interpolate: true
@@ -539,18 +568,25 @@ L.CustomColorFunction = L.PiecewiseFunction.extend({
 	
 	initialize: function (minX, maxX, colors, options) {
 		var range = maxX - minX;
-		var xRange = range/(colors.length - 1);
+		var count = options.interpolate ? colors.length - 1 : colors.length;
+		var xRange = range/count;
 		var functions = [];
 		var colorFunction;
+		var next;
 		
 		L.Util.setOptions(this, options);
 		
-		for (var i = 0; i < colors.length; ++i) {
-			var next = Math.min(i + 1, colors.length - 1);
-			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+		var func = new L.LinearFunction([0, minX], [count, maxX]);
+		
+		for (var i = 0; i < count; ++i) {
+			next = i + 1;
+			//colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(func.evaluate(i), func.evaluate(next), colors[i], colors[next]) : new L.RGBColorBlendFunction(func.evaluate(i), func.evaluate(next), colors[i], colors[i]);
 			
 			functions.push(colorFunction);	
 		}
+		
+		func = null;
 		
 		L.PiecewiseFunction.prototype.initialize.call(this, functions);
 	}

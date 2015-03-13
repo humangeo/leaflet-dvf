@@ -535,6 +535,35 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 	}
 });
 
+/*
+ * Specific an array of x values to break on along with a set of colors (breaks.length - 1)
+ */
+L.ColorClassFunction = L.PiecewiseFunction.extend({
+	options: {
+		interpolate: false
+	},
+	
+	initialize: function (classBreaks, colors, options) {
+		var functions = [];
+		var colorFunction;
+		
+		L.Util.setOptions(this, options);
+		
+		for (var i = 0; i < classBreaks.length - 1; ++i) {
+			var start = classBreaks[i],
+				end = classBreaks[i + 1],
+				startColor = colors[i],
+				endColor = this.options.interpolate ? colors[Math.min(colors.length -1, i + 1)] : colors[i];
+			
+			colorFunction = new L.RGBColorBlendFunction(start, end, startColor, endColor);
+			
+			functions.push(colorFunction);	
+		}
+		
+		L.PiecewiseFunction.prototype.initialize.call(this, functions);
+	}
+});
+
 L.CustomColorFunction = L.PiecewiseFunction.extend({
 	options: {
 		interpolate: true
@@ -542,18 +571,25 @@ L.CustomColorFunction = L.PiecewiseFunction.extend({
 	
 	initialize: function (minX, maxX, colors, options) {
 		var range = maxX - minX;
-		var xRange = range/(colors.length - 1);
+		var count = options.interpolate ? colors.length - 1 : colors.length;
+		var xRange = range/count;
 		var functions = [];
 		var colorFunction;
+		var next;
 		
 		L.Util.setOptions(this, options);
 		
-		for (var i = 0; i < colors.length; ++i) {
-			var next = Math.min(i + 1, colors.length - 1);
-			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+		var func = new L.LinearFunction([0, minX], [count, maxX]);
+		
+		for (var i = 0; i < count; ++i) {
+			next = i + 1;
+			//colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(func.evaluate(i), func.evaluate(next), colors[i], colors[next]) : new L.RGBColorBlendFunction(func.evaluate(i), func.evaluate(next), colors[i], colors[i]);
 			
 			functions.push(colorFunction);	
 		}
+		
+		func = null;
 		
 		L.PiecewiseFunction.prototype.initialize.call(this, functions);
 	}
@@ -793,7 +829,7 @@ L.CategoryLegend = L.Class.extend({
 	generate: function (options) {
 		options = options || {};
 
-		var container = document.createElement('div');
+		var container = document.createDocumenFragment();
 		var legend = L.DomUtil.create('div', 'legend', container);
 		var className = options.className;
 		var legendOptions = this.options;
@@ -827,7 +863,8 @@ L.CategoryLegend = L.Class.extend({
  */
 L.LegendIcon = L.DivIcon.extend({
 	initialize: function (fields, layerOptions, options) {
-		var container = document.createElement('div');
+		var fragment = document.createDocumentFragment();
+		var container = document.createElement('div', '', fragment);
 		var legendContent = L.DomUtil.create('div', 'legend', container);
 		var legendTitle = L.DomUtil.create('div', 'title', legendContent);
 		var legendBox = L.DomUtil.create('div', 'legend-box', legendContent);
@@ -1336,10 +1373,17 @@ L.HTMLUtils = {
 	buildTable: function (obj, className, ignoreFields) {
 		className = className || 'table table-condensed table-striped table-bordered';
 
-		var table = L.DomUtil.create('table', className);
+		var fragment = document.createDocumentFragment();
+		var table = L.DomUtil.create('table', className, fragment);
 		var thead = L.DomUtil.create('thead', '', table);
 		var tbody = L.DomUtil.create('tbody', '', table);
-		thead.innerHTML = '<tr><th>Name</th><th>Value</th></tr>';
+		
+		var thead_tr = L.DomUtil.create('tr', '', thead);
+        var thead_values = ['Name','Value'];
+        for (var i = 0, l = thead_values.length; i < l; i++) {
+            var thead_th = L.DomUtil.create('th', '', thead_tr);
+            thead_th.innerHTML = thead_values[i];
+        }
 
 		ignoreFields = ignoreFields || [];
 
@@ -1360,7 +1404,13 @@ L.HTMLUtils = {
 					container.appendChild(L.HTMLUtils.buildTable(value, ignoreFields));
 					value = container.innerHTML;
 				}
-				tbody.innerHTML += '<tr><td>' + property + '</td><td>' + value + '</td></tr>';
+				
+				var tbody_tr = L.DomUtil.create('tr', '', tbody);
+                var tbody_values = [property, value];
+                for (i = 0, l = tbody_values.length; i < l; i++) {
+                    var tbody_td = L.DomUtil.create('td', '', tbody_tr);
+                    tbody_td.innerHTML = tbody_values[i];
+                }
 			}
 		}
 

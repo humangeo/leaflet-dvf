@@ -570,14 +570,15 @@ L.CustomColorFunction = L.PiecewiseFunction.extend({
 	},
 	
 	initialize: function (minX, maxX, colors, options) {
+
+		L.Util.setOptions(this, options);
+		
 		var range = maxX - minX;
-		var count = options.interpolate ? colors.length - 1 : colors.length;
+		var count = this.options.interpolate ? colors.length - 1 : colors.length;
 		var xRange = range/count;
 		var functions = [];
 		var colorFunction;
 		var next;
-		
-		L.Util.setOptions(this, options);
 		
 		var func = new L.LinearFunction([0, minX], [count, maxX]);
 		
@@ -2478,6 +2479,17 @@ var TextFunctions = TextFunctions || {
 		if (this.options.text) {
 			this._createText(this.options.text);
 		}
+		
+		if (this.options.wordCloud) {
+			var options = this.options.wordCloud;
+			
+			if (options.words.length > 0) {
+				var me = this;
+				setTimeout(function () {
+					me._createWordCloudPattern(options);
+				}, 0);
+			}
+		}
 	},
 
 	_initText: function () {
@@ -2802,6 +2814,142 @@ var PathFunctions = PathFunctions || {
 		this._pattern = pattern;
 		
 		return pattern;
+	},
+	
+	_createWordCloudPattern: function (wordCloudOptions) {
+		var patternGuid = L.Util.guid();
+		var patternOptions = wordCloudOptions.patternOptions = wordCloudOptions.patternOptions || {};
+		
+		if (!this._defs) {
+			this._createDefs();
+		}
+		
+		/*
+		if (this._wordCloud) {
+			this._container.removeChild(this._wordCloud);
+		}
+		
+		if (this._clipPath) {
+			this._defs.removeChild(this._clipPath);
+		}
+		*/
+		
+		var clonedPath = this._createElement('path');
+		clonedPath.setAttribute('d', this._path.getAttribute('d'));
+		clonedPath.setAttribute('id', patternGuid);
+		
+		patternOptions.id = patternGuid;
+		patternOptions.patternUnits = patternOptions.patternUnits || 'userSpaceOnUse'; //'objectBoundingBox';
+		//patternOptions.patternContentUnits = 'userSpaceOnUse';
+		
+		var bbox = this.getBounds();
+		
+		var bounds = new L.Bounds(this._map.project(bbox.getNorthWest()), this._map.project(bbox.getSouthEast()));
+		console.log(bounds);
+		var ratio = bounds.getSize().x / bounds.getSize().y;
+		
+		patternOptions.width = 500;//bounds.getSize().x / 2 || 500;
+		patternOptions.height = 500 * ratio || 500;//bounds.getSize().y / 2 || 500;
+		
+		patternOptions.width = Math.min(patternOptions.width, patternOptions.height);
+		patternOptions.height = patternOptions.width;
+		//patternOptions.width = bounds.getSize().x || 500;
+		//patternOptions.height = bounds.getSize().y || 500;
+		
+		if (!this._wordCloud) {
+			this._wordCloud = this._createElement('g');
+			
+			//this._container.appendChild(this._wordCloud);
+			var pattern = this._createPattern(patternOptions);
+			pattern.appendChild(this._wordCloud);
+	
+			this._defs.appendChild(pattern);
+			
+			this._createWordCloud(this._wordCloud, wordCloudOptions);
+			
+			
+			//this._clipPath = this._createElement('clipPath');
+			//this._clipPath.setAttribute('id', patternGuid);
+			
+			//this._clipPath.appendChild(clonedPath);
+			//this._defs.appendChild(this._clipPath);
+			
+			/*
+			this._wordCloud = this._createElement('g');
+			
+			this._container.appendChild(this._wordCloud);
+			
+			this._createWordCloud(this._wordCloud, wordCloudOptions);
+			*/
+			
+			if (this._wordCloud.childNodes.length > 0) {
+				//this._wordCloud.setAttribute('clip-path', 'url(#' + patternGuid + ')');
+			}
+	
+			this._path.setAttribute('fill', 'url(#' + patternGuid + ')');
+		}
+	},
+	
+	_createWordCloud: function (element, wordCloudOptions) {
+		//var fragment = document.createDocumentFragment();
+		var width = wordCloudOptions.patternOptions.width;
+		var height = wordCloudOptions.patternOptions.height;
+		var words = wordCloudOptions.words;
+		var anchor = this.getTextAnchor();
+		var rect = this._createElement('rect');
+		
+		rect.setAttribute('width', width);
+		rect.setAttribute('height', height);
+		rect.style.fill = '#000';
+		rect.setAttribute('transform', "translate(" + -width/2 + ',' + -height/2 + ")");
+		element.appendChild(rect);
+		
+		var draw = function (words, element) {
+			return function (words) {
+			  var id = "svg" + new Date().getTime();
+		    d3.select(element)
+		        //.attr("transform", "translate(" + anchor.x + "," + anchor.y + ")")
+		    .attr("transform", "translate(" + width/2 + "," + height/2 + ")")
+		      .selectAll("text")
+		        .data(words)
+		      .enter().append("text")
+		        .style("font-size", function(d) { return d.size + "px"; })
+		        .style("font-family", "Impact")
+		        .style("fill", function(d, i) { return fill(i); })
+		        .attr("text-anchor", "middle")
+		        .attr("transform", function(d) {
+		          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+		        })
+		        .text(function(d) { return d.key; });
+		    
+		    console.log('drawing...');
+			};
+		  };
+		  
+		var fill = d3.scale.category20();
+		var scale = d3.scale.linear();
+		
+		var max = words[0].doc_count;
+		var min = words[words.length - 1].doc_count;
+		
+		var fontSize = d3.scale.log().domain([min, max]).range([5, 30]);
+		
+		scale.domain([0, 10]).range([-60, 60]);
+		
+		  d3.layout.cloud().size([width, height])
+		  	  .spiral('rectangular')
+		  	  .timeInterval(Infinity)
+		      .words(words)
+		      .padding(5)
+		      //.rotate(function(d) { return scale(~~(Math.random() * d.doc_count)); })
+		      .rotate(function(d) { return 0; })
+		      .font("Impact")
+		      .fontSize(function(d) { return fontSize(d.doc_count); })
+		      .on("end", draw(words, element))
+		      .start();
+
+		return element;
+
 	},
 
 	_createShape: function (type, shapeOptions) {

@@ -570,14 +570,15 @@ L.CustomColorFunction = L.PiecewiseFunction.extend({
 	},
 	
 	initialize: function (minX, maxX, colors, options) {
+
+    L.Util.setOptions(this, options);
+    
 		var range = maxX - minX;
-		var count = options.interpolate ? colors.length - 1 : colors.length;
+		var count = this.options.interpolate ? colors.length - 1 : colors.length;
 		var xRange = range/count;
 		var functions = [];
 		var colorFunction;
 		var next;
-		
-		L.Util.setOptions(this, options);
 		
 		var func = new L.LinearFunction([0, minX], [count, maxX]);
 		
@@ -829,7 +830,7 @@ L.CategoryLegend = L.Class.extend({
 	generate: function (options) {
 		options = options || {};
 
-		var container = document.createDocumenFragment();
+		var container = document.createElement('div');
 		var legend = L.DomUtil.create('div', 'legend', container);
 		var className = options.className;
 		var legendOptions = this.options;

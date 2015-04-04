@@ -199,7 +199,7 @@ L.CategoryLegend = L.Class.extend({
 	generate: function (options) {
 		options = options || {};
 
-		var container = document.createDocumenFragment();
+		var container = document.createElement('div');
 		var legend = L.DomUtil.create('div', 'legend', container);
 		var className = options.className;
 		var legendOptions = this.options;

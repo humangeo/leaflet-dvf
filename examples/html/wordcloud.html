@@ -163,7 +163,9 @@ $(document).ready(function() {
 			recordsField: 'aggregations.country_word_count.buckets',
 			codeField: 'key',
 			layerOptions: {
-				fillOpacity: 1.0
+                fill: false,
+				fillOpacity: 1.0,
+                stroke: false
 			},
 			tooltipOptions: {
 				iconSize: null
@@ -182,6 +184,8 @@ $(document).ready(function() {
 					}
 				}
 			},
+            setHighlight: null,
+            unsetHighlight: null
 			/*
 			onEachRecord: function (layer, record) {
 				console.log(layer);

@@ -7,7 +7,7 @@ module.exports = function(grunt) {
 		    options: {
 		    	separator: ';'
 		    },
-		    src: ['src/copyright.js', 'src/leaflet.dvf.linearfunctions.js', 'src/leaflet.dvf.utils.js', 'src/leaflet.dvf.palettes.js', 'src/leaflet.dvf.regularpolygon.js', 'src/leaflet.dvf.markers.js', 'src/leaflet.dvf.chartmarkers.js', 'src/leaflet.dvf.datalayer.js', 'src/leaflet.dvf.lines.js', 'src/leaflet.dvf.controls.js'],
+		    src: ['src/copyright.js', 'src/leaflet.dvf.linearfunctions.js', 'src/leaflet.dvf.utils.js', 'src/leaflet.dvf.palettes.js', 'src/leaflet.dvf.regularpolygon.js', 'src/leaflet.dvf.markers.js', 'src/leaflet.dvf.chartmarkers.js', 'src/leaflet.dvf.datalayer.js', 'src/leaflet.dvf.lines.js', 'src/leaflet.dvf.controls.js', 'src/leaflet.dvf.experimental.js'],
 		    dest: 'dist/<%= pkg.name %>.js'
     	},
     	markers: {

@@ -129,7 +129,11 @@ $(document).ready(function() {
 	});
 	
 	map.addLayer(panoramioLayer);
-	
+
+    var mapillaryLayer = new L.MapillaryLayer();
+
+    map.addLayer(mapillaryLayer);
+
 	// Use OSM Nominatim Gazetteer for place name lookup
 	$('.navbar-search').on('submit', function (e) {
 		e.preventDefault();

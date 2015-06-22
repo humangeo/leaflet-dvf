@@ -8,7 +8,7 @@
     <meta name="author" content="">
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/vis/3.6.4/vis.css"></script>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/vis/3.6.4/vis.css" />
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
@@ -648,7 +648,11 @@ $(document).ready(function() {
 		var weightFunction = new L.LinearFunction([0,0.5], [maxSpeed, 40]);
 		var colorFunction = new L.HSLHueFunction([0,120], [maxSpeed, -60]);
 
-		var weightedPolylineTest = new L.FlowLine(data, {
+        var polygon = true;
+        if (items.length > 1000) {
+            polygon = false;
+        }
+		var weightedPolylineTest = new L.WeightedFlowLine(data, {
 			recordsField: null,
 			locationMode: L.LocationModes.LATLNG,
 			latitudeField: 'lat',
@@ -660,20 +664,25 @@ $(document).ready(function() {
 						return value.toFixed(1);
 					},
 					lineWeight: weightFunction,
-					weight: weightFunction,
+					//weight: weightFunction,
 					color: colorFunction,
 					fillColor: colorFunction
 				}
 			},
+            tooltipOptions: {
+                iconSize: null
+            },
 			layerOptions: {
+                polygon: polygon,
 				color: '#333',
-				weight: 1,
+				weight: 10,
 				fill: true,
 				gradient: true,
 				fillOpacity: 0.7,
 				opacity: 0.8,
-				stroke: true,
-				weight: 0.5
+				stroke: !polygon,
+                gradientUnits: 'userSpaceOnUse'
+				//weight: 0.5
 			},
 			onEachSegment: function (record1, record2, line, deltas, distance, velocity) {
 				line.bindPopup($(L.HTMLUtils.buildTable(deltas)).wrap('<div/>').parent().html());

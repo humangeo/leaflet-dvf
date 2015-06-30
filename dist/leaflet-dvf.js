@@ -2872,77 +2872,61 @@ var PathFunctions = PathFunctions || {
 	},
 	
 	_createWordCloudPattern: function (wordCloudOptions) {
-		var patternGuid = L.Util.guid();
+		var patternGuid = ''; //L.Util.guid();
 		var patternOptions = wordCloudOptions.patternOptions = wordCloudOptions.patternOptions || {};
 		
 		if (!this._defs) {
 			this._createDefs();
 		}
-		
-		/*
-		if (this._wordCloud) {
-			this._container.removeChild(this._wordCloud);
-		}
-		
-		if (this._clipPath) {
-			this._defs.removeChild(this._clipPath);
-		}
-		*/
-		
-		var clonedPath = this._createElement('path');
-		clonedPath.setAttribute('d', this._path.getAttribute('d'));
-		clonedPath.setAttribute('id', patternGuid);
-		
-		patternOptions.id = patternGuid;
-		patternOptions.patternUnits = patternOptions.patternUnits || 'userSpaceOnUse'; //'objectBoundingBox';
-		//patternOptions.patternContentUnits = 'userSpaceOnUse';
-		
-		var bbox = this.getBounds();
-		
-		var bounds = new L.Bounds(this._map.project(bbox.getNorthWest()), this._map.project(bbox.getSouthEast()));
-		console.log(bounds);
-		var ratio = bounds.getSize().x / bounds.getSize().y;
-		
-		patternOptions.width = 500;
-		patternOptions.height = 500 * ratio || 500;
-		
-		patternOptions.width = Math.min(patternOptions.width, patternOptions.height);
-		patternOptions.height = patternOptions.width;
-		//patternOptions.width = bounds.getSize().x || 500;
-		//patternOptions.height = bounds.getSize().y || 500;
-		
-		if (!this._wordCloud) {
-			this._wordCloud = this._createElement('g');
-			
-			//this._container.appendChild(this._wordCloud);
-			var pattern = this._createPattern(patternOptions);
-			pattern.appendChild(this._wordCloud);
-	
-			this._defs.appendChild(pattern);
-			
-			this._createWordCloud(this._wordCloud, wordCloudOptions);
-			
-			
-			//this._clipPath = this._createElement('clipPath');
-			//this._clipPath.setAttribute('id', patternGuid);
-			
-			//this._clipPath.appendChild(clonedPath);
-			//this._defs.appendChild(this._clipPath);
-			
-			/*
-			this._wordCloud = this._createElement('g');
-			
-			this._container.appendChild(this._wordCloud);
-			
-			this._createWordCloud(this._wordCloud, wordCloudOptions);
-			*/
-			
-			if (this._wordCloud.childNodes.length > 0) {
-				//this._wordCloud.setAttribute('clip-path', 'url(#' + patternGuid + ')');
-			}
-	
-			this._path.setAttribute('fill', 'url(#' + patternGuid + ')');
-		}
+
+        wordCloudOptions.textField = wordCloudOptions.textField || 'key';
+        wordCloudOptions.countField = wordCloudOptions.countField || 'doc_count';
+
+        for (var i = 0; i < wordCloudOptions.words.length; ++i) {
+            var word = wordCloudOptions.words[i];
+
+            patternGuid += word[wordCloudOptions.textField] + "_" + word[wodCloudOptions.countField];
+        }
+
+        if (patternGuid !== this._wordCloudGuid) {
+            this._wordCloudGuid = patternGuid;
+
+            // Hash words to see if we need to create a new word cloud pattern or use the existing one
+            var clonedPath = this._createElement('path');
+            clonedPath.setAttribute('d', this._path.getAttribute('d'));
+            clonedPath.setAttribute('id', patternGuid);
+
+            patternOptions.id = patternGuid;
+            patternOptions.patternUnits = patternOptions.patternUnits || 'userSpaceOnUse'; //'objectBoundingBox';
+            //patternOptions.patternContentUnits = 'userSpaceOnUse';
+
+            var bbox = this.getBounds();
+
+            var bounds = new L.Bounds(this._map.project(bbox.getNorthWest()), this._map.project(bbox.getSouthEast()));
+            console.log(bounds);
+            var ratio = bounds.getSize().x / bounds.getSize().y;
+
+            patternOptions.width = 500;
+            patternOptions.height = 500 * ratio || 500;
+
+            patternOptions.width = Math.min(patternOptions.width, patternOptions.height);
+            patternOptions.height = patternOptions.width;
+            //patternOptions.width = bounds.getSize().x || 500;
+            //patternOptions.height = bounds.getSize().y || 500;
+
+            this._wordCloud = this._createElement('g');
+
+            //this._container.appendChild(this._wordCloud);
+            this._wordPattern = this._createPattern(patternOptions);
+            this._wordPattern.appendChild(this._wordCloud);
+
+            this._defs.appendChild(this._wordPattern);
+
+            this._createWordCloud(this._wordCloud, wordCloudOptions);
+
+        }
+
+        this._path.setAttribute('fill', 'url(#' + this._wordCloudGuid + ')');
 	},
 	
 	_createWordCloud: function (element, wordCloudOptions) {
@@ -2952,29 +2936,31 @@ var PathFunctions = PathFunctions || {
 		var words = wordCloudOptions.words;
 		var anchor = this.getTextAnchor();
 		var rect = this._createElement('rect');
-		
+		var countField = wordCloudOptions.countField;
+        var textField = wordCloudOptions.textField;
+
 		rect.setAttribute('width', width);
 		rect.setAttribute('height', height);
-		rect.style.fill = '#000';
+		rect.style.fill = wordCloudOptions.fillColor || '#000';
 		rect.setAttribute('transform', "translate(" + -width/2 + ',' + -height/2 + ")");
 		element.appendChild(rect);
 		
 		var draw = function (words, element) {
 			return function (words) {
-			  var id = "svg" + new Date().getTime();
+			  var id = "svg" + L.Util.guid();
 		        d3.select(element)
 		        .attr("transform", "translate(" + width/2 + "," + height/2 + ")")
 		        .selectAll("text")
 		        .data(words)
 		        .enter().append("text")
 		        .style("font-size", function(d) { return d.size + "px"; })
-		        .style("font-family", "Impact")
+		        .style("font-family", wordCloudOptions.fontFamily || 'Impact')
 		        .style("fill", function(d, i) { return fill(i); })
 		        .attr("text-anchor", "middle")
 		        .attr("transform", function(d) {
 		          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
 		        })
-		        .text(function(d) { return d.key; });
+		        .text(function(d) { return d[textField]; });
 
 		    console.log('drawing...');
 			};
@@ -2983,8 +2969,8 @@ var PathFunctions = PathFunctions || {
 		var fill = d3.scale.category20();
 		var scale = d3.scale.linear();
 		
-		var max = words[0].doc_count;
-		var min = words[words.length - 1].doc_count;
+		var max = words[0][countField];
+		var min = words[words.length - 1][countField];
 		
 		var fontSize = d3.scale.log().domain([min, max]).range([5, 30]);
 		
@@ -2998,7 +2984,7 @@ var PathFunctions = PathFunctions || {
           //.rotate(function(d) { return scale(~~(Math.random() * d.doc_count)); })
           .rotate(function(d) { return 0; })
           .font("Impact")
-          .fontSize(function(d) { return fontSize(d.doc_count); })
+          .fontSize(function(d) { return fontSize(d[countField]); })
           .on("end", draw(words, element))
           .start();
 

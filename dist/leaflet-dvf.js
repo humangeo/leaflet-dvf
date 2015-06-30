@@ -2635,6 +2635,49 @@ var PathFunctions = PathFunctions || {
 		this._container.appendChild(this._defs);
 	},
 
+    _createMarker: function (type, options) {
+        if (!this._defs) {
+            this._createDefs();
+        }
+
+        this._markers = this._markers || {};
+        this._markerPath = this._markerPath || {};
+
+        if (this._markers[type]) {
+            this._defs.removeChild(this._markers[type]);
+        }
+
+        this._markers[type] = this._createElement('marker');
+
+        var markerGuid = L.Util.guid();
+
+        var exaggeration = options.exaggeration || 2;
+        var size = 2 * exaggeration;
+
+        this._markers[type].setAttribute('id', markerGuid);
+        this._markers[type].setAttribute('markerWidth', size);
+        this._markers[type].setAttribute('markerHeight', size);
+        this._markers[type].setAttribute('refX', exaggeration);
+        this._markers[type].setAttribute('refY', exaggeration);
+        this._markers[type].setAttribute('orient', 'auto');
+        this._markers[type].setAttribute('markerUnits', 'strokeWidth');
+
+        this._markerPath[type] = this._createElement('path');
+
+        if (options.reverse) {
+            this._markerPath[type].setAttribute('d', 'M0,' + exaggeration + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + exaggeration);
+        }
+        else {
+            this._markerPath[type].setAttribute('d', 'M' + size + ',' + exaggeration + ' L0,' + size + ' L0,0 L' + size + ',' + exaggeration);
+        }
+
+        this._markerPath[type].setAttribute('style', 'fill: ' + this.options.color + '; opacity: ' + this.options.opacity);
+
+        this._markers[type].appendChild(this._markerPath[type]);
+
+        this._defs.appendChild(this._markers[type]);
+    },
+
 	_createGradient: function (options) {
 		if (!this._defs) {
 			this._createDefs();
@@ -3108,6 +3151,15 @@ var PathFunctions = PathFunctions || {
 				context._path.setAttribute('stroke-linejoin', context.options.lineJoin);
 			}
 		}
+
+        if (context.options.markers) {
+            for (var key in context.options.markers) {
+                if (context.options.markers.hasOwnProperty(key)) {
+                    context._createMarker(key, context.options.markers[key]);
+                    context._path.setAttribute('marker-' + key, 'url(#' + context._markers[key].getAttribute('id') + ')');
+                }
+            }
+        }
 
 		if (context.options.gradient) {
 			context._createGradient(context.options.gradient);
@@ -7128,6 +7180,8 @@ L.ArcedPolyline = L.Path.extend({
 		var distance = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
 		var heightOffset = this.options.distanceToHeight.evaluate(distance);
 
+        this._angle = Math.atan((2 * heightOffset)/(0.5 * distance));
+
 		var parts = ['M', point1.x, ',', point1.y, ' C', point1.x, ',', point1.y - heightOffset, ' ', point2.x, ',', point2.y - heightOffset, ' ', point2.x, ',', point2.y ];
 		
 		return parts.join(' ');
@@ -7885,6 +7939,41 @@ L.wordCloudDataLayer = function (data, options) {
 /*
  * A DataLayer for visualizing data as a graph of edges, where the vertices are locations
  */
+var getArrow = function (latlng, angle, options) {
+    angle = L.LatLng.RAD_TO_DEG * angle;
+    options = options || {};
+
+    var numberOfSides = options.numberOfSides || 3;
+    var radius = options.radius || 6;
+
+    var startRotation = 180 / numberOfSides;
+
+    var offsets = {
+        se: startRotation + angle,
+        sw: 180 + startRotation - angle,
+        nw: 180 + startRotation + angle,
+        ne: startRotation - angle
+    };
+
+    var rotation = offsets.se;
+
+    var arrow = new L.RegularPolygonMarker(latlng, {
+        numberOfSides: numberOfSides,
+        rotation: rotation,
+        fillColor: options.fillColor,
+        color: options.color,
+        gradient: options.gradient,
+        weight: options.weight,
+        opacity: options.opacity,
+        fillOpacity: options.fillOpacity,
+        radius: radius,
+        lineCap: 'butt',
+        lineJoin: 'miter'
+    });
+
+    return arrow;
+};
+
 L.Graph = L.DataLayer.extend({
 	statics: {
 		EDGESTYLE: {
@@ -8559,6 +8648,10 @@ L.LayeredRegularPolygonMarker = L.MarkerGroup.extend({
 	}
 });
 
+/*
+This is quick example for creating a layer that shows Mapillary photos (definitely a work in progress).
+PanoramioLayer and this class should both be refactored to inherit from a PhotoLayer base layer w/ common methods
+ */
 L.MapillaryLayer = L.PanoramioLayer.extend({
     options: {
         recordsField: null,

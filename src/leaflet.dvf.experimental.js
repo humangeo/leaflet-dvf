@@ -637,6 +637,41 @@ L.wordCloudDataLayer = function (data, options) {
 /*
  * A DataLayer for visualizing data as a graph of edges, where the vertices are locations
  */
+var getArrow = function (latlng, angle, options) {
+    angle = L.LatLng.RAD_TO_DEG * angle;
+    options = options || {};
+
+    var numberOfSides = options.numberOfSides || 3;
+    var radius = options.radius || 6;
+
+    var startRotation = 180 / numberOfSides;
+
+    var offsets = {
+        se: startRotation + angle,
+        sw: 180 + startRotation - angle,
+        nw: 180 + startRotation + angle,
+        ne: startRotation - angle
+    };
+
+    var rotation = offsets.se;
+
+    var arrow = new L.RegularPolygonMarker(latlng, {
+        numberOfSides: numberOfSides,
+        rotation: rotation,
+        fillColor: options.fillColor,
+        color: options.color,
+        gradient: options.gradient,
+        weight: options.weight,
+        opacity: options.opacity,
+        fillOpacity: options.fillOpacity,
+        radius: radius,
+        lineCap: 'butt',
+        lineJoin: 'miter'
+    });
+
+    return arrow;
+};
+
 L.Graph = L.DataLayer.extend({
 	statics: {
 		EDGESTYLE: {

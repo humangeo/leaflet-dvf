@@ -160,6 +160,49 @@ var PathFunctions = PathFunctions || {
 		this._container.appendChild(this._defs);
 	},
 
+    _createMarker: function (type, options) {
+        if (!this._defs) {
+            this._createDefs();
+        }
+
+        this._markers = this._markers || {};
+        this._markerPath = this._markerPath || {};
+
+        if (this._markers[type]) {
+            this._defs.removeChild(this._markers[type]);
+        }
+
+        this._markers[type] = this._createElement('marker');
+
+        var markerGuid = L.Util.guid();
+
+        var exaggeration = options.exaggeration || 2;
+        var size = 2 * exaggeration;
+
+        this._markers[type].setAttribute('id', markerGuid);
+        this._markers[type].setAttribute('markerWidth', size);
+        this._markers[type].setAttribute('markerHeight', size);
+        this._markers[type].setAttribute('refX', exaggeration);
+        this._markers[type].setAttribute('refY', exaggeration);
+        this._markers[type].setAttribute('orient', 'auto');
+        this._markers[type].setAttribute('markerUnits', 'strokeWidth');
+
+        this._markerPath[type] = this._createElement('path');
+
+        if (options.reverse) {
+            this._markerPath[type].setAttribute('d', 'M0,' + exaggeration + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + exaggeration);
+        }
+        else {
+            this._markerPath[type].setAttribute('d', 'M' + size + ',' + exaggeration + ' L0,' + size + ' L0,0 L' + size + ',' + exaggeration);
+        }
+
+        this._markerPath[type].setAttribute('style', 'fill: ' + this.options.color + '; opacity: ' + this.options.opacity);
+
+        this._markers[type].appendChild(this._markerPath[type]);
+
+        this._defs.appendChild(this._markers[type]);
+    },
+
 	_createGradient: function (options) {
 		if (!this._defs) {
 			this._createDefs();
@@ -633,6 +676,15 @@ var PathFunctions = PathFunctions || {
 				context._path.setAttribute('stroke-linejoin', context.options.lineJoin);
 			}
 		}
+
+        if (context.options.markers) {
+            for (var key in context.options.markers) {
+                if (context.options.markers.hasOwnProperty(key)) {
+                    context._createMarker(key, context.options.markers[key]);
+                    context._path.setAttribute('marker-' + key, 'url(#' + context._markers[key].getAttribute('id') + ')');
+                }
+            }
+        }
 
 		if (context.options.gradient) {
 			context._createGradient(context.options.gradient);

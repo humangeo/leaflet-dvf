@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
+    <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
 </head>
 
 <body>
@@ -116,46 +117,9 @@ $(document).ready(function() {
 
 	layerControl.addTo(map);
 	
-	var fragment = document.createDocumentFragment();
-	var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
-
-	fragment.appendChild(defs);
-	
-	var filler = function (width, height, words) {
-		var fill = d3.scale.category20();
-		  d3.layout.cloud().size([width, height])
-		  	  .timeInterval(1000)
-		      .words(words)
-		      .padding(5)
-		      .rotate(function() { return 0; })
-		      .font("Impact")
-		      .fontSize(function(d) { return d.doc_count; })
-		      .on("end", draw)
-		      .start();
-		 
-		  function draw(words) {
-			  var id = "svg" + new Date().getTime();
-		    d3.select(defs).append("pattern")
-		    	.attr("id", id)
-		        .attr("width", width)
-		        .attr("height", height)
-		      .append("g")
-		        .attr("transform", "translate(" + width/2 + "," + height/2 + ")")
-		      .selectAll("text")
-		        .data(words)
-		      .enter().append("text")
-		        .style("font-size", function(d) { return d.doc_count + "px"; })
-		        .style("font-family", "Impact")
-		        .style("fill", function(d, i) { return fill(d, i); })
-		        .attr("text-anchor", "middle")
-		        .attr("transform", function(d) {
-		          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
-		        })
-		        .text(function(d) { return d.key; });
-		  }
-	};
-	
 	$.getJSON('../data/es_test.json', null, function(data) {
+
+        var colors = new L.HSLHueFunction([0, 0], [20, 350]).sample(100);
 
 		var sizeFunction = new L.LinearFunction([0, 0], [3000, 100]);
 		var countryLayer = new L.ChoroplethDataLayer(data, {
@@ -163,9 +127,10 @@ $(document).ready(function() {
 			recordsField: 'aggregations.country_word_count.buckets',
 			codeField: 'key',
 			layerOptions: {
-                fill: false,
+                fillColor: 'rgba(60, 60, 60, 0.9)',
 				fillOpacity: 1.0,
-                stroke: false
+                stroke: true,
+                weight: 5
 			},
 			tooltipOptions: {
 				iconSize: null
@@ -174,47 +139,33 @@ $(document).ready(function() {
 				'words.buckets': {
 					wordCloud: function (value) {
 						return {
-							words: value //.slice(0, 10)
+							words: value, //.slice(0, 10),
+                            textFillColor: function (i) {
+                                return colors[i];
+                            },
+                            fontFamily: 'Impact',
+                            patternOptions: {
+                                width: 300,
+                                height: 300
+                            }
 						}
 					},
 					displayText: function (value) {
-						return value.slice(0, 10).map(function (item) {
+						return value.slice(0, 20).map(function (item) {
 							return item.key;
 						}).join(', ');
 					}
 				}
 			},
-            setHighlight: null,
-            unsetHighlight: null
-			/*
-			onEachRecord: function (layer, record) {
-				console.log(layer);
-				
-				var points = [];
-				var bounds;
-				
-				for (var layerId in layer._layers) {
-					try {
-						var subLayer = layer._layers[layerId];
-						var layerBounds = subLayer.getBounds();
-						bounds = new L.Bounds(map.latLngToLayerPoint(layerBounds.getNorthWest()), map.latLngToLayerPoint(layerBounds.getSouthEast()));
-						
-						if (bounds.getSize && bounds.min) {
-							var id = filler(bounds.getSize().x, bounds.getSize().y, record.words.buckets);
-							
-							layer.options.fillColor = 'url(#' + id + ')';
-						}
-					}
-					catch (ex) {
-						
-					}
-				}
-				
-			}
-			*/
+            setHighlight: function (style) {
+                style.weight = 10;
+                return style;
+            },
+            unsetHighlight: function (style) {
+                style.weight = 5;
+                return style;
+            }
 		});
-
-		//$('.leaflet-zoom-animated').get(0).appendChild(fragment);
 		
 		map.addLayer(countryLayer);
 			

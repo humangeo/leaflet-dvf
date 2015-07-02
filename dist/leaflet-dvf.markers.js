@@ -2780,7 +2780,7 @@ var PathFunctions = PathFunctions || {
         for (var i = 0; i < wordCloudOptions.words.length; ++i) {
             var word = wordCloudOptions.words[i];
 
-            patternGuid += word[wordCloudOptions.textField] + "_" + word[wodCloudOptions.countField];
+            patternGuid += word[wordCloudOptions.textField] + "_" + word[wordCloudOptions.countField];
         }
 
         if (patternGuid !== this._wordCloudGuid) {
@@ -2798,11 +2798,10 @@ var PathFunctions = PathFunctions || {
             var bbox = this.getBounds();
 
             var bounds = new L.Bounds(this._map.project(bbox.getNorthWest()), this._map.project(bbox.getSouthEast()));
-            console.log(bounds);
             var ratio = bounds.getSize().x / bounds.getSize().y;
 
-            patternOptions.width = 500;
-            patternOptions.height = 500 * ratio || 500;
+            patternOptions.width = patternOptions.width || 500;
+            patternOptions.height = patternOptions.height || (500 * ratio) || 500;
 
             patternOptions.width = Math.min(patternOptions.width, patternOptions.height);
             patternOptions.height = patternOptions.width;
@@ -2818,10 +2817,14 @@ var PathFunctions = PathFunctions || {
             this._defs.appendChild(this._wordPattern);
 
             this._createWordCloud(this._wordCloud, wordCloudOptions);
-
         }
 
-        this._path.setAttribute('fill', 'url(#' + this._wordCloudGuid + ')');
+        var existingFill = this._path.getAttribute('fill');
+
+        if (existingFill.indexOf(this._wordCloudGuid) === -1) {
+            this._path.setAttribute('fill', 'url(#' + this._wordCloudGuid + ')');
+        }
+
 	},
 	
 	_createWordCloud: function (element, wordCloudOptions) {
@@ -2833,10 +2836,10 @@ var PathFunctions = PathFunctions || {
 		var rect = this._createElement('rect');
 		var countField = wordCloudOptions.countField;
         var textField = wordCloudOptions.textField;
-
+        var rotation = wordCloudOptions.rotation || function(d) { return 0; }; //function(d) { return scale(~~(Math.random() * d[countField])); }
 		rect.setAttribute('width', width);
 		rect.setAttribute('height', height);
-		rect.style.fill = wordCloudOptions.fillColor || '#000';
+		rect.style.fill = this.options.fillColor || '#000';
 		rect.setAttribute('transform', "translate(" + -width/2 + ',' + -height/2 + ")");
 		element.appendChild(rect);
 		
@@ -2856,18 +2859,16 @@ var PathFunctions = PathFunctions || {
 		          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
 		        })
 		        .text(function(d) { return d[textField]; });
-
-		    console.log('drawing...');
 			};
 		  };
 		  
-		var fill = d3.scale.category20();
+		var fill = wordCloudOptions.textFillColor || d3.scale.category20();
 		var scale = d3.scale.linear();
 		
 		var max = words[0][countField];
 		var min = words[words.length - 1][countField];
 		
-		var fontSize = d3.scale.log().domain([min, max]).range([5, 30]);
+		var fontSize = wordCloudOptions.fontSize || d3.scale.log().domain([min, max]).range([10, 40]);
 		
 		scale.domain([0, 10]).range([-60, 60]);
 		
@@ -2876,9 +2877,8 @@ var PathFunctions = PathFunctions || {
           .timeInterval(Infinity)
           .words(words)
           .padding(5)
-          //.rotate(function(d) { return scale(~~(Math.random() * d.doc_count)); })
-          .rotate(function(d) { return 0; })
-          .font("Impact")
+          .rotate(rotation)
+          .font(wordCloudOptions.fontFamily || 'Impact')
           .fontSize(function(d) { return fontSize(d[countField]); })
           .on("end", draw(words, element))
           .start();

@@ -6,8 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
-
-    <!-- Le styles -->
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style>
       body {
@@ -38,6 +36,13 @@
       	height: 0px !important;
       	vertical-align: middle;
       	border-left: none !important;
+      }
+
+      .line-legend .legend-box {
+          width: 0px;
+          height: 0px !important;
+          border-top: none !important;
+          border-right: none !important;
       }
 
     </style>
@@ -576,6 +581,7 @@ $(document).ready(function() {
 	var displayOptions = {
 		survivors: {
 			weight: weightFunction,
+            lineWeight: weightFunction,
 			color: colorFunction,
 			displayName: 'Survivors over Time'
 		}
@@ -597,6 +603,9 @@ $(document).ready(function() {
 		includeLayer: function (record) {
 			return record.group === "1";
 		},
+        tooltipOptions: {
+            className: 'leaflet-div-icon line-legend'
+        },
 		displayOptions: displayOptions,
 		onEachSegment: onEachSegment
 	});
@@ -610,6 +619,9 @@ $(document).ready(function() {
 		includeLayer: function (record) {
 			return record.group === "2";
 		},
+        tooltipOptions: {
+            className: 'leaflet-div-icon line-legend'
+        },
 		displayOptions: displayOptions,
 		onEachSegment: onEachSegment
 	});
@@ -623,6 +635,9 @@ $(document).ready(function() {
 		includeLayer: function (record) {
 			return record.group === "3";
 		},
+        tooltipOptions: {
+            className: 'leaflet-div-icon line-legend'
+        },
 		displayOptions: displayOptions,
 		onEachSegment: onEachSegment
 	});

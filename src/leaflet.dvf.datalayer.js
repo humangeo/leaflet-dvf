@@ -338,17 +338,42 @@ L.DataLayer = L.LayerGroup.extend({
 		}
 	},
 
-	onAdd: function (map) {
-		L.LayerGroup.prototype.onAdd.call(this, map);
+    _addLayer: function (map, layer) {
+        return function () {
+            map.addLayer(layer);
+        };
+    },
 
-		map.on('zoomend', this._zoomFunction, this);
-	},
+    _removeLayer: function (map, layer) {
+        return function () {
+            map.removeLayer(layer);
+        };
+    },
 
-	onRemove: function (map) {
-		L.LayerGroup.prototype.onRemove.call(this, map);
+    onAdd: function (map) {
+        var me = this;
+        this._map = map;
 
-		map.off('zoomend', this._zoomFunction, this);
-	},
+        for (var i in me._layers) {
+            if (me._layers.hasOwnProperty(i)) {
+                setTimeout(this._addLayer(map, me._layers[i]), 0);
+            }
+        }
+
+        map.on('zoomend', me._zoomFunction, me);
+    },
+
+    onRemove: function (map) {
+        var me = this;
+
+        for (var i in me._layers) {
+            if (me._layers.hasOwnProperty(i)) {
+                setTimeout(this._removeLayer(map, me._layers[i]), 0);
+            }
+        }
+
+        map.off('zoomend', me._zoomFunction, me);
+    },
 	
 	bringToBack: function () {		
 		this.invoke('bringToBack');
@@ -601,13 +626,12 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 
 	locationToLayer: function (location, record) {
-		var layer;
+        var me = this;
+        var layer = me.recordToLayer(location, record);
 
-		layer = this.recordToLayer(location, record);
-
-		if (layer) {
-			this.addLayer(layer);
-		}
+        if (layer) {
+            me.addLayer(layer);
+        }
 	},
 
 	_bindMouseEvents: function (layer, layerOptions, legendDetails) {
@@ -750,7 +774,21 @@ L.DataLayer = L.LayerGroup.extend({
 		};
 	},
 
+    _recursiveLayerUpdate: function (layer, callee) {
+        var me = this;
+
+        if (layer.eachLayer) {
+            layer.eachLayer(function (subLayer) {
+                me._recursiveLayerUpdate(subLayer, callee);
+            });
+        }
+        else {
+            callee.call(me, layer);
+        }
+    },
+
 	_getIndexedLayer: function (index, location, layerOptions, record) {
+        var me = this;
 		if (this.options.getIndexKey) {
 			var indexKey = this.options.getIndexKey.call(this, location, record);
 			
@@ -771,7 +809,9 @@ L.DataLayer = L.LayerGroup.extend({
 						
 					}
 					else {
-						layer.redraw();
+                        me._recursiveLayerUpdate(layer, function (layer) {
+                            layer.redraw();
+                        });
 					}
 				};
 				
@@ -803,7 +843,7 @@ L.DataLayer = L.LayerGroup.extend({
 		
 		return layer;
 	},
-	
+
 	recordToLayer: function (location, record) {
 		var layerOptions = L.Util.extend({},this.options.layerOptions);
 		var layer;
@@ -816,7 +856,7 @@ L.DataLayer = L.LayerGroup.extend({
 		}
 
 		if (includeLayer) {
-			
+
 			var dynamicOptions = this._getDynamicOptions(record);
 
 			layerOptions = dynamicOptions.layerOptions;
@@ -827,7 +867,7 @@ L.DataLayer = L.LayerGroup.extend({
 
 				// If layer indexing is being used, then load the existing layer from the index
 				layer = this._getIndexedLayer(this._layerIndex, location, layerOptions, record);
-				
+
 				if (layer) {
 					if (this.options.showLegendTooltips) {
 						this._bindMouseEvents(layer, layerOptions, legendDetails);
@@ -864,9 +904,15 @@ L.DataLayer = L.LayerGroup.extend({
 
 		L.StyleConverter.applySVGStyle(i, layerOptions);
 
+		var breakFunction = {
+			evaluate: function (value) {
+				return params.breaks[value];
+			}
+		};
+		
 		for (var property in displayProperties) {
 
-			if (ignoreProperties.indexOf(property) === -1) {
+			if (displayProperties.hasOwnProperty(property) && ignoreProperties.indexOf(property) === -1) {
 
 				valueFunction = displayProperties[property];
 
@@ -875,7 +921,7 @@ L.DataLayer = L.LayerGroup.extend({
 					var minX = bounds ? bounds[0].x : displayProperties.minValue;
 					var maxX = bounds ? bounds[1].x : displayProperties.maxValue;
 
-					var binFunction = new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
+					var binFunction = params.breaks ? breakFunction : new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
 
 					displayMin = minX;
 					displayMax = maxX;
@@ -908,7 +954,7 @@ L.DataLayer = L.LayerGroup.extend({
 										   'background-image:-webkit-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);';
 						}
 						else {
-							i.style.cssText += 'background-color:' + nextValue + ';';
+							i.style.cssText += 'background-color:' + value + ';';
 						}
 					}
 
@@ -926,8 +972,8 @@ L.DataLayer = L.LayerGroup.extend({
 								   'border-right-width:' + nextValue + ';';
 					}
 
-					var min = (segmentSize * index) + minX;
-					var max = min + segmentSize;
+					var min = params.minX || (segmentSize * index) + minX;
+					var max = params.maxX || min + segmentSize;
 
 					if (displayTextFunction && valueFunction) {
 						min = displayTextFunction(min);
@@ -960,7 +1006,7 @@ L.DataLayer = L.LayerGroup.extend({
 		var segmentWidth = (legendWidth / numSegments) - 2 * weight;
 		var displayText;
 		var displayOptions = this.options.displayOptions || {};
-
+		
 		if (className) {
 			L.DomUtil.addClass(legendElement, className);
 		}
@@ -973,53 +1019,94 @@ L.DataLayer = L.LayerGroup.extend({
 			return value;
 		};
 
+		// Create a different legend section for each field specified in displayOptions
+		// Iterate through the fields
 		for (var field in displayOptions) {
-
-			var displayProperties = displayOptions[field];
-			
-			if (!displayProperties.excludeFromLegend) {
-				var displayName = displayProperties.displayName || field;
-
-				displayText = displayProperties.displayText;
-
-				var displayTextFunction = displayText ? displayText : defaultFunction;
-
-				var styles = displayProperties.styles;
-
-				L.DomUtil.create('div', 'legend-title', legendElement).innerHTML = displayName;
-
-				if (styles) {
-					// Generate category legend
-					legendElement.innerHTML += new L.CategoryLegend(styles).generate();
-				}
-				else {
-					// Generate numeric legend
-					var legendItems = L.DomUtil.create('div', 'data-layer-legend');
-					var minValue = L.DomUtil.create('div', 'min-value', legendItems);
-					var scaleBars = L.DomUtil.create('div', 'scale-bars', legendItems);
-					var maxValue = L.DomUtil.create('div', 'max-value', legendItems);
-					var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
-
-					for (var index = 0; index < numSegments; ++index) {
-						var legendParams = {
-							displayProperties: displayProperties,
-							layerOptions: layerOptions,
-							ignoreProperties: ignoreProperties,
-							displayTextFunction: displayTextFunction,
-							index: index,
-							numSegments: numSegments,
-							segmentWidth: segmentWidth,
-							minValue: minValue,
-							maxValue: maxValue,
-							gradient: legendOptions.gradient
-						};
-
-						var element = this._getLegendElement(legendParams);
-
-						scaleBars.appendChild(element);
-
+			if (displayOptions.hasOwnProperty(field)) {
+				
+				// Get the properties associated with a given field
+				var displayProperties = displayOptions[field];
+				
+				// If the field should not be excluded from the legend, then continue...
+				if (!displayProperties.excludeFromLegend) {
+					
+					// Use the provided name or use the field key
+					var displayName = displayProperties.displayName || field;
+	
+					// Determine the function used to print out y values
+					displayText = displayProperties.displayText;
+	
+					var displayTextFunction = displayText ? displayText : defaultFunction;
+	
+					var styles = displayProperties.styles;
+	
+					L.DomUtil.create('div', 'legend-title', legendElement).innerHTML = displayName;
+	
+					// If styles have been specified (e.g. a key/value mapping b/w a given input value and a given output value),
+					// then use those
+					if (styles) {
+						// Generate category legend
+						legendElement.innerHTML += new L.CategoryLegend(styles).generate();
 					}
-					legendElement.appendChild(legendItems);
+					else {
+						// Generate numeric legend
+						var legendItems = L.DomUtil.create('div', 'data-layer-legend');
+						var minValue = L.DomUtil.create('div', 'min-value', legendItems);
+						var scaleBars = L.DomUtil.create('div', 'scale-bars', legendItems);
+						var maxValue = L.DomUtil.create('div', 'max-value', legendItems);
+						var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
+						var breaks = displayProperties.breaks;
+						var segmentWidths = [];
+						
+						numSegments = legendOptions.numSegments || 10;
+						
+						// If breaks have been specified, then use those values to calculate segment widths and provide x ranges
+						// for each segment
+						if (breaks) {
+							// Scale the break numbers relative to the width of the legend
+							var scaleFunction = new L.LinearFunction([breaks[0], 0], [breaks[breaks.length - 1], legendWidth]);
+							var lastWidth = 0;
+							var width = 0;
+							for (var i = 1; i < breaks.length; ++i) {
+								width = scaleFunction.evaluate(breaks[i]);
+								segmentWidths.push(width - lastWidth - 2 * weight);
+								lastWidth = width;
+							}
+							
+							numSegments = segmentWidths.length;
+						}
+						
+						// Add each segment to the legend
+						for (var index = 0; index < numSegments; ++index) {
+							var legendParams = {
+								displayProperties: displayProperties,
+								layerOptions: layerOptions,
+								ignoreProperties: ignoreProperties,
+								displayTextFunction: displayTextFunction,
+								index: index,
+								numSegments: numSegments,
+								segmentWidth: segmentWidth,
+								minValue: minValue,
+								maxValue: maxValue,
+								gradient: legendOptions.gradient
+							};
+	
+							// If there are segmentWidths, then use those
+							if (breaks && segmentWidths.length > 0) {
+								legendParams.segmentWidth = segmentWidths[index];
+								legendParams.segmentSize = segmentWidths[index];
+								legendParams.minX = breaks[index];
+								legendParams.maxX = breaks[index + 1];
+								legendParams.breaks = breaks;
+							}
+							
+							var element = this._getLegendElement(legendParams);
+	
+							scaleBars.appendChild(element);
+	
+						}
+						legendElement.appendChild(legendItems);
+					}
 				}
 			}
 		}

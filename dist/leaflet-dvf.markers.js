@@ -5,6 +5,10 @@
  * Class for interpolating values along a line using a linear equation
  */
 L.LinearFunction = L.Class.extend({
+	options: {
+		constrainX: false
+	},
+	
 	initialize: function (minPoint, maxPoint, options) {
 		this.setOptions(options);
 		this.setRange(minPoint, maxPoint);
@@ -79,6 +83,17 @@ L.LinearFunction = L.Class.extend({
 		this._postProcess = postProcess;
 		
 		return this;
+	},
+	
+	constrainX: function (x) {
+		x = Number(x);
+
+		if (this.options.constrainX) {
+			x = Math.max(x, this._minPoint.x);
+			x = Math.min(x, this._maxPoint.x);
+		}
+		
+		return x;
 	},
 	
 	evaluate: function (x) {
@@ -445,6 +460,10 @@ L.HSLColorBlendFunction = L.LinearFunction.extend({
  * Allows you to combine multiple linear functions into a single linear function
  */
 L.PiecewiseFunction = L.LinearFunction.extend({
+	options: {
+		constrainX: true
+	},
+	
 	initialize: function (functions, options) {
 		
 		L.Util.setOptions(this, options);
@@ -467,29 +486,36 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 		var bounds;
 		var startPoint;
 		var endPoint;
-		var found = false;
 		var currentFunction;
 		
-		for (var index = 0; index < this._functions.length; ++index) {
-			currentFunction = this._functions[index];
-			bounds = currentFunction.getBounds();
-			
-			startPoint = bounds[0];
-			endPoint = bounds[1];
-			
-			if (x >= startPoint.x && x < endPoint.x) {
-				found = true;
-				break;
+		if (x < this._minPoint.x) {
+			currentFunction = this._functions[0];
+		}
+		else if (x >= this._maxPoint.x) {
+			currentFunction = this._functions[this._functions.length - 1];
+		}
+		else {
+			for (var index = 0; index < this._functions.length; ++index) {
+				currentFunction = this._functions[index];
+				bounds = currentFunction.getBounds();
+				
+				startPoint = bounds[0];
+				endPoint = bounds[1];
+				
+				if (x >= startPoint.x && x < endPoint.x) {
+					break;
+				}
 			}
 		}
-		
-		// If found return the found function; otherwise return the last function
-		return found ? currentFunction : this._functions[this._functions.length - 1];
+
+		return currentFunction;
 	},
 	
 	evaluate: function (x) {
 		var currentFunction;
 		var y = null;
+		
+		x = this.constrainX(x);
 		
 		if (this._preProcess) {
 			x = this._preProcess(x);
@@ -509,28 +535,65 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 	}
 });
 
-L.CustomColorFunction = L.PiecewiseFunction.extend({
+/*
+ * Specific an array of x values to break on along with a set of colors (breaks.length - 1)
+ */
+L.ColorClassFunction = L.PiecewiseFunction.extend({
 	options: {
-		interpolate: true
+		interpolate: false
 	},
 	
-	initialize: function (minX, maxX, colors, options) {
-		var range = maxX - minX;
-		var xRange = range/(colors.length - 1);
+	initialize: function (classBreaks, colors, options) {
 		var functions = [];
 		var colorFunction;
 		
 		L.Util.setOptions(this, options);
 		
-		for (var i = 0; i < colors.length; ++i) {
-			var next = Math.min(i + 1, colors.length - 1);
-			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+		for (var i = 0; i < classBreaks.length - 1; ++i) {
+			var start = classBreaks[i],
+				end = classBreaks[i + 1],
+				startColor = colors[i],
+				endColor = this.options.interpolate ? colors[Math.min(colors.length -1, i + 1)] : colors[i];
+			
+			colorFunction = new L.RGBColorBlendFunction(start, end, startColor, endColor);
 			
 			functions.push(colorFunction);	
 		}
 		
 		L.PiecewiseFunction.prototype.initialize.call(this, functions);
 	}
+});
+
+L.CustomColorFunction = L.PiecewiseFunction.extend({
+	options: {
+		interpolate: true
+	},
+	
+	initialize: function (minX, maxX, colors, options) {
+		L.Util.setOptions(this, options);
+
+		var range = maxX - minX;
+		var count = this.options.interpolate ? colors.length - 1 : colors.length;
+		var xRange = range/count;
+		var functions = [];
+		var colorFunction;
+		var next;
+		
+		var func = new L.LinearFunction([0, minX], [count, maxX]);
+		
+		for (var i = 0; i < count; ++i) {
+			next = i + 1;
+			//colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(func.evaluate(i), func.evaluate(next), colors[i], colors[next]) : new L.RGBColorBlendFunction(func.evaluate(i), func.evaluate(next), colors[i], colors[i]);
+			
+			functions.push(colorFunction);	
+		}
+		
+		func = null;
+		
+		L.PiecewiseFunction.prototype.initialize.call(this, functions);
+	}
+	
 });
 
 
@@ -800,7 +863,8 @@ L.CategoryLegend = L.Class.extend({
  */
 L.LegendIcon = L.DivIcon.extend({
 	initialize: function (fields, layerOptions, options) {
-		var container = document.createElement('div');
+		var fragment = document.createDocumentFragment();
+		var container = document.createElement('div', '', fragment);
 		var legendContent = L.DomUtil.create('div', 'legend', container);
 		var legendTitle = L.DomUtil.create('div', 'title', legendContent);
 		var legendBox = L.DomUtil.create('div', 'legend-box', legendContent);
@@ -852,6 +916,14 @@ L.GeometryUtils = {
 	},
 
 	getGeoJSONLocation: function (geoJSON, record, locationTextField, recordToLayer) {
+        var locationTextFunction = function (record) {
+            return L.Util.getFieldValue(record, locationTextField);
+        };
+
+        if (locationTextField && (typeof locationTextField === 'function')) {
+            locationTextFunction = locationTextField;
+        }
+
 		var geoJSONLayer = new L.GeoJSON(geoJSON, {
 			pointToLayer: function (feature, latlng) {
 				var location = {
@@ -1309,10 +1381,17 @@ L.HTMLUtils = {
 	buildTable: function (obj, className, ignoreFields) {
 		className = className || 'table table-condensed table-striped table-bordered';
 
-		var table = L.DomUtil.create('table', className);
+		var fragment = document.createDocumentFragment();
+		var table = L.DomUtil.create('table', className, fragment);
 		var thead = L.DomUtil.create('thead', '', table);
 		var tbody = L.DomUtil.create('tbody', '', table);
-		thead.innerHTML = '<tr><th>Name</th><th>Value</th></tr>';
+		
+		var thead_tr = L.DomUtil.create('tr', '', thead);
+        var thead_values = ['Name','Value'];
+        for (var i = 0, l = thead_values.length; i < l; i++) {
+            var thead_th = L.DomUtil.create('th', '', thead_tr);
+            thead_th.innerHTML = thead_values[i];
+        }
 
 		ignoreFields = ignoreFields || [];
 
@@ -1333,7 +1412,13 @@ L.HTMLUtils = {
 					container.appendChild(L.HTMLUtils.buildTable(value, ignoreFields));
 					value = container.innerHTML;
 				}
-				tbody.innerHTML += '<tr><td>' + property + '</td><td>' + value + '</td></tr>';
+				
+				var tbody_tr = L.DomUtil.create('tr', '', tbody);
+                var tbody_values = [property, value];
+                for (i = 0, l = tbody_values.length; i < l; i++) {
+                    var tbody_td = L.DomUtil.create('td', '', tbody_tr);
+                    tbody_td.innerHTML = tbody_values[i];
+                }
 			}
 		}
 
@@ -2296,6 +2381,17 @@ var TextFunctions = TextFunctions || {
 		if (this.options.text) {
 			this._createText(this.options.text);
 		}
+		
+		if (this.options.wordCloud) {
+			var options = this.options.wordCloud;
+			
+			if (options.words.length > 0) {
+				var me = this;
+				setTimeout(function () {
+					me._createWordCloudPattern(options);
+				}, 0);
+			}
+		}
 	},
 
 	_initText: function () {
@@ -2433,6 +2529,49 @@ var PathFunctions = PathFunctions || {
 		this._container.appendChild(this._defs);
 	},
 
+    _createMarker: function (type, options) {
+        if (!this._defs) {
+            this._createDefs();
+        }
+
+        this._markers = this._markers || {};
+        this._markerPath = this._markerPath || {};
+
+        if (this._markers[type]) {
+            this._defs.removeChild(this._markers[type]);
+        }
+
+        this._markers[type] = this._createElement('marker');
+
+        var markerGuid = L.Util.guid();
+
+        var exaggeration = options.exaggeration || 2;
+        var size = 2 * exaggeration;
+
+        this._markers[type].setAttribute('id', markerGuid);
+        this._markers[type].setAttribute('markerWidth', size);
+        this._markers[type].setAttribute('markerHeight', size);
+        this._markers[type].setAttribute('refX', exaggeration);
+        this._markers[type].setAttribute('refY', exaggeration);
+        this._markers[type].setAttribute('orient', 'auto');
+        this._markers[type].setAttribute('markerUnits', 'strokeWidth');
+
+        this._markerPath[type] = this._createElement('path');
+
+        if (options.reverse) {
+            this._markerPath[type].setAttribute('d', 'M0,' + exaggeration + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + exaggeration);
+        }
+        else {
+            this._markerPath[type].setAttribute('d', 'M' + size + ',' + exaggeration + ' L0,' + size + ' L0,0 L' + size + ',' + exaggeration);
+        }
+
+        this._markerPath[type].setAttribute('style', 'fill: ' + this.options.color + '; opacity: ' + this.options.opacity);
+
+        this._markers[type].appendChild(this._markerPath[type]);
+
+        this._defs.appendChild(this._markers[type]);
+    },
+
 	_createGradient: function (options) {
 		if (!this._defs) {
 			this._createDefs();
@@ -2462,6 +2601,10 @@ var PathFunctions = PathFunctions || {
 			};
 		}
 		gradientOptions.id = "grad" + gradientGuid;
+
+        if (this.options.gradientUnits) {
+            gradient.setAttribute('gradientUnits', this.options.gradientUnits);
+        }
 
 		var stops = options.stops || [
 			{
@@ -2621,6 +2764,127 @@ var PathFunctions = PathFunctions || {
 		
 		return pattern;
 	},
+	
+	_createWordCloudPattern: function (wordCloudOptions) {
+		var patternGuid = ''; //L.Util.guid();
+		var patternOptions = wordCloudOptions.patternOptions = wordCloudOptions.patternOptions || {};
+		
+		if (!this._defs) {
+			this._createDefs();
+		}
+
+        wordCloudOptions.textField = wordCloudOptions.textField || 'key';
+        wordCloudOptions.countField = wordCloudOptions.countField || 'doc_count';
+
+        for (var i = 0; i < wordCloudOptions.words.length; ++i) {
+            var word = wordCloudOptions.words[i];
+
+            patternGuid += word[wordCloudOptions.textField] + "_" + word[wordCloudOptions.countField];
+        }
+
+        if (patternGuid !== this._wordCloudGuid) {
+            this._wordCloudGuid = patternGuid;
+
+            // Hash words to see if we need to create a new word cloud pattern or use the existing one
+            var clonedPath = this._createElement('path');
+            clonedPath.setAttribute('d', this._path.getAttribute('d'));
+            clonedPath.setAttribute('id', patternGuid);
+
+            patternOptions.id = patternGuid;
+            patternOptions.patternUnits = patternOptions.patternUnits || 'userSpaceOnUse'; //'objectBoundingBox';
+            //patternOptions.patternContentUnits = 'userSpaceOnUse';
+
+            var bbox = this.getBounds();
+
+            var bounds = new L.Bounds(this._map.project(bbox.getNorthWest()), this._map.project(bbox.getSouthEast()));
+            var ratio = bounds.getSize().x / bounds.getSize().y;
+
+            patternOptions.width = patternOptions.width || 500;
+            patternOptions.height = patternOptions.height || (500 * ratio) || 500;
+
+            patternOptions.width = Math.min(patternOptions.width, patternOptions.height);
+            patternOptions.height = patternOptions.width;
+            //patternOptions.width = bounds.getSize().x || 500;
+            //patternOptions.height = bounds.getSize().y || 500;
+
+            this._wordCloud = this._createElement('g');
+
+            //this._container.appendChild(this._wordCloud);
+            this._wordPattern = this._createPattern(patternOptions);
+            this._wordPattern.appendChild(this._wordCloud);
+
+            this._defs.appendChild(this._wordPattern);
+
+            this._createWordCloud(this._wordCloud, wordCloudOptions);
+        }
+
+        var existingFill = this._path.getAttribute('fill');
+
+        if (existingFill.indexOf(this._wordCloudGuid) === -1) {
+            this._path.setAttribute('fill', 'url(#' + this._wordCloudGuid + ')');
+        }
+
+	},
+	
+	_createWordCloud: function (element, wordCloudOptions) {
+		//var fragment = document.createDocumentFragment();
+		var width = wordCloudOptions.patternOptions.width;
+		var height = wordCloudOptions.patternOptions.height;
+		var words = wordCloudOptions.words;
+		var anchor = this.getTextAnchor();
+		var rect = this._createElement('rect');
+		var countField = wordCloudOptions.countField;
+        var textField = wordCloudOptions.textField;
+        var rotation = wordCloudOptions.rotation || function(d) { return 0; }; //function(d) { return scale(~~(Math.random() * d[countField])); }
+		rect.setAttribute('width', width);
+		rect.setAttribute('height', height);
+		rect.style.fill = this.options.fillColor || '#000';
+		rect.setAttribute('transform', "translate(" + -width/2 + ',' + -height/2 + ")");
+		element.appendChild(rect);
+		
+		var draw = function (words, element) {
+			return function (words) {
+			  var id = "svg" + L.Util.guid();
+		        d3.select(element)
+		        .attr("transform", "translate(" + width/2 + "," + height/2 + ")")
+		        .selectAll("text")
+		        .data(words)
+		        .enter().append("text")
+		        .style("font-size", function(d) { return d.size + "px"; })
+		        .style("font-family", wordCloudOptions.fontFamily || 'Impact')
+		        .style("fill", function(d, i) { return fill(i); })
+		        .attr("text-anchor", "middle")
+		        .attr("transform", function(d) {
+		          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+		        })
+		        .text(function(d) { return d[textField]; });
+			};
+		  };
+		  
+		var fill = wordCloudOptions.textFillColor || d3.scale.category20();
+		var scale = d3.scale.linear();
+		
+		var max = words[0][countField];
+		var min = words[words.length - 1][countField];
+		
+		var fontSize = wordCloudOptions.fontSize || d3.scale.log().domain([min, max]).range([10, 40]);
+		
+		scale.domain([0, 10]).range([-60, 60]);
+		
+        d3.layout.cloud().size([width, height])
+          .spiral('rectangular')
+          .timeInterval(Infinity)
+          .words(words)
+          .padding(5)
+          .rotate(rotation)
+          .font(wordCloudOptions.fontFamily || 'Impact')
+          .fontSize(function(d) { return fontSize(d[countField]); })
+          .on("end", draw(words, element))
+          .start();
+
+		return element;
+
+	},
 
 	_createShape: function (type, shapeOptions) {
 		if (this._shape) {
@@ -2768,10 +3032,24 @@ var PathFunctions = PathFunctions || {
 			}
 		}
 
+        if (context.options.markers) {
+            for (var key in context.options.markers) {
+                if (context.options.markers.hasOwnProperty(key)) {
+                    context._createMarker(key, context.options.markers[key]);
+                    context._path.setAttribute('marker-' + key, 'url(#' + context._markers[key].getAttribute('id') + ')');
+                }
+            }
+        }
+
 		if (context.options.gradient) {
 			context._createGradient(context.options.gradient);
 
-			context._path.setAttribute('fill', 'url(#' + context._gradient.getAttribute('id') + ')');
+            if (context.options.stroke && !context.options.fill) {
+                context._path.setAttribute('stroke', 'url(#' + context._gradient.getAttribute('id') + ')');
+            }
+            else {
+                context._path.setAttribute('fill', 'url(#' + context._gradient.getAttribute('id') + ')');
+            }
 		}
 		else if (!context.options.fill) {
 			context._path.setAttribute('fill', 'none');
@@ -2789,6 +3067,17 @@ var PathFunctions = PathFunctions || {
 		if (context.options.fillPattern) {
 			context._createFillPattern(context.options.fillPattern);
 		}
+
+        if (context.options.wordCloud) {
+            var options = context.options.wordCloud;
+
+            if (options.words.length > 0) {
+                var me = this;
+                setTimeout(function () {
+                    me._createWordCloudPattern(options);
+                }, 0);
+            }
+        }
 		
 		context._applyCustomStyles();
 

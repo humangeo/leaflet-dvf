@@ -2,6 +2,10 @@
  * Class for interpolating values along a line using a linear equation
  */
 L.LinearFunction = L.Class.extend({
+	options: {
+		constrainX: false
+	},
+	
 	initialize: function (minPoint, maxPoint, options) {
 		this.setOptions(options);
 		this.setRange(minPoint, maxPoint);
@@ -76,6 +80,17 @@ L.LinearFunction = L.Class.extend({
 		this._postProcess = postProcess;
 		
 		return this;
+	},
+	
+	constrainX: function (x) {
+		x = Number(x);
+
+		if (this.options.constrainX) {
+			x = Math.max(x, this._minPoint.x);
+			x = Math.min(x, this._maxPoint.x);
+		}
+		
+		return x;
 	},
 	
 	evaluate: function (x) {
@@ -442,6 +457,10 @@ L.HSLColorBlendFunction = L.LinearFunction.extend({
  * Allows you to combine multiple linear functions into a single linear function
  */
 L.PiecewiseFunction = L.LinearFunction.extend({
+	options: {
+		constrainX: true
+	},
+	
 	initialize: function (functions, options) {
 		
 		L.Util.setOptions(this, options);
@@ -464,29 +483,36 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 		var bounds;
 		var startPoint;
 		var endPoint;
-		var found = false;
 		var currentFunction;
 		
-		for (var index = 0; index < this._functions.length; ++index) {
-			currentFunction = this._functions[index];
-			bounds = currentFunction.getBounds();
-			
-			startPoint = bounds[0];
-			endPoint = bounds[1];
-			
-			if (x >= startPoint.x && x < endPoint.x) {
-				found = true;
-				break;
+		if (x < this._minPoint.x) {
+			currentFunction = this._functions[0];
+		}
+		else if (x >= this._maxPoint.x) {
+			currentFunction = this._functions[this._functions.length - 1];
+		}
+		else {
+			for (var index = 0; index < this._functions.length; ++index) {
+				currentFunction = this._functions[index];
+				bounds = currentFunction.getBounds();
+				
+				startPoint = bounds[0];
+				endPoint = bounds[1];
+				
+				if (x >= startPoint.x && x < endPoint.x) {
+					break;
+				}
 			}
 		}
-		
-		// If found return the found function; otherwise return the last function
-		return found ? currentFunction : this._functions[this._functions.length - 1];
+
+		return currentFunction;
 	},
 	
 	evaluate: function (x) {
 		var currentFunction;
 		var y = null;
+		
+		x = this.constrainX(x);
 		
 		if (this._preProcess) {
 			x = this._preProcess(x);
@@ -506,28 +532,65 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 	}
 });
 
-L.CustomColorFunction = L.PiecewiseFunction.extend({
+/*
+ * Specific an array of x values to break on along with a set of colors (breaks.length - 1)
+ */
+L.ColorClassFunction = L.PiecewiseFunction.extend({
 	options: {
-		interpolate: true
+		interpolate: false
 	},
 	
-	initialize: function (minX, maxX, colors, options) {
-		var range = maxX - minX;
-		var xRange = range/(colors.length - 1);
+	initialize: function (classBreaks, colors, options) {
 		var functions = [];
 		var colorFunction;
 		
 		L.Util.setOptions(this, options);
 		
-		for (var i = 0; i < colors.length; ++i) {
-			var next = Math.min(i + 1, colors.length - 1);
-			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+		for (var i = 0; i < classBreaks.length - 1; ++i) {
+			var start = classBreaks[i],
+				end = classBreaks[i + 1],
+				startColor = colors[i],
+				endColor = this.options.interpolate ? colors[Math.min(colors.length -1, i + 1)] : colors[i];
+			
+			colorFunction = new L.RGBColorBlendFunction(start, end, startColor, endColor);
 			
 			functions.push(colorFunction);	
 		}
 		
 		L.PiecewiseFunction.prototype.initialize.call(this, functions);
 	}
+});
+
+L.CustomColorFunction = L.PiecewiseFunction.extend({
+	options: {
+		interpolate: true
+	},
+	
+	initialize: function (minX, maxX, colors, options) {
+		L.Util.setOptions(this, options);
+
+		var range = maxX - minX;
+		var count = this.options.interpolate ? colors.length - 1 : colors.length;
+		var xRange = range/count;
+		var functions = [];
+		var colorFunction;
+		var next;
+		
+		var func = new L.LinearFunction([0, minX], [count, maxX]);
+		
+		for (var i = 0; i < count; ++i) {
+			next = i + 1;
+			//colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(func.evaluate(i), func.evaluate(next), colors[i], colors[next]) : new L.RGBColorBlendFunction(func.evaluate(i), func.evaluate(next), colors[i], colors[i]);
+			
+			functions.push(colorFunction);	
+		}
+		
+		func = null;
+		
+		L.PiecewiseFunction.prototype.initialize.call(this, functions);
+	}
+	
 });
 
 

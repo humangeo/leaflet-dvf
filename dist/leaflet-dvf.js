@@ -5,6 +5,10 @@
  * Class for interpolating values along a line using a linear equation
  */
 L.LinearFunction = L.Class.extend({
+	options: {
+		constrainX: false
+	},
+	
 	initialize: function (minPoint, maxPoint, options) {
 		this.setOptions(options);
 		this.setRange(minPoint, maxPoint);
@@ -79,6 +83,17 @@ L.LinearFunction = L.Class.extend({
 		this._postProcess = postProcess;
 		
 		return this;
+	},
+	
+	constrainX: function (x) {
+		x = Number(x);
+
+		if (this.options.constrainX) {
+			x = Math.max(x, this._minPoint.x);
+			x = Math.min(x, this._maxPoint.x);
+		}
+		
+		return x;
 	},
 	
 	evaluate: function (x) {
@@ -445,6 +460,10 @@ L.HSLColorBlendFunction = L.LinearFunction.extend({
  * Allows you to combine multiple linear functions into a single linear function
  */
 L.PiecewiseFunction = L.LinearFunction.extend({
+	options: {
+		constrainX: true
+	},
+	
 	initialize: function (functions, options) {
 		
 		L.Util.setOptions(this, options);
@@ -467,29 +486,36 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 		var bounds;
 		var startPoint;
 		var endPoint;
-		var found = false;
 		var currentFunction;
 		
-		for (var index = 0; index < this._functions.length; ++index) {
-			currentFunction = this._functions[index];
-			bounds = currentFunction.getBounds();
-			
-			startPoint = bounds[0];
-			endPoint = bounds[1];
-			
-			if (x >= startPoint.x && x < endPoint.x) {
-				found = true;
-				break;
+		if (x < this._minPoint.x) {
+			currentFunction = this._functions[0];
+		}
+		else if (x >= this._maxPoint.x) {
+			currentFunction = this._functions[this._functions.length - 1];
+		}
+		else {
+			for (var index = 0; index < this._functions.length; ++index) {
+				currentFunction = this._functions[index];
+				bounds = currentFunction.getBounds();
+				
+				startPoint = bounds[0];
+				endPoint = bounds[1];
+				
+				if (x >= startPoint.x && x < endPoint.x) {
+					break;
+				}
 			}
 		}
-		
-		// If found return the found function; otherwise return the last function
-		return found ? currentFunction : this._functions[this._functions.length - 1];
+
+		return currentFunction;
 	},
 	
 	evaluate: function (x) {
 		var currentFunction;
 		var y = null;
+		
+		x = this.constrainX(x);
 		
 		if (this._preProcess) {
 			x = this._preProcess(x);
@@ -509,28 +535,65 @@ L.PiecewiseFunction = L.LinearFunction.extend({
 	}
 });
 
-L.CustomColorFunction = L.PiecewiseFunction.extend({
+/*
+ * Specific an array of x values to break on along with a set of colors (breaks.length - 1)
+ */
+L.ColorClassFunction = L.PiecewiseFunction.extend({
 	options: {
-		interpolate: true
+		interpolate: false
 	},
 	
-	initialize: function (minX, maxX, colors, options) {
-		var range = maxX - minX;
-		var xRange = range/(colors.length - 1);
+	initialize: function (classBreaks, colors, options) {
 		var functions = [];
 		var colorFunction;
 		
 		L.Util.setOptions(this, options);
 		
-		for (var i = 0; i < colors.length; ++i) {
-			var next = Math.min(i + 1, colors.length - 1);
-			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+		for (var i = 0; i < classBreaks.length - 1; ++i) {
+			var start = classBreaks[i],
+				end = classBreaks[i + 1],
+				startColor = colors[i],
+				endColor = this.options.interpolate ? colors[Math.min(colors.length -1, i + 1)] : colors[i];
+			
+			colorFunction = new L.RGBColorBlendFunction(start, end, startColor, endColor);
 			
 			functions.push(colorFunction);	
 		}
 		
 		L.PiecewiseFunction.prototype.initialize.call(this, functions);
 	}
+});
+
+L.CustomColorFunction = L.PiecewiseFunction.extend({
+	options: {
+		interpolate: true
+	},
+	
+	initialize: function (minX, maxX, colors, options) {
+		L.Util.setOptions(this, options);
+
+		var range = maxX - minX;
+		var count = this.options.interpolate ? colors.length - 1 : colors.length;
+		var xRange = range/count;
+		var functions = [];
+		var colorFunction;
+		var next;
+		
+		var func = new L.LinearFunction([0, minX], [count, maxX]);
+		
+		for (var i = 0; i < count; ++i) {
+			next = i + 1;
+			//colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[next]) : new L.RGBColorBlendFunction(minX + xRange * i, minX + xRange * next, colors[i], colors[i]);
+			colorFunction = this.options.interpolate ? new L.RGBColorBlendFunction(func.evaluate(i), func.evaluate(next), colors[i], colors[next]) : new L.RGBColorBlendFunction(func.evaluate(i), func.evaluate(next), colors[i], colors[i]);
+			
+			functions.push(colorFunction);	
+		}
+		
+		func = null;
+		
+		L.PiecewiseFunction.prototype.initialize.call(this, functions);
+	}
+	
 });
 
 
@@ -800,7 +863,8 @@ L.CategoryLegend = L.Class.extend({
  */
 L.LegendIcon = L.DivIcon.extend({
 	initialize: function (fields, layerOptions, options) {
-		var container = document.createElement('div');
+		var fragment = document.createDocumentFragment();
+		var container = document.createElement('div', '', fragment);
 		var legendContent = L.DomUtil.create('div', 'legend', container);
 		var legendTitle = L.DomUtil.create('div', 'title', legendContent);
 		var legendBox = L.DomUtil.create('div', 'legend-box', legendContent);
@@ -852,6 +916,14 @@ L.GeometryUtils = {
 	},
 
 	getGeoJSONLocation: function (geoJSON, record, locationTextField, recordToLayer) {
+        var locationTextFunction = function (record) {
+            return L.Util.getFieldValue(record, locationTextField);
+        };
+
+        if (locationTextField && (typeof locationTextField === 'function')) {
+            locationTextFunction = locationTextField;
+        }
+
 		var geoJSONLayer = new L.GeoJSON(geoJSON, {
 			pointToLayer: function (feature, latlng) {
 				var location = {
@@ -1309,10 +1381,17 @@ L.HTMLUtils = {
 	buildTable: function (obj, className, ignoreFields) {
 		className = className || 'table table-condensed table-striped table-bordered';
 
-		var table = L.DomUtil.create('table', className);
+		var fragment = document.createDocumentFragment();
+		var table = L.DomUtil.create('table', className, fragment);
 		var thead = L.DomUtil.create('thead', '', table);
 		var tbody = L.DomUtil.create('tbody', '', table);
-		thead.innerHTML = '<tr><th>Name</th><th>Value</th></tr>';
+		
+		var thead_tr = L.DomUtil.create('tr', '', thead);
+        var thead_values = ['Name','Value'];
+        for (var i = 0, l = thead_values.length; i < l; i++) {
+            var thead_th = L.DomUtil.create('th', '', thead_tr);
+            thead_th.innerHTML = thead_values[i];
+        }
 
 		ignoreFields = ignoreFields || [];
 
@@ -1333,7 +1412,13 @@ L.HTMLUtils = {
 					container.appendChild(L.HTMLUtils.buildTable(value, ignoreFields));
 					value = container.innerHTML;
 				}
-				tbody.innerHTML += '<tr><td>' + property + '</td><td>' + value + '</td></tr>';
+				
+				var tbody_tr = L.DomUtil.create('tr', '', tbody);
+                var tbody_values = [property, value];
+                for (i = 0, l = tbody_values.length; i < l; i++) {
+                    var tbody_td = L.DomUtil.create('td', '', tbody_tr);
+                    tbody_td.innerHTML = tbody_values[i];
+                }
 			}
 		}
 
@@ -2378,7 +2463,7 @@ L.RegularPolygon = L.Polygon.extend({
 		for (var i = 0; i < this._latlngs.length; ++i) {
 			var latlng = this._latlngs[i];
 			
-			feature.coordinates[0].push([latlng[1], latlng[0]]);
+			feature.geometry.coordinates[0].push([latlng.lng, latlng.lat]);
 		}
 		
 		return feature;
@@ -2400,6 +2485,17 @@ var TextFunctions = TextFunctions || {
 
 		if (this.options.text) {
 			this._createText(this.options.text);
+		}
+		
+		if (this.options.wordCloud) {
+			var options = this.options.wordCloud;
+			
+			if (options.words.length > 0) {
+				var me = this;
+				setTimeout(function () {
+					me._createWordCloudPattern(options);
+				}, 0);
+			}
 		}
 	},
 
@@ -2538,6 +2634,49 @@ var PathFunctions = PathFunctions || {
 		this._container.appendChild(this._defs);
 	},
 
+    _createMarker: function (type, options) {
+        if (!this._defs) {
+            this._createDefs();
+        }
+
+        this._markers = this._markers || {};
+        this._markerPath = this._markerPath || {};
+
+        if (this._markers[type]) {
+            this._defs.removeChild(this._markers[type]);
+        }
+
+        this._markers[type] = this._createElement('marker');
+
+        var markerGuid = L.Util.guid();
+
+        var exaggeration = options.exaggeration || 2;
+        var size = 2 * exaggeration;
+
+        this._markers[type].setAttribute('id', markerGuid);
+        this._markers[type].setAttribute('markerWidth', size);
+        this._markers[type].setAttribute('markerHeight', size);
+        this._markers[type].setAttribute('refX', exaggeration);
+        this._markers[type].setAttribute('refY', exaggeration);
+        this._markers[type].setAttribute('orient', 'auto');
+        this._markers[type].setAttribute('markerUnits', 'strokeWidth');
+
+        this._markerPath[type] = this._createElement('path');
+
+        if (options.reverse) {
+            this._markerPath[type].setAttribute('d', 'M0,' + exaggeration + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + exaggeration);
+        }
+        else {
+            this._markerPath[type].setAttribute('d', 'M' + size + ',' + exaggeration + ' L0,' + size + ' L0,0 L' + size + ',' + exaggeration);
+        }
+
+        this._markerPath[type].setAttribute('style', 'fill: ' + this.options.color + '; opacity: ' + this.options.opacity);
+
+        this._markers[type].appendChild(this._markerPath[type]);
+
+        this._defs.appendChild(this._markers[type]);
+    },
+
 	_createGradient: function (options) {
 		if (!this._defs) {
 			this._createDefs();
@@ -2567,6 +2706,10 @@ var PathFunctions = PathFunctions || {
 			};
 		}
 		gradientOptions.id = "grad" + gradientGuid;
+
+        if (this.options.gradientUnits) {
+            gradient.setAttribute('gradientUnits', this.options.gradientUnits);
+        }
 
 		var stops = options.stops || [
 			{
@@ -2726,6 +2869,127 @@ var PathFunctions = PathFunctions || {
 		
 		return pattern;
 	},
+	
+	_createWordCloudPattern: function (wordCloudOptions) {
+		var patternGuid = ''; //L.Util.guid();
+		var patternOptions = wordCloudOptions.patternOptions = wordCloudOptions.patternOptions || {};
+		
+		if (!this._defs) {
+			this._createDefs();
+		}
+
+        wordCloudOptions.textField = wordCloudOptions.textField || 'key';
+        wordCloudOptions.countField = wordCloudOptions.countField || 'doc_count';
+
+        for (var i = 0; i < wordCloudOptions.words.length; ++i) {
+            var word = wordCloudOptions.words[i];
+
+            patternGuid += word[wordCloudOptions.textField] + "_" + word[wordCloudOptions.countField];
+        }
+
+        if (patternGuid !== this._wordCloudGuid) {
+            this._wordCloudGuid = patternGuid;
+
+            // Hash words to see if we need to create a new word cloud pattern or use the existing one
+            var clonedPath = this._createElement('path');
+            clonedPath.setAttribute('d', this._path.getAttribute('d'));
+            clonedPath.setAttribute('id', patternGuid);
+
+            patternOptions.id = patternGuid;
+            patternOptions.patternUnits = patternOptions.patternUnits || 'userSpaceOnUse'; //'objectBoundingBox';
+            //patternOptions.patternContentUnits = 'userSpaceOnUse';
+
+            var bbox = this.getBounds();
+
+            var bounds = new L.Bounds(this._map.project(bbox.getNorthWest()), this._map.project(bbox.getSouthEast()));
+            var ratio = bounds.getSize().x / bounds.getSize().y;
+
+            patternOptions.width = patternOptions.width || 500;
+            patternOptions.height = patternOptions.height || (500 * ratio) || 500;
+
+            patternOptions.width = Math.min(patternOptions.width, patternOptions.height);
+            patternOptions.height = patternOptions.width;
+            //patternOptions.width = bounds.getSize().x || 500;
+            //patternOptions.height = bounds.getSize().y || 500;
+
+            this._wordCloud = this._createElement('g');
+
+            //this._container.appendChild(this._wordCloud);
+            this._wordPattern = this._createPattern(patternOptions);
+            this._wordPattern.appendChild(this._wordCloud);
+
+            this._defs.appendChild(this._wordPattern);
+
+            this._createWordCloud(this._wordCloud, wordCloudOptions);
+        }
+
+        var existingFill = this._path.getAttribute('fill');
+
+        if (existingFill.indexOf(this._wordCloudGuid) === -1) {
+            this._path.setAttribute('fill', 'url(#' + this._wordCloudGuid + ')');
+        }
+
+	},
+	
+	_createWordCloud: function (element, wordCloudOptions) {
+		//var fragment = document.createDocumentFragment();
+		var width = wordCloudOptions.patternOptions.width;
+		var height = wordCloudOptions.patternOptions.height;
+		var words = wordCloudOptions.words;
+		var anchor = this.getTextAnchor();
+		var rect = this._createElement('rect');
+		var countField = wordCloudOptions.countField;
+        var textField = wordCloudOptions.textField;
+        var rotation = wordCloudOptions.rotation || function(d) { return 0; }; //function(d) { return scale(~~(Math.random() * d[countField])); }
+		rect.setAttribute('width', width);
+		rect.setAttribute('height', height);
+		rect.style.fill = this.options.fillColor || '#000';
+		rect.setAttribute('transform', "translate(" + -width/2 + ',' + -height/2 + ")");
+		element.appendChild(rect);
+		
+		var draw = function (words, element) {
+			return function (words) {
+			  var id = "svg" + L.Util.guid();
+		        d3.select(element)
+		        .attr("transform", "translate(" + width/2 + "," + height/2 + ")")
+		        .selectAll("text")
+		        .data(words)
+		        .enter().append("text")
+		        .style("font-size", function(d) { return d.size + "px"; })
+		        .style("font-family", wordCloudOptions.fontFamily || 'Impact')
+		        .style("fill", function(d, i) { return fill(i); })
+		        .attr("text-anchor", "middle")
+		        .attr("transform", function(d) {
+		          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+		        })
+		        .text(function(d) { return d[textField]; });
+			};
+		  };
+		  
+		var fill = wordCloudOptions.textFillColor || d3.scale.category20();
+		var scale = d3.scale.linear();
+		
+		var max = words[0][countField];
+		var min = words[words.length - 1][countField];
+		
+		var fontSize = wordCloudOptions.fontSize || d3.scale.log().domain([min, max]).range([10, 40]);
+		
+		scale.domain([0, 10]).range([-60, 60]);
+		
+        d3.layout.cloud().size([width, height])
+          .spiral('rectangular')
+          .timeInterval(Infinity)
+          .words(words)
+          .padding(5)
+          .rotate(rotation)
+          .font(wordCloudOptions.fontFamily || 'Impact')
+          .fontSize(function(d) { return fontSize(d[countField]); })
+          .on("end", draw(words, element))
+          .start();
+
+		return element;
+
+	},
 
 	_createShape: function (type, shapeOptions) {
 		if (this._shape) {
@@ -2873,10 +3137,24 @@ var PathFunctions = PathFunctions || {
 			}
 		}
 
+        if (context.options.markers) {
+            for (var key in context.options.markers) {
+                if (context.options.markers.hasOwnProperty(key)) {
+                    context._createMarker(key, context.options.markers[key]);
+                    context._path.setAttribute('marker-' + key, 'url(#' + context._markers[key].getAttribute('id') + ')');
+                }
+            }
+        }
+
 		if (context.options.gradient) {
 			context._createGradient(context.options.gradient);
 
-			context._path.setAttribute('fill', 'url(#' + context._gradient.getAttribute('id') + ')');
+            if (context.options.stroke && !context.options.fill) {
+                context._path.setAttribute('stroke', 'url(#' + context._gradient.getAttribute('id') + ')');
+            }
+            else {
+                context._path.setAttribute('fill', 'url(#' + context._gradient.getAttribute('id') + ')');
+            }
 		}
 		else if (!context.options.fill) {
 			context._path.setAttribute('fill', 'none');
@@ -2894,6 +3172,17 @@ var PathFunctions = PathFunctions || {
 		if (context.options.fillPattern) {
 			context._createFillPattern(context.options.fillPattern);
 		}
+
+        if (context.options.wordCloud) {
+            var options = context.options.wordCloud;
+
+            if (options.words.length > 0) {
+                var me = this;
+                setTimeout(function () {
+                    me._createWordCloudPattern(options);
+                }, 0);
+            }
+        }
 		
 		context._applyCustomStyles();
 
@@ -4908,17 +5197,42 @@ L.DataLayer = L.LayerGroup.extend({
 		}
 	},
 
-	onAdd: function (map) {
-		L.LayerGroup.prototype.onAdd.call(this, map);
+    _addLayer: function (map, layer) {
+        return function () {
+            map.addLayer(layer);
+        };
+    },
 
-		map.on('zoomend', this._zoomFunction, this);
-	},
+    _removeLayer: function (map, layer) {
+        return function () {
+            map.removeLayer(layer);
+        };
+    },
 
-	onRemove: function (map) {
-		L.LayerGroup.prototype.onRemove.call(this, map);
+    onAdd: function (map) {
+        var me = this;
+        this._map = map;
 
-		map.off('zoomend', this._zoomFunction, this);
-	},
+        for (var i in me._layers) {
+            if (me._layers.hasOwnProperty(i)) {
+                setTimeout(this._addLayer(map, me._layers[i]), 0);
+            }
+        }
+
+        map.on('zoomend', me._zoomFunction, me);
+    },
+
+    onRemove: function (map) {
+        var me = this;
+
+        for (var i in me._layers) {
+            if (me._layers.hasOwnProperty(i)) {
+                setTimeout(this._removeLayer(map, me._layers[i]), 0);
+            }
+        }
+
+        map.off('zoomend', me._zoomFunction, me);
+    },
 	
 	bringToBack: function () {		
 		this.invoke('bringToBack');
@@ -5171,13 +5485,12 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 
 	locationToLayer: function (location, record) {
-		var layer;
+        var me = this;
+        var layer = me.recordToLayer(location, record);
 
-		layer = this.recordToLayer(location, record);
-
-		if (layer) {
-			this.addLayer(layer);
-		}
+        if (layer) {
+            me.addLayer(layer);
+        }
 	},
 
 	_bindMouseEvents: function (layer, layerOptions, legendDetails) {
@@ -5320,7 +5633,21 @@ L.DataLayer = L.LayerGroup.extend({
 		};
 	},
 
+    _recursiveLayerUpdate: function (layer, callee) {
+        var me = this;
+
+        if (layer.eachLayer) {
+            layer.eachLayer(function (subLayer) {
+                me._recursiveLayerUpdate(subLayer, callee);
+            });
+        }
+        else {
+            callee.call(me, layer);
+        }
+    },
+
 	_getIndexedLayer: function (index, location, layerOptions, record) {
+        var me = this;
 		if (this.options.getIndexKey) {
 			var indexKey = this.options.getIndexKey.call(this, location, record);
 			
@@ -5341,7 +5668,9 @@ L.DataLayer = L.LayerGroup.extend({
 						
 					}
 					else {
-						layer.redraw();
+                        me._recursiveLayerUpdate(layer, function (layer) {
+                            layer.redraw();
+                        });
 					}
 				};
 				
@@ -5373,7 +5702,7 @@ L.DataLayer = L.LayerGroup.extend({
 		
 		return layer;
 	},
-	
+
 	recordToLayer: function (location, record) {
 		var layerOptions = L.Util.extend({},this.options.layerOptions);
 		var layer;
@@ -5386,7 +5715,7 @@ L.DataLayer = L.LayerGroup.extend({
 		}
 
 		if (includeLayer) {
-			
+
 			var dynamicOptions = this._getDynamicOptions(record);
 
 			layerOptions = dynamicOptions.layerOptions;
@@ -5397,7 +5726,7 @@ L.DataLayer = L.LayerGroup.extend({
 
 				// If layer indexing is being used, then load the existing layer from the index
 				layer = this._getIndexedLayer(this._layerIndex, location, layerOptions, record);
-				
+
 				if (layer) {
 					if (this.options.showLegendTooltips) {
 						this._bindMouseEvents(layer, layerOptions, legendDetails);
@@ -5434,9 +5763,15 @@ L.DataLayer = L.LayerGroup.extend({
 
 		L.StyleConverter.applySVGStyle(i, layerOptions);
 
+		var breakFunction = {
+			evaluate: function (value) {
+				return params.breaks[value];
+			}
+		};
+		
 		for (var property in displayProperties) {
 
-			if (ignoreProperties.indexOf(property) === -1) {
+			if (displayProperties.hasOwnProperty(property) && ignoreProperties.indexOf(property) === -1) {
 
 				valueFunction = displayProperties[property];
 
@@ -5445,7 +5780,7 @@ L.DataLayer = L.LayerGroup.extend({
 					var minX = bounds ? bounds[0].x : displayProperties.minValue;
 					var maxX = bounds ? bounds[1].x : displayProperties.maxValue;
 
-					var binFunction = new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
+					var binFunction = params.breaks ? breakFunction : new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
 
 					displayMin = minX;
 					displayMax = maxX;
@@ -5478,7 +5813,7 @@ L.DataLayer = L.LayerGroup.extend({
 										   'background-image:-webkit-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);';
 						}
 						else {
-							i.style.cssText += 'background-color:' + nextValue + ';';
+							i.style.cssText += 'background-color:' + value + ';';
 						}
 					}
 
@@ -5496,8 +5831,8 @@ L.DataLayer = L.LayerGroup.extend({
 								   'border-right-width:' + nextValue + ';';
 					}
 
-					var min = (segmentSize * index) + minX;
-					var max = min + segmentSize;
+					var min = params.minX || (segmentSize * index) + minX;
+					var max = params.maxX || min + segmentSize;
 
 					if (displayTextFunction && valueFunction) {
 						min = displayTextFunction(min);
@@ -5530,7 +5865,7 @@ L.DataLayer = L.LayerGroup.extend({
 		var segmentWidth = (legendWidth / numSegments) - 2 * weight;
 		var displayText;
 		var displayOptions = this.options.displayOptions || {};
-
+		
 		if (className) {
 			L.DomUtil.addClass(legendElement, className);
 		}
@@ -5543,53 +5878,94 @@ L.DataLayer = L.LayerGroup.extend({
 			return value;
 		};
 
+		// Create a different legend section for each field specified in displayOptions
+		// Iterate through the fields
 		for (var field in displayOptions) {
-
-			var displayProperties = displayOptions[field];
-			
-			if (!displayProperties.excludeFromLegend) {
-				var displayName = displayProperties.displayName || field;
-
-				displayText = displayProperties.displayText;
-
-				var displayTextFunction = displayText ? displayText : defaultFunction;
-
-				var styles = displayProperties.styles;
-
-				L.DomUtil.create('div', 'legend-title', legendElement).innerHTML = displayName;
-
-				if (styles) {
-					// Generate category legend
-					legendElement.innerHTML += new L.CategoryLegend(styles).generate();
-				}
-				else {
-					// Generate numeric legend
-					var legendItems = L.DomUtil.create('div', 'data-layer-legend');
-					var minValue = L.DomUtil.create('div', 'min-value', legendItems);
-					var scaleBars = L.DomUtil.create('div', 'scale-bars', legendItems);
-					var maxValue = L.DomUtil.create('div', 'max-value', legendItems);
-					var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
-
-					for (var index = 0; index < numSegments; ++index) {
-						var legendParams = {
-							displayProperties: displayProperties,
-							layerOptions: layerOptions,
-							ignoreProperties: ignoreProperties,
-							displayTextFunction: displayTextFunction,
-							index: index,
-							numSegments: numSegments,
-							segmentWidth: segmentWidth,
-							minValue: minValue,
-							maxValue: maxValue,
-							gradient: legendOptions.gradient
-						};
-
-						var element = this._getLegendElement(legendParams);
-
-						scaleBars.appendChild(element);
-
+			if (displayOptions.hasOwnProperty(field)) {
+				
+				// Get the properties associated with a given field
+				var displayProperties = displayOptions[field];
+				
+				// If the field should not be excluded from the legend, then continue...
+				if (!displayProperties.excludeFromLegend) {
+					
+					// Use the provided name or use the field key
+					var displayName = displayProperties.displayName || field;
+	
+					// Determine the function used to print out y values
+					displayText = displayProperties.displayText;
+	
+					var displayTextFunction = displayText ? displayText : defaultFunction;
+	
+					var styles = displayProperties.styles;
+	
+					L.DomUtil.create('div', 'legend-title', legendElement).innerHTML = displayName;
+	
+					// If styles have been specified (e.g. a key/value mapping b/w a given input value and a given output value),
+					// then use those
+					if (styles) {
+						// Generate category legend
+						legendElement.innerHTML += new L.CategoryLegend(styles).generate();
 					}
-					legendElement.appendChild(legendItems);
+					else {
+						// Generate numeric legend
+						var legendItems = L.DomUtil.create('div', 'data-layer-legend');
+						var minValue = L.DomUtil.create('div', 'min-value', legendItems);
+						var scaleBars = L.DomUtil.create('div', 'scale-bars', legendItems);
+						var maxValue = L.DomUtil.create('div', 'max-value', legendItems);
+						var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
+						var breaks = displayProperties.breaks;
+						var segmentWidths = [];
+						
+						numSegments = legendOptions.numSegments || 10;
+						
+						// If breaks have been specified, then use those values to calculate segment widths and provide x ranges
+						// for each segment
+						if (breaks) {
+							// Scale the break numbers relative to the width of the legend
+							var scaleFunction = new L.LinearFunction([breaks[0], 0], [breaks[breaks.length - 1], legendWidth]);
+							var lastWidth = 0;
+							var width = 0;
+							for (var i = 1; i < breaks.length; ++i) {
+								width = scaleFunction.evaluate(breaks[i]);
+								segmentWidths.push(width - lastWidth - 2 * weight);
+								lastWidth = width;
+							}
+							
+							numSegments = segmentWidths.length;
+						}
+						
+						// Add each segment to the legend
+						for (var index = 0; index < numSegments; ++index) {
+							var legendParams = {
+								displayProperties: displayProperties,
+								layerOptions: layerOptions,
+								ignoreProperties: ignoreProperties,
+								displayTextFunction: displayTextFunction,
+								index: index,
+								numSegments: numSegments,
+								segmentWidth: segmentWidth,
+								minValue: minValue,
+								maxValue: maxValue,
+								gradient: legendOptions.gradient
+							};
+	
+							// If there are segmentWidths, then use those
+							if (breaks && segmentWidths.length > 0) {
+								legendParams.segmentWidth = segmentWidths[index];
+								legendParams.segmentSize = segmentWidths[index];
+								legendParams.minX = breaks[index];
+								legendParams.maxX = breaks[index + 1];
+								legendParams.breaks = breaks;
+							}
+							
+							var element = this._getLegendElement(legendParams);
+	
+							scaleBars.appendChild(element);
+	
+						}
+						legendElement.appendChild(legendItems);
+					}
 				}
 			}
 		}
@@ -6789,6 +7165,8 @@ L.ArcedPolyline = L.Path.extend({
 		var distance = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
 		var heightOffset = this.options.distanceToHeight.evaluate(distance);
 
+        this._angle = Math.atan((2 * heightOffset)/(0.5 * distance));
+
 		var parts = ['M', point1.x, ',', point1.y, ' C', point1.x, ',', point1.y - heightOffset, ' ', point2.x, ',', point2.y - heightOffset, ' ', point2.x, ',', point2.y ];
 		
 		return parts.join(' ');
@@ -6907,3 +7285,1458 @@ L.arcedPolyline = function (latlngs, options) {
 L.control.legend = function (options) {
 	return new L.Control.Legend(options);
 };
+;
+/*
+ *
+ */
+L.SeriesMarker = L.Path.extend({
+	initialize: function (centerLatLng, options) {
+		L.Path.prototype.initialize.call(this, options);
+
+		L.Util.setOptions(this, options);
+
+		this._latlng = centerLatLng;
+	},
+
+	options: {
+		fill: false,
+		size: new L.Point(80, 80),
+		position: {
+			x: 0,
+			y: 0
+		},
+		weight: 1,
+		color: '#000',
+		opacity: 1.0,
+	},
+
+	setLatLng: function (latlng) {
+		this._latlng = latlng;
+		return this.redraw();
+	},
+
+	projectLatlngs: function () {
+		this._point = this._map.latLngToLayerPoint(this._latlng);
+		this._points = this._getPoints();
+	},
+
+	getBounds: function () {
+		var map = this._map,
+			point = map.project(this._latlng),
+			swPoint = new L.Point(point.x, point.y),
+			nePoint = new L.Point(point.x + this.options.size.x, point.y - this.options.size.y),
+			sw = map.unproject(swPoint),
+			ne = map.unproject(nePoint);
+
+		return new L.LatLngBounds(sw, ne);
+	},
+
+	getLatLng: function () {
+		return this._latlng;
+	},
+
+	getPathString: function () {
+		return new L.SVGPathBuilder(this._points, null, {
+			closePath: this.options.fill
+		}).build(6);
+	},
+
+	getDataPoint: function (x) {
+		return _.find(this._seriesPoints, function (value) {
+			return value.x === x;
+		});
+	},
+
+	getClosestPathPoint: function (x) {
+		var points = this._points;
+		var closestPoint;
+		var upperIndex = -1;
+
+		var upperPoint = _.find(points, function (value, index) {
+			var match = value.x >= x;
+
+			if (match) {
+				upperIndex = index;
+			}
+
+			return match;
+		});
+
+		if (upperPoint) {
+			if (upperPoint.x === x) {
+				closestPoint = upperPoint;
+			}
+			else if (upperIndex > 0) {
+				// Compare the upper point distance to x with the previous point's distance to x
+				var lowerPoint = points[upperIndex - 1];
+				var upperDelta = Math.abs(upperPoint.x - x);
+				var lowerDelta = Math.abs(lowerPoint.x - x);
+
+				if (upperDelta < lowerDelta) {
+					closestPoint = upperPoint;
+				}
+				else {
+					closestPoint = lowerPoint;
+				}
+			}
+		}
+
+		return closestPoint;
+	},
+
+	getClosestPoint: function (x) {
+		var points = this._seriesPoints;
+		var closestPoint;
+		var upperIndex = -1;
+
+		x = this._reverseXTransform.evaluate(x);
+
+		var upperPoint = _.find(points, function (value, index) {
+			var match = value.x >= x;
+
+			if (match) {
+				upperIndex = index;
+			}
+
+			return match;
+		});
+
+		if (upperPoint) {
+			if (upperPoint.x === x) {
+				closestPoint = upperPoint;
+			}
+			else if (upperIndex > 0) {
+				// Compare the upper point distance to x with the previous point's distance to x
+				var lowerPoint = points[upperIndex - 1];
+				var upperDelta = Math.abs(upperPoint.x - x);
+				var lowerDelta = Math.abs(lowerPoint.x - x);
+
+				if (upperDelta < lowerDelta) {
+					closestPoint = upperPoint;
+				}
+				else {
+					closestPoint = lowerPoint;
+				}
+			}
+		}
+
+		return closestPoint;
+	},
+
+	_getPoints: function () {
+
+		var options = this.options;
+
+		var size = options.size;
+		var minX = options.xRange ? options.xRange[0] : options.minX;
+		var maxX = options.xRange ? options.xRange[1] : options.maxX;
+		var minY = options.yRange ? options.yRange[0] : options.minY;
+		var maxY = options.yRange ? options.yRange[1] : options.maxY;
+
+		var xTransform = new L.LinearFunction([minX, 0], [maxX, size.x]);
+		var yTransform = new L.LinearFunction([minY, 0], [maxY, size.y]);
+
+		this._reverseXTransform = new L.LinearFunction([0, minX], [size.x, maxX]);
+		this._reverseYTransform = new L.LinearFunction([0, minY], [size.y, maxY]);
+
+		var seriesPoint;
+		var x, y;
+		var xField = options.xField || 'x';
+		var yField = options.yField || 'y';
+
+		var points = [];
+
+		var series = options.value;
+
+		this._seriesPoints = [];
+
+		// Need to sort x's numerically before plotting
+		for (var index in series) {
+			if (series.hasOwnProperty(index)) {
+				seriesPoint = series[index];
+
+				x = L.Util.getFieldValue(seriesPoint, xField);
+				y = L.Util.getFieldValue(seriesPoint, yField);
+
+				// If x is a date string, then parse it
+				if (isNaN(x)) {
+					x = moment(x).unix();
+				}
+				else {
+					x = Number(x);
+				}
+
+				this._seriesPoints.push(new L.Point(x, y));
+
+				x = xTransform.evaluate(x);
+				y = yTransform.evaluate(y);
+
+				points.push(new L.Point(this._point.x + options.position.x + x - size.x/2, this._point.y + options.position.y - y));
+			}
+		}
+
+		this._seriesPoints = _.sortBy(this._seriesPoints, function (point) {
+			return point.x;
+		});
+
+		points = _.sortBy(points, function (point) {
+			return point.x;
+		});
+
+		if (options.fill) {
+			var minYCoord = yTransform.evaluate(minY);
+			points.unshift(new L.Point(this._point.x + options.position.x + xTransform.evaluate(minX) - size.x/2, this._point.y + options.position.y - minYCoord));
+			points.push(new L.Point(this._point.x + options.position.x + xTransform.evaluate(maxX) - size.x/2, this._point.y + options.position.y - minYCoord));
+		}
+
+		return points;
+	}
+});
+
+L.Line = L.Path.extend({
+	initialize: function (points, options) {
+		L.Path.prototype.initialize.call(this, options);
+		this._points = points;
+	},
+
+	getPathString: function () {
+		var path = new L.SVGPathBuilder(this._points, null, {
+			closePath: false
+		}).build(6);
+
+		return path;
+	}
+});
+
+/*
+ *
+ */
+L.SparklineMarker = L.ChartMarker.extend({
+	initialize: function (centerLatLng, options) {
+		L.Util.setOptions(this, options);
+
+		L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
+	},
+
+	options: {
+		weight:	1,
+		opacity: 1,
+		dataPointHighlightStyle: {
+			weight: 1.0,
+			opacity: 1.0,
+			color: '#1E90FF',
+			lineCap: 'square',
+			dropShadow: false,
+			dashArray: [5, 2]
+		}
+	},
+
+	_highlight: function (options) {
+		if (options.weight) {
+			options.weight *= 2;
+		}
+
+		return options;
+	},
+
+	_unhighlight: function (options) {
+		if (options.weight) {
+			options.weight /= 2;
+		}
+
+		return options;
+	},
+
+	_bindMouseEvents: function (chartElement) {
+		var self = this;
+		var tooltipOptions = this.options.tooltipOptions;
+
+		chartElement.on('mousemove', function (e) {
+			var currentOptions = this.options;
+			var key = currentOptions.key;
+			var value = currentOptions.value;
+			var layerPoint = e.layerPoint;
+			var x = layerPoint.x - this._point.x;
+			var y = layerPoint.y - this._point.y;
+			var iconSize = currentOptions.iconSize;
+			var newX = x;
+			var newY = y;
+			var newPoint;
+			var offset = 5;
+
+			if (currentOptions.marker) {
+				self.removeLayer(currentOptions.marker);
+			}
+
+			if (currentOptions.lines) {
+				_.each(currentOptions.lines, function (line) {
+					self.removeLayer(line);
+				});
+			}
+
+			var closestPoint = chartElement.getClosestPoint(x + currentOptions.position.x + self.options.size.x / 2);
+			var closestPathPoint = chartElement.getClosestPathPoint(layerPoint.x);
+			var bounds = chartElement.getBounds();
+
+			if (closestPoint) {
+				value = {
+					x: closestPoint.x,
+					y: closestPoint.y
+				};
+
+				newPoint = new L.Point(-offset, iconSize.y + offset);
+
+				var legendOptions = {};
+				var defaultDisplayText = function (value) {
+					return '<div><div><span class="xvalue">' + value.x + '</span><span class="separator">:</span><span class="yvalue">' + value.y + '</span></div></div>';
+				};
+
+				var displayText = currentOptions.displayText ? currentOptions.displayText(value) : defaultDisplayText(value);
+
+				legendOptions[key] = {
+					name: currentOptions.displayName,
+					value: displayText
+				};
+
+				var icon = new L.LegendIcon(legendOptions, currentOptions, {
+					className: 'leaflet-div-icon',
+					iconSize: tooltipOptions ? tooltipOptions.iconSize : iconSize,
+					iconAnchor: newPoint
+				});
+
+				var latlng = self._map.layerPointToLatLng(closestPathPoint);
+
+				currentOptions.marker = new L.Marker(latlng, {
+					icon: icon
+				});
+
+				currentOptions.lines = [
+					new L.Line([new L.Point(closestPathPoint.x, chartElement._point.y), new L.Point(closestPathPoint.x, closestPathPoint.y)], self.options.dataPointHighlightStyle),
+					new L.Line([new L.Point(closestPathPoint.x, closestPathPoint.y), new L.Point(chartElement._point.x + currentOptions.position.x - self.options.size.x / 2, closestPathPoint.y)], self.options.dataPointHighlightStyle)
+				];
+
+				self.addLayer(currentOptions.marker);
+
+				_.each(currentOptions.lines, function (line) {
+					self.addLayer(line);
+				});
+			}
+		});
+
+		chartElement.on('mouseover', function (e) {
+			var currentOptions = this.options;
+
+			currentOptions = self._highlight(currentOptions);
+
+			this.initialize(self._latlng, currentOptions);
+			this.redraw();
+			this.setStyle(currentOptions);
+		});
+
+		chartElement.on('mouseout', function (e) {
+			var currentOptions = this.options;
+
+			currentOptions = self._unhighlight(currentOptions);
+
+			this.initialize(self._latlng, currentOptions);
+			this.redraw();
+			this.setStyle(currentOptions);
+
+			if (currentOptions.lines) {
+				_.each(currentOptions.lines, function (line) {
+					self.removeLayer(line);
+				});
+			}
+
+			self.removeLayer(currentOptions.marker);
+		});
+	},
+
+	_loadComponents: function () {
+		var chartOptions = this.options.chartOptions;
+		var data = this.options.data;
+		var series;
+		var size = this.options.size;
+		var chartOption;
+
+		// Series is an array or object of arrays of points
+		for (var key in data) {
+			if (data.hasOwnProperty(key)) {
+				series = data[key];
+				chartOption = chartOptions[key];
+				
+				chartOption = L.Util.extend({}, this.options, chartOption);
+
+				chartOption.xField = "0";
+				chartOption.yField = "1";
+				chartOption.key = key;
+				chartOption.value = series;
+
+				var seriesLayer = new L.SeriesMarker(this._latlng, chartOption);
+
+				this._bindMouseEvents(seriesLayer);
+
+				this.addLayer(seriesLayer);
+			}
+		}
+	}
+});
+
+/*
+ *
+ */
+L.SparklineDataLayer = L.ChartDataLayer.extend({
+	initialize: function (data, options) {
+		L.ChartDataLayer.prototype.initialize.call(this, data, options);
+	},
+
+	_preProcessRecords: function (records) {
+		var record;
+		var series;
+		var xRange = [Number.MAX_VALUE, Number.MIN_VALUE];
+		var yRange = [Number.MAX_VALUE, Number.MIN_VALUE];
+		var xValues = {};
+		var seriesObjects = [];
+		var xField = this.options.xField || 'x';
+		var yField = this.options.yField || 'y';
+		var seriesField = this.options.seriesField;
+		var includeFunction = this.options.filter || this.options.includeLayer;
+		var key;
+		var seriesPoint;
+		var points = {};
+		var pointIndex;
+		var index;
+		
+		for (index in records) {
+			if (records.hasOwnProperty(index)) {
+
+				record = records[index];
+
+				var includeLayer = includeFunction ? includeFunction.call(this, record) : true;
+
+				if (includeLayer) {
+					
+					// If there's a seriesField option specified, then navigate to the property specified by the seriesField
+					if (seriesField) {
+					
+						// Get the seriesField property
+						series = L.Util.getFieldValue(record, seriesField);
+						
+						// If the seriesField is an object then break it into pairs
+						// [[1, 2], [2, 3], ... [9, 10]]
+						if (_.isObject(series)) {
+							series = _.pairs(series);
+						}
+
+						// Iterate through keys in chartOptions
+						for (key in this.options.chartOptions) {
+							
+							points = {};
+							var chartOptions = this.options.chartOptions[key];
+							
+							// Need to sort x's numerically before plotting
+							for (pointIndex in series) {
+								if (series.hasOwnProperty(pointIndex)) {
+									seriesPoint = series[pointIndex];
+
+									x = L.Util.getFieldValue(seriesPoint, chartOptions.xField || xField);
+									y = L.Util.getFieldValue(seriesPoint, chartOptions.yField || yField);
+								
+									// If x is a date string, then parse it
+									if (isNaN(x)) {
+										x = moment(x).unix();
+									}
+
+									x = Number(x);
+
+									xValues[x] = x;
+									xRange[0] = Math.min(xRange[0], x);
+									xRange[1] = Math.max(xRange[1], x);
+									yRange[0] = Math.min(yRange[0], y);
+									yRange[1] = Math.max(yRange[1], y);
+
+									points[x] = y;
+								}
+							}
+
+							seriesObjects[index] = seriesObjects[index] || record;
+							
+							// Add the key and points to the record.
+							// TODO:  make sure this doesn't overwrite existing record properties
+							L.Util.setFieldValue(seriesObjects[index], key, points);
+						}
+					}
+					else {
+						// Iterate through the keys in chartOptions
+						for (key in this.options.chartOptions) {
+							
+							// Get the key property from the record
+							series = L.Util.getFieldValue(record, key);
+							
+							if (_.isObject(series)) {
+								series = _.pairs(series);
+							}
+
+							points = {};
+							var chartOption = this.options.chartOptions[key];
+							
+							// Need to sort x's numerically before plotting
+							for (pointIndex in series) {
+								if (series.hasOwnProperty(pointIndex)) {
+									seriesPoint = series[pointIndex];
+
+									x = L.Util.getFieldValue(seriesPoint, chartOption.xField || xField);
+									y = L.Util.getFieldValue(seriesPoint, chartOption.yField || yField);
+
+									// TODO:  This may be unnecessary, since it's handled
+									// by the lines above
+									if (seriesPoint.x) {
+										x = seriesPoint.x;
+										y = seriesPoint.y;
+									}
+									else if (_.isArray(seriesPoint)) {
+										x = seriesPoint[0];
+										y = seriesPoint[1];
+									}
+									else {
+										x = index;
+										y = seriesPoint;
+									}
+
+									// If x is a date string, then parse it
+									if (isNaN(x)) {
+										x = moment(x).unix();
+									}
+
+									x = Number(x);
+
+									xValues[x] = x;
+									xRange[0] = Math.min(xRange[0], x);
+									xRange[1] = Math.max(xRange[1], x);
+									yRange[0] = Math.min(yRange[0], y);
+									yRange[1] = Math.max(yRange[1], y);
+
+									points[x] = y;
+								}
+							}
+
+							seriesObjects[index] = seriesObjects[index] || record;
+
+							L.Util.setFieldValue(seriesObjects[index], key, points);
+						}
+					}
+				}
+			}
+		}
+
+		xValues = _.sortBy(_.keys(xValues), function (value) {
+			return value;
+		});
+
+		for (index in seriesObjects) {
+
+			var seriesObject = seriesObjects[index];
+
+			for (key in this.options.chartOptions) {
+
+				var seriesData = L.Util.getFieldValue(seriesObject, key);
+
+				for (var j = 0; j < xValues.length; ++j) {
+					var x = xValues[j];
+
+					if (!(x in seriesData)) {
+						seriesData[x] = 0;
+					}
+				}
+
+				L.Util.setFieldValue(seriesObjects[index], key, _.chain(seriesData).pairs().sortBy(function(value) {
+					return value;
+				}).value());
+
+			}
+
+		}
+
+		this.options.layerOptions.minX = xRange[0];
+		this.options.layerOptions.maxX = xRange[1];
+		this.options.layerOptions.minY = Math.min(0, yRange[0]);
+		this.options.layerOptions.maxY = yRange[1];
+		this.options.xField = "0";
+		this.options.yField = "1";
+
+		return seriesObjects;
+	},
+
+	_getMarker: function (latLng, options) {
+		return new L.SparklineMarker(latLng, options);
+	}
+});
+
+L.sparklineDataLayer = function (data, options) {
+	return new L.SparklineDataLayer(data, options);
+};
+
+/*
+ *
+ */
+L.WordCloudMarker = L.ChartMarker.extend({
+	initialize: function (centerLatLng, options) {
+		L.Util.setOptions(this, options);
+
+		L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
+	},
+
+	options: {
+
+	},
+
+	_loadComponents: function () {
+		// Add an L.DivIcon for each term, sized by count, and colored by count or by word
+	}
+});
+
+L.wordCloudMarker = function (centerLatLng, options) {
+	return new L.WordCloudMarker(centerLatLng, options);
+};
+
+/*
+ *
+ */
+L.WordCloudDataLayer = L.ChartDataLayer.extend({
+	initialize: function (data, options) {
+		L.ChartDataLayer.prototype.initialize.call(this, data, options);
+	},
+
+	_preProcessRecords: function (records) {
+		// If coloring by word, grab the set of all unique words and map colors to those words
+		return records;
+	},
+
+	_getMarker: function (latLng, options) {
+		return new L.WordCloudMarker(latLng, options);
+	}
+});
+
+L.wordCloudDataLayer = function (data, options) {
+	return new L.WordCloudDataDataLayer(data, options);
+};
+
+/*
+ * A DataLayer for visualizing data as a graph of edges, where the vertices are locations
+ */
+var getArrow = function (latlng, angle, options) {
+    angle = L.LatLng.RAD_TO_DEG * angle;
+    options = options || {};
+
+    var numberOfSides = options.numberOfSides || 3;
+    var radius = options.radius || 6;
+
+    var startRotation = 180 / numberOfSides;
+
+    var offsets = {
+        se: startRotation + angle,
+        sw: 180 + startRotation - angle,
+        nw: 180 + startRotation + angle,
+        ne: startRotation - angle
+    };
+
+    var rotation = offsets.se;
+
+    var arrow = new L.RegularPolygonMarker(latlng, {
+        numberOfSides: numberOfSides,
+        rotation: rotation,
+        fillColor: options.fillColor,
+        color: options.color,
+        gradient: options.gradient,
+        weight: options.weight,
+        opacity: options.opacity,
+        fillOpacity: options.fillOpacity,
+        radius: radius,
+        lineCap: 'butt',
+        lineJoin: 'miter'
+    });
+
+    return arrow;
+};
+
+L.Graph = L.DataLayer.extend({
+	statics: {
+		EDGESTYLE: {
+			STRAIGHT: function (latlng1, latlng2) {
+				return new L.Polyline([latlng1, latlng2]);
+			},
+			ARC: function (latlng1, latlng2) {
+				return new L.ArcedPolyline([latlng1, latlng2]);
+			}
+		}
+	}
+});
+
+L.Graph = L.Graph.extend({
+	options: {
+		getEdge: L.Graph.EDGESTYLE.STRAIGHT
+	},
+	_getLayer: function (location, layerOptions, record) {
+		location.location.setStyle(layerOptions);
+		return location.location;
+	},
+	_getLocation: function (record, index) {
+		var fromField = this.options.fromField;
+		var toField = this.options.toField;
+		var location;
+
+		var fromValue = L.Util.getFieldValue(record, fromField);
+		var toValue = L.Util.getFieldValue(record, toField);
+
+		var fromLocation = this.options.locationMode.call(this, fromValue, fromValue);
+		var toLocation = this.options.locationMode.call(this, toValue, toValue);
+
+		// Get from location
+		// Get to location
+		// Create a line (arced or straight) connecting the two locations
+		if (fromLocation && toLocation) {
+			var latlng1 = fromLocation.center;
+			var latlng2 = toLocation.center;
+
+			if (latlng1 && latlng2) {
+				var line = this.options.getEdge.call(this, latlng1, latlng2);
+				var bounds = new L.LatLngBounds(new L.LatLng(Math.min(latlng1.lat, latlng2.lat), Math.min(latlng1.lng, latlng2.lng)), new L.LatLng(Math.max(latlng1.lat, latlng2.lat), Math.max(latlng1.lng, latlng2.lng)));
+
+				location = {
+					center: bounds.getCenter(),
+					location: line,
+					text: fromValue + ' - ' + toValue
+				};
+			}
+		}
+
+		return location;
+	}
+});
+
+/*
+ * Incomplete.  A WORK IN PROGRESS
+ * Needs two points with associated weights and the next point with weight in order to determine the join angles.  May need to
+ * include angles as well...
+ */
+L.WeightedLineSegment = L.Polyline.extend({
+	initialize: function (weightedPoint1, weightedPoint2, options) {
+		L.Polyline.prototype.initialize.call(this, options);
+
+		L.Util.setOptions(this, options);
+
+		this._weightedPoint1 = weightedPoint1;
+		this._weightedPoint2 = weightedPoint2;
+		this._latlngs = [];
+	},
+
+    options: {
+        polygon: true
+    },
+
+	getLatLngs: function () {
+		var points1 = this._weightedPointToPoint(this._weightedPoint1);
+		var points2 = this._weightedPointToPoint(this._weightedPoint2);
+		
+		var midPoint1 = points1[1];
+		var midPoint2 = points2[1];
+		
+		return [this._map.layerPointToLatLng(midPoint1), this._map.layerPointToLatLng(midPoint2)];
+	},
+	
+	projectLatlngs: function () {
+		this._points = this._getPoints();
+		
+		if ((typeof this.options.fill !== 'undefined' && this.options.fill && this.options.gradient) || (this.options.stroke && !this.options.fill && this.options.gradient)) {
+			this._setGradient();
+		}
+	},
+
+	_setGradient: function () {
+		var p1 = this._points[1];
+		var p2 = this._points[4];
+
+		var deltaX = p2.x - p1.x;
+		var deltaY = p2.y - p1.y;
+		var vector;
+
+        this.options.gradientUnits = this.options.gradientUnits || 'objectBoundingBox';
+
+		if (deltaX !== 0 || deltaY !== 0) {
+            if (this.options.gradientUnits === 'objectBoundingBox') {
+                var angle = Math.atan(deltaY / deltaX);
+                var directionX = deltaX / Math.abs(deltaX);
+                var directionY = deltaY / Math.abs(deltaY);
+
+                p1 = new L.Point(50 + 50 * Math.cos(angle + Math.PI), 50 + 50 * Math.sin(angle + Math.PI));
+                p2 = new L.Point(50 + 50 * Math.cos(angle), 50 + 50 * Math.sin(angle));
+
+                if (directionX < 0) {
+                    var temp = p1;
+                    p1 = p2;
+                    p2 = temp;
+                }
+                vector = [[p1.x.toFixed(2) + '%', p1.y.toFixed(2) + '%'], [p2.x.toFixed(2) + '%', p2.y.toFixed(2) + '%']];
+            }
+            else {
+                vector = [[p1.x.toFixed(2), p1.y.toFixed(2)], [p2.x.toFixed(2), p2.y.toFixed(2)]];
+            }
+			var color1 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint1.lineWeight) : (this._weightedPoint1.fillColor || this._weightedPoint1.color);
+			var color2 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint2.lineWeight) : (this._weightedPoint2.fillColor || this._weightedPoint2.color);
+			var opacity1 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint1.lineWeight) : 1;
+			var opacity2 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint2.lineWeight) : 1;
+
+			this.options.gradient = {
+				vector: vector,
+				stops: [
+					{
+						offset: '0%',
+						style: {
+							color: color1,
+							opacity: opacity1
+						}
+					},
+					{
+						offset: '100%',
+						style: {
+							color: color2,
+							opacity: opacity2
+						}
+					}
+				]
+			};
+
+			this.setStyle(this.options);
+		}
+	},
+
+	_weightedPointToPoint: function (weightedPoint) {
+		var points = [];
+		
+		this._latlngs.push(weightedPoint.latlng);
+		
+		var point1 = this._map.latLngToLayerPoint(weightedPoint.latlng);
+
+		var weight = weightedPoint.lineWeight/2;
+		var angle1 = weightedPoint.angle;
+		var angle2 = angle1 + Math.PI;
+		var coord1 = new L.Point(point1.x + Math.cos(angle1) * weight, point1.y + Math.sin(angle1) * weight);
+		var coord2 = new L.Point(point1.x + Math.cos(angle2) * weight, point1.y + Math.sin(angle2) * weight);
+		
+		points = [coord1, point1, coord2];
+		
+		return points;
+	},
+
+	_getPoints: function () {
+		var points = [];
+		var points1 = this._weightedPointToPoint(this._weightedPoint1);
+		var points2 = this._weightedPointToPoint(this._weightedPoint2);
+
+        if (this.options.polygon) {
+            var line0 = new L.LinearFunction(points1[0], points2[0]);
+            var line1 = new L.LinearFunction(points1[1], points2[1]);
+            var line2 = new L.LinearFunction(points1[2], points2[2]);
+
+		    // TODO:  Make this an angled or curved polygon if the angle difference is greater than some value
+		    // Interpolate the weight and get the mid point angle
+            var intersectionPoint = line2.getIntersectionPoint(line0);
+            var bounds = new L.Bounds([].concat(points1, points2));
+
+            if (intersectionPoint) {
+                if (!bounds.contains(intersectionPoint)) {
+                    points2 = points2.reverse();
+                }
+            }
+            else if (line0._slope === line2._slope) {
+                points2 = points2.reverse();
+            }
+
+            line0 = null;
+            line1 = null;
+            line2 = null;
+            intersectionPoint = null;
+        }
+
+		points = points.concat(points1, points2);
+
+		this._originalPoints = points;
+
+		return points;
+	},
+
+	getBounds: function () {
+		var bounds = new L.LatLngBounds();
+		var point;
+		
+		for (var i = 0; i < this._latlngs.length; ++i) {
+			bounds.extend(this._latlngs[i]);		
+		}
+		
+		return bounds;
+	},
+	
+	getPathString: function () {
+        var closePath = this.options.polygon;
+        var points = this._points;
+
+        if (!this.options.polygon) {
+            points = [points[1], points[4]];
+        }
+
+		return new L.SVGPathBuilder(points, [], {
+            closePath: closePath
+        }).build(6);
+	}
+});
+
+L.WeightedLineSegment.include(LineTextFunctions);
+
+/*
+ * 
+ */
+L.WeightedFlowLine = L.FlowLine.extend({
+	initialize: function (data, options) {
+		L.Util.setOptions(this, options);
+		L.FlowLine.prototype.initialize.call(this, data, options);
+		this._loaded = false;
+	},
+	
+	_getAngle: function (p1, p2) {
+		var point1 = this._map.latLngToLayerPoint(p1);
+		var point2 = this._map.latLngToLayerPoint(p2);
+		var deltaX = point2.x - point1.x;
+		var deltaY = point2.y - point1.y;
+		var angleRadians = Math.atan(deltaY/deltaX);
+
+		return angleRadians;
+	},
+
+	_getAngles: function (p1, p2) {
+		var angleRadians = this._getAngle(p1, p2);
+		
+		if (isNaN(angleRadians)) {
+			angleRadians = 0; //Math.PI/2;
+		}
+		
+		var angle1 = angleRadians + Math.PI/2;
+		var angle2 = angle1 + Math.PI;
+
+		return [angle1, angle2];
+	},
+
+	onAdd: function (map) {
+		L.FlowLine.prototype.onAdd.call(this, map);
+		
+		if (this._data && !this._loaded) {
+			this._loadRecords(this._data);
+		}
+	},
+	
+	_addLineSegment: function (p1, p2, angles, records, keys, index) {
+		var angleValues = this._getAngles(p1, p2);
+		
+		var options1 = this._getDynamicOptions(records[keys[index - 1]]);
+		var options2 = this._getDynamicOptions(records[keys[index]]);
+		
+		angles.push(L.extend({
+			latlng: p1,
+			angle: (angleValues[0] + angles[angles.length - 1].angle)/2
+		}, options2.layerOptions));
+
+		var line = new L.WeightedLineSegment(angles[0], angles[1], options2.layerOptions);
+		this.addLayer(line);
+
+		if (this.options.showLegendTooltips) {
+			this._bindMouseEvents(line, options2.layerOptions, options2.legendDetails);
+		}
+		
+		this.onEachSegment(records[keys[index - 1]], records[keys[index]], line);
+		
+		return angles;
+	},
+	
+	_loadRecords: function (records) {
+		if (this._map) {
+			var angles = [];
+			var keys = Object.keys(records);
+			
+			if (keys.length > 0) {
+				
+				keys = keys.length === 1 ? keys.push(keys[0]) : keys;
+				
+				var p1 = this._getLocation(records[keys[0]], keys[0]).center;
+				var p2 = this._getLocation(records[keys[1]], keys[1]).center;
+				var angleValues = this._getAngles(p1, p2);
+				var options = this._getDynamicOptions(records[keys[0]]);
+				
+				if (angleValues.length > 0) {
+					
+					angles.push(L.extend({
+						latlng: p1,
+						angle: angleValues[0]
+					}, options.layerOptions));
+					
+					for (var i = 1; i < keys.length - 1; ++i) {
+						p1 = p2;
+						p2 = this._getLocation(records[keys[i + 1]], keys[i + 1]).center;
+		
+						angles = this._addLineSegment(p1, p2, angles, records, keys, i);
+						angles = angles.slice(1);
+					}
+		
+					p1 = p2;
+					p2 = this._getLocation(records[keys[keys.length - 1]]).center;
+		
+					this._addLineSegment(p1, p2, angles, records, keys, keys.length - 1);
+				}
+				
+				this._loaded = true;
+			}
+		}
+	}
+});
+
+/*
+ * Incomplete - A WORK IN PROGRESS - NOTE:  This is now obsolete - replaced by the L.WeightedFlowLine class
+ * Takes a set of weighted points as input.  Iterates through those points, creating WeightedLineSegment
+ * objects.
+ */
+L.WeightedPolyline = L.FeatureGroup.extend({
+	initialize: function (latlngs, options) {
+		L.FeatureGroup.prototype.initialize.call(this, options);
+		L.Util.setOptions(this, options);
+		this._latlngs = latlngs;
+	},
+
+	onAdd: function (map) {
+		L.LayerGroup.prototype.onAdd.call(this, map);
+		this._loadComponents();
+	},
+
+	getBounds: function () {
+		var bounds = new L.LatLngBounds();
+
+		this.eachLayer(function (layer) {
+			bounds.extend(layer.getBounds ? layer.getBounds() : layer.getLatLng());
+		});
+
+		return bounds;
+	},
+	
+	setLatLngs: function (latlngs) {
+		this._latlngs = latlngs;
+		this._loadComponents();
+		this.redraw();
+	},
+
+	getLatLngs: function () {
+		return this._latlngs;
+	},
+
+	options: {
+		weightToColor: new L.HSLHueFunction([0, 120], [20, -30])
+	},
+
+	_getAngle: function (p1, p2) {
+		var point1 = this._map.latLngToLayerPoint(p1);
+		var point2 = this._map.latLngToLayerPoint(p2);
+		var deltaX = point2.x - point1.x;
+		var deltaY = point2.y - point1.y;
+		var angleRadians = Math.atan(deltaY/deltaX);
+
+		return angleRadians;
+	},
+
+	_getAngles: function (p1, p2) {
+		var angleRadians = this._getAngle(p1, p2);
+		
+		if (isNaN(angleRadians)) {
+			angleRadians = 0; //Math.PI/2;
+		}
+		
+		var angle1 = angleRadians + Math.PI/2;
+		var angle2 = angle1 + Math.PI;
+
+		return [angle1, angle2];
+	},
+
+	// TODO:  Move some of these calculations to the WeightedLineSegment class - specifically angle calculation
+	_loadComponents: function () {
+		var angles = [];
+		var p1 = this._latlngs[0];
+		var p2 = this._latlngs[1];
+		var angleValues = this._getAngles(p1, p2);
+
+		if (angleValues.length > 0) {
+			angles.push({
+				latlng: p1,
+				angle: angleValues[0],
+				lineWeight: p1.weight
+			});
+
+			for (var i = 1; i < this._latlngs.length - 1; ++i) {
+				p1 = this._latlngs[i];
+				p2 = this._latlngs[i + 1];
+
+				// LatLngs to layer coords
+				angleValues = this._getAngles(p1, p2);
+
+				angles.push({
+					latlng: p1,
+					angle: angleValues[0],
+					lineWeight: p1.weight
+				});
+
+				this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));
+
+				angles = angles.slice(1);
+			}
+
+			p1 = L.extend({}, p2);
+			p2 = this._latlngs[this._latlngs.length - 1];
+
+			angles.push({
+				latlng: p1,
+				angle: angles[0].angle,
+				lineWeight: p2.weight
+			});
+			
+			this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));
+		}
+	}
+});
+
+L.weightedPolyline = function (latlngs, options) {
+	return new L.WeightedPolyline(latlngs, options);
+};
+
+/*
+ * Incomplete - A WORK IN PROGRESS
+ * Takes an array of of values (degrees for each slice), an array of fillColors (color for each level of the stack), and an array for each one of the options.data (must have the same length for each)
+ */
+L.StackedPieChartMarker = L.ChartMarker.extend({
+    initialize: function(centerLatLng, options) {
+        L.Util.setOptions(this, options);
+        L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
+    },
+
+    options: {
+        weight: 1,
+        opacity: 1,
+        color: "#000",
+        fill: true,
+        radius: 10,
+        rotation: 0,
+        numberOfSides: 50,
+        mouseOverExaggeration: 1.2,
+        maxDegrees: 360,
+        iconSize: new L.Point(50, 40)
+    },
+
+    _loadComponents: function() {
+        var value;
+        var allValueMax = 0;
+        var scale = 1;
+        var sum = 0;
+        var angle = 0;
+        var percentage = 0;
+        var radius = this.options.radius;
+        var barThickness = this.options.barThickness;
+        var maxDegrees = this.options.maxDegrees || 360;
+        var lastAngle = 0;//this.options.rotation;
+        var bar;
+        var options = this.options;
+        var dataPoint;
+        var data = this.options.data;
+        var chartOptions = this.options.chartOptions;
+        var chartOption;
+        var key;
+        var getValue = function(data, key) {
+            var value = 0;
+            if (data[key]) {
+                value = parseFloat(data[key]);
+            }
+            return value;
+        };
+        var i;
+        var j = 0;
+        var dataValueSum = [];
+        var dataScale = [];
+        var valueSum;
+        
+        for (key in data) {
+            value = getValue(data, key);
+            //sum += value;
+            valueSum = 0;
+            for(i = 0; i < data[key].length; ++i){
+        		value = parseFloat(data[key][i]);
+        		valueSum += value;
+        	}
+        	dataValueSum.push(valueSum);
+        	dataScale.push(options.barThickness / valueSum);
+        	allValueMax = (allValueMax > valueSum) ? allValueMax : valueSum;
+            sum += options.values[j];
+            ++j;
+        }
+        scale = options.barThickness / allValueMax;
+        if (sum > 0) {
+            circle = new L.CircleMarker(this._latlng, {
+            	color: options.color, 
+            	radius: barThickness, 
+            	fillColor: options.fillColor, 
+            	fill:true, 
+            	iconSize: new L.Point(50, 40)
+            });
+			this._bindMouseEvents(circle);
+			this.addLayer(circle);
+
+        	j = 0;
+            for (key in data) {
+            	valueSum = 0.0;
+                percentage = options.values[j]/sum;
+                angle = percentage * maxDegrees;
+                options.startAngle = lastAngle;
+                options.endAngle = lastAngle + angle;
+            	for(i = 0; i < data[key].length; ++i){
+            		value = parseFloat(data[key][i]);
+            		
+            		valueSum += value;
+            		options.radius = valueSum * dataScale[j];
+            		options.barThickness = value * dataScale[j];
+
+	                chartOption = chartOptions[key];
+	                options.fillColor = this.options.fillColors[i];
+	                if(options.fillColor == 'transparent')
+	                	options.fillOpacity = 0.0;
+	                else
+	                	options.fillOpacity = 1.0;
+	                options.color = chartOption.color || "#000";
+	                options.radiusX = options.radius;
+	                options.radiusY = options.radius;
+	                options.rotation = 0;
+	                options.key = key + ' ' + i;
+	                options.value = value;
+	                options.displayName = chartOption.displayName;
+	                options.displayText = chartOption.displayText;
+	                bar = new L.RadialBarMarker(this._latlng, options);
+	                this._bindMouseEvents(bar);
+	                this.addLayer(bar);
+            	}
+                lastAngle = options.endAngle;
+                j++;
+            }
+            
+            var displayText = function(v){ return parseInt(100*v)+"%";};
+            
+            for(i = 0.2; i < 1.0; i+=0.2){
+	            circle = new L.CircleMarker(this._latlng, {
+	            	value: i,
+	            	color: options.color,
+	            	radius: barThickness*i,
+	            	weight: 1,
+	            	dashArray: [5,5],
+	            	fill:false,
+	            	iconSize: new L.Point(50, 40),
+	            	displayName: "percent",
+	            	displayText: displayText
+	            });
+				this._bindMouseEvents(circle);
+				this.addLayer(circle);
+			}
+        }
+    }
+});
+
+L.stackedPieChartMarker = function(centerLatLng, options) {
+    return new L.StackedPieChartMarker(centerLatLng, options);
+};
+
+/**
+ *
+ */
+L.LayeredRegularPolygonMarker = L.MarkerGroup.extend({
+	options: {
+		levels: 2,
+		numberOfSides: 50
+	},
+	
+	setStyle: function (options) {
+		// TODO:  Implement this
+		options.levels = options.levels || 2;
+		var markers = [];
+		var radiusX = options.radiusX || options.radius;
+		var radiusY = options.radiusY || options.radius;
+		var radiusXOffset = radiusX / (0.75 * options.levels);
+		var radiusYOffset = radiusY / (0.75 * options.levels);
+		var markerOptions = L.extend({}, options);
+		
+		radiusX = radiusX + (options.levels - 1) * radiusXOffset;
+		radiusY = radiusY + (options.levels - 1) * radiusYOffset;
+		
+		var fillOpacity = options.fillOpacity || 0.5;
+		var fillOpacityOffset = options.fillOpacity / (1.5 * options.levels);
+		
+		fillOpacity = fillOpacity - options.levels * fillOpacityOffset;
+		
+		for (var i = 0; i < options.levels; ++i) {
+			markerOptions.radius = 0;
+			markerOptions.radiusX = radiusX;
+			markerOptions.radiusY = radiusY;
+			markerOptions.fillOpacity = fillOpacity;
+			
+			this._markers[i].setStyle(markerOptions);
+			
+			radiusX -= radiusXOffset;
+			radiusY -= radiusYOffset;
+			fillOpacity += fillOpacityOffset;
+		}
+		
+		return this;
+	},
+	
+	initialize: function (latlng, options) {
+		L.Util.setOptions(this, options);
+		
+		options.levels = options.levels || 2;
+		var markers = [];
+		var radiusX = options.radiusX || options.radius;
+		var radiusY = options.radiusY || options.radius;
+		var radiusXOffset = radiusX / (0.75 * options.levels);
+		var radiusYOffset = radiusY / (0.75 * options.levels);
+		var markerOptions = L.extend({}, options);
+		
+		radiusX = radiusX + (options.levels - 1) * radiusXOffset;
+		radiusY = radiusY + (options.levels - 1) * radiusYOffset;
+		
+		var fillOpacity = options.fillOpacity || 0.5;
+		var fillOpacityOffset = options.fillOpacity / (1.5 * options.levels);
+		
+		fillOpacity = fillOpacity - options.levels * fillOpacityOffset;
+		
+		for (var i = 0; i < options.levels; ++i) {
+			markerOptions.radius = 0;
+			markerOptions.radiusX = radiusX;
+			markerOptions.radiusY = radiusY;
+			markerOptions.fillOpacity = fillOpacity;
+			
+			markers.push(new L.RegularPolygonMarker(latlng, markerOptions));
+			
+			radiusX -= radiusXOffset;
+			radiusY -= radiusYOffset;
+			fillOpacity += fillOpacityOffset;
+		}
+		
+		this._markers = markers;
+		
+		L.MarkerGroup.prototype.initialize.call(this, latlng, markers);
+	}
+});
+
+/*
+This is quick example for creating a layer that shows Mapillary photos (definitely a work in progress).
+PanoramioLayer and this class should both be refactored to inherit from a PhotoLayer base layer w/ common methods
+ */
+L.MapillaryLayer = L.PanoramioLayer.extend({
+    options: {
+        recordsField: null,
+        locationMode: L.LocationModes.LATLNG,
+        latitudeField: 'lat',
+        longitudeField: 'lon',
+        onEachRecord: function (layer, record) {
+            var photoUrl = record.map_image_versions[1].url;
+            var title = record.location;
+            var me = this;
+            var width = 640;
+            var height = 640;
+            var offset = 20000;
+
+            layer.on('click', function (e) {
+                var container = document.createElement('div');
+                var content = L.DomUtil.create('div', '', container);
+
+                L.DomUtil.addClass(content, 'panoramio-content');
+
+                var photo = L.DomUtil.create('img', 'photo', content);
+                photo.setAttribute('onload', 'this.style.opacity=1;');
+                photo.setAttribute('src', photoUrl);
+                photo.style.width = width + 'px';
+
+                var photoInfo = L.DomUtil.create('div', 'photo-info', content);
+                photoInfo.style.width = (width - 20) + 'px';
+                photoInfo.innerHTML = '<span>' + title + '</span>' +
+                '<a class="photo-link" target="_blank" href="' + photoUrl + '">' +
+                '<img src="https://upload.wikimedia.org/wikipedia/commons/a/a8/Mapillary_logo.png" style="height: 14px;"/>' +
+                '</a>';
+
+
+                var icon = new L.DivIcon({
+                    className: 'photo-details',
+                    html: container.innerHTML,
+                    iconAnchor: [width/2, height/2]
+                });
+
+                var marker = new L.Marker(e.target._latlng, {
+                    icon: icon,
+                    zIndexOffset: offset
+                });
+
+                marker.on('click', function (e) {
+                    me.removeLayer(e.target);
+                });
+
+                layer.viewedImage = marker;
+                me.viewedImage = marker;
+
+                me.addLayer(marker);
+            });
+
+            if (this.options.onEachPhoto) {
+                this.options.onEachPhoto.call(this, layer, record);
+            }
+
+        },
+        setIcon: function (record, options) {
+            var title = record.location;
+            var iconSize = new L.Point(40, 40);
+            var photoUrl = record.map_image_versions[0].url;
+            var icon = new L.DivIcon({
+                iconSize: iconSize,
+                className: '',
+                html: '<img class="photo" onload="this.style.opacity=1" title="' + title + '" src="' + photoUrl + '"/>'
+            });
+
+            return icon;
+        }
+    },
+    requestPhotos: function () {
+
+        var me = this;
+        var bounds = this._map.getBounds();
+        var southWest = bounds.getSouthWest();
+        var northEast = bounds.getNorthEast();
+
+        while (me._calls.length > 0) {
+            me._calls.pop().abort();
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange  = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var data = JSON.parse(xhr.responseText);
+
+                me._count = data.length;
+
+                me.fire('photosAvailable', data);
+                me.clearLayers();
+                me.addData(data);
+            }
+        };
+        xhr.open('GET', 'http://api.mapillary.com/v1/im/search?min-lat=' + southWest.lat + '&max-lat=' + northEast.lat + '&min-lon=' + southWest.lng + '&max-lon=' + northEast.lng + '&max-results=50', true);
+        xhr.send(null);
+
+        me._calls.push(xhr);
+    }
+});
+
+

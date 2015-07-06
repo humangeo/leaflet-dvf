@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Examples - Earthquakes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+      .mag-value {
+		  vertical-align: middle;
+		  text-align: center;
+		  line-height: 10px;
+		  color: rgba(0, 0, 0, 0.8);
+	  }
+	  
+	  .leaflet-tile-pane {
+	  	  opacity: 0.3;
+	  }
+	  
+	  #map {
+		  background-color: #090920;
+	  }
+    </style>
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
+</head>
+
+<body>
+	<div class="navbar navbar-inverse">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">Earthquakes</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+    	<div class="row-fluid">
+			<div id="map"></div>
+		</div>
+	</div>
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-42733116-1', 'humangeo.github.io');
+	  ga('send', 'pageview');
+	</script>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
+	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
+	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+	<script type="text/javascript">
+map = null;
+var lastLayer;
+var legendControl;
+
+// JSONP callback function for displaying the latest earthquake data
+var eqfeed_callback = function (data) {
+
+	var breaks = [0, 2, 4, 6, 8, 10];
+	var colors = L.ColorBrewer.Diverging['Spectral'][5].slice(0).reverse();
+	var magnitudeFillColorFunction = new L.ColorClassFunction(breaks, colors, {
+		interpolate: false
+	});
+	
+	var breaks2 = [0, 1, 1.5, 2.6, 3.7, 8, 9.5, 10];
+	var colors2 = L.ColorBrewer.Diverging['RdYlGn'][5].slice(0).reverse();
+	var magnitudeFillColorFunction2 = new L.ColorClassFunction(breaks2, colors2, {
+		interpolate: false
+	});
+
+	magnitudeFillColorFunction2 = new L.CustomColorFunction(0, 10, colors2, {
+		interpolate: false
+	});
+	
+	var now = Math.round((new Date()).getTime());
+	var start = now - 86400000;
+
+	// Initialize a linear function to map earthquake time to opacity
+	var timeOpacityFunction = new L.LinearFunction(new L.Point(start,0.3), new L.Point(now,1));
+
+	var textFunction = function (value) {
+		return {
+			text: value,
+			style: {
+				'font-size': '10px'
+			}
+		};
+	};
+
+	// Setup a new data layer
+	var dataLayer = new L.DataLayer(data,{
+		recordsField: 'features',
+		latitudeField: 'geometry.coordinates.1',
+		longitudeField: 'geometry.coordinates.0',
+		locationMode: L.LocationModes.LATLNG,
+		
+		getMarker: function (latlng, options, record) {
+			return new L.LayeredRegularPolygonMarker(latlng, options);
+		},
+		
+		displayOptions: {
+			'properties.mag': {
+				displayName: 'Magnitude',
+				fillColor: magnitudeFillColorFunction2,
+				//breaks: breaks,
+				text: textFunction
+			},
+			'properties.time': {
+				displayName: 'Time',
+				opacity: timeOpacityFunction,
+				fillOpacity: timeOpacityFunction,
+				displayText: function (value) {
+					return moment.unix(value/1000).format('MM/DD/YY HH:mm');
+				}
+			}
+		},
+		layerOptions: {
+			levels: 3,
+			numberOfSides: 50,
+			radius: 10,
+			weight: 0.3,
+			color: '#000',
+			opacity: 0.2,
+			stroke: true,
+			fillOpacity: 0.8,
+			dropShadow: false,
+			gradient: true
+		},
+		legendOptions: {
+			numSegments: 5
+		},
+		tooltipOptions: {
+			iconSize: new L.Point(90,76),
+			iconAnchor: new L.Point(-4,76)
+		},
+		onEachRecord: function (layer, record, location) {
+			var $html = $(L.HTMLUtils.buildTable(record));
+
+			layer.bindPopup($html.wrap('<div/>').parent().html(),{
+				minWidth: 400,
+				maxWidth: 400
+			});
+		}
+	});
+
+	// Add the data layer to the map
+	map.addLayer(dataLayer);
+
+	lastLayer = dataLayer;
+};
+
+$(document).ready(function() {
+
+	// Function for resizing the map to fill the available space on the screen
+	var resize = function () {
+		var $map = $('#map');
+
+		$map.height($(window).height() - $('div.navbar').outerHeight());
+
+		if (map) {
+			map.invalidateSize();
+		}
+	};
+
+	// Resize the map element on window resize
+	$(window).on('resize', function () {
+		resize();
+	});
+
+	// Resize the map element
+	resize();
+
+	// Initialize the map
+	map = L.map('map').setView([0.0, 0.0], 2);
+
+	var baseLayer = new L.StamenTileLayer('toner', {
+		detectRetina: true
+	});
+
+	baseLayer.addTo(map);
+
+	var prccEarthquakesLayer = L.tileLayer('http://{s}.tiles.mapbox.com/v3/bclc-apec.map-rslgvy56/{z}/{x}/{y}.png', {
+		attribution: 'Map &copy; Pacific Rim Coordination Center (PRCC).  Certain data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
+	});
+
+	// Initialize the legend control and add it to the map
+	var legendControl = new L.Control.Legend();
+
+	legendControl.addTo(map);
+
+	var layerControl = new L.Control.Layers({
+		'Cloudmade': baseLayer,
+		'PRCC Earthquake Risk Zones': prccEarthquakesLayer
+	});
+
+	layerControl.addTo(map);
+
+	// Function for requesting the latest earthquakes from USGS
+	var getData = function () {
+
+		if (lastLayer) {
+			map.removeLayer(lastLayer);
+		}
+
+		$.ajax({
+			url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
+			type: 'GET',
+			dataType: 'jsonp'
+		});
+	};
+
+	// Get the latest earthquake data
+	getData();
+
+	// Periodically request the latest data
+	setInterval(getData,300000);
+});
+
+	</script>
+</body>
+</html>

@@ -94,7 +94,7 @@ L.RegularPolygon = L.Polygon.extend({
 		for (var i = 0; i < this._latlngs.length; ++i) {
 			var latlng = this._latlngs[i];
 			
-			feature.coordinates[0].push([latlng[1], latlng[0]]);
+			feature.geometry.coordinates[0].push([latlng.lng, latlng.lat]);
 		}
 		
 		return feature;

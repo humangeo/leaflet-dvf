@@ -570,9 +570,8 @@ L.CustomColorFunction = L.PiecewiseFunction.extend({
 	},
 	
 	initialize: function (minX, maxX, colors, options) {
+		L.Util.setOptions(this, options);
 
-    L.Util.setOptions(this, options);
-    
 		var range = maxX - minX;
 		var count = this.options.interpolate ? colors.length - 1 : colors.length;
 		var xRange = range/count;
@@ -917,6 +916,14 @@ L.GeometryUtils = {
 	},
 
 	getGeoJSONLocation: function (geoJSON, record, locationTextField, recordToLayer) {
+        var locationTextFunction = function (record) {
+            return L.Util.getFieldValue(record, locationTextField);
+        };
+
+        if (locationTextField && (typeof locationTextField === 'function')) {
+            locationTextFunction = locationTextField;
+        }
+
 		var geoJSONLayer = new L.GeoJSON(geoJSON, {
 			pointToLayer: function (feature, latlng) {
 				var location = {
@@ -2374,6 +2381,17 @@ var TextFunctions = TextFunctions || {
 		if (this.options.text) {
 			this._createText(this.options.text);
 		}
+		
+		if (this.options.wordCloud) {
+			var options = this.options.wordCloud;
+			
+			if (options.words.length > 0) {
+				var me = this;
+				setTimeout(function () {
+					me._createWordCloudPattern(options);
+				}, 0);
+			}
+		}
 	},
 
 	_initText: function () {
@@ -2511,6 +2529,49 @@ var PathFunctions = PathFunctions || {
 		this._container.appendChild(this._defs);
 	},
 
+    _createMarker: function (type, options) {
+        if (!this._defs) {
+            this._createDefs();
+        }
+
+        this._markers = this._markers || {};
+        this._markerPath = this._markerPath || {};
+
+        if (this._markers[type]) {
+            this._defs.removeChild(this._markers[type]);
+        }
+
+        this._markers[type] = this._createElement('marker');
+
+        var markerGuid = L.Util.guid();
+
+        var exaggeration = options.exaggeration || 2;
+        var size = 2 * exaggeration;
+
+        this._markers[type].setAttribute('id', markerGuid);
+        this._markers[type].setAttribute('markerWidth', size);
+        this._markers[type].setAttribute('markerHeight', size);
+        this._markers[type].setAttribute('refX', exaggeration);
+        this._markers[type].setAttribute('refY', exaggeration);
+        this._markers[type].setAttribute('orient', 'auto');
+        this._markers[type].setAttribute('markerUnits', 'strokeWidth');
+
+        this._markerPath[type] = this._createElement('path');
+
+        if (options.reverse) {
+            this._markerPath[type].setAttribute('d', 'M0,' + exaggeration + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + exaggeration);
+        }
+        else {
+            this._markerPath[type].setAttribute('d', 'M' + size + ',' + exaggeration + ' L0,' + size + ' L0,0 L' + size + ',' + exaggeration);
+        }
+
+        this._markerPath[type].setAttribute('style', 'fill: ' + this.options.color + '; opacity: ' + this.options.opacity);
+
+        this._markers[type].appendChild(this._markerPath[type]);
+
+        this._defs.appendChild(this._markers[type]);
+    },
+
 	_createGradient: function (options) {
 		if (!this._defs) {
 			this._createDefs();
@@ -2540,6 +2601,10 @@ var PathFunctions = PathFunctions || {
 			};
 		}
 		gradientOptions.id = "grad" + gradientGuid;
+
+        if (this.options.gradientUnits) {
+            gradient.setAttribute('gradientUnits', this.options.gradientUnits);
+        }
 
 		var stops = options.stops || [
 			{
@@ -2699,6 +2764,127 @@ var PathFunctions = PathFunctions || {
 		
 		return pattern;
 	},
+	
+	_createWordCloudPattern: function (wordCloudOptions) {
+		var patternGuid = ''; //L.Util.guid();
+		var patternOptions = wordCloudOptions.patternOptions = wordCloudOptions.patternOptions || {};
+		
+		if (!this._defs) {
+			this._createDefs();
+		}
+
+        wordCloudOptions.textField = wordCloudOptions.textField || 'key';
+        wordCloudOptions.countField = wordCloudOptions.countField || 'doc_count';
+
+        for (var i = 0; i < wordCloudOptions.words.length; ++i) {
+            var word = wordCloudOptions.words[i];
+
+            patternGuid += word[wordCloudOptions.textField] + "_" + word[wordCloudOptions.countField];
+        }
+
+        if (patternGuid !== this._wordCloudGuid) {
+            this._wordCloudGuid = patternGuid;
+
+            // Hash words to see if we need to create a new word cloud pattern or use the existing one
+            var clonedPath = this._createElement('path');
+            clonedPath.setAttribute('d', this._path.getAttribute('d'));
+            clonedPath.setAttribute('id', patternGuid);
+
+            patternOptions.id = patternGuid;
+            patternOptions.patternUnits = patternOptions.patternUnits || 'userSpaceOnUse'; //'objectBoundingBox';
+            //patternOptions.patternContentUnits = 'userSpaceOnUse';
+
+            var bbox = this.getBounds();
+
+            var bounds = new L.Bounds(this._map.project(bbox.getNorthWest()), this._map.project(bbox.getSouthEast()));
+            var ratio = bounds.getSize().x / bounds.getSize().y;
+
+            patternOptions.width = patternOptions.width || 500;
+            patternOptions.height = patternOptions.height || (500 * ratio) || 500;
+
+            patternOptions.width = Math.min(patternOptions.width, patternOptions.height);
+            patternOptions.height = patternOptions.width;
+            //patternOptions.width = bounds.getSize().x || 500;
+            //patternOptions.height = bounds.getSize().y || 500;
+
+            this._wordCloud = this._createElement('g');
+
+            //this._container.appendChild(this._wordCloud);
+            this._wordPattern = this._createPattern(patternOptions);
+            this._wordPattern.appendChild(this._wordCloud);
+
+            this._defs.appendChild(this._wordPattern);
+
+            this._createWordCloud(this._wordCloud, wordCloudOptions);
+        }
+
+        var existingFill = this._path.getAttribute('fill');
+
+        if (existingFill.indexOf(this._wordCloudGuid) === -1) {
+            this._path.setAttribute('fill', 'url(#' + this._wordCloudGuid + ')');
+        }
+
+	},
+	
+	_createWordCloud: function (element, wordCloudOptions) {
+		//var fragment = document.createDocumentFragment();
+		var width = wordCloudOptions.patternOptions.width;
+		var height = wordCloudOptions.patternOptions.height;
+		var words = wordCloudOptions.words;
+		var anchor = this.getTextAnchor();
+		var rect = this._createElement('rect');
+		var countField = wordCloudOptions.countField;
+        var textField = wordCloudOptions.textField;
+        var rotation = wordCloudOptions.rotation || function(d) { return 0; }; //function(d) { return scale(~~(Math.random() * d[countField])); }
+		rect.setAttribute('width', width);
+		rect.setAttribute('height', height);
+		rect.style.fill = this.options.fillColor || '#000';
+		rect.setAttribute('transform', "translate(" + -width/2 + ',' + -height/2 + ")");
+		element.appendChild(rect);
+		
+		var draw = function (words, element) {
+			return function (words) {
+			  var id = "svg" + L.Util.guid();
+		        d3.select(element)
+		        .attr("transform", "translate(" + width/2 + "," + height/2 + ")")
+		        .selectAll("text")
+		        .data(words)
+		        .enter().append("text")
+		        .style("font-size", function(d) { return d.size + "px"; })
+		        .style("font-family", wordCloudOptions.fontFamily || 'Impact')
+		        .style("fill", function(d, i) { return fill(i); })
+		        .attr("text-anchor", "middle")
+		        .attr("transform", function(d) {
+		          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+		        })
+		        .text(function(d) { return d[textField]; });
+			};
+		  };
+		  
+		var fill = wordCloudOptions.textFillColor || d3.scale.category20();
+		var scale = d3.scale.linear();
+		
+		var max = words[0][countField];
+		var min = words[words.length - 1][countField];
+		
+		var fontSize = wordCloudOptions.fontSize || d3.scale.log().domain([min, max]).range([10, 40]);
+		
+		scale.domain([0, 10]).range([-60, 60]);
+		
+        d3.layout.cloud().size([width, height])
+          .spiral('rectangular')
+          .timeInterval(Infinity)
+          .words(words)
+          .padding(5)
+          .rotate(rotation)
+          .font(wordCloudOptions.fontFamily || 'Impact')
+          .fontSize(function(d) { return fontSize(d[countField]); })
+          .on("end", draw(words, element))
+          .start();
+
+		return element;
+
+	},
 
 	_createShape: function (type, shapeOptions) {
 		if (this._shape) {
@@ -2846,10 +3032,24 @@ var PathFunctions = PathFunctions || {
 			}
 		}
 
+        if (context.options.markers) {
+            for (var key in context.options.markers) {
+                if (context.options.markers.hasOwnProperty(key)) {
+                    context._createMarker(key, context.options.markers[key]);
+                    context._path.setAttribute('marker-' + key, 'url(#' + context._markers[key].getAttribute('id') + ')');
+                }
+            }
+        }
+
 		if (context.options.gradient) {
 			context._createGradient(context.options.gradient);
 
-			context._path.setAttribute('fill', 'url(#' + context._gradient.getAttribute('id') + ')');
+            if (context.options.stroke && !context.options.fill) {
+                context._path.setAttribute('stroke', 'url(#' + context._gradient.getAttribute('id') + ')');
+            }
+            else {
+                context._path.setAttribute('fill', 'url(#' + context._gradient.getAttribute('id') + ')');
+            }
 		}
 		else if (!context.options.fill) {
 			context._path.setAttribute('fill', 'none');
@@ -2867,6 +3067,17 @@ var PathFunctions = PathFunctions || {
 		if (context.options.fillPattern) {
 			context._createFillPattern(context.options.fillPattern);
 		}
+
+        if (context.options.wordCloud) {
+            var options = context.options.wordCloud;
+
+            if (options.words.length > 0) {
+                var me = this;
+                setTimeout(function () {
+                    me._createWordCloudPattern(options);
+                }, 0);
+            }
+        }
 		
 		context._applyCustomStyles();
 

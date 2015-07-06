@@ -507,6 +507,8 @@ L.ArcedPolyline = L.Path.extend({
 		var distance = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
 		var heightOffset = this.options.distanceToHeight.evaluate(distance);
 
+        this._angle = Math.atan((2 * heightOffset)/(0.5 * distance));
+
 		var parts = ['M', point1.x, ',', point1.y, ' C', point1.x, ',', point1.y - heightOffset, ' ', point2.x, ',', point2.y - heightOffset, ' ', point2.x, ',', point2.y ];
 		
 		return parts.join(' ');

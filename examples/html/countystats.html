@@ -131,6 +131,9 @@
 		
 		var options = {
 			locationMode: L.LocationModes.LOOKUP,
+            getIndexKey: function (location, record) {
+                return location.text;
+            },
 			recordsField: null,
 			codeField: 'FIPS',
 			locationLookup: countyPolygons, // A GeoJSON FeatureCollection that will be used to lookup boundaries/location

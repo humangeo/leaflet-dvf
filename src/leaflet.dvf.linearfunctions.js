@@ -567,9 +567,8 @@ L.CustomColorFunction = L.PiecewiseFunction.extend({
 	},
 	
 	initialize: function (minX, maxX, colors, options) {
+		L.Util.setOptions(this, options);
 
-    L.Util.setOptions(this, options);
-    
 		var range = maxX - minX;
 		var count = this.options.interpolate ? colors.length - 1 : colors.length;
 		var xRange = range/count;

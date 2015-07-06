@@ -36,7 +36,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="#">DC Crimes</a>
+          <a class="brand" href="#">French Agriculture</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
@@ -69,8 +69,7 @@
 	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js"></script>	
 	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
-	<script type="text/javascript" src="../data/dccrimestats.js"></script>
-	<script type="text/javascript" src="../data/dcprecinctstopo.js"></script>
+	<script type="text/javascript" src="../data/francetopo.js"></script>
 	<script type="text/javascript">
 		
 $(document).ready(function() {
@@ -93,9 +92,9 @@ $(document).ready(function() {
 
 	resize();
 
-	var precincts = topojson.feature(precinctsTopo, precinctsTopo.objects.dcprecincts);
+	var adminBoundaries = topojson.feature(franceTopo, franceTopo.objects.france);
 
-	map = L.map('map').setView([38.8951, -77.0367], 12);
+	map = L.map('map').setView([47, 2], 12);
 
 	legendControl = new L.Control.Legend();
 
@@ -107,134 +106,6 @@ $(document).ready(function() {
 	
 	baseLayer.addTo(map);
 
-	var opacityFunction = new L.PiecewiseFunction([new L.LinearFunction(new L.Point(0, 0), new L.Point(1, 0.7)), new L.LinearFunction(new L.Point(1, 0.7), new L.Point(55, 0.7))]);
-
-	var stats = crimeStats.stats;
-	
-	for (var precinctKey in stats) {
-		var precinctData = stats[precinctKey];
-		
-		var max = 0;
-		var topCrime = null;
-		
-		for (var crimeType in precinctData) {
-			if (crimeType !== 'THEFT/OTHER') {
-			var count = precinctData[crimeType];
-			
-			if (count > max) {
-				max = count;
-				topCrime = crimeType;
-			}
-			}
-		}
-		
-		precinctData.top = topCrime;
-	}
-	
-	var colorFunction = new L.CustomColorFunction(0, crimeStats.types.length - 1, L.ColorBrewer.Qualitative.Paired['9']);
-	var categoryMap = {};
-	
-	for (var i = 0; i < crimeStats.types.length; ++i) {
-		var crimeType = crimeStats.types[i];
-		categoryMap[crimeType.term] = colorFunction.evaluate(i);
-	}
-	
-	colorFunction = new L.CategoryFunction(categoryMap);
-	
-	var options = {
-		recordsField: 'stats', //'precincts',
-		codeField: null, //'term',
-		locationMode: L.LocationModes.LOOKUP,
-		locationLookup: precincts,
-		locationIndexField: 'voting_precinct',
-		locationTextField: 'voting_precinct',
-		displayOptions: {
-			'top': {
-				displayName: 'Top Crime',
-				fillColor: colorFunction,
-				color: colorFunction
-			}
-		},
-		layerOptions: {
-			fillOpacity: 0.4,
-			opacity: 1,
-			weight: 1,
-			stroke: true,
-			color: '#777',
-			dropShadow: false
-		},
-		tooltipOptions: {
-			iconSize: new L.Point(80,60),
-			iconAnchor: new L.Point(-5,60)
-		}
-	};
-
-	var crimesLayer = new L.ChoroplethDataLayer(crimeStats,options);
-
-	crimesLayer.getLegend = null;
-	
-	map.addLayer(crimesLayer);
-	
-	var crimeOptions = {
-		recordsField: 'stats',
-		codeField: null,
-		locationMode: L.LocationModes.LOOKUP,
-		locationLookup: precincts,
-		locationIndexField: 'voting_precinct',
-		locationTextField: 'voting_precinct',
-		chartOptions: {},
-		layerOptions: {
-			color: '#333',
-			stroke: true, //true
-			fillOpacity: 1.0,
-			opacity: 1,
-			weight: 0.6,
-			//radius: 20,
-			barWidth: 4,
-			width: 4,
-			gradient: true, //true
-			dropShadow: false, //true
-			drawReverse: true,
-			numberOfSides: 50
-		},
-		tooltipOptions: {
-			iconSize: new L.Point(80,60),
-			iconAnchor: new L.Point(-5,60)
-		},
-		onEachRecord: function (layer,record) {
-			var $html = $(L.HTMLUtils.buildTable(record));
-
-			layer.bindPopup($html.wrap('<div/>').parent().html(),{
-				minWidth: 400,
-				maxWidth: 400
-			});
-		},
-		legendOptions: {
-			title: 'Crime Types'
-		}
-	};
-	
-	for (var i = 0; i < crimeStats.types.length; ++i) {
-		var type = crimeStats.types[i];
-		
-		if (type.term !== 'THEFT/OTHER') {
-			crimeOptions.chartOptions[type.term] = {
-				//color: colorFunction.evaluate(type.term),
-				fillColor: colorFunction.evaluate(type.term),
-				minValue: 0,
-				maxValue: 100,
-				maxRadius: 10,
-				maxHeight: 30,
-				displayText: function (value) {
-					return value.toFixed(0);
-				}
-			}
-		}
-	}
-
-	var crimeChartLayer = new L.StackedRegularPolygonDataLayer(crimeStats, crimeOptions);
-
-	map.addLayer(crimeChartLayer);
 
 });
 

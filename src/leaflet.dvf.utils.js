@@ -286,6 +286,14 @@ L.GeometryUtils = {
 	},
 
 	getGeoJSONLocation: function (geoJSON, record, locationTextField, recordToLayer) {
+        var locationTextFunction = function (record) {
+            return L.Util.getFieldValue(record, locationTextField);
+        };
+
+        if (locationTextField && (typeof locationTextField === 'function')) {
+            locationTextFunction = locationTextField;
+        }
+
 		var geoJSONLayer = new L.GeoJSON(geoJSON, {
 			pointToLayer: function (feature, latlng) {
 				var location = {

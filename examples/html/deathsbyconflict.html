@@ -8,311 +8,321 @@
     <meta name="author" content="">
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
-      
-      #map {
-      	background-image: url('../img/subtlepatterns/irongrip/irongrip.png');
-      }
-      
-      #map div.leaflet-tile-pane {
-      	opacity: 0.5;
-      }
-      
-      div.leaflet-control-legend {
-      	max-height: 200px;
-      }
-      
-      .leaflet-control-layers-overlays {
-      	*max-height: 200px;
-      	overflow-x: scroll;
-      }
+        body {
+            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
+
+        #map {
+            background-image: url('../img/subtlepatterns/irongrip/irongrip.png');
+        }
+
+        #map div.leaflet-tile-pane {
+            opacity: 0.5;
+        }
+
+        div.leaflet-control-legend {
+            max-height: 200px;
+        }
+
+        .leaflet-control-layers-overlays {
+            *max-height: 200px;
+            overflow-x: scroll;
+        }
     </style>
-    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
-	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
 </head>
 
 <body>
-	<div class="navbar navbar-inverse">
-      <div class="navbar-inner">
+<div class="navbar navbar-inverse">
+    <div class="navbar-inner">
         <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="#">Conflict Deaths</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">Conflict Deaths</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
         </div>
-      </div>
     </div>
+</div>
 
-    <div class="container-fluid">
-    	<div class="row-fluid">
-			<div id="map"></div>
-		</div>
-	</div>
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div id="map"></div>
+    </div>
+</div>
 
-	<script>
-	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
+<script>
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'http://www.google-analytics.com/analytics.js', 'ga');
 
-	  ga('create', 'UA-42733116-1', 'humangeo.github.io');
-	  ga('send', 'pageview');
-	</script>
-	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
-	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
-	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
-	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-	<script type="text/javascript" src="../../dist/data/countryData.min.js"></script>
-	<script type="text/javascript" src="../data/battleDeaths.js"></script>
-	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
-	<script type="text/javascript">
+    ga('create', 'UA-42733116-1', 'humangeo.github.io');
+    ga('send', 'pageview');
+</script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
+<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
+<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
+<script type="text/javascript"
+        src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+<script type="text/javascript" src="../../dist/data/countryData.min.js"></script>
+<script type="text/javascript" src="../data/battleDeaths.js"></script>
+<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+<script type="text/javascript">
 
-$(document).ready(function() {
-	var map;
-	var legendControl;
+    $(document).ready(function () {
+        var map;
+        var legendControl;
 
-	// Function for resizing the map to fill the available space on the screen
-	var resize = function () {
-		var $map = $('#map');
-		
-		$map.height($(window).height() - $('div.navbar').outerHeight());
-		
-		if (map) {
-			map.invalidateSize();
-		}
-	};
-	
-	// Resize the map element on window resize
-	$(window).on('resize', function () {
-		resize();
-	});
-	
-	// Resize the map element
-	resize();
-	
-	// Initialize the map
-	map = L.map('map').setView([0.0, 0.0], 2);
-	
-	var baseLayer = new L.StamenTileLayer('toner', {
-		detectRetina: true
-	}).addTo(map);
-	
-	baseLayer.addTo(map);
-	
-	// Initialize the legend control and add it to the map
-	var legendControl = new L.Control.Legend();
-	
-	legendControl.addTo(map);
-	
-	var layerControl = new L.Control.Layers({
-		'Stamen Toner': baseLayer
-	});
-	
-	layerControl.addTo(map);
-	
-	var deathsByLocation = _.pairs(_.groupBy(battleDeaths, function (value) {
-		var gwnoa = value.gwnoa;
-		
-		if (gwnoa.length > 3) {
-			gwnoa = gwnoa.substring(0, Math.sqrt(gwnoa.length))
-		}
-		return gwnoa;
-	}));
-	
-	_.each(deathsByLocation, function (location) {
-		location[1].counts = _.countBy(location[1], function (value) {
-			return value.year
-		});
-		
-		location[1].years = _.groupBy(location[1], function (value) {
-			return value.year
-		});
-		
-		location[1].deaths = {};
-		location[1].deathsPerConflict = {};
-		
-		location[1].total = 0;
-		
-		for (var year in location[1].years) {
-			location[1].deaths[year] = Number(_.reduce(_.pluck(location[1].years[year],'bdeadhig'), function (memo, value) {
-				return Number(memo) + Number(value);
-			}));
-			
-			location[1].total = location[1].total + location[1].deaths[year];
-			
-			location[1].deathsPerConflict[year] = location[1].deaths[year]/location[1].counts[year];
-		}
-	});
+        // Function for resizing the map to fill the available space on the screen
+        var resize = function () {
+            var $map = $('#map');
 
-	var deathsByYear = _.groupBy(battleDeaths, function (value) {
-		return value.year;
-	});
-	
-	var dataLayer;
-	var linkLayer;
-	
-	var min = _.min(deathsByLocation, function (value) {
-		return value[1].total;
-	})[1].total;
+            $map.height($(window).height() - $('div.navbar').outerHeight());
 
-	var max = _.max(deathsByLocation, function (value) {
-		return value[1].total;
-	})[1].total;
-	
-	dataLayer = new L.ChoroplethDataLayer(deathsByLocation,{
-		recordsField: null,
-		locationMode: L.LocationModes.GWCOUNTRY,
-		codeField: '0', //'gwnoa',
-		displayOptions: {
-			'1.total': {
-				displayName: 'Total Conflict Deaths',
-				fillColor: new L.HSLHueFunction([min, 60], [max, 0], {
-					outputLuminosity: '70%'
-				}),
-				color: new L.HSLHueFunction([min, 60], [max, 0], {
-					outputLuminosity: '35%'
-				})
-			}
-		},
-		layerOptions: {
-			fillOpacity: 0.7,
-			opacity: 1,
-			weight: 0.4,
-			gradient: false,
-			dropShadow: false
-		},
-		tooltipOptions: {
-			iconSize: new L.Point(100, 60),
-			iconAnchor: new L.Point(-5, 100)
-		}
-	});
-	
-	map.addLayer(dataLayer);
-	
-	var sparklines = new L.SparklineDataLayer(deathsByLocation,{
-		recordsField: null,
-		locationMode: L.LocationModes.GWCOUNTRY,
-		codeField: '0',
-		xField: '0',
-		yField: '1',
-		includeBoundary: true,
-		boundaryStyle: {
-			fillOpacity: 0.2,
-			color: '#222222',
-			opacity: 1,
-			weight: 2,
-			gradient: true,
-			clickable: false
-		},
-		//filter: function (record) {
-		//	return record[0] !== '816' && record[0] !== '-99' && record[0] !== '560' && record[0] !== '731' && record[0] !== '710';
-		//},
-		chartOptions: {
-			'1.deaths': {
-				xField: "0",
-				yField: "1",
-				fill: true,
-				fillColor: '#FF0000',
-				color: '#000000',
-				displayName: 'Deaths by Year',
-				dropShadow: true
-			},
-			'1.deathsPerConflict': {
-				xField: "0",
-				yField: "1",
-				fill: true,
-				color: '#222222',
-				fillColor: '#ffa500',
-				displayName: 'Deaths per Conflict by Year',
-				dropShadow: true
-			}
-		},
-		layerOptions: {
-			fillOpacity: 0.9,
-			opacity: 1,
-			weight: 0.4,
-			size: new L.Point(200, 150)
-		},
-		tooltipOptions: {
-			iconSize: new L.Point(100, 60),
-			iconAnchor: new L.Point(-5, 100)
-		}
-	});
-	
-	map.addLayer(sparklines);
-	
-	/*
-	for (var key in deathsByYear) {
-		var min = Number(_.min(deathsByYear[key], function (value) {
-			return Number(value.bdeadhig);
-		}).bdeadhig);
-	
-		var max = Number(_.max(deathsByYear[key], function (value) {
-			return Number(value.bdeadhig);
-		}).bdeadhig);
-	
-		// Setup a new data layer
-		dataLayer = new L.ChoroplethDataLayer(deathsByYear[key],{
-			recordsField: null,
-			locationMode: L.LocationModes.COUNTRY,
-			codeField: 'gwnoa',
-			displayOptions: {
-				bdeadhig: {
-					displayName: 'Deaths (High)',
-					fillColor: new L.HSLHueFunction([min, 120], [max, 0]),
-					color: new L.HSLHueFunction([min, 120], [max, 0], {
-						outputLuminosity: '35%'
-					})
-				}
-			},
-			layerOptions: {
-				fillOpacity: 0.2,
-				opacity: 1,
-				weight: 0.4,
-				gradient: false,
-				dropShadow: false
-			},
-			tooltipOptions: {
-				iconSize: new L.Point(100, 60),
-				iconAnchor: new L.Point(-5, 100)
-			}
-		});
-	
-		linkLayer = new L.Graph(deathsByYear[key],{
-			recordsField: null,
-			locationMode: L.LocationModes.COUNTRY,
-			fromField: 'gwnoa',
-			toField: 'gwnob',
-			filter: function (record) {
-				return record.gwnob.length > 0;
-			},
-			getEdge: L.Graph.EDGESTYLE.ARC,
-			layerOptions: {
-				weight: 2
-			}
-		});
-	
-		layerControl.addOverlay(linkLayer, key + ' Links');
-		layerControl.addOverlay(dataLayer, key);
-	}
-	*/
-});
-	</script>
+            if (map) {
+                map.invalidateSize();
+            }
+        };
+
+        // Resize the map element on window resize
+        $(window).on('resize', function () {
+            resize();
+        });
+
+        // Resize the map element
+        resize();
+
+        // Initialize the map
+        map = L.map('map').setView([0.0, 0.0], 2);
+
+        var baseLayer = new L.StamenTileLayer('toner', {
+            detectRetina: true
+        }).addTo(map);
+
+        baseLayer.addTo(map);
+
+        // Initialize the legend control and add it to the map
+        var legendControl = new L.Control.Legend();
+
+        legendControl.addTo(map);
+
+        var layerControl = new L.Control.Layers({
+            'Stamen Toner': baseLayer
+        });
+
+        layerControl.addTo(map);
+
+        var deathsByLocation = _.pairs(_.groupBy(battleDeaths, function (value) {
+            var gwnoa = value.gwnoa;
+
+            if (gwnoa.length > 3) {
+                gwnoa = gwnoa.substring(0, Math.sqrt(gwnoa.length))
+            }
+            return gwnoa;
+        }));
+
+        _.each(deathsByLocation, function (location) {
+            location[1].counts = _.countBy(location[1], function (value) {
+                return value.year
+            });
+
+            location[1].years = _.groupBy(location[1], function (value) {
+                return value.year
+            });
+
+            location[1].deaths = {};
+            location[1].deathsPerConflict = {};
+
+            location[1].total = 0;
+
+            for (var year in location[1].years) {
+                location[1].deaths[year] = Number(_.reduce(_.pluck(location[1].years[year], 'bdeadhig'), function (memo, value) {
+                    return Number(memo) + Number(value);
+                }));
+
+                location[1].total = location[1].total + location[1].deaths[year];
+
+                location[1].deathsPerConflict[year] = location[1].deaths[year] / location[1].counts[year];
+            }
+        });
+
+        var deathsByYear = _.groupBy(battleDeaths, function (value) {
+            return value.year;
+        });
+
+        var dataLayer;
+        var linkLayer;
+
+        var min = _.min(deathsByLocation, function (value) {
+            return value[1].total;
+        })[1].total;
+
+        var max = _.max(deathsByLocation, function (value) {
+            return value[1].total;
+        })[1].total;
+
+        dataLayer = new L.ChoroplethDataLayer(deathsByLocation, {
+            recordsField: null,
+            locationMode: L.LocationModes.GWCOUNTRY,
+            codeField: '0', //'gwnoa',
+            displayOptions: {
+                '1.total': {
+                    displayName: 'Total Conflict Deaths',
+                    fillColor: new L.HSLHueFunction([min, 60], [max, 0], {
+                        outputLuminosity: '70%'
+                    }),
+                    color: new L.HSLHueFunction([min, 60], [max, 0], {
+                        outputLuminosity: '35%'
+                    })
+                }
+            },
+            layerOptions: {
+                fillOpacity: 0.7,
+                opacity: 1,
+                weight: 0.4,
+                gradient: false,
+                dropShadow: false
+            },
+            tooltipOptions: {
+                iconSize: new L.Point(100, 60),
+                iconAnchor: new L.Point(-5, 100)
+            }
+        });
+
+        map.addLayer(dataLayer);
+
+        var sparklines = new L.SparklineDataLayer(deathsByLocation, {
+            recordsField: null,
+            locationMode: L.LocationModes.GWCOUNTRY,
+            codeField: '0',
+            xField: '0',
+            yField: '1',
+            includeBoundary: true,
+            boundaryStyle: {
+                fillOpacity: 0.2,
+                color: '#222222',
+                opacity: 1,
+                weight: 2,
+                gradient: true,
+                clickable: false
+            },
+            //filter: function (record) {
+            //	return record[0] !== '816' && record[0] !== '-99' && record[0] !== '560' && record[0] !== '731' && record[0] !== '710';
+            //},
+            chartOptions: {
+                '1.deaths': {
+                    xField: "0",
+                    yField: "1",
+                    fill: true,
+                    fillColor: '#FF0000',
+                    color: '#000000',
+                    displayName: 'Deaths by Year',
+                    dropShadow: true
+                },
+                '1.deathsPerConflict': {
+                    xField: "0",
+                    yField: "1",
+                    fill: true,
+                    color: '#222222',
+                    fillColor: '#ffa500',
+                    displayName: 'Deaths per Conflict by Year',
+                    dropShadow: true
+                }
+            },
+            layerOptions: {
+                fillOpacity: 0.9,
+                opacity: 1,
+                weight: 0.4,
+                size: new L.Point(200, 150)
+            },
+            tooltipOptions: {
+                iconSize: new L.Point(100, 60),
+                iconAnchor: new L.Point(-5, 100)
+            }
+        });
+
+        map.addLayer(sparklines);
+
+        /*
+         for (var key in deathsByYear) {
+         var min = Number(_.min(deathsByYear[key], function (value) {
+         return Number(value.bdeadhig);
+         }).bdeadhig);
+
+         var max = Number(_.max(deathsByYear[key], function (value) {
+         return Number(value.bdeadhig);
+         }).bdeadhig);
+
+         // Setup a new data layer
+         dataLayer = new L.ChoroplethDataLayer(deathsByYear[key],{
+         recordsField: null,
+         locationMode: L.LocationModes.COUNTRY,
+         codeField: 'gwnoa',
+         displayOptions: {
+         bdeadhig: {
+         displayName: 'Deaths (High)',
+         fillColor: new L.HSLHueFunction([min, 120], [max, 0]),
+         color: new L.HSLHueFunction([min, 120], [max, 0], {
+         outputLuminosity: '35%'
+         })
+         }
+         },
+         layerOptions: {
+         fillOpacity: 0.2,
+         opacity: 1,
+         weight: 0.4,
+         gradient: false,
+         dropShadow: false
+         },
+         tooltipOptions: {
+         iconSize: new L.Point(100, 60),
+         iconAnchor: new L.Point(-5, 100)
+         }
+         });
+
+         linkLayer = new L.Graph(deathsByYear[key],{
+         recordsField: null,
+         locationMode: L.LocationModes.COUNTRY,
+         fromField: 'gwnoa',
+         toField: 'gwnob',
+         filter: function (record) {
+         return record.gwnob.length > 0;
+         },
+         getEdge: L.Graph.EDGESTYLE.ARC,
+         layerOptions: {
+         weight: 2
+         }
+         });
+
+         layerControl.addOverlay(linkLayer, key + ' Links');
+         layerControl.addOverlay(dataLayer, key);
+         }
+         */
+    });
+</script>
 </body>
 </html>

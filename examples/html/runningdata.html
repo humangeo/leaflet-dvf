@@ -7,824 +7,827 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
-    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/vis/3.6.4/vis.css" />
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
-	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
-	<link href='http://fonts.googleapis.com/css?family=Orbitron' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/vis/3.6.4/vis.css"/>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
+    <link href='http://fonts.googleapis.com/css?family=Orbitron' rel='stylesheet' type='text/css'>
     <style>
 
-    body {
-		padding-top: 0px; /* 60px to make the container go all the way to the bottom of the topbar */
-    }
-    
-    #map {
-    	*background-image: url('../img/subtlepatterns/grey_wash_wall/grey_wash_wall.png');
-    	background-color: #222;
-    }
-    
-    #map div.leaflet-tile-pane {
-    	opacity: 0.5;
-    }
-    
-    div.leaflet-control-legend {
-    	width: 350px;
-    }
-    
-    div.panoramio-content {
-    	background-color: rgba(0, 0, 0, 0.5);
-    }
-    
-    div.panoramio-content img.photo {
-    	width: 500px;
-    	min-height: 100px;
-    	-webkit-transition: height 2s; /* For Safari 3.1 to 6.0 */
-    	-moz-transition: height 2s;
-    	transition: height 2s;
-    }
-    
-    .legend-line {
-    	margin-bottom: 20px;
-    }
+        body {
+            padding-top: 0px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
 
-    .legend-line div.scale-bars i {
-    	background: none !important;
-    	width: 0px;
-    	height: 0px !important;
-    	vertical-align: middle;
-    	border-left: none !important;
-    }
-    
-    .line-legend .legend-box {
-    	width: 0px;
-    	height: 0px !important;
-    	border-top: none !important;
-    	border-right: none !important;
-    }
-    
-    a.brand {
-    	*font-family: 'Adamas-Regular', sans serif;
-    	*font-size: 80px;
-    }
-    
-    a.author-link {
-    	color: #c0c0c0;
-    }
-    
-    #timeline {
-    	position: fixed;
-    	bottom: 0px;
-    	right: 0px;
-    	left: 0px;
-    	background-color: rgba(20, 20, 20, 0.9);
-    	height: 200px;
-    	border: none;
-    }
-    
-    .vis.timeline .customStyle1 {
-    	fill: none;
-    }
-    
-    .vis.timeline .customStyle2 {
-    	fill: none;
-    }
-    
-    .vis.timeline .customStyle2 {
-    	stroke-width: 1px;
-		stroke-opacity: 0.5;
-		stroke: #fff;
-    	
-    }
-    
-    .vis.timeline .customStyle1.fill {
-    	fill: url(#grad1);
-		fill-opacity: 0.9;
-		*stroke-width: 1px;
-		*stroke-opacity: 0.5;
-		*stroke: #fff;
-    }
-    
-    .vis.timeline .timeaxis .text {
-    	color: #fff;
-    }
-    
-    .vis.timeline.root {
-    	background: linear-gradient(to bottom, rgba(76,76,76,0.1) 0%, rgba(40,40,40,1) 100%);
-		border: none;
-    }
-    
-    .vis.timeline .timeaxis.foreground {
-    	*background-color: #333;
-    }
-    
-    .vis.timeline .vispanel.left {
-    	border-top-style: none;
-    }
-    
-    .vispanel.bottom {
-    	border-left-style: none;
-    }
-    
-    .vis.timeline .vispanel.bottom {
-    	border: none;
-    }
-    
-    .vis.timeline .timeaxis .grid.minor {
-    	border-color: #333;
-    }
-    
-    .vis.timeline .vispanel.background.horizontal .grid.horizontal {
-    	border-color: #333;
-    }
-    
-    .vis.timeline .vispanel.center, .vis.timeline .vispanel.top, .vis.timeline .vispanel.bottom {
-    	border-right-style: none;
-    	border-left-style: none;
-    }
-    
-    .vis.timeline .vispanel.center, .vis.timeline .vispanel.left, .vis.timeline .vispanel.right {
-    	border-top-style: none;
-    	border-color: #444;
-    }
-    
-    div.leaflet-div-icon {
-    	background-color: #111;
-    	border-radius: 0px;
-    	background-image: none;
-    	color: #fff;
-    	border: none;
-    	text-align: left;
-    	padding: 14px;
-    }
-    
-    div.leaflet-div-icon div.legend-box {
-    	width: 134px;
-    	height: 20px;
-    }
-    
-    div.leaflet-div-icon div.key {
-    	display: inline-block;
-    	font-weight: bold;
-    }
-    
-    div.leaflet-div-icon div.value {
-    	display: block;
-    }
-    
-    div.info {
-    	position: absolute;
-    	top: 60px;
-    	right: 60px;
-    	width: 250px;
-    	height: 250px;
-    	border-radius: 125px;
-    	background-color: rgba(40, 40, 40, 0.7);
-    }
-    
-    div.info div.measure {
-    	font-size: 50px;
-    	line-height: 65px;
-    	color: #fff;
-    	text-align: center;
-    }
-    
-    div.info div.units {
-    	font-size: 20px;
-    	color: #eee;
-    	line-height: 20px;
-    	text-align: center;
-    }
-    
-    .track-point {
-    	width: 20px;
-    	font-size: 10px;
-    	height: 14px;
-    	padding: 2px;
-    	text-align: center;
-    	vertical-align: middle;
-    	background-color: rgba(100, 100, 100, 0.5);
-    	*box-shadow: 0 0 2px #B2B2B2;
-    }
-    
-    .photo {
-    	border-radius: 50%;
-    	padding: 0px;
-    	background-color: #000;
-    }
-    
-    .photo-details img.photo {
-    	padding: 2px;
-    	border-radius: 0px;
-    }
-      
-		.track-point-wrapper {
-			*position: relative;
-			background: rgba(0,0,0,0);
-			*border: 4px solid #333;
-			
-		}
-		
-		.track-point-wrapper:before {
-			right: 100%;
-			top: 50%;
-			border: solid transparent;
-			content: " ";
-			height: 0;
-			width: 0;
-			position: absolute;
-			pointer-events: none;
-			*box-shadow: -2px 2px 2px 0 rgba( 178, 178, 178, .4 );
-		}
-		
-		.track-point-wrapper:before {
-			border-color: rgba(194, 225, 245, 0);
-			border-right-color: rgba(100, 100, 100, 0.0);
-			border-width: 14px;
-			margin-top: -11px;
-		}
-		
-		.leaflet-bar a.leaflet-disabled {
-			background-color: #222;
-			color: #333;
-		}
-		
-		.leaflet-bar a, .leaflet-bar a:hover {
-			color: #fff;
-			background-color: #222;
-		}
-		
-		.leaflet-bar a, .leaflet-control-layers-toggle {
-			background-color: #222;
-		}
-		
-		.leaflet-control-layers-expanded {
-			background: #222;
-		}
-		
-		.leaflet-control-layers .leaflet-control-layers-list, .leaflet-control-layers-expanded .leaflet-control-layers-toggle {
-			background-color: #222;
-			color: #fff;
-		}
-		
-		.leaflet-container .leaflet-control-attribution {
-			background: #222;
-			color: #ccc;
-		}
-		
-		.leaflet-control-attribution a, .leaflet-control-attribution a:hover {
-			color: #999;
-		}
-		
-		div.legend-box {
-			border-radius: 50%;
-			-moz-transform: scale(0.5,0.5); /* IE 9 */
-			-moz-transform-origin: 0% 0%;
-    		-webkit-transform: scale(0.5,0.5); /* Chrome, Safari, Opera */
-    		-webkit-transform-origin: 0% 0%;
-   			transform: scale(0.5,0.5);
-   			transform-origin: 0% 0%;
-   			display: inline-block;
-		}
+        #map {
+            *background-image: url('../img/subtlepatterns/grey_wash_wall/grey_wash_wall.png');
+            background-color: #222;
+        }
+
+        #map div.leaflet-tile-pane {
+            opacity: 0.5;
+        }
+
+        div.leaflet-control-legend {
+            width: 350px;
+        }
+
+        div.panoramio-content {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        div.panoramio-content img.photo {
+            width: 500px;
+            min-height: 100px;
+            -webkit-transition: height 2s; /* For Safari 3.1 to 6.0 */
+            -moz-transition: height 2s;
+            transition: height 2s;
+        }
+
+        .legend-line {
+            margin-bottom: 20px;
+        }
+
+        .legend-line div.scale-bars i {
+            background: none !important;
+            width: 0px;
+            height: 0px !important;
+            vertical-align: middle;
+            border-left: none !important;
+        }
+
+        .line-legend .legend-box {
+            width: 0px;
+            height: 0px !important;
+            border-top: none !important;
+            border-right: none !important;
+        }
+
+        a.brand {
+            *font-family: 'Adamas-Regular', sans serif;
+            *font-size: 80px;
+        }
+
+        a.author-link {
+            color: #c0c0c0;
+        }
+
+        #timeline {
+            position: fixed;
+            bottom: 0px;
+            right: 0px;
+            left: 0px;
+            background-color: rgba(20, 20, 20, 0.9);
+            height: 200px;
+            border: none;
+        }
+
+        .vis.timeline .customStyle1 {
+            fill: none;
+        }
+
+        .vis.timeline .customStyle2 {
+            fill: none;
+        }
+
+        .vis.timeline .customStyle2 {
+            stroke-width: 1px;
+            stroke-opacity: 0.5;
+            stroke: #fff;
+
+        }
+
+        .vis.timeline .customStyle1.fill {
+            fill: url(#grad1);
+            fill-opacity: 0.9;
+            *stroke-width: 1px;
+            *stroke-opacity: 0.5;
+            *stroke: #fff;
+        }
+
+        .vis.timeline .timeaxis .text {
+            color: #fff;
+        }
+
+        .vis.timeline.root {
+            background: linear-gradient(to bottom, rgba(76, 76, 76, 0.1) 0%, rgba(40, 40, 40, 1) 100%);
+            border: none;
+        }
+
+        .vis.timeline .timeaxis.foreground {
+            *background-color: #333;
+        }
+
+        .vis.timeline .vispanel.left {
+            border-top-style: none;
+        }
+
+        .vispanel.bottom {
+            border-left-style: none;
+        }
+
+        .vis.timeline .vispanel.bottom {
+            border: none;
+        }
+
+        .vis.timeline .timeaxis .grid.minor {
+            border-color: #333;
+        }
+
+        .vis.timeline .vispanel.background.horizontal .grid.horizontal {
+            border-color: #333;
+        }
+
+        .vis.timeline .vispanel.center, .vis.timeline .vispanel.top, .vis.timeline .vispanel.bottom {
+            border-right-style: none;
+            border-left-style: none;
+        }
+
+        .vis.timeline .vispanel.center, .vis.timeline .vispanel.left, .vis.timeline .vispanel.right {
+            border-top-style: none;
+            border-color: #444;
+        }
+
+        div.leaflet-div-icon {
+            background-color: #111;
+            border-radius: 0px;
+            background-image: none;
+            color: #fff;
+            border: none;
+            text-align: left;
+            padding: 14px;
+        }
+
+        div.leaflet-div-icon div.legend-box {
+            width: 134px;
+            height: 20px;
+        }
+
+        div.leaflet-div-icon div.key {
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        div.leaflet-div-icon div.value {
+            display: block;
+        }
+
+        div.info {
+            position: absolute;
+            top: 60px;
+            right: 60px;
+            width: 250px;
+            height: 250px;
+            border-radius: 125px;
+            background-color: rgba(40, 40, 40, 0.7);
+        }
+
+        div.info div.measure {
+            font-size: 50px;
+            line-height: 65px;
+            color: #fff;
+            text-align: center;
+        }
+
+        div.info div.units {
+            font-size: 20px;
+            color: #eee;
+            line-height: 20px;
+            text-align: center;
+        }
+
+        .track-point {
+            width: 20px;
+            font-size: 10px;
+            height: 14px;
+            padding: 2px;
+            text-align: center;
+            vertical-align: middle;
+            background-color: rgba(100, 100, 100, 0.5);
+            *box-shadow: 0 0 2px #B2B2B2;
+        }
+
+        .photo {
+            border-radius: 50%;
+            padding: 0px;
+            background-color: #000;
+        }
+
+        .photo-details img.photo {
+            padding: 2px;
+            border-radius: 0px;
+        }
+
+        .track-point-wrapper {
+            *position: relative;
+            background: rgba(0, 0, 0, 0);
+            *border: 4px solid #333;
+
+        }
+
+        .track-point-wrapper:before {
+            right: 100%;
+            top: 50%;
+            border: solid transparent;
+            content: " ";
+            height: 0;
+            width: 0;
+            position: absolute;
+            pointer-events: none;
+            *box-shadow: -2px 2px 2px 0 rgba(178, 178, 178, .4);
+        }
+
+        .track-point-wrapper:before {
+            border-color: rgba(194, 225, 245, 0);
+            border-right-color: rgba(100, 100, 100, 0.0);
+            border-width: 14px;
+            margin-top: -11px;
+        }
+
+        .leaflet-bar a.leaflet-disabled {
+            background-color: #222;
+            color: #333;
+        }
+
+        .leaflet-bar a, .leaflet-bar a:hover {
+            color: #fff;
+            background-color: #222;
+        }
+
+        .leaflet-bar a, .leaflet-control-layers-toggle {
+            background-color: #222;
+        }
+
+        .leaflet-control-layers-expanded {
+            background: #222;
+        }
+
+        .leaflet-control-layers .leaflet-control-layers-list, .leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+            background-color: #222;
+            color: #fff;
+        }
+
+        .leaflet-container .leaflet-control-attribution {
+            background: #222;
+            color: #ccc;
+        }
+
+        .leaflet-control-attribution a, .leaflet-control-attribution a:hover {
+            color: #999;
+        }
+
+        div.legend-box {
+            border-radius: 50%;
+            -moz-transform: scale(0.5, 0.5); /* IE 9 */
+            -moz-transform-origin: 0% 0%;
+            -webkit-transform: scale(0.5, 0.5); /* Chrome, Safari, Opera */
+            -webkit-transform-origin: 0% 0%;
+            transform: scale(0.5, 0.5);
+            transform-origin: 0% 0%;
+            display: inline-block;
+        }
     </style>
 </head>
 
 <body>
-	<div class="navbar navbar-inverse">
-      <div class="navbar-inner">
+<div class="navbar navbar-inverse">
+    <div class="navbar-inner">
         <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="#">GPX Analyzer</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">GPX Analyzer</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
         </div>
-      </div>
     </div>
+</div>
 
-    <div class="container-fluid">
-    	<div class="row-fluid">
-			<div id="map"></div>
-		</div>
-	</div>
-	<div class="info">
-		<div class="measure distance"></div>
-		<div class="units distance-units"></div>
-		<div class="measure time"></div>
-		<div class="measure top-speed"></div>
-		<div class="units speed-units"></div>
-	</div>
-	<div id="timeline"></div>
-	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.2.1/moment.min.js"></script>
-	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet-src.js"></script>
-	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
-	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
-	<script type="text/javascript" src="../lib/tilefilter/TileLayer.Filter.js"></script>
-	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/vis/3.6.4/vis.min.js"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
-	<script type="text/javascript">
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div id="map"></div>
+    </div>
+</div>
+<div class="info">
+    <div class="measure distance"></div>
+    <div class="units distance-units"></div>
+    <div class="measure time"></div>
+    <div class="measure top-speed"></div>
+    <div class="units speed-units"></div>
+</div>
+<div id="timeline"></div>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.2.1/moment.min.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet-src.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
+<script type="text/javascript"
+        src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script type="text/javascript" src="../lib/tilefilter/TileLayer.Filter.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/vis/3.6.4/vis.min.js"></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+<script type="text/javascript">
 
-$(document).ready(function() {
-	var map;
-	var SVG_NS = 'http://www.w3.org/2000/svg';
-	
-	// Function for resizing the map to fill the available space on the screen
-	var resize = function () {
-		var $map = $('#map');
-		
-		$map.height($(window).height() - $('div.navbar').outerHeight());
-		
-		if (map) {
-			map.invalidateSize();
-		}
-	};
-	
-	// Resize the map element on window resize
-	$(window).on('resize', function () {
-		resize();
-	});
-	
-	// Resize the map element
-	resize();
-	
-	// Initialize the map
-	map = L.map('map').setView([38.895843, -77.043085], 15);
-	
-	var baseLayer = new L.StamenTileLayer('toner', {
-		detectRetina: true
-	});
+    $(document).ready(function () {
+        var map;
+        var SVG_NS = 'http://www.w3.org/2000/svg';
 
-	baseLayer.setFilter(function () {
-        return new L.CSSFilter(this, {
-            filters: ['invert(100%)']
-        }).render();
-	});
+        // Function for resizing the map to fill the available space on the screen
+        var resize = function () {
+            var $map = $('#map');
 
-	var terrainLayer = new L.StamenTileLayer('terrain', {
-		detectRetina: true
-	});
+            $map.height($(window).height() - $('div.navbar').outerHeight());
 
-	terrainLayer.setFilter(function () {
-        return new L.CSSFilter(this, {
-            filters: ['grayscale(100%)', 'invert(100%)']
-        }).render();
-	});
-
-	var osmLayer = new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg');
-
-	osmLayer.setFilter(function () {
-        return new L.CSSFilter(this, {
-            filters: ['grayscale(100%)', 'invert(100%)']
-        }).render();
-	});
-
-	osmLayer.addTo(map);
-	
-	var groups = new vis.DataSet();
-    groups.add({
-        id: 0,
-        content: 'Speed',
-        className: 'customStyle1',
-        options: {
-            drawPoints: false,
-            shaded: {
-                enabled: true,
-                orientation: 'bottom'
+            if (map) {
+                map.invalidateSize();
             }
-        }
-    });
+        };
 
-    groups.add({
-        id: 1,
-        content: 'Elevation',
-        className: 'customStyle2',
-        options: {
-            drawPoints: false
-        }
-    });
-    
-	var timeline = new vis.Graph2d($('#timeline').get(0), [], {
-		minHeight: 200,
-		maxHeight: 200,
-		graphHeight: 150,
-		style: 'line',
-		dataAxis: {
-			customRange: {
-				left: {
-					min: 0
-				},
-				right: {
-					min: 0
-				}
-			}
-		},
-		catmullRom: false,
-		drawPoints: false
-	}, groups);
-	
-	var layerControl = new L.Control.Layers({
-		'Stamen Toner': baseLayer,
-		'Stamen Terrain': terrainLayer,
-		'MapQuest OSM': osmLayer
-	});
-	
-	layerControl.addTo(map);
+        // Resize the map element on window resize
+        $(window).on('resize', function () {
+            resize();
+        });
 
-	var panoramioLayer = new L.PanoramioLayer();
+        // Resize the map element
+        resize();
 
-	layerControl.addOverlay(panoramioLayer, 'Panoramio Photos');
-	
-	var dropZone = $('body').get(0);
+        // Initialize the map
+        map = L.map('map').setView([38.895843, -77.043085], 15);
 
-	function handleDragOver(e) {
-	    e.stopPropagation();
-	    e.preventDefault();
-	    e.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-	};
-	
-  	function handleDrop(e) {
-	e.stopPropagation();
-	e.preventDefault();
+        var baseLayer = new L.StamenTileLayer('toner', {
+            detectRetina: true
+        });
 
-	var file = e.dataTransfer.files[0],
-	    reader = new FileReader();
-	reader.onload = function (event) {
-	  processData(event.target.result);
-	};
-	console.log(file);
-	reader.readAsText(file);
-	
-	return false;
-	};
-	dropZone.addEventListener('dragover', handleDragOver, false);
-	dropZone.addEventListener('drop', handleDrop, false);
-	  
+        baseLayer.setFilter(function () {
+            return new L.CSSFilter(this, {
+                filters: ['invert(100%)']
+            }).render();
+        });
 
-	/*
-	$.ajax({
-		url: '../data/20131031-012045-Run.gpx',
-		type: 'GET',
-		dataType: 'xml',
-		success: function (data) {
-			processData(data);
-		},
-		error: function (jqXHR, textStatus, errorThrown) {
-			console.log(errorThrown);
-		}
-	});
-	*/
+        var terrainLayer = new L.StamenTileLayer('terrain', {
+            detectRetina: true
+        });
 
-	
-	$.ajax({
-		url: '../data/20110827-060626-Run.gpx',
-		type: 'GET',
-		dataType: 'xml',
-		success: function (data) {
-			processData(data);
-		},
-		error: function (jqXHR, textStatus, errorThrown) {
-			console.log(errorThrown);
-		}
-	});
+        terrainLayer.setFilter(function () {
+            return new L.CSSFilter(this, {
+                filters: ['grayscale(100%)', 'invert(100%)']
+            }).render();
+        });
 
-	/*
-	$.ajax({
-		url: '../data/20120620-232221-Run.gpx',
-		type: 'GET',
-		dataType: 'xml',
-		success: function (data) {
-			processData(data);
-		},
-		error: function (jqXHR, textStatus, errorThrown) {
-			console.log(errorThrown);
-		}
-	});
-	*/
+        var osmLayer = new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg');
 
-	var units = 'mi';
-	var conversion = {
-		km: {distance: {text: 'km', value: 1000}, speed: {text: 'kph', value: 3.6}},
-		mi: {distance: {text: 'mi', value: 1609.34}, speed: {text: 'mph', value: 2.23694}}
-	};
-	
-	processData = function (data) {
-		var $trkpts = $(data).find('trkpt');
-		
-		var data = [];
+        osmLayer.setFilter(function () {
+            return new L.CSSFilter(this, {
+                filters: ['grayscale(100%)', 'invert(100%)']
+            }).render();
+        });
 
-		var lastLocation = null;
-		var lastTime = null;
-		var lastEle = null;
-		var index = 0;
-		var maxEle = -5000.0;
-		var minEle = 5000.0;
-		var maxSpeed = 0.0;
-		var maxEleSpeed = 0.0;
-		var items = [];
-		var distance = 0;
-		var totalSpeed = 0;
-		var elapsedTime = 0.0;
-		
-		$trkpts.each(function () {
-			var $pt = $(this);
-			var location = new L.LatLng(Number($pt.attr('lat')), Number($pt.attr('lon')));
-			var ele = Number($pt.find('ele').text());
-			var speed = 0.0;
-			var eleSpeed = 0.0;
-			var timeString = $pt.find('time').text();
-			var time = moment(timeString);
-			
-			if (lastLocation && lastTime) {
-				var timeDelta = time.diff(lastTime, 'seconds');
-				var distDelta = location.distanceTo(lastLocation);
-				var eleDelta = ele - lastEle;
-				
-				if (timeDelta > 0) {
-					speed = distDelta/timeDelta;
-					eleSpeed = eleDelta/timeDelta;
-				}
+        osmLayer.addTo(map);
 
-				distance += distDelta;
-				elapsedTime += timeDelta;
-			}
+        var groups = new vis.DataSet();
+        groups.add({
+            id: 0,
+            content: 'Speed',
+            className: 'customStyle1',
+            options: {
+                drawPoints: false,
+                shaded: {
+                    enabled: true,
+                    orientation: 'bottom'
+                }
+            }
+        });
 
-			if (speed > maxSpeed) {
-				maxSpeed = speed;
-			}
+        groups.add({
+            id: 1,
+            content: 'Elevation',
+            className: 'customStyle2',
+            options: {
+                drawPoints: false
+            }
+        });
 
-			totalSpeed += speed;
-			
-			data.push({
-				index: index,
-				location: location,
-				lat: location.lat,
-				lon: location.lng,
-				ele: ele,
-				eleSpeed: eleSpeed,
-				speed: speed,
-				time: time,
-				elapsedTime: elapsedTime,
-				distance: distance
-			});
-
-			location.weight = speed * 2;
-			location.ele = ele;
-			location.index = index + 1;
-			location.time = timeString;
-			
-			//data.push(location);
-			
-			lastLocation = location;
-			lastTime = time;
-			lastEle = ele;
-			
-			index++;
-
-			if (ele > maxEle) {
-				maxEle = ele;
-			}
-
-			if (ele < minEle) {
-				minEle = ele;
-			}
-
-			items.push({
-				x: timeString,
-				y: speed,
-				group: 0
-			});
-
-			/*
-			items.push({
-				x: timeString,
-				y: ele,
-				group: 1
-			});
-			*/
-		});
-
-		timeline.setItems(items);
-		timeline.fit();
-
-		var averageSpeed = totalSpeed/index;
-		
-		console.log('Distance: ' + distance);
-		console.log('Average Speed: ' + averageSpeed);
-
-		var aveSpeed = averageSpeed * conversion[units].speed.value;
-	
-		$('.distance').text((distance/conversion[units].distance.value).toFixed(1));
-		$('.distance-units').text(conversion[units].distance.text);
-		$('.top-speed').text((averageSpeed * conversion[units].speed.value).toFixed(1));
-		$('.speed-units').text(conversion[units].speed.text);
-		
-		var getTimeText = function (elapsedTime) {
-			var hours = Math.floor(elapsedTime / 3600);
-			var minutes = Math.floor((elapsedTime - (hours * 3600)) / 60);
-			var seconds = (elapsedTime - (hours * 3600) - (minutes * 60));
-			var pad = function (number) {
-				return ("00" + number).substr(-2,2)
-			}
-
-			return pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
-		};
-		
-		$('.time').text(getTimeText(elapsedTime));
-		/*
-		var colorFunction = new L.CustomColorFunction(0, 15.02968, [[247, 252, 240], [ 224, 243, 219], [ 204, 235, 197], [ 168, 221, 181], [ 123, 204, 196], [ 78, 179, 211], [ 43, 140, 190], [ 8, 104, 172], [ 8, 64, 129] ], {
-			interpolate: true
-		});
-		*/
-		var weightFunction = new L.LinearFunction([0,0.5], [maxSpeed, 40]);
-		var colorFunction = new L.HSLHueFunction([0,120], [maxSpeed, -60]);
-
-        var polygon = true;
-        if (items.length > 1000) {
-            polygon = false;
-        }
-		var weightedPolylineTest = new L.WeightedFlowLine(data, {
-			recordsField: null,
-			locationMode: L.LocationModes.LATLNG,
-			latitudeField: 'lat',
-			longitudeField: 'lon',
-			displayOptions: {
-				speed: {
-					displayName: 'Speed',
-					displayText: function (value) {
-						return value.toFixed(1);
-					},
-					lineWeight: weightFunction,
-					//weight: weightFunction,
-					color: colorFunction,
-					fillColor: colorFunction
-				}
-			},
-            tooltipOptions: {
-                iconSize: null
+        var timeline = new vis.Graph2d($('#timeline').get(0), [], {
+            minHeight: 200,
+            maxHeight: 200,
+            graphHeight: 150,
+            style: 'line',
+            dataAxis: {
+                customRange: {
+                    left: {
+                        min: 0
+                    },
+                    right: {
+                        min: 0
+                    }
+                }
             },
-			layerOptions: {
-                polygon: polygon,
-				color: '#333',
-				weight: 10,
-				fill: true,
-				gradient: true,
-				fillOpacity: 0.7,
-				opacity: 0.8,
-				stroke: !polygon,
-                gradientUnits: 'userSpaceOnUse'
-				//weight: 0.5
-			},
-			onEachSegment: function (record1, record2, line, deltas, distance, velocity) {
-				line.bindPopup($(L.HTMLUtils.buildTable(deltas)).wrap('<div/>').parent().html());
-			}
-		});
+            catmullRom: false,
+            drawPoints: false
+        }, groups);
 
-		var weightFunction2 = new L.LinearFunction([0,0], [maxEle, 20]);
+        var layerControl = new L.Control.Layers({
+            'Stamen Toner': baseLayer,
+            'Stamen Terrain': terrainLayer,
+            'MapQuest OSM': osmLayer
+        });
 
-		var weightedPolylineTest2 = new L.DataLayer(data, {
-			recordsField: null,
-			locationMode: L.LocationModes.LATLNG,
-			latitudeField: 'lat',
-			longitudeField: 'lon',
-			displayOptions: {
-				index: {
-					displayName: 'Point',
-					text: function (value) {
-						return {
-							text: value,
-							attr: {
-								fill: '#000',
-								'font-size': 10,
-								'font-weight': 'bold'
-							}
-						}
-					}
-				},
-				ele: {
-					displayName: 'Elevation'
-				},
-				elapsedTime: {
-					displayName: 'Elapsed Time',
-					displayText: function (value) {
-						return getTimeText(value);
-					}
-				},
-				speed: {
-					displayName: 'Speed',
-					displayText: function (value) {
-						return value.toFixed(1);
-					},
-					fillColor: colorFunction,
-					radius: weightFunction
-				}
-			},
-			getMarker: function (latlng, options, record) {
-				return new L.Marker(latlng, {
-					icon: new L.DivIcon({
-						className: 'track-point-wrapper',
-						html: '<div class="track-point" style="color: ' + options.fillColor + ';">' + record.index + '</div>',
-						iconAnchor: new L.Point(0, 30)
-					}),
-					fillColor: options.fillColor
-				});
-			},
-			tooltipOptions: {
-				iconSize: new L.Point(150, 150),
-				iconAnchor: new L.Point(-20, 200)
-			},
-			layerOptions: {
-				//color: '#333',
-				opacity: 0.7,
-				weight: 0.5,
-				fill: false,
-				fillOpacity: 0.6,
-				stroke: false,
-				//fillColor: '#333',
-				numberOfSides: 50,
-				radius: 10
-			},
-			onEachSegment: function (record1, record2, line, deltas, distance, velocity) {
-				line.bindPopup($(L.HTMLUtils.buildTable(deltas)).wrap('<div/>').parent().html());
-			}
-		});
-		
-		var colorArray = colorFunction.sample(10);
+        layerControl.addTo(map);
 
-		var gradient = document.createElementNS(SVG_NS, 'linearGradient');
-		gradient.setAttribute('id', 'grad1');
-		gradient.setAttribute('x1', '0%');
-		gradient.setAttribute('x2', '0%');
-		gradient.setAttribute('y1', '100%');
-		gradient.setAttribute('y2', '0%');
+        var panoramioLayer = new L.PanoramioLayer();
 
-		for (var i = 0; i < colorArray.length; ++i) {
-			var stop = document.createElementNS(SVG_NS, 'stop');
-			stop.setAttribute('offset', ((i/(colorArray.length - 1)) * 100) + '%');
-			stop.setAttribute('stop-color', colorArray[i]);
-			stop.setAttribute('stop-opacity', '1');
+        layerControl.addOverlay(panoramioLayer, 'Panoramio Photos');
 
-			gradient.appendChild(stop);
-		}
+        var dropZone = $('body').get(0);
 
-		var $svg = $('path.customStyle1').parent();
-		var svg = $svg.get(0);
-		var defs = svg.querySelector('defs') || svg.insertBefore(document.createElementNS(SVG_NS, 'defs'), svg.firstChild);
-		defs.appendChild(gradient);
+        function handleDragOver(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+        };
 
-		var averageWeight = weightFunction.evaluate(averageSpeed);
-		var maxWeight = weightFunction.evaluate(maxSpeed);
+        function handleDrop(e) {
+            e.stopPropagation();
+            e.preventDefault();
 
-		/*
-		var averageSpeedLine = new L.Polyline(data, {
-			opacity: 0.1,
-			color: '#bbb',
-			lineJoin: 'miter',
-			lineCap: 'square',
-			weight: averageWeight * 2
-		});
-		*/
-		
-		var maxSpeedLine = new L.Polyline(data, {
-			opacity: 0.1,
-			color: '#bbb',
-			//lineJoin: 'miter',
-			//lineCap: 'square',
-			weight: maxWeight
-		});
+            var file = e.dataTransfer.files[0],
+                    reader = new FileReader();
+            reader.onload = function (event) {
+                processData(event.target.result);
+            };
+            console.log(file);
+            reader.readAsText(file);
 
-		map.addLayer(maxSpeedLine);
-		//map.addLayer(averageSpeedLine);
-		map.addLayer(weightedPolylineTest);
-		//map.addLayer(weightedPolylineTest2);
-		
-		map.on('zoomend', function (e) {
-			if (map.getZoom() > 17) {
-				setTimeout(function (){
-					//map.addLayer(weightedPolylineTest2);
-				}, 100)
-			}
-			else {
-				setTimeout(function (){
-					//map.removeLayer(weightedPolylineTest2);
-				}, 100)
-			}
-		});
-		
-		layerControl.addOverlay(weightedPolylineTest, 'Weighted Polyline');
+            return false;
+        };
+        dropZone.addEventListener('dragover', handleDragOver, false);
+        dropZone.addEventListener('drop', handleDrop, false);
 
-		map.fitBounds(weightedPolylineTest.getBounds());
-	}
-});
-	</script>
+
+        /*
+         $.ajax({
+         url: '../data/20131031-012045-Run.gpx',
+         type: 'GET',
+         dataType: 'xml',
+         success: function (data) {
+         processData(data);
+         },
+         error: function (jqXHR, textStatus, errorThrown) {
+         console.log(errorThrown);
+         }
+         });
+         */
+
+
+        $.ajax({
+            url: '../data/20110827-060626-Run.gpx',
+            type: 'GET',
+            dataType: 'xml',
+            success: function (data) {
+                processData(data);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log(errorThrown);
+            }
+        });
+
+        /*
+         $.ajax({
+         url: '../data/20120620-232221-Run.gpx',
+         type: 'GET',
+         dataType: 'xml',
+         success: function (data) {
+         processData(data);
+         },
+         error: function (jqXHR, textStatus, errorThrown) {
+         console.log(errorThrown);
+         }
+         });
+         */
+
+        var units = 'mi';
+        var conversion = {
+            km: {distance: {text: 'km', value: 1000}, speed: {text: 'kph', value: 3.6}},
+            mi: {distance: {text: 'mi', value: 1609.34}, speed: {text: 'mph', value: 2.23694}}
+        };
+
+        processData = function (data) {
+            var $trkpts = $(data).find('trkpt');
+
+            var data = [];
+
+            var lastLocation = null;
+            var lastTime = null;
+            var lastEle = null;
+            var index = 0;
+            var maxEle = -5000.0;
+            var minEle = 5000.0;
+            var maxSpeed = 0.0;
+            var maxEleSpeed = 0.0;
+            var items = [];
+            var distance = 0;
+            var totalSpeed = 0;
+            var elapsedTime = 0.0;
+
+            $trkpts.each(function () {
+                var $pt = $(this);
+                var location = new L.LatLng(Number($pt.attr('lat')), Number($pt.attr('lon')));
+                var ele = Number($pt.find('ele').text());
+                var speed = 0.0;
+                var eleSpeed = 0.0;
+                var timeString = $pt.find('time').text();
+                var time = moment(timeString);
+
+                if (lastLocation && lastTime) {
+                    var timeDelta = time.diff(lastTime, 'seconds');
+                    var distDelta = location.distanceTo(lastLocation);
+                    var eleDelta = ele - lastEle;
+
+                    if (timeDelta > 0) {
+                        speed = distDelta / timeDelta;
+                        eleSpeed = eleDelta / timeDelta;
+                    }
+
+                    distance += distDelta;
+                    elapsedTime += timeDelta;
+                }
+
+                if (speed > maxSpeed) {
+                    maxSpeed = speed;
+                }
+
+                totalSpeed += speed;
+
+                data.push({
+                    index: index,
+                    location: location,
+                    lat: location.lat,
+                    lon: location.lng,
+                    ele: ele,
+                    eleSpeed: eleSpeed,
+                    speed: speed,
+                    time: time,
+                    elapsedTime: elapsedTime,
+                    distance: distance
+                });
+
+                location.weight = speed * 2;
+                location.ele = ele;
+                location.index = index + 1;
+                location.time = timeString;
+
+                //data.push(location);
+
+                lastLocation = location;
+                lastTime = time;
+                lastEle = ele;
+
+                index++;
+
+                if (ele > maxEle) {
+                    maxEle = ele;
+                }
+
+                if (ele < minEle) {
+                    minEle = ele;
+                }
+
+                items.push({
+                    x: timeString,
+                    y: speed,
+                    group: 0
+                });
+
+                /*
+                 items.push({
+                 x: timeString,
+                 y: ele,
+                 group: 1
+                 });
+                 */
+            });
+
+            timeline.setItems(items);
+            timeline.fit();
+
+            var averageSpeed = totalSpeed / index;
+
+            console.log('Distance: ' + distance);
+            console.log('Average Speed: ' + averageSpeed);
+
+            var aveSpeed = averageSpeed * conversion[units].speed.value;
+
+            $('.distance').text((distance / conversion[units].distance.value).toFixed(1));
+            $('.distance-units').text(conversion[units].distance.text);
+            $('.top-speed').text((averageSpeed * conversion[units].speed.value).toFixed(1));
+            $('.speed-units').text(conversion[units].speed.text);
+
+            var getTimeText = function (elapsedTime) {
+                var hours = Math.floor(elapsedTime / 3600);
+                var minutes = Math.floor((elapsedTime - (hours * 3600)) / 60);
+                var seconds = (elapsedTime - (hours * 3600) - (minutes * 60));
+                var pad = function (number) {
+                    return ("00" + number).substr(-2, 2)
+                }
+
+                return pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
+            };
+
+            $('.time').text(getTimeText(elapsedTime));
+            /*
+             var colorFunction = new L.CustomColorFunction(0, 15.02968, [[247, 252, 240], [ 224, 243, 219], [ 204, 235, 197], [ 168, 221, 181], [ 123, 204, 196], [ 78, 179, 211], [ 43, 140, 190], [ 8, 104, 172], [ 8, 64, 129] ], {
+             interpolate: true
+             });
+             */
+            var weightFunction = new L.LinearFunction([0, 0.5], [maxSpeed, 40]);
+            var colorFunction = new L.HSLHueFunction([0, 120], [maxSpeed, -60]);
+
+            var polygon = true;
+            if (items.length > 1000) {
+                polygon = false;
+            }
+            var weightedPolylineTest = new L.WeightedFlowLine(data, {
+                recordsField: null,
+                locationMode: L.LocationModes.LATLNG,
+                latitudeField: 'lat',
+                longitudeField: 'lon',
+                displayOptions: {
+                    speed: {
+                        displayName: 'Speed',
+                        displayText: function (value) {
+                            return value.toFixed(1);
+                        },
+                        lineWeight: weightFunction,
+                        //weight: weightFunction,
+                        color: colorFunction,
+                        fillColor: colorFunction
+                    }
+                },
+                tooltipOptions: {
+                    iconSize: null
+                },
+                layerOptions: {
+                    polygon: polygon,
+                    color: '#333',
+                    weight: 10,
+                    fill: true,
+                    gradient: true,
+                    fillOpacity: 0.7,
+                    opacity: 0.8,
+                    stroke: !polygon,
+                    gradientUnits: 'userSpaceOnUse'
+                    //weight: 0.5
+                },
+                onEachSegment: function (record1, record2, line, deltas, distance, velocity) {
+                    line.bindPopup($(L.HTMLUtils.buildTable(deltas)).wrap('<div/>').parent().html());
+                }
+            });
+
+            var weightFunction2 = new L.LinearFunction([0, 0], [maxEle, 20]);
+
+            var weightedPolylineTest2 = new L.DataLayer(data, {
+                recordsField: null,
+                locationMode: L.LocationModes.LATLNG,
+                latitudeField: 'lat',
+                longitudeField: 'lon',
+                displayOptions: {
+                    index: {
+                        displayName: 'Point',
+                        text: function (value) {
+                            return {
+                                text: value,
+                                attr: {
+                                    fill: '#000',
+                                    'font-size': 10,
+                                    'font-weight': 'bold'
+                                }
+                            }
+                        }
+                    },
+                    ele: {
+                        displayName: 'Elevation'
+                    },
+                    elapsedTime: {
+                        displayName: 'Elapsed Time',
+                        displayText: function (value) {
+                            return getTimeText(value);
+                        }
+                    },
+                    speed: {
+                        displayName: 'Speed',
+                        displayText: function (value) {
+                            return value.toFixed(1);
+                        },
+                        fillColor: colorFunction,
+                        radius: weightFunction
+                    }
+                },
+                getMarker: function (latlng, options, record) {
+                    return new L.Marker(latlng, {
+                        icon: new L.DivIcon({
+                            className: 'track-point-wrapper',
+                            html: '<div class="track-point" style="color: ' + options.fillColor + ';">' + record.index + '</div>',
+                            iconAnchor: new L.Point(0, 30)
+                        }),
+                        fillColor: options.fillColor
+                    });
+                },
+                tooltipOptions: {
+                    iconSize: new L.Point(150, 150),
+                    iconAnchor: new L.Point(-20, 200)
+                },
+                layerOptions: {
+                    //color: '#333',
+                    opacity: 0.7,
+                    weight: 0.5,
+                    fill: false,
+                    fillOpacity: 0.6,
+                    stroke: false,
+                    //fillColor: '#333',
+                    numberOfSides: 50,
+                    radius: 10
+                },
+                onEachSegment: function (record1, record2, line, deltas, distance, velocity) {
+                    line.bindPopup($(L.HTMLUtils.buildTable(deltas)).wrap('<div/>').parent().html());
+                }
+            });
+
+            var colorArray = colorFunction.sample(10);
+
+            var gradient = document.createElementNS(SVG_NS, 'linearGradient');
+            gradient.setAttribute('id', 'grad1');
+            gradient.setAttribute('x1', '0%');
+            gradient.setAttribute('x2', '0%');
+            gradient.setAttribute('y1', '100%');
+            gradient.setAttribute('y2', '0%');
+
+            for (var i = 0; i < colorArray.length; ++i) {
+                var stop = document.createElementNS(SVG_NS, 'stop');
+                stop.setAttribute('offset', ((i / (colorArray.length - 1)) * 100) + '%');
+                stop.setAttribute('stop-color', colorArray[i]);
+                stop.setAttribute('stop-opacity', '1');
+
+                gradient.appendChild(stop);
+            }
+
+            var $svg = $('path.customStyle1').parent();
+            var svg = $svg.get(0);
+            var defs = svg.querySelector('defs') || svg.insertBefore(document.createElementNS(SVG_NS, 'defs'), svg.firstChild);
+            defs.appendChild(gradient);
+
+            var averageWeight = weightFunction.evaluate(averageSpeed);
+            var maxWeight = weightFunction.evaluate(maxSpeed);
+
+            /*
+             var averageSpeedLine = new L.Polyline(data, {
+             opacity: 0.1,
+             color: '#bbb',
+             lineJoin: 'miter',
+             lineCap: 'square',
+             weight: averageWeight * 2
+             });
+             */
+
+            var maxSpeedLine = new L.Polyline(data, {
+                opacity: 0.1,
+                color: '#bbb',
+                //lineJoin: 'miter',
+                //lineCap: 'square',
+                weight: maxWeight
+            });
+
+            map.addLayer(maxSpeedLine);
+            //map.addLayer(averageSpeedLine);
+            map.addLayer(weightedPolylineTest);
+            //map.addLayer(weightedPolylineTest2);
+
+            map.on('zoomend', function (e) {
+                if (map.getZoom() > 17) {
+                    setTimeout(function () {
+                        //map.addLayer(weightedPolylineTest2);
+                    }, 100)
+                }
+                else {
+                    setTimeout(function () {
+                        //map.removeLayer(weightedPolylineTest2);
+                    }, 100)
+                }
+            });
+
+            layerControl.addOverlay(weightedPolylineTest, 'Weighted Polyline');
+
+            map.fitBounds(weightedPolylineTest.getBounds());
+        }
+    });
+</script>
 </body>
 </html>

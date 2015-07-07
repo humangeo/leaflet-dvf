@@ -8,693 +8,701 @@
     <meta name="author" content="">
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
+        body {
+            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
 
-      #map {
-      	background-image: url('http://upload.wikimedia.org/wikipedia/commons/d/d4/Battle_of_Moscow_7_Septembr_1812_year.jpg');
-      	background-size: 100%;
-      }
+        #map {
+            background-image: url('http://upload.wikimedia.org/wikipedia/commons/d/d4/Battle_of_Moscow_7_Septembr_1812_year.jpg');
+            background-size: 100%;
+        }
 
-      #map div.leaflet-tile-pane {
-      	opacity: 0.4;
-      }
+        #map div.leaflet-tile-pane {
+            opacity: 0.4;
+        }
 
-      div.leaflet-control-legend {
-      	width: 400px;
-      	min-height: 120px;
-      }
+        div.leaflet-control-legend {
+            width: 400px;
+            min-height: 120px;
+        }
 
-      .legend-line {
-      	margin-bottom: 20px;
-      }
+        .legend-line {
+            margin-bottom: 20px;
+        }
 
-      .legend-line div.scale-bars i {
-      	background: none !important;
-      	width: 0px;
-      	height: 0px !important;
-      	vertical-align: middle;
-      	border-left: none !important;
-      }
+        .legend-line div.scale-bars i {
+            background: none !important;
+            width: 0px;
+            height: 0px !important;
+            vertical-align: middle;
+            border-left: none !important;
+        }
 
-      .line-legend .legend-box {
-          width: 0px;
-          height: 0px !important;
-          border-top: none !important;
-          border-right: none !important;
-      }
+        .line-legend .legend-box {
+            width: 0px;
+            height: 0px !important;
+            border-top: none !important;
+            border-right: none !important;
+        }
 
     </style>
-    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
-	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
 </head>
 
 <body>
-	<div class="navbar">
-      <div class="navbar-inner">
+<div class="navbar">
+    <div class="navbar-inner">
         <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="#">Napoleon's March</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
-            </ul>
-          </div>
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">Napoleon's March</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
         </div>
-      </div>
     </div>
+</div>
 
-    <div class="container-fluid">
-    	<div class="row-fluid">
-			<div id="map"></div>
-		</div>
-	</div>
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div id="map"></div>
+    </div>
+</div>
 
-	<script>
-	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
+<script>
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'http://www.google-analytics.com/analytics.js', 'ga');
 
-	  ga('create', 'UA-42733116-1', 'humangeo.github.io');
-	  ga('send', 'pageview');
-	</script>
-	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
-	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-	<script type="text/javascript">
+    ga('create', 'UA-42733116-1', 'humangeo.github.io');
+    ga('send', 'pageview');
+</script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+<script type="text/javascript">
 
-$(document).ready(function() {
-	var map;
+    $(document).ready(function () {
+        var map;
 
-	var resize = function () {
-		var $map = $('#map');
+        var resize = function () {
+            var $map = $('#map');
 
-		$map.height($(window).height() - $('div.navbar').outerHeight());
+            $map.height($(window).height() - $('div.navbar').outerHeight());
 
-		if (map) {
-			map.invalidateSize();
-		}
-	};
+            if (map) {
+                map.invalidateSize();
+            }
+        };
 
-	$(window).on('resize', function () {
-		resize();
-	});
+        $(window).on('resize', function () {
+            resize();
+        });
 
-	resize();
+        resize();
 
-	map = L.map('map').setView([54.5, 31.5], 7);
-	map.attributionControl.addAttribution('Original idea from <a href="http://en.wikipedia.org/wiki/Charles_Joseph_Minard" target="_blank">Charles Minard</a> and his famous <a href="http://upload.wikimedia.org/wikipedia/commons/2/29/Minard.png" style="font-style: italic;" target="_blank">Carte figurative des pertes successives en hommes de l\'Armée Française dans la campagne de Russie 1812-1813</a>.  Minard troop data courtesy of <a href="http://www-958.ibm.com/software/data/cognos/manyeyes/datasets/minard-troops/versions/1" target="_blank">IBM Many Eyes</a>.  Background image from Albrecht Adam\'s <a style="font-style: italic;" href="http://upload.wikimedia.org/wikipedia/commons/d/d4/Battle_of_Moscow_7_Septembr_1812_year.jpg" target="_blank">Battle of Moscow on 7 September 1812</a>');
+        map = L.map('map').setView([54.5, 31.5], 7);
+        map.attributionControl.addAttribution('Original idea from <a href="http://en.wikipedia.org/wiki/Charles_Joseph_Minard" target="_blank">Charles Minard</a> and his famous <a href="http://upload.wikimedia.org/wikipedia/commons/2/29/Minard.png" style="font-style: italic;" target="_blank">Carte figurative des pertes successives en hommes de l\'Armée Française dans la campagne de Russie 1812-1813</a>.  Minard troop data courtesy of <a href="http://www-958.ibm.com/software/data/cognos/manyeyes/datasets/minard-troops/versions/1" target="_blank">IBM Many Eyes</a>.  Background image from Albrecht Adam\'s <a style="font-style: italic;" href="http://upload.wikimedia.org/wikipedia/commons/d/d4/Battle_of_Moscow_7_Septembr_1812_year.jpg" target="_blank">Battle of Moscow on 7 September 1812</a>');
 
-	// Add the Stamen toner tiles as a base layer
-	var baseLayer = new L.StamenTileLayer('toner', {
-		detectRetina: true
-	}).addTo(map);
+        // Add the Stamen toner tiles as a base layer
+        var baseLayer = new L.StamenTileLayer('toner', {
+            detectRetina: true
+        }).addTo(map);
 
-	// Add a layer control
-	var layerControl = L.control.layers({
-		'Background': baseLayer
-	}).addTo(map);
+        // Add a layer control
+        var layerControl = L.control.layers({
+            'Background': baseLayer
+        }).addTo(map);
 
-	// Add a legend control
-	var legendControl = L.control.legend({
-		autoAdd: false
-	}).addTo(map);
+        // Add a legend control
+        var legendControl = L.control.legend({
+            autoAdd: false
+        }).addTo(map);
 
-	// Napoleon's march troop data from IBM Many Eyes (http://www-958.ibm.com/software/data/cognos/manyeyes/datasets/minard-troops/versions/1) - converted from CSV to JSON
-	var troopData = [
-		{
-			"num": "1",
-			"lon": "24",
-			"lat": "54.9",
-			"survivors": "340000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "2",
-			"lon": "24.5",
-			"lat": "55",
-			"survivors": "340000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "3",
-			"lon": "25.5",
-			"lat": "54.5",
-			"survivors": "340000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "4",
-			"lon": "26",
-			"lat": "54.7",
-			"survivors": "320000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "5",
-			"lon": "27",
-			"lat": "54.8",
-			"survivors": "300000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "6",
-			"lon": "28",
-			"lat": "54.9",
-			"survivors": "280000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "7",
-			"lon": "28.5",
-			"lat": "55",
-			"survivors": "240000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "8",
-			"lon": "29",
-			"lat": "55.1",
-			"survivors": "210000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "9",
-			"lon": "30",
-			"lat": "55.2",
-			"survivors": "180000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "10",
-			"lon": "30.3",
-			"lat": "55.3",
-			"survivors": "175000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "11",
-			"lon": "32",
-			"lat": "54.8",
-			"survivors": "145000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "12",
-			"lon": "33.2",
-			"lat": "54.9",
-			"survivors": "140000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "13",
-			"lon": "34.4",
-			"lat": "55.5",
-			"survivors": "127100",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "14",
-			"lon": "35.5",
-			"lat": "55.4",
-			"survivors": "100000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "15",
-			"lon": "36",
-			"lat": "55.5",
-			"survivors": "100000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "16",
-			"lon": "37.6",
-			"lat": "55.8",
-			"survivors": "100000",
-			"direction": "A",
-			"group": "1"
-		},
-		{
-			"num": "17",
-			"lon": "37.7",
-			"lat": "55.7",
-			"survivors": "100000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "18",
-			"lon": "37.5",
-			"lat": "55.7",
-			"survivors": "98000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "19",
-			"lon": "37",
-			"lat": "55",
-			"survivors": "97000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "20",
-			"lon": "36.8",
-			"lat": "55",
-			"survivors": "96000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "21",
-			"lon": "35.4",
-			"lat": "55.3",
-			"survivors": "87000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "22",
-			"lon": "34.3",
-			"lat": "55.2",
-			"survivors": "55000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "23",
-			"lon": "33.3",
-			"lat": "54.8",
-			"survivors": "37000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "24",
-			"lon": "32",
-			"lat": "54.6",
-			"survivors": "24000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "25",
-			"lon": "30.4",
-			"lat": "54.4",
-			"survivors": "20000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "26",
-			"lon": "29.2",
-			"lat": "54.3",
-			"survivors": "20000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "27",
-			"lon": "28.5",
-			"lat": "54.2",
-			"survivors": "20000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "28",
-			"lon": "28.3",
-			"lat": "54.3",
-			"survivors": "20000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "29",
-			"lon": "27.5",
-			"lat": "54.5",
-			"survivors": "20000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "30",
-			"lon": "26.8",
-			"lat": "54.3",
-			"survivors": "12000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "31",
-			"lon": "26.4",
-			"lat": "54.4",
-			"survivors": "14000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "32",
-			"lon": "25",
-			"lat": "54.4",
-			"survivors": "8000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "33",
-			"lon": "24.4",
-			"lat": "54.4",
-			"survivors": "4000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "34",
-			"lon": "24.2",
-			"lat": "54.4",
-			"survivors": "4000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "35",
-			"lon": "24.1",
-			"lat": "54.4",
-			"survivors": "4000",
-			"direction": "R",
-			"group": "1"
-		},
-		{
-			"num": "1",
-			"lon": "24",
-			"lat": "55.1",
-			"survivors": "60000",
-			"direction": "A",
-			"group": "2"
-		},
-		{
-			"num": "2",
-			"lon": "24.5",
-			"lat": "55.2",
-			"survivors": "60000",
-			"direction": "A",
-			"group": "2"
-		},
-		{
-			"num": "3",
-			"lon": "25.5",
-			"lat": "54.7",
-			"survivors": "60000",
-			"direction": "A",
-			"group": "2"
-		},
-		{
-			"num": "4",
-			"lon": "26.6",
-			"lat": "55.7",
-			"survivors": "40000",
-			"direction": "A",
-			"group": "2"
-		},
-		{
-			"num": "5",
-			"lon": "27.4",
-			"lat": "55.6",
-			"survivors": "33000",
-			"direction": "A",
-			"group": "2"
-		},
-		{
-			"num": "6",
-			"lon": "28.7",
-			"lat": "55.5",
-			"survivors": "33000",
-			"direction": "A",
-			"group": "2"
-		},
-		{
-			"num": "7",
-			"lon": "28.7",
-			"lat": "55.5",
-			"survivors": "33000",
-			"direction": "R",
-			"group": "2"
-		},
-		{
-			"num": "8",
-			"lon": "29.2",
-			"lat": "54.2",
-			"survivors": "30000",
-			"direction": "R",
-			"group": "2"
-		},
-		{
-			"num": "9",
-			"lon": "28.5",
-			"lat": "54.1",
-			"survivors": "30000",
-			"direction": "R",
-			"group": "2"
-		},
-		{
-			"num": "10",
-			"lon": "28.3",
-			"lat": "54.2",
-			"survivors": "28000",
-			"direction": "R",
-			"group": "2"
-		},
-		{
-			"num": "1",
-			"lon": "24",
-			"lat": "55.2",
-			"survivors": "22000",
-			"direction": "A",
-			"group": "3"
-		},
-		{
-			"num": "2",
-			"lon": "24.5",
-			"lat": "55.3",
-			"survivors": "22000",
-			"direction": "A",
-			"group": "3"
-		},
-		{
-			"num": "3",
-			"lon": "24.6",
-			"lat": "55.8",
-			"survivors": "6000",
-			"direction": "A",
-			"group": "3"
-		},
-		{
-			"num": "4",
-			"lon": "24.6",
-			"lat": "55.8",
-			"survivors": "6000",
-			"direction": "R",
-			"group": "3"
-		},
-		{
-			"num": "5",
-			"lon": "24.2",
-			"lat": "54.4",
-			"survivors": "6000",
-			"direction": "R",
-			"group": "3"
-		},
-		{
-			"num": "6",
-			"lon": "24.1",
-			"lat": "54.4",
-			"survivors": "6000",
-			"direction": "R",
-			"group": "3"
-		}
-	];
+        // Napoleon's march troop data from IBM Many Eyes (http://www-958.ibm.com/software/data/cognos/manyeyes/datasets/minard-troops/versions/1) - converted from CSV to JSON
+        var troopData = [
+            {
+                "num": "1",
+                "lon": "24",
+                "lat": "54.9",
+                "survivors": "340000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "2",
+                "lon": "24.5",
+                "lat": "55",
+                "survivors": "340000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "3",
+                "lon": "25.5",
+                "lat": "54.5",
+                "survivors": "340000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "4",
+                "lon": "26",
+                "lat": "54.7",
+                "survivors": "320000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "5",
+                "lon": "27",
+                "lat": "54.8",
+                "survivors": "300000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "6",
+                "lon": "28",
+                "lat": "54.9",
+                "survivors": "280000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "7",
+                "lon": "28.5",
+                "lat": "55",
+                "survivors": "240000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "8",
+                "lon": "29",
+                "lat": "55.1",
+                "survivors": "210000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "9",
+                "lon": "30",
+                "lat": "55.2",
+                "survivors": "180000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "10",
+                "lon": "30.3",
+                "lat": "55.3",
+                "survivors": "175000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "11",
+                "lon": "32",
+                "lat": "54.8",
+                "survivors": "145000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "12",
+                "lon": "33.2",
+                "lat": "54.9",
+                "survivors": "140000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "13",
+                "lon": "34.4",
+                "lat": "55.5",
+                "survivors": "127100",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "14",
+                "lon": "35.5",
+                "lat": "55.4",
+                "survivors": "100000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "15",
+                "lon": "36",
+                "lat": "55.5",
+                "survivors": "100000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "16",
+                "lon": "37.6",
+                "lat": "55.8",
+                "survivors": "100000",
+                "direction": "A",
+                "group": "1"
+            },
+            {
+                "num": "17",
+                "lon": "37.7",
+                "lat": "55.7",
+                "survivors": "100000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "18",
+                "lon": "37.5",
+                "lat": "55.7",
+                "survivors": "98000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "19",
+                "lon": "37",
+                "lat": "55",
+                "survivors": "97000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "20",
+                "lon": "36.8",
+                "lat": "55",
+                "survivors": "96000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "21",
+                "lon": "35.4",
+                "lat": "55.3",
+                "survivors": "87000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "22",
+                "lon": "34.3",
+                "lat": "55.2",
+                "survivors": "55000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "23",
+                "lon": "33.3",
+                "lat": "54.8",
+                "survivors": "37000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "24",
+                "lon": "32",
+                "lat": "54.6",
+                "survivors": "24000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "25",
+                "lon": "30.4",
+                "lat": "54.4",
+                "survivors": "20000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "26",
+                "lon": "29.2",
+                "lat": "54.3",
+                "survivors": "20000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "27",
+                "lon": "28.5",
+                "lat": "54.2",
+                "survivors": "20000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "28",
+                "lon": "28.3",
+                "lat": "54.3",
+                "survivors": "20000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "29",
+                "lon": "27.5",
+                "lat": "54.5",
+                "survivors": "20000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "30",
+                "lon": "26.8",
+                "lat": "54.3",
+                "survivors": "12000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "31",
+                "lon": "26.4",
+                "lat": "54.4",
+                "survivors": "14000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "32",
+                "lon": "25",
+                "lat": "54.4",
+                "survivors": "8000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "33",
+                "lon": "24.4",
+                "lat": "54.4",
+                "survivors": "4000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "34",
+                "lon": "24.2",
+                "lat": "54.4",
+                "survivors": "4000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "35",
+                "lon": "24.1",
+                "lat": "54.4",
+                "survivors": "4000",
+                "direction": "R",
+                "group": "1"
+            },
+            {
+                "num": "1",
+                "lon": "24",
+                "lat": "55.1",
+                "survivors": "60000",
+                "direction": "A",
+                "group": "2"
+            },
+            {
+                "num": "2",
+                "lon": "24.5",
+                "lat": "55.2",
+                "survivors": "60000",
+                "direction": "A",
+                "group": "2"
+            },
+            {
+                "num": "3",
+                "lon": "25.5",
+                "lat": "54.7",
+                "survivors": "60000",
+                "direction": "A",
+                "group": "2"
+            },
+            {
+                "num": "4",
+                "lon": "26.6",
+                "lat": "55.7",
+                "survivors": "40000",
+                "direction": "A",
+                "group": "2"
+            },
+            {
+                "num": "5",
+                "lon": "27.4",
+                "lat": "55.6",
+                "survivors": "33000",
+                "direction": "A",
+                "group": "2"
+            },
+            {
+                "num": "6",
+                "lon": "28.7",
+                "lat": "55.5",
+                "survivors": "33000",
+                "direction": "A",
+                "group": "2"
+            },
+            {
+                "num": "7",
+                "lon": "28.7",
+                "lat": "55.5",
+                "survivors": "33000",
+                "direction": "R",
+                "group": "2"
+            },
+            {
+                "num": "8",
+                "lon": "29.2",
+                "lat": "54.2",
+                "survivors": "30000",
+                "direction": "R",
+                "group": "2"
+            },
+            {
+                "num": "9",
+                "lon": "28.5",
+                "lat": "54.1",
+                "survivors": "30000",
+                "direction": "R",
+                "group": "2"
+            },
+            {
+                "num": "10",
+                "lon": "28.3",
+                "lat": "54.2",
+                "survivors": "28000",
+                "direction": "R",
+                "group": "2"
+            },
+            {
+                "num": "1",
+                "lon": "24",
+                "lat": "55.2",
+                "survivors": "22000",
+                "direction": "A",
+                "group": "3"
+            },
+            {
+                "num": "2",
+                "lon": "24.5",
+                "lat": "55.3",
+                "survivors": "22000",
+                "direction": "A",
+                "group": "3"
+            },
+            {
+                "num": "3",
+                "lon": "24.6",
+                "lat": "55.8",
+                "survivors": "6000",
+                "direction": "A",
+                "group": "3"
+            },
+            {
+                "num": "4",
+                "lon": "24.6",
+                "lat": "55.8",
+                "survivors": "6000",
+                "direction": "R",
+                "group": "3"
+            },
+            {
+                "num": "5",
+                "lon": "24.2",
+                "lat": "54.4",
+                "survivors": "6000",
+                "direction": "R",
+                "group": "3"
+            },
+            {
+                "num": "6",
+                "lon": "24.1",
+                "lat": "54.4",
+                "survivors": "6000",
+                "direction": "R",
+                "group": "3"
+            }
+        ];
 
-	// Vary the color from dark blue to grey to dark red
-	// Blues = more survivors, Reds = fewer survivors
-	var colorFunction = new L.PiecewiseFunction([
-		new L.HSLLuminosityFunction([4000, 0.3], [50000, 0.6], {
-			outputHue: 0,
-			outputSaturation: '60%'
-		}),
-		new L.HSLSaturationFunction([50000, 0.6], [100000, 0.1], {
-			outputHue: 0,
-			outputLuminosity: '60%'
-		}),
-		new L.HSLSaturationFunction([100000, 0.0], [300000, 0.6], {
-			outputHue: 240,
-			outputLuminosity: '60%'
-		}),
-		new L.HSLLuminosityFunction([300000, 0.6], [340000, 0.3], {
-			outputHue: 240,
-			outputSaturation: '60%'
-		})
-	]);
+        // Vary the color from dark blue to grey to dark red
+        // Blues = more survivors, Reds = fewer survivors
+        var colorFunction = new L.PiecewiseFunction([
+            new L.HSLLuminosityFunction([4000, 0.3], [50000, 0.6], {
+                outputHue: 0,
+                outputSaturation: '60%'
+            }),
+            new L.HSLSaturationFunction([50000, 0.6], [100000, 0.1], {
+                outputHue: 0,
+                outputLuminosity: '60%'
+            }),
+            new L.HSLSaturationFunction([100000, 0.0], [300000, 0.6], {
+                outputHue: 240,
+                outputLuminosity: '60%'
+            }),
+            new L.HSLLuminosityFunction([300000, 0.6], [340000, 0.3], {
+                outputHue: 240,
+                outputSaturation: '60%'
+            })
+        ]);
 
-	// Vary the line weight from 5 pixels to 40 pixels based on the number of survivors
-	var weightFunction = new L.LinearFunction([4000, 5], [340000, 40]);
+        // Vary the line weight from 5 pixels to 40 pixels based on the number of survivors
+        var weightFunction = new L.LinearFunction([4000, 5], [340000, 40]);
 
-	// On each line segment, bind a popup that displays the changes from the starting point to the ending point
-	var onEachSegment = function (record1, record2, line, deltas) {
-		line.bindPopup($(L.HTMLUtils.buildTable(deltas.survivors)).wrap('<div/>').parent().html());
-	};
+        // On each line segment, bind a popup that displays the changes from the starting point to the ending point
+        var onEachSegment = function (record1, record2, line, deltas) {
+            line.bindPopup($(L.HTMLUtils.buildTable(deltas.survivors)).wrap('<div/>').parent().html());
+        };
 
-	// Define layerOptions and displayOptions that will be used across flow lines
-	var layerOptions = {
-		opacity: 0.9
-	};
+        // Define layerOptions and displayOptions that will be used across flow lines
+        var layerOptions = {
+            opacity: 0.9
+        };
 
-	var displayOptions = {
-		survivors: {
-			weight: weightFunction,
-            lineWeight: weightFunction,
-			color: colorFunction,
-			displayName: 'Survivors over Time'
-		}
-	};
+        var displayOptions = {
+            survivors: {
+                weight: weightFunction,
+                lineWeight: weightFunction,
+                color: colorFunction,
+                displayName: 'Survivors over Time'
+            }
+        };
 
-	// Define flow lines for each group of troops in the data.  The includeLayer option is provided to filter
-	// points by a particular group (see below).
-	var group1Line = new L.FlowLine(troopData, {
-		recordsField: null,
-		locationMode: L.LocationModes.LATLNG,
-		latitudeField: 'lat',
-		longitudeField: 'lon',
-		layerOptions: layerOptions,
-		legendOptions: {
-			width: 100,
-			numSegments: 5,
-			className: 'legend-line'
-		},
-		includeLayer: function (record) {
-			return record.group === "1";
-		},
-        tooltipOptions: {
-            className: 'leaflet-div-icon line-legend'
-        },
-		displayOptions: displayOptions,
-		onEachSegment: onEachSegment
-	});
+        // Define flow lines for each group of troops in the data.  The includeLayer option is provided to filter
+        // points by a particular group (see below).
+        var group1Line = new L.FlowLine(troopData, {
+            recordsField: null,
+            locationMode: L.LocationModes.LATLNG,
+            latitudeField: 'lat',
+            longitudeField: 'lon',
+            layerOptions: layerOptions,
+            legendOptions: {
+                width: 100,
+                numSegments: 5,
+                className: 'legend-line'
+            },
+            includeLayer: function (record) {
+                return record.group === "1";
+            },
+            tooltipOptions: {
+                className: 'leaflet-div-icon line-legend'
+            },
+            displayOptions: displayOptions,
+            onEachSegment: onEachSegment
+        });
 
-	var group2Line = new L.FlowLine(troopData, {
-		recordsField: null,
-		locationMode: L.LocationModes.LATLNG,
-		latitudeField: 'lat',
-		longitudeField: 'lon',
-		layerOptions: layerOptions,
-		includeLayer: function (record) {
-			return record.group === "2";
-		},
-        tooltipOptions: {
-            className: 'leaflet-div-icon line-legend'
-        },
-		displayOptions: displayOptions,
-		onEachSegment: onEachSegment
-	});
+        var group2Line = new L.FlowLine(troopData, {
+            recordsField: null,
+            locationMode: L.LocationModes.LATLNG,
+            latitudeField: 'lat',
+            longitudeField: 'lon',
+            layerOptions: layerOptions,
+            includeLayer: function (record) {
+                return record.group === "2";
+            },
+            tooltipOptions: {
+                className: 'leaflet-div-icon line-legend'
+            },
+            displayOptions: displayOptions,
+            onEachSegment: onEachSegment
+        });
 
-	var group3Line = new L.FlowLine(troopData, {
-		recordsField: null,
-		locationMode: L.LocationModes.LATLNG,
-		latitudeField: 'lat',
-		longitudeField: 'lon',
-		layerOptions: layerOptions,
-		includeLayer: function (record) {
-			return record.group === "3";
-		},
-        tooltipOptions: {
-            className: 'leaflet-div-icon line-legend'
-        },
-		displayOptions: displayOptions,
-		onEachSegment: onEachSegment
-	});
+        var group3Line = new L.FlowLine(troopData, {
+            recordsField: null,
+            locationMode: L.LocationModes.LATLNG,
+            latitudeField: 'lat',
+            longitudeField: 'lon',
+            layerOptions: layerOptions,
+            includeLayer: function (record) {
+                return record.group === "3";
+            },
+            tooltipOptions: {
+                className: 'leaflet-div-icon line-legend'
+            },
+            displayOptions: displayOptions,
+            onEachSegment: onEachSegment
+        });
 
-	// Create a data layer for points - displayed as circles.  This will be displayed over top of the flow lines
-	var points = new L.DataLayer(troopData, {
-		recordsField: null,
-		locationMode: L.LocationModes.LATLNG,
-		latitudeField: 'lat',
-		longitudeField: 'lon',
-		layerOptions: {
-			fillColor: '#0F0F0F',
-			color: '#000000',
-			opacity: 1.0,
-			dropShadow: false,
-			gradient: true,
-			numberOfSides: 50,
-			weight: 0.5,
-			fillOpacity: 0.8
-		},
-		legendOptions: {
-			width: 250,
-			numSegments: 7
-		},
-		tooltipOptions: {
-			iconSize: new L.Point(80, 64),
-			iconAnchor: new L.Point(-5, 64)
-		},
-		displayOptions: {
-			survivors: {
-				radius: new L.LinearFunction([4000, 2.5], [340000, 20]),
-				fillColor: colorFunction,
-				displayName: 'Survivors by Location'
-			}
-		},
-		onEachRecord: function (layer, record) {
-			layer.bindPopup($(L.HTMLUtils.buildTable(record)).wrap('<div/>').parent().html());
-		}
-	});
+        // Create a data layer for points - displayed as circles.  This will be displayed over top of the flow lines
+        var points = new L.DataLayer(troopData, {
+            recordsField: null,
+            locationMode: L.LocationModes.LATLNG,
+            latitudeField: 'lat',
+            longitudeField: 'lon',
+            layerOptions: {
+                fillColor: '#0F0F0F',
+                color: '#000000',
+                opacity: 1.0,
+                dropShadow: false,
+                gradient: true,
+                numberOfSides: 50,
+                weight: 0.5,
+                fillOpacity: 0.8
+            },
+            legendOptions: {
+                width: 250,
+                numSegments: 7
+            },
+            tooltipOptions: {
+                iconSize: new L.Point(80, 64),
+                iconAnchor: new L.Point(-5, 64)
+            },
+            displayOptions: {
+                survivors: {
+                    radius: new L.LinearFunction([4000, 2.5], [340000, 20]),
+                    fillColor: colorFunction,
+                    displayName: 'Survivors by Location'
+                }
+            },
+            onEachRecord: function (layer, record) {
+                layer.bindPopup($(L.HTMLUtils.buildTable(record)).wrap('<div/>').parent().html());
+            }
+        });
 
-	// Add each layer to the layer control
-	layerControl.addOverlay(group1Line, 'Group 1');
-	layerControl.addOverlay(group2Line, 'Group 2');
-	layerControl.addOverlay(group3Line, 'Group 3');
-	layerControl.addOverlay(points, 'Points');
+        // Add each layer to the layer control
+        layerControl.addOverlay(group1Line, 'Group 1');
+        layerControl.addOverlay(group2Line, 'Group 2');
+        layerControl.addOverlay(group3Line, 'Group 3');
+        layerControl.addOverlay(points, 'Points');
 
-	// Add the layers we want to display to the legend
-	// Since all group lines use the same weight and color scales, just add the first layer to the legend
-	legendControl.addLayer(group1Line);
-	legendControl.addLayer(points);
+        // Add the layers we want to display to the legend
+        // Since all group lines use the same weight and color scales, just add the first layer to the legend
+        legendControl.addLayer(group1Line);
+        legendControl.addLayer(points);
 
-	// Add each layer to the map
-	map.addLayer(group1Line);
-	map.addLayer(group2Line);
-	map.addLayer(group3Line);
-	map.addLayer(points);
-});
-	</script>
+        // Add each layer to the map
+        map.addLayer(group1Line);
+        map.addLayer(group2Line);
+        map.addLayer(group3Line);
+        map.addLayer(points);
+    });
+</script>
 </body>
 </html>

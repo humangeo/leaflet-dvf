@@ -8,129 +8,132 @@
     <meta name="author" content="">
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
-      
-      #map {
-      	background-image: url('http://subtlepatterns.com/patterns/grey_wash_wall.png');
-      }
-      
-      #map div.leaflet-tile-pane {
-      	opacity: 0.5;
-      }
-      
+        body {
+            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
+
+        #map {
+            background-image: url('http://subtlepatterns.com/patterns/grey_wash_wall.png');
+        }
+
+        #map div.leaflet-tile-pane {
+            opacity: 0.5;
+        }
+
     </style>
-    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
-	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
-	<link rel="stylesheet" href="../css/MarkerCluster.Default.css" type="text/css" media="screen" />
-	<link rel="stylesheet" href="../css/MarkerCluster.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/MarkerCluster.Default.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/MarkerCluster.css" type="text/css" media="screen"/>
 </head>
 
 <body>
-	<div class="navbar navbar-inverse">
-      <div class="navbar-inner">
+<div class="navbar navbar-inverse">
+    <div class="navbar-inner">
         <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="#">Marker Test</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">Marker Test</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
         </div>
-      </div>
     </div>
+</div>
 
-    <div class="container-fluid">
-    	<div class="row-fluid">
-			<div id="map"></div>
-		</div>
-	</div>
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div id="map"></div>
+    </div>
+</div>
 
-	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
-	<script type="text/javascript" src="../lib/geohash.js"></script>
-	<script type="text/javascript" src="../lib/leaflet.markercluster-src.js"></script>
-	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
-	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
-	<script type="text/javascript">
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
+<script type="text/javascript" src="../lib/geohash.js"></script>
+<script type="text/javascript" src="../lib/leaflet.markercluster-src.js"></script>
+<script type="text/javascript"
+        src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
+<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+<script type="text/javascript">
 
-$(document).ready(function() {
-	var map;
-	var legendControl;
+    $(document).ready(function () {
+        var map;
+        var legendControl;
 
-	// Function for resizing the map to fill the available space on the screen
-	var resize = function () {
-		var $map = $('#map');
-		
-		$map.height($(window).height() - $('div.navbar').outerHeight());
-		
-		if (map) {
-			map.invalidateSize();
-		}
-	};
-	
-	// Resize the map element on window resize
-	$(window).on('resize', function () {
-		resize();
-	});
-	
-	// Resize the map element
-	resize();
-	
-	// Initialize the map
-	map = L.map('map').setView([0.0, 0.0], 2);
-	
-	var baseLayer = new L.StamenTileLayer('toner').addTo(map);
-	
-	baseLayer.addTo(map);
-	
-	// Initialize the legend control and add it to the map
-	var legendControl = new L.Control.Legend();
-	
-	legendControl.addTo(map);
-	
-	var layerControl = new L.Control.Layers({
-		'Stamen Toner': baseLayer
-	});
-	
-	layerControl.addTo(map);
-	
-	var markers = new L.MarkerClusterGroup();
+        // Function for resizing the map to fill the available space on the screen
+        var resize = function () {
+            var $map = $('#map');
 
-	layerControl.addOverlay(markers, 'Markers');
-	
-	for (var i = 0; i < 3000; ++i) {
-		var marker = new L.MapMarker(new L.LatLng(Math.random() * 90, Math.random() * 180), {
-			gradient: true,
-			dropShadow: true,
-			radius: Math.random() * 20,
-			fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)'
-		});
-		
-		marker = new L.SVGMarker(new L.LatLng(Math.random() * 90, Math.random() * 180), {
-		  svg: "http://upload.wikimedia.org/wikipedia/commons/8/8b/Green_Arrow_Up_Darker.svg",
-		  size: new L.Point(20, 20)
-		});
-		// Add the data layer to the map
-		markers.addLayer(marker);
-	}
-	
-	map.addLayer(markers);
-	
-	
-});
-	</script>
+            $map.height($(window).height() - $('div.navbar').outerHeight());
+
+            if (map) {
+                map.invalidateSize();
+            }
+        };
+
+        // Resize the map element on window resize
+        $(window).on('resize', function () {
+            resize();
+        });
+
+        // Resize the map element
+        resize();
+
+        // Initialize the map
+        map = L.map('map').setView([0.0, 0.0], 2);
+
+        var baseLayer = new L.StamenTileLayer('toner').addTo(map);
+
+        baseLayer.addTo(map);
+
+        // Initialize the legend control and add it to the map
+        var legendControl = new L.Control.Legend();
+
+        legendControl.addTo(map);
+
+        var layerControl = new L.Control.Layers({
+            'Stamen Toner': baseLayer
+        });
+
+        layerControl.addTo(map);
+
+        var markers = new L.MarkerClusterGroup();
+
+        layerControl.addOverlay(markers, 'Markers');
+
+        for (var i = 0; i < 3000; ++i) {
+            var marker = new L.MapMarker(new L.LatLng(Math.random() * 90, Math.random() * 180), {
+                gradient: true,
+                dropShadow: true,
+                radius: Math.random() * 20,
+                fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)'
+            });
+
+            marker = new L.SVGMarker(new L.LatLng(Math.random() * 90, Math.random() * 180), {
+                svg: "http://upload.wikimedia.org/wikipedia/commons/8/8b/Green_Arrow_Up_Darker.svg",
+                size: new L.Point(20, 20)
+            });
+            // Add the data layer to the map
+            markers.addLayer(marker);
+        }
+
+        map.addLayer(markers);
+
+
+    });
+</script>
 </body>
 </html>

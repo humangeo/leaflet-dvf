@@ -8,218 +8,228 @@
     <meta name="author" content="">
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
-      .mag-value {
-		  vertical-align: middle;
-		  text-align: center;
-		  line-height: 10px;
-		  color: rgba(0, 0, 0, 0.8);
-	  }
+        body {
+            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
 
-	  .leaflet-tile-pane {
-	  	  opacity: 0.3;
-	  }
+        .mag-value {
+            vertical-align: middle;
+            text-align: center;
+            line-height: 10px;
+            color: rgba(0, 0, 0, 0.8);
+        }
 
-	  #map {
-		  background-color: #090920;
-	  }
+        .leaflet-tile-pane {
+            opacity: 0.3;
+        }
+
+        #map {
+            background-color: #090920;
+        }
     </style>
-    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
-	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
 </head>
 
 <body>
-	<div class="navbar navbar-inverse">
-      <div class="navbar-inner">
+<div class="navbar navbar-inverse">
+    <div class="navbar-inner">
         <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="#">DC Metro Bus Locations</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">DC Metro Bus Locations</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
         </div>
-      </div>
     </div>
+</div>
 
-    <div class="container-fluid">
-    	<div class="row-fluid">
-			<div id="map"></div>
-		</div>
-	</div>
-	<script>
-	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div id="map"></div>
+    </div>
+</div>
+<script>
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'http://www.google-analytics.com/analytics.js', 'ga');
 
-	  ga('create', 'UA-42733116-1', 'humangeo.github.io');
-	  ga('send', 'pageview');
-	</script>
-	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
-	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
-	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
-	<script type="text/javascript">
-map = null;
-var lastLayer;
-var legendControl;
+    ga('create', 'UA-42733116-1', 'humangeo.github.io');
+    ga('send', 'pageview');
+</script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+<script type="text/javascript">
+    map = null;
+    var lastLayer;
+    var legendControl;
 
-$(document).ready(function() {
+    $(document).ready(function () {
 
-	// Function for resizing the map to fill the available space on the screen
-	var resize = function () {
-		var $map = $('#map');
+        // Function for resizing the map to fill the available space on the screen
+        var resize = function () {
+            var $map = $('#map');
 
-		$map.height($(window).height() - $('div.navbar').outerHeight());
+            $map.height($(window).height() - $('div.navbar').outerHeight());
 
-		if (map) {
-			map.invalidateSize();
-		}
-	};
+            if (map) {
+                map.invalidateSize();
+            }
+        };
 
-	// Resize the map element on window resize
-	$(window).on('resize', function () {
-		resize();
-	});
+        // Resize the map element on window resize
+        $(window).on('resize', function () {
+            resize();
+        });
 
-	// Resize the map element
-	resize();
+        // Resize the map element
+        resize();
 
-	// Initialize the map
-	map = L.map('map').setView([38.8951, -77.0367], 12);
+        // Initialize the map
+        map = L.map('map').setView([38.8951, -77.0367], 12);
 
-	var baseLayer = new L.StamenTileLayer('toner', {
-		detectRetina: true
-	});
+        var baseLayer = new L.StamenTileLayer('toner', {
+            detectRetina: true
+        });
 
-	baseLayer.addTo(map);
+        baseLayer.addTo(map);
 
-	// Initialize the legend control and add it to the map
-	var legendControl = new L.Control.Legend();
+        // Initialize the legend control and add it to the map
+        var legendControl = new L.Control.Legend();
 
-	legendControl.addTo(map);
+        legendControl.addTo(map);
 
-	// Function for requesting the latest data from the metro API
-	var getData = function () {
+        // Function for requesting the latest data from the metro API
+        var getData = function () {
 
-		$.ajax({
-			url: 'http://api.wmata.com/Bus.svc/json/jBusPositions?includingVariations=true&lat=38.8951&lon=-77.0367&radius=10000&api_key=ueqqukk4jghndaqr8rczcr8z',
-			type: 'GET',
-			dataType: 'jsonp',
-			success: function (data) {
-				// Setup a new data layer
-				if (!lastLayer){
-					var deviationFunction = new L.HSLHueFunction([-60, 0], [60, 240]);
+            $.ajax({
+                url: 'http://api.wmata.com/Bus.svc/json/jBusPositions?includingVariations=true&lat=38.8951&lon=-77.0367&radius=10000&api_key=ueqqukk4jghndaqr8rczcr8z',
+                type: 'GET',
+                dataType: 'jsonp',
+                success: function (data) {
+                    // Setup a new data layer
+                    if (!lastLayer) {
+                        var deviationFunction = new L.HSLHueFunction([-60, 0], [60, 240]);
 
-					var dataLayer = new L.DataLayer(data,{
-						recordsField: 'BusPositions',
-						latitudeField: 'Lat',
-						longitudeField: 'Lon',
-						locationMode: L.LocationModes.LATLNG,
+                        var dataLayer = new L.DataLayer(data, {
+                            recordsField: 'BusPositions',
+                            latitudeField: 'Lat',
+                            longitudeField: 'Lon',
+                            locationMode: L.LocationModes.LATLNG,
 
-						displayOptions: {
-							'Deviation': {
-								displayName: 'Deviation (minutes)',
-								fillColor: deviationFunction,
+                            displayOptions: {
+                                'Deviation': {
+                                    displayName: 'Deviation (minutes)',
+                                    fillColor: deviationFunction,
 
-								displayText: function (value) {
-									return value;
-								}
-							},
-							'RouteID': {
-								excludeFromLegend: true,
-								text: function (value) {
-									return {
-										text: value,
-										style: {
-											'font-size': '10px'
-										}
-									}
-								}
-							}
-						},
-						legendOptions: {
-							numSegments: 19
-						},
+                                    displayText: function (value) {
+                                        return value;
+                                    }
+                                },
+                                'RouteID': {
+                                    excludeFromLegend: true,
+                                    text: function (value) {
+                                        return {
+                                            text: value,
+                                            style: {
+                                                'font-size': '10px'
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            legendOptions: {
+                                numSegments: 19
+                            },
 
-						layerOptions: {
-							levels: 2,
-							numberOfSides: 50,
-							radius: 10,
-							weight: 0.3,
-							color: '#000',
-							opacity: 0.5,
-							stroke: false,
-							fillOpacity: 0.8,
-							dropShadow: false,
-							gradient: true
-						},
-						tooltipOptions: {
-							iconSize: new L.Point(90,90),
-							iconAnchor: new L.Point(-4,90)
-						},
-						onEachRecord: function (layer, record, location) {
-							var $html = $(L.HTMLUtils.buildTable(record));
+                            layerOptions: {
+                                levels: 2,
+                                numberOfSides: 50,
+                                radius: 10,
+                                weight: 0.3,
+                                color: '#000',
+                                opacity: 0.5,
+                                stroke: false,
+                                fillOpacity: 0.8,
+                                dropShadow: false,
+                                gradient: true
+                            },
+                            tooltipOptions: {
+                                iconSize: new L.Point(90, 90),
+                                iconAnchor: new L.Point(-4, 90)
+                            },
+                            onEachRecord: function (layer, record, location) {
+                                var $html = $(L.HTMLUtils.buildTable(record));
 
-							layer.bindPopup($html.wrap('<div/>').parent().html(),{
-								minWidth: 400,
-								maxWidth: 400
-							});
-						},
-						/*
-						getMarker: function (location, options, record) {
-							return new L.LayeredRegularPolygonMarker(location, options);
-						},
-						*/
-						getIndexKey: function (location, record) {
-							return record.VehicleID;
-						},
-						getTrack: function (layer, location, trackLayer) {
-							trackLayer = trackLayer || new L.Polyline([], {
-								dashArray: [2, 2],
-								color: '#eee',
-								weight: 2
-							});
-							trackLayer.addLatLng(location.center);
-							return trackLayer;
-						}
-					});
+                                layer.bindPopup($html.wrap('<div/>').parent().html(), {
+                                    minWidth: 400,
+                                    maxWidth: 400
+                                });
+                            },
+                            /*
+                             getMarker: function (location, options, record) {
+                             return new L.LayeredRegularPolygonMarker(location, options);
+                             },
+                             */
+                            getIndexKey: function (location, record) {
+                                return record.VehicleID;
+                            },
+                            getTrack: function (layer, location, trackLayer) {
+                                trackLayer = trackLayer || new L.Polyline([], {
+                                    dashArray: [2, 2],
+                                    color: '#eee',
+                                    weight: 2
+                                });
+                                trackLayer.addLatLng(location.center);
+                                return trackLayer;
+                            }
+                        });
 
-					// Add the data layer to the map
-					map.addLayer(dataLayer);
+                        // Add the data layer to the map
+                        map.addLayer(dataLayer);
 
-					lastLayer = dataLayer;
-				}
-				else {
-					lastLayer.setData(data);
-				}
+                        lastLayer = dataLayer;
+                    }
+                    else {
+                        lastLayer.setData(data);
+                    }
 
-				setTimeout(getData, 5000);
-			}
-		});
-	};
+                    setTimeout(getData, 5000);
+                }
+            });
+        };
 
-	// Get the latest earthquake data
-	getData();
+        // Get the latest earthquake data
+        getData();
 
-	// Periodically request the latest data
-	//setInterval(getData,5000);
-});
+        // Periodically request the latest data
+        //setInterval(getData,5000);
+    });
 
-	</script>
+</script>
 </body>
 </html>

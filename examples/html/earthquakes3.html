@@ -8,193 +8,202 @@
     <meta name="author" content="">
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
+        body {
+            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
 
-      .leaflet-tile-pane {
-	  	  opacity: 0.3;
-	  }
+        .leaflet-tile-pane {
+            opacity: 0.3;
+        }
 
-	  #map {
-		  background-color: #090920;
-	  }
+        #map {
+            background-color: #090920;
+        }
     </style>
-    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
-	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
 </head>
 
 <body>
-	<div class="navbar navbar-inverse">
-      <div class="navbar-inner">
+<div class="navbar navbar-inverse">
+    <div class="navbar-inner">
         <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="#">Earthquakes</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">Earthquakes</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
         </div>
-      </div>
     </div>
+</div>
 
-    <div class="container-fluid">
-    	<div class="row-fluid">
-			<div id="map"></div>
-		</div>
-	</div>
-	<script>
-	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div id="map"></div>
+    </div>
+</div>
+<script>
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'http://www.google-analytics.com/analytics.js', 'ga');
 
-	  ga('create', 'UA-42733116-1', 'humangeo.github.io');
-	  ga('send', 'pageview');
-	</script>
-	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
-	<script type="text/javascript" src="../lib/date.format.js"></script>
-	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-	<script type="text/javascript">
-map = null;
-var lastLayer;
-var legendControl;
+    ga('create', 'UA-42733116-1', 'humangeo.github.io');
+    ga('send', 'pageview');
+</script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="../lib/date.format.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+<script type="text/javascript">
+    map = null;
+    var lastLayer;
+    var legendControl;
 
-// JSONP callback function for displaying the latest earthquake data
-var eqfeed_callback = function (data) {
+    // JSONP callback function for displaying the latest earthquake data
+    var eqfeed_callback = function (data) {
 
-	var now = Math.round((new Date()).getTime());
-	var start = now - 86400000;
-	var timeOpacityFunction = new L.LinearFunction(new L.Point(start,0.3), new L.Point(now,1));
+        var now = Math.round((new Date()).getTime());
+        var start = now - 86400000;
+        var timeOpacityFunction = new L.LinearFunction(new L.Point(start, 0.3), new L.Point(now, 1));
 
-	// Setup a new data layer
-	var dataLayer = new L.RadialMeterMarkerDataLayer(data,{
-		recordsField: 'features',
-		geoJSONField: null,
-		locationMode: L.LocationModes.GEOJSON,
-		chartOptions: {
-			'properties.mag':{
-				color: '#000000',
-				minValue: 0,
-				maxValue: 10,
-				displayName: 'Magnitude'
-			}
-		},
-		displayOptions: {
-			'properties.mag':{
-				fillColor: new L.HSLHueFunction([0, 120], [10, 0])
-			}
-		},
-		layerOptions: {
-			numSegments: 8,
-			maxDegrees: 360.0,
-			barThickness: 15,
-			fillOpacity: 1.0,
-			opacity: 1,
-			weight: 0.5,
-			radius: 30,
-			gradient: true,
-			dropShadow: true,
-			lineCap: 'square',
-			lineJoin: 'miter'
-		},
-		tooltipOptions: {
-			iconSize: new L.Point(90,76),
-			iconAnchor: new L.Point(-4,76)
-		},
-		onEachRecord: function (layer,record) {
-			var $html = $(L.HTMLUtils.buildTable(record));
+        // Setup a new data layer
+        var dataLayer = new L.RadialMeterMarkerDataLayer(data, {
+            recordsField: 'features',
+            geoJSONField: null,
+            locationMode: L.LocationModes.GEOJSON,
+            chartOptions: {
+                'properties.mag': {
+                    color: '#000000',
+                    minValue: 0,
+                    maxValue: 10,
+                    displayName: 'Magnitude'
+                }
+            },
+            displayOptions: {
+                'properties.mag': {
+                    fillColor: new L.HSLHueFunction([0, 120], [10, 0])
+                }
+            },
+            layerOptions: {
+                numSegments: 8,
+                maxDegrees: 360.0,
+                barThickness: 15,
+                fillOpacity: 1.0,
+                opacity: 1,
+                weight: 0.5,
+                radius: 30,
+                gradient: true,
+                dropShadow: true,
+                lineCap: 'square',
+                lineJoin: 'miter'
+            },
+            tooltipOptions: {
+                iconSize: new L.Point(90, 76),
+                iconAnchor: new L.Point(-4, 76)
+            },
+            onEachRecord: function (layer, record) {
+                var $html = $(L.HTMLUtils.buildTable(record));
 
-			layer.bindPopup($html.wrap('<div/>').parent().html(),{
-				minWidth: 400,
-				maxWidth: 400
-			});
-		}
-	});
+                layer.bindPopup($html.wrap('<div/>').parent().html(), {
+                    minWidth: 400,
+                    maxWidth: 400
+                });
+            }
+        });
 
-	// Add the data layer to the map
-	map.addLayer(dataLayer);
+        // Add the data layer to the map
+        map.addLayer(dataLayer);
 
-	lastLayer = dataLayer;
-};
+        lastLayer = dataLayer;
+    };
 
-$(document).ready(function() {
+    $(document).ready(function () {
 
-	// Function for resizing the map to fill the available space on the screen
-	var resize = function () {
-		var $map = $('#map');
+        // Function for resizing the map to fill the available space on the screen
+        var resize = function () {
+            var $map = $('#map');
 
-		$map.height($(window).height() - $('div.navbar').outerHeight());
+            $map.height($(window).height() - $('div.navbar').outerHeight());
 
-		if (map) {
-			map.invalidateSize();
-		}
-	};
+            if (map) {
+                map.invalidateSize();
+            }
+        };
 
-	// Resize the map element on window resize
-	$(window).on('resize', function () {
-		resize();
-	});
+        // Resize the map element on window resize
+        $(window).on('resize', function () {
+            resize();
+        });
 
-	// Resize the map element
-	resize();
+        // Resize the map element
+        resize();
 
-	// Initialize the map
-	map = L.map('map').setView([0.0, 0.0], 2);
+        // Initialize the map
+        map = L.map('map').setView([0.0, 0.0], 2);
 
-	var baseLayer = new L.StamenTileLayer('toner', {
-		detectRetina: true
-	});
+        var baseLayer = new L.StamenTileLayer('toner', {
+            detectRetina: true
+        });
 
-	baseLayer.addTo(map);
+        baseLayer.addTo(map);
 
-	var prccEarthquakesLayer = L.tileLayer('http://{s}.tiles.mapbox.com/v3/bclc-apec.map-rslgvy56/{z}/{x}/{y}.png', {
-		attribution: 'Map &copy; Pacific Rim Coordination Center (PRCC).  Certain data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
-	});
+        var prccEarthquakesLayer = L.tileLayer('http://{s}.tiles.mapbox.com/v3/bclc-apec.map-rslgvy56/{z}/{x}/{y}.png', {
+            attribution: 'Map &copy; Pacific Rim Coordination Center (PRCC).  Certain data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
+        });
 
-	// Initialize the legend control and add it to the map
-	var legendControl = new L.Control.Legend();
+        // Initialize the legend control and add it to the map
+        var legendControl = new L.Control.Legend();
 
-	legendControl.addTo(map);
+        legendControl.addTo(map);
 
-	var layerControl = new L.Control.Layers({
-		'Cloudmade': baseLayer,
-		'PRCC Earthquake Risk Zones': prccEarthquakesLayer
-	});
+        var layerControl = new L.Control.Layers({
+            'Cloudmade': baseLayer,
+            'PRCC Earthquake Risk Zones': prccEarthquakesLayer
+        });
 
-	layerControl.addTo(map);
+        layerControl.addTo(map);
 
-	// Function for requesting the latest earthquakes from USGS
-	var getData = function () {
+        // Function for requesting the latest earthquakes from USGS
+        var getData = function () {
 
-		if (lastLayer) {
-			map.removeLayer(lastLayer);
-		}
+            if (lastLayer) {
+                map.removeLayer(lastLayer);
+            }
 
-		$.ajax({
-			url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
-			type: 'GET',
-			dataType: 'jsonp'
-		});
-	};
+            $.ajax({
+                url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
+                type: 'GET',
+                dataType: 'jsonp'
+            });
+        };
 
-	// Get the latest earthquake data
-	getData();
+        // Get the latest earthquake data
+        getData();
 
-	// Periodically request the latest data
-	setInterval(getData,300000);
-});
-	</script>
+        // Periodically request the latest data
+        setInterval(getData, 300000);
+    });
+</script>
 </body>
 </html>

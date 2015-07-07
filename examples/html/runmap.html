@@ -8,843 +8,847 @@
     <meta name="author" content="">
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
+        body {
+            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
 
-      #map {
-      	background-image: url('../img/subtlepatterns/grey_wash_wall/grey_wash_wall.png');
-      }
+        #map {
+            background-image: url('../img/subtlepatterns/grey_wash_wall/grey_wash_wall.png');
+        }
 
-      #map div.leaflet-tile-pane {
-      	opacity: 0.5;
-      }
+        #map div.leaflet-tile-pane {
+            opacity: 0.5;
+        }
 
-      div.leaflet-control-legend {
-      	width: 350px;
-      }
-      .legend-line {
-      	margin-bottom: 20px;
-      }
+        div.leaflet-control-legend {
+            width: 350px;
+        }
 
-      .legend-line div.scale-bars i {
-      	background: none !important;
-      	width: 0px;
-      	height: 0px !important;
-      	vertical-align: middle;
-      	border-left: none !important;
-      }
+        .legend-line {
+            margin-bottom: 20px;
+        }
 
-      .line-legend .legend-box {
-      	width: 0px;
-      	height: 0px !important;
-      	border-top: none !important;
-      	border-right: none !important;
-      }
+        .legend-line div.scale-bars i {
+            background: none !important;
+            width: 0px;
+            height: 0px !important;
+            vertical-align: middle;
+            border-left: none !important;
+        }
+
+        .line-legend .legend-box {
+            width: 0px;
+            height: 0px !important;
+            border-top: none !important;
+            border-right: none !important;
+        }
 
     </style>
-    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
-	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
 </head>
 
 <body>
-	<div class="navbar navbar-inverse">
-      <div class="navbar-inner">
+<div class="navbar navbar-inverse">
+    <div class="navbar-inner">
         <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="#">Run Map</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">Run Map</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
         </div>
-      </div>
     </div>
+</div>
 
-    <div class="container-fluid">
-    	<div class="row-fluid">
-			<div id="map"></div>
-		</div>
-	</div>
-	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.2.1/moment.min.js"></script>
-	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
-	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
-	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
-	<script type="text/javascript">
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div id="map"></div>
+    </div>
+</div>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.2.1/moment.min.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
+<script type="text/javascript"
+        src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+<script type="text/javascript">
 
-$(document).ready(function() {
-	var map;
-	var legendControl;
+    $(document).ready(function () {
+        var map;
+        var legendControl;
 
-	// Function for resizing the map to fill the available space on the screen
-	var resize = function () {
-		var $map = $('#map');
+        // Function for resizing the map to fill the available space on the screen
+        var resize = function () {
+            var $map = $('#map');
 
-		$map.height($(window).height() - $('div.navbar').outerHeight());
+            $map.height($(window).height() - $('div.navbar').outerHeight());
 
-		if (map) {
-			map.invalidateSize();
-		}
-	};
+            if (map) {
+                map.invalidateSize();
+            }
+        };
 
-	// Resize the map element on window resize
-	$(window).on('resize', function () {
-		resize();
-	});
+        // Resize the map element on window resize
+        $(window).on('resize', function () {
+            resize();
+        });
 
-	// Resize the map element
-	resize();
+        // Resize the map element
+        resize();
 
-	// Initialize the map
-	map = L.map('map').setView([38.895843, -77.043085], 15);
+        // Initialize the map
+        map = L.map('map').setView([38.895843, -77.043085], 15);
 
-	var baseLayer = new L.StamenTileLayer('toner', {
-		detectRetina: true
-	}).addTo(map);
+        var baseLayer = new L.StamenTileLayer('toner', {
+            detectRetina: true
+        }).addTo(map);
 
-	baseLayer.addTo(map);
+        baseLayer.addTo(map);
 
-	// Initialize the legend control and add it to the map
-	var legendControl = new L.Control.Legend();
+        // Initialize the legend control and add it to the map
+        var legendControl = new L.Control.Legend();
 
-	legendControl.addTo(map);
+        legendControl.addTo(map);
 
-	var layerControl = new L.Control.Layers({
-		'Stamen Toner': baseLayer
-	});
+        var layerControl = new L.Control.Layers({
+            'Stamen Toner': baseLayer
+        });
 
-	layerControl.addTo(map);
+        layerControl.addTo(map);
 
-	var data = {
-	  "gpx": {
-		"wpt": [
-		  {
-			"lat": "38.90006",
-			"lon": "-77.05691",
-			"ele": "4.98652",
-			"name": "Start"
-		  },
-		  {
-			"lat": "38.90082",
-			"lon": "-77.0572",
-			"ele": "4.9469",
-			"name": "Run 001"
-		  },
-		  {
-			"lat": "38.90098",
-			"lon": "-77.05725",
-			"ele": "5.23951",
-			"name": "Run 002"
-		  },
-		  {
-			"lat": "38.90101",
-			"lon": "-77.05705",
-			"ele": "5.65099",
-			"name": "Run 003"
-		  },
-		  {
-			"lat": "38.90087",
-			"lon": "-77.05682",
-			"ele": "5.90702",
-			"name": "Run 004"
-		  },
-		  {
-			"lat": "38.90076",
-			"lon": "-77.05659",
-			"ele": "6.12343",
-			"name": "Run 005"
-		  },
-		  {
-			"lat": "38.90074",
-			"lon": "-77.05634",
-			"ele": "7.33348",
-			"name": "Run 006"
-		  },
-		  {
-			"lat": "38.90087",
-			"lon": "-77.05619",
-			"ele": "8.03757",
-			"name": "Run 007"
-		  },
-		  {
-			"lat": "38.90134",
-			"lon": "-77.05619",
-			"ele": "8.36066",
-			"name": "Run 008"
-		  },
-		  {
-			"lat": "38.90225",
-			"lon": "-77.05616",
-			"ele": "7.40359",
-			"name": "Run 009"
-		  },
-		  {
-			"lat": "38.90238",
-			"lon": "-77.05625",
-			"ele": "7.09879",
-			"name": "Run 010"
-		  },
-		  {
-			"lat": "38.90238",
-			"lon": "-77.05653",
-			"ele": "6.34898",
-			"name": "Run 011"
-		  },
-		  {
-			"lat": "38.9024",
-			"lon": "-77.058",
-			"ele": "2.67309",
-			"name": "Run 012"
-		  },
-		  {
-			"lat": "38.90251",
-			"lon": "-77.05855",
-			"ele": "3.7216",
-			"name": "Run 013"
-		  },
-		  {
-			"lat": "38.90252",
-			"lon": "-77.06267",
-			"ele": "4.91337",
-			"name": "Run 014"
-		  },
-		  {
-			"lat": "38.90254",
-			"lon": "-77.06306",
-			"ele": "4.43788",
-			"name": "Run 015"
-		  },
-		  {
-			"lat": "38.90291",
-			"lon": "-77.06476",
-			"ele": "4.63905",
-			"name": "Run 016"
-		  },
-		  {
-			"lat": "38.90337",
-			"lon": "-77.06598",
-			"ele": "4.76402",
-			"name": "Run 017"
-		  },
-		  {
-			"lat": "38.90352",
-			"lon": "-77.06667",
-			"ele": "4.61772",
-			"name": "Run 018"
-		  },
-		  {
-			"lat": "38.90368",
-			"lon": "-77.06662",
-			"ele": "5.017",
-			"name": "Run 019"
-		  },
-		  {
-			"lat": "38.90354",
-			"lon": "-77.06606",
-			"ele": "5.49859",
-			"name": "Run 020"
-		  },
-		  {
-			"lat": "38.90303",
-			"lon": "-77.0647",
-			"ele": "5.18769",
-			"name": "Run 021"
-		  },
-		  {
-			"lat": "38.90265",
-			"lon": "-77.06312",
-			"ele": "4.82803",
-			"name": "Run 022"
-		  },
-		  {
-			"lat": "38.90261",
-			"lon": "-77.06137",
-			"ele": "4.72744",
-			"name": "Run 023"
-		  },
-		  {
-			"lat": "38.90263",
-			"lon": "-77.05915",
-			"ele": "4.22452",
-			"name": "Run 024"
-		  },
-		  {
-			"lat": "38.90271",
-			"lon": "-77.0583",
-			"ele": "3.77647",
-			"name": "Run 025"
-		  },
-		  {
-			"lat": "38.90283",
-			"lon": "-77.05771",
-			"ele": "3.05409",
-			"name": "Run 026"
-		  },
-		  {
-			"lat": "38.90329",
-			"lon": "-77.05664",
-			"ele": "4.35559",
-			"name": "Run 027"
-		  },
-		  {
-			"lat": "38.90334",
-			"lon": "-77.05623",
-			"ele": "5.96493",
-			"name": "Run 028"
-		  },
-		  {
-			"lat": "38.90325",
-			"lon": "-77.05577",
-			"ele": "7.9248",
-			"name": "Run 029"
-		  },
-		  {
-			"lat": "38.90292",
-			"lon": "-77.05537",
-			"ele": "12.40231",
-			"name": "Run 030"
-		  },
-		  {
-			"lat": "38.90263",
-			"lon": "-77.05525",
-			"ele": "11.01852",
-			"name": "Run 031"
-		  },
-		  {
-			"lat": "38.90191",
-			"lon": "-77.05534",
-			"ele": "9.04036",
-			"name": "Run 032"
-		  },
-		  {
-			"lat": "38.90158",
-			"lon": "-77.05533",
-			"ele": "9.04951",
-			"name": "Run 033"
-		  },
-		  {
-			"lat": "38.90104",
-			"lon": "-77.05506",
-			"ele": "9.30859",
-			"name": "Run 034"
-		  },
-		  {
-			"lat": "38.9004",
-			"lon": "-77.05464",
-			"ele": "9.11351",
-			"name": "Run 035"
-		  },
-		  {
-			"lat": "38.89986",
-			"lon": "-77.05411",
-			"ele": "11.60983",
-			"name": "Run 036"
-		  },
-		  {
-			"lat": "38.89947",
-			"lon": "-77.05372",
-			"ele": "11.53058",
-			"name": "Run 037"
-		  },
-		  {
-			"lat": "38.89856",
-			"lon": "-77.05297",
-			"ele": "12.69187",
-			"name": "Run 038"
-		  },
-		  {
-			"lat": "38.89797",
-			"lon": "-77.05275",
-			"ele": "14.73403",
-			"name": "Run 039"
-		  },
-		  {
-			"lat": "38.89746",
-			"lon": "-77.05276",
-			"ele": "15.02968",
-			"name": "Run 040"
-		  },
-		  {
-			"lat": "38.89666",
-			"lon": "-77.05311",
-			"ele": "12.70711",
-			"name": "Run 041"
-		  },
-		  {
-			"lat": "38.89615",
-			"lon": "-77.05336",
-			"ele": "12.04569",
-			"name": "Run 042"
-		  },
-		  {
-			"lat": "38.89562",
-			"lon": "-77.05365",
-			"ele": "11.95425",
-			"name": "Run 043"
-		  },
-		  {
-			"lat": "38.89519",
-			"lon": "-77.05385",
-			"ele": "11.81404",
-			"name": "Run 044"
-		  },
-		  {
-			"lat": "38.89471",
-			"lon": "-77.05392",
-			"ele": "11.66164",
-			"name": "Run 045"
-		  },
-		  {
-			"lat": "38.89419",
-			"lon": "-77.05383",
-			"ele": "11.35989",
-			"name": "Run 046"
-		  },
-		  {
-			"lat": "38.89375",
-			"lon": "-77.05365",
-			"ele": "9.46099",
-			"name": "Run 047"
-		  },
-		  {
-			"lat": "38.89293",
-			"lon": "-77.05321",
-			"ele": "5.31266",
-			"name": "Run 048"
-		  },
-		  {
-			"lat": "38.89211",
-			"lon": "-77.05274",
-			"ele": "5.16636",
-			"name": "Run 049"
-		  },
-		  {
-			"lat": "38.89173",
-			"lon": "-77.05241",
-			"ele": "4.86765",
-			"name": "Run 050"
-		  },
-		  {
-			"lat": "38.89145",
-			"lon": "-77.05211",
-			"ele": "4.46836",
-			"name": "Run 051"
-		  },
-		  {
-			"lat": "38.89127",
-			"lon": "-77.05199",
-			"ele": "4.16052",
-			"name": "Run 052"
-		  },
-		  {
-			"lat": "38.89094",
-			"lon": "-77.05195",
-			"ele": "3.53872",
-			"name": "Run 053"
-		  },
-		  {
-			"lat": "38.8907",
-			"lon": "-77.05199",
-			"ele": "2.80111",
-			"name": "Run 054"
-		  },
-		  {
-			"lat": "38.89041",
-			"lon": "-77.05211",
-			"ele": "2.72491",
-			"name": "Run 055"
-		  },
-		  {
-			"lat": "38.88978",
-			"lon": "-77.05242",
-			"ele": "2.85292",
-			"name": "Run 056"
-		  },
-		  {
-			"lat": "38.88954",
-			"lon": "-77.05253",
-			"ele": "2.85902",
-			"name": "Run 057"
-		  },
-		  {
-			"lat": "38.88911",
-			"lon": "-77.05255",
-			"ele": "2.86207",
-			"name": "Run 058"
-		  },
-		  {
-			"lat": "38.88875",
-			"lon": "-77.05246",
-			"ele": "2.82244",
-			"name": "Run 059"
-		  },
-		  {
-			"lat": "38.88836",
-			"lon": "-77.05223",
-			"ele": "2.68833",
-			"name": "Run 060"
-		  },
-		  {
-			"lat": "38.88795",
-			"lon": "-77.0519",
-			"ele": "2.53288",
-			"name": "Run 061"
-		  },
-		  {
-			"lat": "38.88767",
-			"lon": "-77.05153",
-			"ele": "2.54203",
-			"name": "Run 062"
-		  },
-		  {
-			"lat": "38.88743",
-			"lon": "-77.05105",
-			"ele": "2.72491",
-			"name": "Run 063"
-		  },
-		  {
-			"lat": "38.88727",
-			"lon": "-77.05037",
-			"ele": "3.81609",
-			"name": "Run 064"
-		  },
-		  {
-			"lat": "38.88721",
-			"lon": "-77.0502",
-			"ele": "4.08127",
-			"name": "Run 065"
-		  },
-		  {
-			"lat": "38.88706",
-			"lon": "-77.05009",
-			"ele": "4.16661",
-			"name": "Run 066"
-		  },
-		  {
-			"lat": "38.88697",
-			"lon": "-77.05001",
-			"ele": "3.98678",
-			"name": "Run 067"
-		  },
-		  {
-			"lat": "38.88671",
-			"lon": "-77.04326",
-			"ele": "2.82854",
-			"name": "Run 068"
-		  },
-		  {
-			"lat": "38.88691",
-			"lon": "-77.04128",
-			"ele": "2.0513",
-			"name": "Run 069"
-		  },
-		  {
-			"lat": "38.8869",
-			"lon": "-77.03662",
-			"ele": "4.09956",
-			"name": "Run 070"
-		  },
-		  {
-			"lat": "38.88676",
-			"lon": "-77.03611",
-			"ele": "5.45287",
-			"name": "Run 071"
-		  },
-		  {
-			"lat": "38.88648",
-			"lon": "-77.03554",
-			"ele": "5.57174",
-			"name": "Run 072"
-		  },
-		  {
-			"lat": "38.88603",
-			"lon": "-77.03505",
-			"ele": "4.69696",
-			"name": "Run 073"
-		  },
-		  {
-			"lat": "38.88549",
-			"lon": "-77.03475",
-			"ele": "3.98373",
-			"name": "Run 074"
-		  },
-		  {
-			"lat": "38.885",
-			"lon": "-77.03443",
-			"ele": "2.78587",
-			"name": "Run 075"
-		  },
-		  {
-			"lat": "38.88486",
-			"lon": "-77.03429",
-			"ele": "2.42011",
-			"name": "Run 076"
-		  },
-		  {
-			"lat": "38.88487",
-			"lon": "-77.03406",
-			"ele": "2.57251",
-			"name": "Run 077"
-		  },
-		  {
-			"lat": "38.88572",
-			"lon": "-77.03459",
-			"ele": "4.89204",
-			"name": "Run 078"
-		  },
-		  {
-			"lat": "38.88643",
-			"lon": "-77.03489",
-			"ele": "5.44068",
-			"name": "Run 079"
-		  },
-		  {
-			"lat": "38.88659",
-			"lon": "-77.03504",
-			"ele": "5.47116",
-			"name": "Run 080"
-		  },
-		  {
-			"lat": "38.88701",
-			"lon": "-77.03545",
-			"ele": "5.71804",
-			"name": "Run 081"
-		  },
-		  {
-			"lat": "38.88726",
-			"lon": "-77.03588",
-			"ele": "5.2456",
-			"name": "Run 082"
-		  },
-		  {
-			"lat": "38.88762",
-			"lon": "-77.03735",
-			"ele": "2.54812",
-			"name": "Run 083"
-		  },
-		  {
-			"lat": "38.88766",
-			"lon": "-77.03742",
-			"ele": "2.5146",
-			"name": "Run 084"
-		  },
-		  {
-			"lat": "38.88775",
-			"lon": "-77.03735",
-			"ele": "2.64566",
-			"name": "Run 085"
-		  },
-		  {
-			"lat": "38.88775",
-			"lon": "-77.03682",
-			"ele": "3.05714",
-			"name": "Run 086"
-		  },
-		  {
-			"lat": "38.88758",
-			"lon": "-77.03621",
-			"ele": "3.95325",
-			"name": "Run 087"
-		  },
-		  {
-			"lat": "38.8875",
-			"lon": "-77.03552",
-			"ele": "5.15721",
-			"name": "Run 088"
-		  },
-		  {
-			"lat": "38.88758",
-			"lon": "-77.03473",
-			"ele": "5.7851",
-			"name": "Run 089"
-		  },
-		  {
-			"lat": "38.88781",
-			"lon": "-77.03381",
-			"ele": "7.3792",
-			"name": "Run 090"
-		  },
-		  {
-			"lat": "38.88799",
-			"lon": "-77.03371",
-			"ele": "7.19937",
-			"name": "Run 091"
-		  },
-		  {
-			"lat": "38.88869",
-			"lon": "-77.03313",
-			"ele": "7.35482",
-			"name": "Run 092"
-		  },
-		  {
-			"lat": "38.88911",
-			"lon": "-77.03297",
-			"ele": "6.73608",
-			"name": "Run 093"
-		  },
-		  {
-			"lat": "38.88963",
-			"lon": "-77.03292",
-			"ele": "7.26338",
-			"name": "Run 094"
-		  },
-		  {
-			"lat": "38.89013",
-			"lon": "-77.03308",
-			"ele": "6.51052",
-			"name": "Run 095"
-		  },
-		  {
-			"lat": "38.89049",
-			"lon": "-77.03333",
-			"ele": "5.9314",
-			"name": "Run 096"
-		  },
-		  {
-			"lat": "38.89089",
-			"lon": "-77.0336",
-			"ele": "4.82498",
-			"name": "Run 097"
-		  },
-		  {
-			"lat": "38.89135",
-			"lon": "-77.03371",
-			"ele": "3.65455",
-			"name": "Run 098"
-		  },
-		  {
-			"lat": "38.89196",
-			"lon": "-77.0337",
-			"ele": "2.5146",
-			"name": "Run 099"
-		  },
-		  {
-			"lat": "38.89196",
-			"lon": "-77.039",
-			"ele": "3.82828",
-			"name": "Run 100"
-		  },
-		  {
-			"lat": "38.89218",
-			"lon": "-77.039",
-			"ele": "3.9502",
-			"name": "Run 101"
-		  },
-		  {
-			"lat": "38.89216",
-			"lon": "-77.02625",
-			"ele": "2.78282",
-			"name": "Run 102"
-		  },
-		  {
-			"lat": "38.89218",
-			"lon": "-77.0261",
-			"ele": "2.74015",
-			"name": "Run 103"
-		  },
-		  {
-			"lat": "38.89237",
-			"lon": "-77.02599",
-			"ele": "2.77672",
-			"name": "Run 104"
-		  },
-		  {
-			"lat": "38.89429",
-			"lon": "-77.02607",
-			"ele": "4.05079",
-			"name": "Run 105"
-		  },
-		  {
-			"lat": "38.89324",
-			"lon": "-77.0222",
-			"ele": "4.1148",
-			"name": "Run 106"
-		  },
-		  {
-			"lat": "38.89354",
-			"lon": "-77.02221",
-			"ele": "4.61772",
-			"name": "Run 107"
-		  },
-		  {
-			"lat": "38.89493",
-			"lon": "-77.02722",
-			"ele": "4.67563",
-			"name": "Run 108"
-		  },
-		  {
-			"lat": "38.89517",
-			"lon": "-77.02822",
-			"ele": "4.74573",
-			"name": "Run 109"
-		  }
-		]
-	  }
-	};
+        var data = {
+            "gpx": {
+                "wpt": [
+                    {
+                        "lat": "38.90006",
+                        "lon": "-77.05691",
+                        "ele": "4.98652",
+                        "name": "Start"
+                    },
+                    {
+                        "lat": "38.90082",
+                        "lon": "-77.0572",
+                        "ele": "4.9469",
+                        "name": "Run 001"
+                    },
+                    {
+                        "lat": "38.90098",
+                        "lon": "-77.05725",
+                        "ele": "5.23951",
+                        "name": "Run 002"
+                    },
+                    {
+                        "lat": "38.90101",
+                        "lon": "-77.05705",
+                        "ele": "5.65099",
+                        "name": "Run 003"
+                    },
+                    {
+                        "lat": "38.90087",
+                        "lon": "-77.05682",
+                        "ele": "5.90702",
+                        "name": "Run 004"
+                    },
+                    {
+                        "lat": "38.90076",
+                        "lon": "-77.05659",
+                        "ele": "6.12343",
+                        "name": "Run 005"
+                    },
+                    {
+                        "lat": "38.90074",
+                        "lon": "-77.05634",
+                        "ele": "7.33348",
+                        "name": "Run 006"
+                    },
+                    {
+                        "lat": "38.90087",
+                        "lon": "-77.05619",
+                        "ele": "8.03757",
+                        "name": "Run 007"
+                    },
+                    {
+                        "lat": "38.90134",
+                        "lon": "-77.05619",
+                        "ele": "8.36066",
+                        "name": "Run 008"
+                    },
+                    {
+                        "lat": "38.90225",
+                        "lon": "-77.05616",
+                        "ele": "7.40359",
+                        "name": "Run 009"
+                    },
+                    {
+                        "lat": "38.90238",
+                        "lon": "-77.05625",
+                        "ele": "7.09879",
+                        "name": "Run 010"
+                    },
+                    {
+                        "lat": "38.90238",
+                        "lon": "-77.05653",
+                        "ele": "6.34898",
+                        "name": "Run 011"
+                    },
+                    {
+                        "lat": "38.9024",
+                        "lon": "-77.058",
+                        "ele": "2.67309",
+                        "name": "Run 012"
+                    },
+                    {
+                        "lat": "38.90251",
+                        "lon": "-77.05855",
+                        "ele": "3.7216",
+                        "name": "Run 013"
+                    },
+                    {
+                        "lat": "38.90252",
+                        "lon": "-77.06267",
+                        "ele": "4.91337",
+                        "name": "Run 014"
+                    },
+                    {
+                        "lat": "38.90254",
+                        "lon": "-77.06306",
+                        "ele": "4.43788",
+                        "name": "Run 015"
+                    },
+                    {
+                        "lat": "38.90291",
+                        "lon": "-77.06476",
+                        "ele": "4.63905",
+                        "name": "Run 016"
+                    },
+                    {
+                        "lat": "38.90337",
+                        "lon": "-77.06598",
+                        "ele": "4.76402",
+                        "name": "Run 017"
+                    },
+                    {
+                        "lat": "38.90352",
+                        "lon": "-77.06667",
+                        "ele": "4.61772",
+                        "name": "Run 018"
+                    },
+                    {
+                        "lat": "38.90368",
+                        "lon": "-77.06662",
+                        "ele": "5.017",
+                        "name": "Run 019"
+                    },
+                    {
+                        "lat": "38.90354",
+                        "lon": "-77.06606",
+                        "ele": "5.49859",
+                        "name": "Run 020"
+                    },
+                    {
+                        "lat": "38.90303",
+                        "lon": "-77.0647",
+                        "ele": "5.18769",
+                        "name": "Run 021"
+                    },
+                    {
+                        "lat": "38.90265",
+                        "lon": "-77.06312",
+                        "ele": "4.82803",
+                        "name": "Run 022"
+                    },
+                    {
+                        "lat": "38.90261",
+                        "lon": "-77.06137",
+                        "ele": "4.72744",
+                        "name": "Run 023"
+                    },
+                    {
+                        "lat": "38.90263",
+                        "lon": "-77.05915",
+                        "ele": "4.22452",
+                        "name": "Run 024"
+                    },
+                    {
+                        "lat": "38.90271",
+                        "lon": "-77.0583",
+                        "ele": "3.77647",
+                        "name": "Run 025"
+                    },
+                    {
+                        "lat": "38.90283",
+                        "lon": "-77.05771",
+                        "ele": "3.05409",
+                        "name": "Run 026"
+                    },
+                    {
+                        "lat": "38.90329",
+                        "lon": "-77.05664",
+                        "ele": "4.35559",
+                        "name": "Run 027"
+                    },
+                    {
+                        "lat": "38.90334",
+                        "lon": "-77.05623",
+                        "ele": "5.96493",
+                        "name": "Run 028"
+                    },
+                    {
+                        "lat": "38.90325",
+                        "lon": "-77.05577",
+                        "ele": "7.9248",
+                        "name": "Run 029"
+                    },
+                    {
+                        "lat": "38.90292",
+                        "lon": "-77.05537",
+                        "ele": "12.40231",
+                        "name": "Run 030"
+                    },
+                    {
+                        "lat": "38.90263",
+                        "lon": "-77.05525",
+                        "ele": "11.01852",
+                        "name": "Run 031"
+                    },
+                    {
+                        "lat": "38.90191",
+                        "lon": "-77.05534",
+                        "ele": "9.04036",
+                        "name": "Run 032"
+                    },
+                    {
+                        "lat": "38.90158",
+                        "lon": "-77.05533",
+                        "ele": "9.04951",
+                        "name": "Run 033"
+                    },
+                    {
+                        "lat": "38.90104",
+                        "lon": "-77.05506",
+                        "ele": "9.30859",
+                        "name": "Run 034"
+                    },
+                    {
+                        "lat": "38.9004",
+                        "lon": "-77.05464",
+                        "ele": "9.11351",
+                        "name": "Run 035"
+                    },
+                    {
+                        "lat": "38.89986",
+                        "lon": "-77.05411",
+                        "ele": "11.60983",
+                        "name": "Run 036"
+                    },
+                    {
+                        "lat": "38.89947",
+                        "lon": "-77.05372",
+                        "ele": "11.53058",
+                        "name": "Run 037"
+                    },
+                    {
+                        "lat": "38.89856",
+                        "lon": "-77.05297",
+                        "ele": "12.69187",
+                        "name": "Run 038"
+                    },
+                    {
+                        "lat": "38.89797",
+                        "lon": "-77.05275",
+                        "ele": "14.73403",
+                        "name": "Run 039"
+                    },
+                    {
+                        "lat": "38.89746",
+                        "lon": "-77.05276",
+                        "ele": "15.02968",
+                        "name": "Run 040"
+                    },
+                    {
+                        "lat": "38.89666",
+                        "lon": "-77.05311",
+                        "ele": "12.70711",
+                        "name": "Run 041"
+                    },
+                    {
+                        "lat": "38.89615",
+                        "lon": "-77.05336",
+                        "ele": "12.04569",
+                        "name": "Run 042"
+                    },
+                    {
+                        "lat": "38.89562",
+                        "lon": "-77.05365",
+                        "ele": "11.95425",
+                        "name": "Run 043"
+                    },
+                    {
+                        "lat": "38.89519",
+                        "lon": "-77.05385",
+                        "ele": "11.81404",
+                        "name": "Run 044"
+                    },
+                    {
+                        "lat": "38.89471",
+                        "lon": "-77.05392",
+                        "ele": "11.66164",
+                        "name": "Run 045"
+                    },
+                    {
+                        "lat": "38.89419",
+                        "lon": "-77.05383",
+                        "ele": "11.35989",
+                        "name": "Run 046"
+                    },
+                    {
+                        "lat": "38.89375",
+                        "lon": "-77.05365",
+                        "ele": "9.46099",
+                        "name": "Run 047"
+                    },
+                    {
+                        "lat": "38.89293",
+                        "lon": "-77.05321",
+                        "ele": "5.31266",
+                        "name": "Run 048"
+                    },
+                    {
+                        "lat": "38.89211",
+                        "lon": "-77.05274",
+                        "ele": "5.16636",
+                        "name": "Run 049"
+                    },
+                    {
+                        "lat": "38.89173",
+                        "lon": "-77.05241",
+                        "ele": "4.86765",
+                        "name": "Run 050"
+                    },
+                    {
+                        "lat": "38.89145",
+                        "lon": "-77.05211",
+                        "ele": "4.46836",
+                        "name": "Run 051"
+                    },
+                    {
+                        "lat": "38.89127",
+                        "lon": "-77.05199",
+                        "ele": "4.16052",
+                        "name": "Run 052"
+                    },
+                    {
+                        "lat": "38.89094",
+                        "lon": "-77.05195",
+                        "ele": "3.53872",
+                        "name": "Run 053"
+                    },
+                    {
+                        "lat": "38.8907",
+                        "lon": "-77.05199",
+                        "ele": "2.80111",
+                        "name": "Run 054"
+                    },
+                    {
+                        "lat": "38.89041",
+                        "lon": "-77.05211",
+                        "ele": "2.72491",
+                        "name": "Run 055"
+                    },
+                    {
+                        "lat": "38.88978",
+                        "lon": "-77.05242",
+                        "ele": "2.85292",
+                        "name": "Run 056"
+                    },
+                    {
+                        "lat": "38.88954",
+                        "lon": "-77.05253",
+                        "ele": "2.85902",
+                        "name": "Run 057"
+                    },
+                    {
+                        "lat": "38.88911",
+                        "lon": "-77.05255",
+                        "ele": "2.86207",
+                        "name": "Run 058"
+                    },
+                    {
+                        "lat": "38.88875",
+                        "lon": "-77.05246",
+                        "ele": "2.82244",
+                        "name": "Run 059"
+                    },
+                    {
+                        "lat": "38.88836",
+                        "lon": "-77.05223",
+                        "ele": "2.68833",
+                        "name": "Run 060"
+                    },
+                    {
+                        "lat": "38.88795",
+                        "lon": "-77.0519",
+                        "ele": "2.53288",
+                        "name": "Run 061"
+                    },
+                    {
+                        "lat": "38.88767",
+                        "lon": "-77.05153",
+                        "ele": "2.54203",
+                        "name": "Run 062"
+                    },
+                    {
+                        "lat": "38.88743",
+                        "lon": "-77.05105",
+                        "ele": "2.72491",
+                        "name": "Run 063"
+                    },
+                    {
+                        "lat": "38.88727",
+                        "lon": "-77.05037",
+                        "ele": "3.81609",
+                        "name": "Run 064"
+                    },
+                    {
+                        "lat": "38.88721",
+                        "lon": "-77.0502",
+                        "ele": "4.08127",
+                        "name": "Run 065"
+                    },
+                    {
+                        "lat": "38.88706",
+                        "lon": "-77.05009",
+                        "ele": "4.16661",
+                        "name": "Run 066"
+                    },
+                    {
+                        "lat": "38.88697",
+                        "lon": "-77.05001",
+                        "ele": "3.98678",
+                        "name": "Run 067"
+                    },
+                    {
+                        "lat": "38.88671",
+                        "lon": "-77.04326",
+                        "ele": "2.82854",
+                        "name": "Run 068"
+                    },
+                    {
+                        "lat": "38.88691",
+                        "lon": "-77.04128",
+                        "ele": "2.0513",
+                        "name": "Run 069"
+                    },
+                    {
+                        "lat": "38.8869",
+                        "lon": "-77.03662",
+                        "ele": "4.09956",
+                        "name": "Run 070"
+                    },
+                    {
+                        "lat": "38.88676",
+                        "lon": "-77.03611",
+                        "ele": "5.45287",
+                        "name": "Run 071"
+                    },
+                    {
+                        "lat": "38.88648",
+                        "lon": "-77.03554",
+                        "ele": "5.57174",
+                        "name": "Run 072"
+                    },
+                    {
+                        "lat": "38.88603",
+                        "lon": "-77.03505",
+                        "ele": "4.69696",
+                        "name": "Run 073"
+                    },
+                    {
+                        "lat": "38.88549",
+                        "lon": "-77.03475",
+                        "ele": "3.98373",
+                        "name": "Run 074"
+                    },
+                    {
+                        "lat": "38.885",
+                        "lon": "-77.03443",
+                        "ele": "2.78587",
+                        "name": "Run 075"
+                    },
+                    {
+                        "lat": "38.88486",
+                        "lon": "-77.03429",
+                        "ele": "2.42011",
+                        "name": "Run 076"
+                    },
+                    {
+                        "lat": "38.88487",
+                        "lon": "-77.03406",
+                        "ele": "2.57251",
+                        "name": "Run 077"
+                    },
+                    {
+                        "lat": "38.88572",
+                        "lon": "-77.03459",
+                        "ele": "4.89204",
+                        "name": "Run 078"
+                    },
+                    {
+                        "lat": "38.88643",
+                        "lon": "-77.03489",
+                        "ele": "5.44068",
+                        "name": "Run 079"
+                    },
+                    {
+                        "lat": "38.88659",
+                        "lon": "-77.03504",
+                        "ele": "5.47116",
+                        "name": "Run 080"
+                    },
+                    {
+                        "lat": "38.88701",
+                        "lon": "-77.03545",
+                        "ele": "5.71804",
+                        "name": "Run 081"
+                    },
+                    {
+                        "lat": "38.88726",
+                        "lon": "-77.03588",
+                        "ele": "5.2456",
+                        "name": "Run 082"
+                    },
+                    {
+                        "lat": "38.88762",
+                        "lon": "-77.03735",
+                        "ele": "2.54812",
+                        "name": "Run 083"
+                    },
+                    {
+                        "lat": "38.88766",
+                        "lon": "-77.03742",
+                        "ele": "2.5146",
+                        "name": "Run 084"
+                    },
+                    {
+                        "lat": "38.88775",
+                        "lon": "-77.03735",
+                        "ele": "2.64566",
+                        "name": "Run 085"
+                    },
+                    {
+                        "lat": "38.88775",
+                        "lon": "-77.03682",
+                        "ele": "3.05714",
+                        "name": "Run 086"
+                    },
+                    {
+                        "lat": "38.88758",
+                        "lon": "-77.03621",
+                        "ele": "3.95325",
+                        "name": "Run 087"
+                    },
+                    {
+                        "lat": "38.8875",
+                        "lon": "-77.03552",
+                        "ele": "5.15721",
+                        "name": "Run 088"
+                    },
+                    {
+                        "lat": "38.88758",
+                        "lon": "-77.03473",
+                        "ele": "5.7851",
+                        "name": "Run 089"
+                    },
+                    {
+                        "lat": "38.88781",
+                        "lon": "-77.03381",
+                        "ele": "7.3792",
+                        "name": "Run 090"
+                    },
+                    {
+                        "lat": "38.88799",
+                        "lon": "-77.03371",
+                        "ele": "7.19937",
+                        "name": "Run 091"
+                    },
+                    {
+                        "lat": "38.88869",
+                        "lon": "-77.03313",
+                        "ele": "7.35482",
+                        "name": "Run 092"
+                    },
+                    {
+                        "lat": "38.88911",
+                        "lon": "-77.03297",
+                        "ele": "6.73608",
+                        "name": "Run 093"
+                    },
+                    {
+                        "lat": "38.88963",
+                        "lon": "-77.03292",
+                        "ele": "7.26338",
+                        "name": "Run 094"
+                    },
+                    {
+                        "lat": "38.89013",
+                        "lon": "-77.03308",
+                        "ele": "6.51052",
+                        "name": "Run 095"
+                    },
+                    {
+                        "lat": "38.89049",
+                        "lon": "-77.03333",
+                        "ele": "5.9314",
+                        "name": "Run 096"
+                    },
+                    {
+                        "lat": "38.89089",
+                        "lon": "-77.0336",
+                        "ele": "4.82498",
+                        "name": "Run 097"
+                    },
+                    {
+                        "lat": "38.89135",
+                        "lon": "-77.03371",
+                        "ele": "3.65455",
+                        "name": "Run 098"
+                    },
+                    {
+                        "lat": "38.89196",
+                        "lon": "-77.0337",
+                        "ele": "2.5146",
+                        "name": "Run 099"
+                    },
+                    {
+                        "lat": "38.89196",
+                        "lon": "-77.039",
+                        "ele": "3.82828",
+                        "name": "Run 100"
+                    },
+                    {
+                        "lat": "38.89218",
+                        "lon": "-77.039",
+                        "ele": "3.9502",
+                        "name": "Run 101"
+                    },
+                    {
+                        "lat": "38.89216",
+                        "lon": "-77.02625",
+                        "ele": "2.78282",
+                        "name": "Run 102"
+                    },
+                    {
+                        "lat": "38.89218",
+                        "lon": "-77.0261",
+                        "ele": "2.74015",
+                        "name": "Run 103"
+                    },
+                    {
+                        "lat": "38.89237",
+                        "lon": "-77.02599",
+                        "ele": "2.77672",
+                        "name": "Run 104"
+                    },
+                    {
+                        "lat": "38.89429",
+                        "lon": "-77.02607",
+                        "ele": "4.05079",
+                        "name": "Run 105"
+                    },
+                    {
+                        "lat": "38.89324",
+                        "lon": "-77.0222",
+                        "ele": "4.1148",
+                        "name": "Run 106"
+                    },
+                    {
+                        "lat": "38.89354",
+                        "lon": "-77.02221",
+                        "ele": "4.61772",
+                        "name": "Run 107"
+                    },
+                    {
+                        "lat": "38.89493",
+                        "lon": "-77.02722",
+                        "ele": "4.67563",
+                        "name": "Run 108"
+                    },
+                    {
+                        "lat": "38.89517",
+                        "lon": "-77.02822",
+                        "ele": "4.74573",
+                        "name": "Run 109"
+                    }
+                ]
+            }
+        };
 
-	var colors = new L.CustomColorFunction(0, 15.02968, [[247, 252, 240], [ 224, 243, 219], [ 204, 235, 197], [ 168, 221, 181], [ 123, 204, 196], [ 78, 179, 211], [ 43, 140, 190], [ 8, 104, 172], [ 8, 64, 129] ], {
-		interpolate: true
-	});
+        var colors = new L.CustomColorFunction(0, 15.02968, [[247, 252, 240], [224, 243, 219], [204, 235, 197], [168, 221, 181], [123, 204, 196], [78, 179, 211], [43, 140, 190], [8, 104, 172], [8, 64, 129]], {
+            interpolate: true
+        });
 
-	var dataLayer = new L.FlowLine(data, {
-		recordsField: 'gpx.wpt',
-		locationMode: L.LocationModes.LATLNG,
-		latitudeField: 'lat',
-		longitudeField: 'lon',
-		legendOptions: {
-			className: 'legend-line',
-			numSegments: 10
-		},
-		displayOptions: {
-			ele: {
-				displayName: 'Elevation',
-				weight: new L.LinearFunction([0, 3], [15.02968, 20]),
-				color: colors //new L.HSLHueFunction([0, 120], [16, -30])
-			}
-		},
-		layerOptions: {
-			opacity: 1.0
-		}
-	});
+        var dataLayer = new L.FlowLine(data, {
+            recordsField: 'gpx.wpt',
+            locationMode: L.LocationModes.LATLNG,
+            latitudeField: 'lat',
+            longitudeField: 'lon',
+            legendOptions: {
+                className: 'legend-line',
+                numSegments: 10
+            },
+            displayOptions: {
+                ele: {
+                    displayName: 'Elevation',
+                    weight: new L.LinearFunction([0, 3], [15.02968, 20]),
+                    color: colors //new L.HSLHueFunction([0, 120], [16, -30])
+                }
+            },
+            layerOptions: {
+                opacity: 1.0
+            }
+        });
 
-	// Add the data layer to the layer control
-	layerControl.addOverlay(dataLayer, 'Flow Line');
+        // Add the data layer to the layer control
+        layerControl.addOverlay(dataLayer, 'Flow Line');
 
-	var runData = [];
-	var wpts = data.gpx.wpt
-	for (var i = 0; i < wpts.length; ++i) {
-		var wpt = wpts[i];
-		var latlng = new L.LatLng(wpt.lat, wpt.lon);
+        var runData = [];
+        var wpts = data.gpx.wpt
+        for (var i = 0; i < wpts.length; ++i) {
+            var wpt = wpts[i];
+            var latlng = new L.LatLng(wpt.lat, wpt.lon);
 
-		latlng.weight = wpt.ele * 2;
+            latlng.weight = wpt.ele * 2;
 
-		console.log(wpt.ele);
+            console.log(wpt.ele);
 
-		runData.push(latlng);
-	}
+            runData.push(latlng);
+        }
 
-	var weightedPolylineTest = new L.WeightedPolyline(runData, {
-		fill: true,
-		fillColor: '#0033ff',
-		fillOpacity: 1,
-		stroke: false
-	});
+        var weightedPolylineTest = new L.WeightedPolyline(runData, {
+            fill: true,
+            fillColor: '#0033ff',
+            fillOpacity: 1,
+            stroke: false
+        });
 
-	map.addLayer(weightedPolylineTest);
-	layerControl.addOverlay(weightedPolylineTest, 'Weighted Polyline');
-});
-	</script>
+        map.addLayer(weightedPolylineTest);
+        layerControl.addOverlay(weightedPolylineTest, 'Weighted Polyline');
+    });
+</script>
 </body>
 </html>

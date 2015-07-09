@@ -68,7 +68,7 @@
 <script type="text/javascript" src="../lib/jquery-1.11.0.min.js"></script>
 <script type="text/javascript" src="../lib/moment.min.js"></script>
 <script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
 <script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 <script type="text/javascript">
@@ -223,6 +223,10 @@
 
         layerControl.addTo(map);
 
+        $.ajaxSetup({
+            cache:true
+        });
+
         // Function for requesting the latest earthquakes from USGS
         var getData = function () {
 
@@ -231,9 +235,11 @@
             }
 
             $.ajax({
-                url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
+                //url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
+                url: 'http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojsonp',
                 type: 'GET',
-                dataType: 'jsonp'
+                dataType: 'jsonp',
+                jsonp: false
             });
         };
 

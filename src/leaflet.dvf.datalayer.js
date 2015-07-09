@@ -27,12 +27,12 @@ L.LocationModes = {
         var location = getLocation(this.options.latitudeField, this.options.longitudeField);
 
         if (!location && this.options.fallbackLocationFields) {
-            var index = 0;
+            var fallbackIndex = 0;
             var fallbackLocationFields;
-            while (!location && index < this.options.fallbackLocationFields.length) {
-                fallbackLocationFields = this.options.fallbackLocationFields[index];
+            while (!location && fallbackIndex < this.options.fallbackLocationFields.length) {
+                fallbackLocationFields = this.options.fallbackLocationFields[fallbackIndex];
                 location = getLocation(fallbackLocationFields.latitudeField, fallbackLocationFields.longitudeField);
-                index++;
+                fallbackIndex++;
             }
         }
 
@@ -288,7 +288,6 @@ L.DataLayer = L.LayerGroup.extend({
 
     initialize: function (data, options) {
         L.setOptions(this, options);
-
         L.LayerGroup.prototype.initialize.call(this, options);
 
         data = data || {};
@@ -338,16 +337,41 @@ L.DataLayer = L.LayerGroup.extend({
         }
     },
 
-    onAdd: function (map) {
-        L.LayerGroup.prototype.onAdd.call(this, map);
+    _addLayer: function (map, layer) {
+        return function () {
+            map.addLayer(layer);
+        };
+    },
 
-        map.on('zoomend', this._zoomFunction, this);
+    _removeLayer: function (map, layer) {
+        return function () {
+            map.removeLayer(layer);
+        };
+    },
+
+    onAdd: function (map) {
+        var me = this;
+        this._map = map;
+
+        for (var i in me._layers) {
+            if (me._layers.hasOwnProperty(i)) {
+                setTimeout(this._addLayer(map, me._layers[i]), 0);
+            }
+        }
+
+        map.on('zoomend', me._zoomFunction, me);
     },
 
     onRemove: function (map) {
-        L.LayerGroup.prototype.onRemove.call(this, map);
+        var me = this;
 
-        map.off('zoomend', this._zoomFunction, this);
+        for (var i in me._layers) {
+            if (me._layers.hasOwnProperty(i)) {
+                setTimeout(this._removeLayer(map, me._layers[i]), 0);
+            }
+        }
+
+        map.off('zoomend', me._zoomFunction, me);
     },
 
     bringToBack: function () {
@@ -556,7 +580,7 @@ L.DataLayer = L.LayerGroup.extend({
         this.options.filter = filterFunction;
 
         // Re-load data
-        this.reloadData()
+        this.reloadData();
 
         return this;
     },
@@ -601,12 +625,11 @@ L.DataLayer = L.LayerGroup.extend({
     },
 
     locationToLayer: function (location, record) {
-        var layer;
-
-        layer = this.recordToLayer(location, record);
+        var me = this;
+        var layer = me.recordToLayer(location, record);
 
         if (layer) {
-            this.addLayer(layer);
+            me.addLayer(layer);
         }
     },
 
@@ -750,7 +773,21 @@ L.DataLayer = L.LayerGroup.extend({
         };
     },
 
+    _recursiveLayerUpdate: function (layer, callee) {
+        var me = this;
+
+        if (layer.eachLayer) {
+            layer.eachLayer(function (subLayer) {
+                me._recursiveLayerUpdate(subLayer, callee);
+            });
+        }
+        else {
+            callee.call(me, layer);
+        }
+    },
+
     _getIndexedLayer: function (index, location, layerOptions, record) {
+        var me = this;
         if (this.options.getIndexKey) {
             var indexKey = this.options.getIndexKey.call(this, location, record);
 
@@ -771,7 +808,9 @@ L.DataLayer = L.LayerGroup.extend({
 
                     }
                     else {
-                        layer.redraw();
+                        me._recursiveLayerUpdate(layer, function (layer) {
+                            layer.redraw();
+                        });
                     }
                 };
 
@@ -864,9 +903,15 @@ L.DataLayer = L.LayerGroup.extend({
 
         L.StyleConverter.applySVGStyle(i, layerOptions);
 
+        var breakFunction = {
+            evaluate: function (value) {
+                return params.breaks[value];
+            }
+        };
+
         for (var property in displayProperties) {
 
-            if (ignoreProperties.indexOf(property) === -1) {
+            if (displayProperties.hasOwnProperty(property) && ignoreProperties.indexOf(property) === -1) {
 
                 valueFunction = displayProperties[property];
 
@@ -875,7 +920,7 @@ L.DataLayer = L.LayerGroup.extend({
                     var minX = bounds ? bounds[0].x : displayProperties.minValue;
                     var maxX = bounds ? bounds[1].x : displayProperties.maxValue;
 
-                    var binFunction = new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
+                    var binFunction = params.breaks ? breakFunction : new L.LinearFunction(new L.Point(0, minX), new L.Point(numSegments, maxX));
 
                     displayMin = minX;
                     displayMax = maxX;
@@ -908,7 +953,7 @@ L.DataLayer = L.LayerGroup.extend({
                             'background-image:-webkit-linear-gradient(left , ' + value + ' 0%, ' + nextValue + ' 100%);';
                         }
                         else {
-                            i.style.cssText += 'background-color:' + nextValue + ';';
+                            i.style.cssText += 'background-color:' + value + ';';
                         }
                     }
 
@@ -926,8 +971,8 @@ L.DataLayer = L.LayerGroup.extend({
                         'border-right-width:' + nextValue + ';';
                     }
 
-                    var min = (segmentSize * index) + minX;
-                    var max = min + segmentSize;
+                    var min = params.minX || (segmentSize * index) + minX;
+                    var max = params.maxX || min + segmentSize;
 
                     if (displayTextFunction && valueFunction) {
                         min = displayTextFunction(min);
@@ -973,60 +1018,100 @@ L.DataLayer = L.LayerGroup.extend({
             return value;
         };
 
+        // Create a different legend section for each field specified in displayOptions
+        // Iterate through the fields
         for (var field in displayOptions) {
+            if (displayOptions.hasOwnProperty(field)) {
 
-            var displayProperties = displayOptions[field];
+                // Get the properties associated with a given field
+                var displayProperties = displayOptions[field];
 
-            if (!displayProperties.excludeFromLegend) {
-                var displayName = displayProperties.displayName || field;
+                // If the field should not be excluded from the legend, then continue...
+                if (!displayProperties.excludeFromLegend) {
 
-                displayText = displayProperties.displayText;
+                    // Use the provided name or use the field key
+                    var displayName = displayProperties.displayName || field;
 
-                var displayTextFunction = displayText ? displayText : defaultFunction;
+                    // Determine the function used to print out y values
+                    displayText = displayProperties.displayText;
 
-                var styles = displayProperties.styles;
+                    var displayTextFunction = displayText ? displayText : defaultFunction;
 
-                L.DomUtil.create('div', 'legend-title', legendElement).innerHTML = displayName;
+                    var styles = displayProperties.styles;
 
-                if (styles) {
-                    // Generate category legend
-                    legendElement.innerHTML += new L.CategoryLegend(styles).generate();
-                }
-                else {
-                    // Generate numeric legend
-                    var legendItems = L.DomUtil.create('div', 'data-layer-legend');
-                    var minValue = L.DomUtil.create('div', 'min-value', legendItems);
-                    var scaleBars = L.DomUtil.create('div', 'scale-bars', legendItems);
-                    var maxValue = L.DomUtil.create('div', 'max-value', legendItems);
-                    var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
+                    L.DomUtil.create('div', 'legend-title', legendElement).innerHTML = displayName;
 
-                    for (var index = 0; index < numSegments; ++index) {
-                        var legendParams = {
-                            displayProperties: displayProperties,
-                            layerOptions: layerOptions,
-                            ignoreProperties: ignoreProperties,
-                            displayTextFunction: displayTextFunction,
-                            index: index,
-                            numSegments: numSegments,
-                            segmentWidth: segmentWidth,
-                            minValue: minValue,
-                            maxValue: maxValue,
-                            gradient: legendOptions.gradient
-                        };
-
-                        var element = this._getLegendElement(legendParams);
-
-                        scaleBars.appendChild(element);
-
+                    // If styles have been specified (e.g. a key/value mapping b/w a given input value and a given output value),
+                    // then use those
+                    if (styles) {
+                        // Generate category legend
+                        legendElement.innerHTML += new L.CategoryLegend(styles).generate();
                     }
-                    legendElement.appendChild(legendItems);
+                    else {
+                        // Generate numeric legend
+                        var legendItems = L.DomUtil.create('div', 'data-layer-legend');
+                        var minValue = L.DomUtil.create('div', 'min-value', legendItems);
+                        var scaleBars = L.DomUtil.create('div', 'scale-bars', legendItems);
+                        var maxValue = L.DomUtil.create('div', 'max-value', legendItems);
+                        var ignoreProperties = ['displayName', 'displayText', 'minValue', 'maxValue'];
+                        var breaks = displayProperties.breaks;
+                        var segmentWidths = [];
+
+                        numSegments = legendOptions.numSegments || 10;
+
+                        // If breaks have been specified, then use those values to calculate segment widths and provide x ranges
+                        // for each segment
+                        if (breaks) {
+                            // Scale the break numbers relative to the width of the legend
+                            var scaleFunction = new L.LinearFunction([breaks[0], 0], [breaks[breaks.length - 1], legendWidth]);
+                            var lastWidth = 0;
+                            var width = 0;
+                            for (var i = 1; i < breaks.length; ++i) {
+                                width = scaleFunction.evaluate(breaks[i]);
+                                segmentWidths.push(width - lastWidth - 2 * weight);
+                                lastWidth = width;
+                            }
+
+                            numSegments = segmentWidths.length;
+                        }
+
+                        // Add each segment to the legend
+                        for (var index = 0; index < numSegments; ++index) {
+                            var legendParams = {
+                                displayProperties: displayProperties,
+                                layerOptions: layerOptions,
+                                ignoreProperties: ignoreProperties,
+                                displayTextFunction: displayTextFunction,
+                                index: index,
+                                numSegments: numSegments,
+                                segmentWidth: segmentWidth,
+                                minValue: minValue,
+                                maxValue: maxValue,
+                                gradient: legendOptions.gradient
+                            };
+
+                            // If there are segmentWidths, then use those
+                            if (breaks && segmentWidths.length > 0) {
+                                legendParams.segmentWidth = segmentWidths[index];
+                                legendParams.segmentSize = segmentWidths[index];
+                                legendParams.minX = breaks[index];
+                                legendParams.maxX = breaks[index + 1];
+                                legendParams.breaks = breaks;
+                            }
+
+                            var element = this._getLegendElement(legendParams);
+
+                            scaleBars.appendChild(element);
+
+                        }
+                        legendElement.appendChild(legendItems);
+                    }
                 }
             }
         }
 
         return container.innerHTML;
     },
-
     /**
      * Override the default L.LayerGroup handling of GeoJSON to provide support for nested layer groups.
      */
@@ -1176,16 +1261,18 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
             opacity: 1.0
         },
         onEachRecord: function (layer, record) {
-            var photoUrl = record['photo_file_url'];
-            var title = record['photo_title'];
+            var photoUrl = record.photo_file_url;
+            var title = record.photo_title;
             var me = this;
-            var width = record['width'];
-            var height = record['height'];
+            var width = record.width;
+            var height = record.height;
             var offset = 20000;
 
             layer.on('click', function (e) {
                 var container = document.createElement('div');
                 var content = L.DomUtil.create('div', '', container);
+
+                L.DomUtil.addClass(content, 'panoramio-content');
 
                 var photo = L.DomUtil.create('img', 'photo', content);
                 photo.setAttribute('onload', 'this.style.opacity=1;');
@@ -1195,14 +1282,14 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
                 var photoInfo = L.DomUtil.create('div', 'photo-info', content);
                 photoInfo.style.width = (width - 20) + 'px';
                 photoInfo.innerHTML = '<span>' + title + '</span>' +
-                '<a class="photo-link" target="_blank" href="' + record['photo_url'] + '">' +
+                '<a class="photo-link" target="_blank" href="' + record.photo_url + '">' +
                 '<img src="http://www.panoramio.com/img/glass/components/logo_bar/panoramio.png" style="height: 14px;"/>' +
                 '</a>';
 
                 var authorLink = L.DomUtil.create('a', 'author-link', content);
                 authorLink.setAttribute('target', '_blank');
-                authorLink.setAttribute('href', record['owner_url']);
-                authorLink.innerHTML = 'by ' + record['owner_name'];
+                authorLink.setAttribute('href', record.owner_url);
+                authorLink.innerHTML = 'by ' + record.owner_name;
 
                 var icon = new L.DivIcon({
                     className: 'photo-details',
@@ -1240,7 +1327,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
             }
 
             var iconSize = size ? new L.Point(size, size) : L.PanoramioLayer.SIZES[this.options.size];
-            var url = record['photo_file_url'].replace('/medium/', '/' + this.options.size + '/');
+            var url = record.photo_file_url.replace('/medium/', '/' + this.options.size + '/');
             var icon = new L.DivIcon({
                 iconSize: iconSize,
                 className: '',
@@ -1267,7 +1354,6 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 
         var me = this;
         var resetFunction = function (e) {
-
             me._from = 0;
             me._to = L.PanoramioLayer.NUM_PHOTOS;
 
@@ -1279,7 +1365,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 
             var request = function () {
                 me.requestPhotos();
-            }
+            };
 
             me._call = setTimeout(request, 1000);
         };
@@ -1316,7 +1402,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
         // moment js
         for (var i = 0; i < photos.length; ++i) {
             var photo = photos[i];
-            var timestamp = moment(photo['upload_date'], L.PanoramioLayer.UPLOAD_DATE_FORMAT);
+            var timestamp = moment(photo.upload_date, L.PanoramioLayer.UPLOAD_DATE_FORMAT);
 
             timestamps.push(timestamp);
 
@@ -1367,7 +1453,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 
         data.callback = 'window.LeafletDvfJsonpCallbacks.' + key;
 
-        for (property in data) {
+        for (var property in data) {
             if (data.hasOwnProperty(property)) {
                 params.push(property + '=' + encodeURIComponent(data[property]));
             }
@@ -1401,7 +1487,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
                 if (key in window.LeafletDvfJsonpCallbacks) {
                     window.LeafletDvfJsonpCallbacks[key] = function () {
                         delete window.LeafletDvfJsonpCallbacks[key];
-                    }
+                    };
                 }
             }
         };
@@ -1516,6 +1602,9 @@ L.ChoroplethDataLayer = L.DataLayer.extend({
         if (location.location instanceof L.LatLng) {
             location.location = this._markerFunction.call(this, location.location, layerOptions, record);
         }
+        else if (location.location instanceof L.LatLngBounds) {
+            location.location = new L.Rectangle(location.location, layerOptions);
+        }
 
         if (location.location.setStyle) {
 
@@ -1564,7 +1653,7 @@ L.ChartDataLayer = L.DataLayer.extend({
             options.data[key] = this.options.getFieldValue ? this.options.getFieldValue.call(this, record, key) : L.Util.getFieldValue(record, key);
         }
 
-        for (var key in tooltipOptions) {
+        for (key in tooltipOptions) {
             options[key] = tooltipOptions[key];
         }
 
@@ -1687,7 +1776,7 @@ L.StackedPieChartDataLayer = L.ChartDataLayer.extend({
 
     _getMarker: function (latLng, options) {
         return new L.StackedPieChartMarker(latLng, options);
-    },
+    }
 });
 
 L.stackedPieChartDataLayer = function (data, options) {
@@ -1726,7 +1815,7 @@ L.RadialMeterMarkerDataLayer = L.DataLayer.extend({
             options.data[key] = L.Util.getFieldValue(record, key);
         }
 
-        for (var key in tooltipOptions) {
+        for (key in tooltipOptions) {
             options[key] = tooltipOptions[key];
         }
 
@@ -1741,7 +1830,7 @@ L.RadialMeterMarkerDataLayer = L.DataLayer.extend({
 
     _getMarker: function (latLng, options) {
         return new L.RadialMeterMarker(latLng, options);
-    },
+    }
 });
 
 L.radialMeterMarkerDataLayer = function (data, options) {

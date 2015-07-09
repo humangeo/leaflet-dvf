@@ -82,15 +82,14 @@
 </script>
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript"
-        src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
-<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
 <script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
 <script type="text/javascript" src="../lib/jsts/jsts.js"></script>
 <script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+
 <script type="text/javascript" src="../../dist/data/countryData.min.js"></script>
 <script type="text/javascript">
     map = null;
@@ -136,7 +135,7 @@
         legendControl.addTo(map);
 
         var layerControl = new L.Control.Layers({
-            'Cloudmade': baseLayer,
+            'Cloudmade': baseLayer
         });
 
         layerControl.addTo(map);
@@ -174,14 +173,13 @@
                         fillPattern: {
                             url: record.flag,
                             pattern: {
-                                width: '150px',
-                                height: '100px',
-                                patternUnits: 'userSpaceOnUse',
-                                patternContentUnits: 'Default'
+                                width: '100px',
+                                height: '66px',
+                                patternUnits: 'userSpaceOnUse'
                             },
                             image: {
-                                width: '150px',
-                                height: '100px'
+                                width: '113px',
+                                height: '87px'
                             }
                         },
                         fillOpacity: 0.7,
@@ -230,14 +228,14 @@
                 layerOptions: {
                     fillOpacity: 0.9,
                     opacity: 1,
-                    weight: 1,
+                    weight: 0.3,
                     width: 8,
                     numberOfSides: 100,
                     gradient: true,
-                    dropShadow: true,
+                    dropShadow: false,
                     //lineCap: 'square',
                     //lineJoin: 'miter'//,
-                    stroke: false
+                    stroke: true
                 }
             });
 

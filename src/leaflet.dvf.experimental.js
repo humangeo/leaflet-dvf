@@ -17,7 +17,7 @@ L.SeriesMarker = L.Path.extend({
         },
         weight: 1,
         color: '#000',
-        opacity: 1.0,
+        opacity: 1.0
     },
 
     setLatLng: function (latlng) {
@@ -308,7 +308,7 @@ L.SparklineMarker = L.ChartMarker.extend({
                 value = {
                     x: closestPoint.x,
                     y: closestPoint.y
-                }
+                };
 
                 newPoint = new L.Point(-offset, iconSize.y + offset);
 
@@ -427,8 +427,13 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
         var yField = this.options.yField || 'y';
         var seriesField = this.options.seriesField;
         var includeFunction = this.options.filter || this.options.includeLayer;
+        var key;
+        var seriesPoint;
+        var points = {};
+        var pointIndex;
+        var index;
 
-        for (var index in records) {
+        for (index in records) {
             if (records.hasOwnProperty(index)) {
 
                 record = records[index];
@@ -449,15 +454,14 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
                             series = _.pairs(series);
                         }
 
-                        var seriesPoint;
-
                         // Iterate through keys in chartOptions
-                        for (var key in this.options.chartOptions) {
-                            var points = {};
+                        for (key in this.options.chartOptions) {
+
+                            points = {};
                             var chartOptions = this.options.chartOptions[key];
 
                             // Need to sort x's numerically before plotting
-                            for (var pointIndex in series) {
+                            for (pointIndex in series) {
                                 if (series.hasOwnProperty(pointIndex)) {
                                     seriesPoint = series[pointIndex];
 
@@ -490,7 +494,7 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
                     }
                     else {
                         // Iterate through the keys in chartOptions
-                        for (var key in this.options.chartOptions) {
+                        for (key in this.options.chartOptions) {
 
                             // Get the key property from the record
                             series = L.Util.getFieldValue(record, key);
@@ -499,12 +503,11 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
                                 series = _.pairs(series);
                             }
 
-                            var seriesPoint;
-                            var points = {};
+                            points = {};
                             var chartOption = this.options.chartOptions[key];
 
                             // Need to sort x's numerically before plotting
-                            for (var pointIndex in series) {
+                            for (pointIndex in series) {
                                 if (series.hasOwnProperty(pointIndex)) {
                                     seriesPoint = series[pointIndex];
 
@@ -556,11 +559,11 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
             return value;
         });
 
-        for (var index in seriesObjects) {
+        for (index in seriesObjects) {
 
             var seriesObject = seriesObjects[index];
 
-            for (var key in this.options.chartOptions) {
+            for (key in this.options.chartOptions) {
 
                 var seriesData = L.Util.getFieldValue(seriesObject, key);
 
@@ -573,7 +576,7 @@ L.SparklineDataLayer = L.ChartDataLayer.extend({
                 }
 
                 L.Util.setFieldValue(seriesObjects[index], key, _.chain(seriesData).pairs().sortBy(function (value) {
-                    return value
+                    return value;
                 }).value());
 
             }
@@ -605,7 +608,6 @@ L.sparklineDataLayer = function (data, options) {
 L.WordCloudMarker = L.ChartMarker.extend({
     initialize: function (centerLatLng, options) {
         L.setOptions(this, options);
-
         L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
     },
 
@@ -645,6 +647,41 @@ L.wordCloudDataLayer = function (data, options) {
 /*
  * A DataLayer for visualizing data as a graph of edges, where the vertices are locations
  */
+var getArrow = function (latlng, angle, options) {
+    angle = L.LatLng.RAD_TO_DEG * angle;
+    options = options || {};
+
+    var numberOfSides = options.numberOfSides || 3;
+    var radius = options.radius || 6;
+
+    var startRotation = 180 / numberOfSides;
+
+    var offsets = {
+        se: startRotation + angle,
+        sw: 180 + startRotation - angle,
+        nw: 180 + startRotation + angle,
+        ne: startRotation - angle
+    };
+
+    var rotation = offsets.se;
+
+    var arrow = new L.RegularPolygonMarker(latlng, {
+        numberOfSides: numberOfSides,
+        rotation: rotation,
+        fillColor: options.fillColor,
+        color: options.color,
+        gradient: options.gradient,
+        weight: options.weight,
+        opacity: options.opacity,
+        fillOpacity: options.fillOpacity,
+        radius: radius,
+        lineCap: 'butt',
+        lineJoin: 'miter'
+    });
+
+    return arrow;
+};
+
 L.Graph = L.DataLayer.extend({
     statics: {
         EDGESTYLE: {
@@ -706,6 +743,10 @@ L.Graph = L.Graph.extend({
  * include angles as well...
  */
 L.WeightedLineSegment = L.Path.extend({
+
+    options: {
+        polygon: true
+    },
     initialize: function (weightedPoint1, weightedPoint2, options) {
         L.setOptions(this, options);
 
@@ -716,12 +757,32 @@ L.WeightedLineSegment = L.Path.extend({
 
     _project: function () {
         this._points = this._getPoints();
-        this._setGradient();
+        if ((typeof this.options.fill !== 'undefined' && this.options.fill && this.options.gradient) || (this.options.stroke && !this.options.fill && this.options.gradient)) {
+            this._setGradient();
+        }
     },
 
     _update: function () {
         if (this._map) {
             this._renderer._setPath(this, this.getPathString());
+        }
+    },
+
+    getLatLngs: function () {
+        var points1 = this._weightedPointToPoint(this._weightedPoint1);
+        var points2 = this._weightedPointToPoint(this._weightedPoint2);
+
+        var midPoint1 = points1[1];
+        var midPoint2 = points2[1];
+
+        return [this._map.layerPointToLatLng(midPoint1), this._map.layerPointToLatLng(midPoint2)];
+    },
+
+    projectLatlngs: function () {
+        this._points = this._getPoints();
+
+        if ((typeof this.options.fill !== 'undefined' && this.options.fill && this.options.gradient) || (this.options.stroke && !this.options.fill && this.options.gradient)) {
+            this._setGradient();
         }
     },
 
@@ -731,28 +792,36 @@ L.WeightedLineSegment = L.Path.extend({
 
         var deltaX = p2.x - p1.x;
         var deltaY = p2.y - p1.y;
+        var vector;
 
-        if (deltaX != 0 || deltaY != 0) {
-            var angle = Math.atan(deltaY / deltaX);
-            var directionX = deltaX / Math.abs(deltaX);
-            var directionY = deltaY / Math.abs(deltaY);
+        this.options.gradientUnits = this.options.gradientUnits || 'objectBoundingBox';
 
-            var p1 = new L.Point(50 + 50 * Math.cos(angle + Math.PI), 50 + 50 * Math.sin(angle + Math.PI));
-            var p2 = new L.Point(50 + 50 * Math.cos(angle), 50 + 50 * Math.sin(angle));
+        if (deltaX !== 0 || deltaY !== 0) {
+            if (this.options.gradientUnits === 'objectBoundingBox') {
+                var angle = Math.atan(deltaY / deltaX);
+                var directionX = deltaX / Math.abs(deltaX);
+                var directionY = deltaY / Math.abs(deltaY);
 
-            if (directionX < 0) {
-                var temp = p1;
-                p1 = p2;
-                p2 = temp;
+                p1 = new L.Point(50 + 50 * Math.cos(angle + Math.PI), 50 + 50 * Math.sin(angle + Math.PI));
+                p2 = new L.Point(50 + 50 * Math.cos(angle), 50 + 50 * Math.sin(angle));
+
+                if (directionX < 0) {
+                    var temp = p1;
+                    p1 = p2;
+                    p2 = temp;
+                }
+                vector = [[p1.x.toFixed(2) + '%', p1.y.toFixed(2) + '%'], [p2.x.toFixed(2) + '%', p2.y.toFixed(2) + '%']];
             }
-
-            var color1 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint1.weight) : null;
-            var color2 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint2.weight) : null;
-            var opacity1 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint1.weight) : 1;
-            var opacity2 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint2.weight) : 1;
+            else {
+                vector = [[p1.x.toFixed(2), p1.y.toFixed(2)], [p2.x.toFixed(2), p2.y.toFixed(2)]];
+            }
+            var color1 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint1.lineWeight) : (this._weightedPoint1.fillColor || this._weightedPoint1.color);
+            var color2 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint2.lineWeight) : (this._weightedPoint2.fillColor || this._weightedPoint2.color);
+            var opacity1 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint1.lineWeight) : 1;
+            var opacity2 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint2.lineWeight) : 1;
 
             this.options.gradient = {
-                vector: [[p1.x.toFixed(2) + '%', p1.y.toFixed(2) + '%'], [p2.x.toFixed(2) + '%', p2.y.toFixed(2) + '%']],
+                vector: vector,
                 stops: [
                     {
                         offset: '0%',
@@ -769,48 +838,63 @@ L.WeightedLineSegment = L.Path.extend({
                         }
                     }
                 ]
-            }
+            };
 
             this.setStyle(this.options);
         }
-
     },
 
     _weightedPointToPoint: function (weightedPoint) {
+        var points = [];
+
         this._latlngs.push(weightedPoint.latlng);
 
         var point1 = this._map.latLngToLayerPoint(weightedPoint.latlng);
-        var weight = weightedPoint.weight;
+
+        var weight = weightedPoint.lineWeight / 2;
         var angle1 = weightedPoint.angle;
         var angle2 = angle1 + Math.PI;
         var coord1 = new L.Point(point1.x + Math.cos(angle1) * weight, point1.y + Math.sin(angle1) * weight);
         var coord2 = new L.Point(point1.x + Math.cos(angle2) * weight, point1.y + Math.sin(angle2) * weight);
 
-        return [coord1, point1, coord2];
+        points = [coord1, point1, coord2];
+
+        return points;
     },
 
     _getPoints: function () {
         var points = [];
         var points1 = this._weightedPointToPoint(this._weightedPoint1);
-        var points2 = this._weightedPointToPoint(this._weightedPoint2); //.reverse();
+        var points2 = this._weightedPointToPoint(this._weightedPoint2);
 
-        var line0 = new L.LinearFunction(points1[0], points2[0]);
-        var line1 = new L.LinearFunction(points1[1], points2[1]);
-        var line2 = new L.LinearFunction(points1[2], points2[2]);
+        if (this.options.polygon) {
+            var line0 = new L.LinearFunction(points1[0], points2[0]);
+            var line1 = new L.LinearFunction(points1[1], points2[1]);
+            var line2 = new L.LinearFunction(points1[2], points2[2]);
 
-        // TODO:  Make this an angled or curved polygon if the angle difference is greater than some value
-        // Interpolate the weight and get the mid point angle
+            // TODO:  Make this an angled or curved polygon if the angle difference is greater than some value
+            // Interpolate the weight and get the mid point angle
+            var intersectionPoint = line2.getIntersectionPoint(line0);
+            var bounds = new L.Bounds([].concat(points1, points2));
 
-        var intersectionPoint = line2.getIntersectionPoint(line0);
-        var bounds = new L.Bounds([].concat(points1, points2));
-
-        if (intersectionPoint) {
-            if (!bounds.contains(intersectionPoint)) {
+            if (intersectionPoint) {
+                if (!bounds.contains(intersectionPoint)) {
+                    points2 = points2.reverse();
+                }
+            }
+            else if (line0._slope === line2._slope) {
                 points2 = points2.reverse();
             }
+
+            line0 = null;
+            line1 = null;
+            line2 = null;
+            intersectionPoint = null;
         }
 
         points = points.concat(points1, points2);
+
+        this._originalPoints = points;
 
         return points;
     },
@@ -827,12 +911,128 @@ L.WeightedLineSegment = L.Path.extend({
     },
 
     getPathString: function () {
-        return new L.SVGPathBuilder(this._points, []).build(6);
+        var closePath = this.options.polygon;
+        var points = this._points;
+
+        if (!this.options.polygon) {
+            points = [points[1], points[4]];
+        }
+
+        return new L.SVGPathBuilder(points, [], {
+            closePath: closePath
+        }).build(6);
+    }
+});
+
+L.WeightedLineSegment.include(LineTextFunctions);
+
+/*
+ * 
+ */
+L.WeightedFlowLine = L.FlowLine.extend({
+    initialize: function (data, options) {
+        L.Util.setOptions(this, options);
+        L.FlowLine.prototype.initialize.call(this, data, options);
+        this._loaded = false;
+    },
+
+    _getAngle: function (p1, p2) {
+        var point1 = this._map.latLngToLayerPoint(p1);
+        var point2 = this._map.latLngToLayerPoint(p2);
+        var deltaX = point2.x - point1.x;
+        var deltaY = point2.y - point1.y;
+        var angleRadians = Math.atan(deltaY / deltaX);
+
+        return angleRadians;
+    },
+
+    _getAngles: function (p1, p2) {
+        var angleRadians = this._getAngle(p1, p2);
+
+        if (isNaN(angleRadians)) {
+            angleRadians = 0; //Math.PI/2;
+        }
+
+        var angle1 = angleRadians + Math.PI / 2;
+        var angle2 = angle1 + Math.PI;
+
+        return [angle1, angle2];
+    },
+
+    onAdd: function (map) {
+        L.FlowLine.prototype.onAdd.call(this, map);
+
+        if (this._data && !this._loaded) {
+            this._loadRecords(this._data);
+        }
+    },
+
+    _addLineSegment: function (p1, p2, angles, records, keys, index) {
+        var angleValues = this._getAngles(p1, p2);
+
+        var options1 = this._getDynamicOptions(records[keys[index - 1]]);
+        var options2 = this._getDynamicOptions(records[keys[index]]);
+
+        angles.push(L.extend({
+            latlng: p1,
+            angle: (angleValues[0] + angles[angles.length - 1].angle) / 2
+        }, options2.layerOptions));
+
+        var line = new L.WeightedLineSegment(angles[0], angles[1], options2.layerOptions);
+        this.addLayer(line);
+
+        if (this.options.showLegendTooltips) {
+            this._bindMouseEvents(line, options2.layerOptions, options2.legendDetails);
+        }
+
+        this.onEachSegment(records[keys[index - 1]], records[keys[index]], line);
+
+        return angles;
+    },
+
+    _loadRecords: function (records) {
+        if (this._map) {
+            var angles = [];
+            var keys = Object.keys(records);
+
+            if (keys.length > 0) {
+
+                keys = keys.length === 1 ? keys.push(keys[0]) : keys;
+
+                var p1 = this._getLocation(records[keys[0]], keys[0]).center;
+                var p2 = this._getLocation(records[keys[1]], keys[1]).center;
+                var angleValues = this._getAngles(p1, p2);
+                var options = this._getDynamicOptions(records[keys[0]]);
+
+                if (angleValues.length > 0) {
+
+                    angles.push(L.extend({
+                        latlng: p1,
+                        angle: angleValues[0]
+                    }, options.layerOptions));
+
+                    for (var i = 1; i < keys.length - 1; ++i) {
+                        p1 = p2;
+                        p2 = this._getLocation(records[keys[i + 1]], keys[i + 1]).center;
+
+                        angles = this._addLineSegment(p1, p2, angles, records, keys, i);
+                        angles = angles.slice(1);
+                    }
+
+                    p1 = p2;
+                    p2 = this._getLocation(records[keys[keys.length - 1]]).center;
+
+                    this._addLineSegment(p1, p2, angles, records, keys, keys.length - 1);
+                }
+
+                this._loaded = true;
+            }
+        }
     }
 });
 
 /*
- * Incomplete - A WORK IN PROGRESS
+ * Incomplete - A WORK IN PROGRESS - NOTE:  This is now obsolete - replaced by the L.WeightedFlowLine class
  * Takes a set of weighted points as input.  Iterates through those points, creating WeightedLineSegment
  * objects.
  */
@@ -884,6 +1084,11 @@ L.WeightedPolyline = L.FeatureGroup.extend({
 
     _getAngles: function (p1, p2) {
         var angleRadians = this._getAngle(p1, p2);
+
+        if (isNaN(angleRadians)) {
+            angleRadians = 0;
+        }
+
         var angle1 = angleRadians + Math.PI / 2;
         var angle2 = angle1 + Math.PI;
 
@@ -901,7 +1106,7 @@ L.WeightedPolyline = L.FeatureGroup.extend({
             angles.push({
                 latlng: p1,
                 angle: angleValues[0],
-                weight: p1.weight
+                lineWeight: p1.weight
             });
 
             for (var i = 1; i < this._latlngs.length - 1; ++i) {
@@ -914,7 +1119,7 @@ L.WeightedPolyline = L.FeatureGroup.extend({
                 angles.push({
                     latlng: p1,
                     angle: angleValues[0],
-                    weight: p1.weight
+                    lineWeight: p1.weight
                 });
 
                 this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));
@@ -928,7 +1133,7 @@ L.WeightedPolyline = L.FeatureGroup.extend({
             angles.push({
                 latlng: p1,
                 angle: angles[0].angle,
-                weight: p2.weight
+                lineWeight: p2.weight
             });
 
             this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));
@@ -988,14 +1193,16 @@ L.StackedPieChartMarker = L.ChartMarker.extend({
             }
             return value;
         };
+        var i;
         var j = 0;
         var dataValueSum = [];
         var dataScale = [];
+        var valueSum;
+
         for (key in data) {
             value = getValue(data, key);
-            //sum += value;
-            var valueSum = 0;
-            for (var i = 0; i < data[key].length; ++i) {
+            valueSum = 0;
+            for (i = 0; i < data[key].length; ++i) {
                 value = parseFloat(data[key][i]);
                 valueSum += value;
             }
@@ -1017,14 +1224,15 @@ L.StackedPieChartMarker = L.ChartMarker.extend({
             this._bindMouseEvents(circle);
             this.addLayer(circle);
 
-            var j = 0;
+            j = 0;
             for (key in data) {
-                var valueSum = 0.0;
+                valueSum = 0.0;
                 percentage = options.values[j] / sum;
                 angle = percentage * maxDegrees;
                 options.startAngle = lastAngle;
                 options.endAngle = lastAngle + angle;
-                for (var i = 0; i < data[key].length; ++i) {
+
+                for (i = 0; i < data[key].length; ++i) {
                     value = parseFloat(data[key][i]);
 
                     valueSum += value;
@@ -1052,7 +1260,12 @@ L.StackedPieChartMarker = L.ChartMarker.extend({
                 lastAngle = options.endAngle;
                 j++;
             }
-            for (var i = 0.2; i < 1.0; i += 0.2) {
+
+            var displayText = function (v) {
+                return parseInt(100 * v) + "%";
+            };
+
+            for (i = 0.2; i < 1.0; i += 0.2) {
                 circle = new L.CircleMarker(this._latlng, {
                     value: i,
                     color: options.color,
@@ -1062,9 +1275,7 @@ L.StackedPieChartMarker = L.ChartMarker.extend({
                     fill: false,
                     iconSize: new L.Point(50, 40),
                     displayName: "percent",
-                    displayText: function (v) {
-                        return parseInt(100 * v) + "%";
-                    }
+                    displayText: displayText
                 });
                 this._bindMouseEvents(circle);
                 this.addLayer(circle);
@@ -1121,7 +1332,7 @@ L.LayeredRegularPolygonMarker = L.MarkerGroup.extend({
     },
 
     initialize: function (latlng, options) {
-        L.setOptions(this, options);
+        L.Util.setOptions(this, options);
 
         options.levels = options.levels || 2;
         var markers = [];
@@ -1155,6 +1366,112 @@ L.LayeredRegularPolygonMarker = L.MarkerGroup.extend({
         this._markers = markers;
 
         L.MarkerGroup.prototype.initialize.call(this, latlng, markers);
+    }
+});
+
+/*
+ This is quick example for creating a layer that shows Mapillary photos (definitely a work in progress).
+ PanoramioLayer and this class should both be refactored to inherit from a PhotoLayer base layer w/ common methods
+ */
+L.MapillaryLayer = L.PanoramioLayer.extend({
+    options: {
+        recordsField: null,
+        locationMode: L.LocationModes.LATLNG,
+        latitudeField: 'lat',
+        longitudeField: 'lon',
+        onEachRecord: function (layer, record) {
+            var photoUrl = record.map_image_versions[1].url;
+            var title = record.location;
+            var me = this;
+            var width = 640;
+            var height = 640;
+            var offset = 20000;
+
+            layer.on('click', function (e) {
+                var container = document.createElement('div');
+                var content = L.DomUtil.create('div', '', container);
+
+                L.DomUtil.addClass(content, 'panoramio-content');
+
+                var photo = L.DomUtil.create('img', 'photo', content);
+                photo.setAttribute('onload', 'this.style.opacity=1;');
+                photo.setAttribute('src', photoUrl);
+                photo.style.width = width + 'px';
+
+                var photoInfo = L.DomUtil.create('div', 'photo-info', content);
+                photoInfo.style.width = (width - 20) + 'px';
+                photoInfo.innerHTML = '<span>' + title + '</span>' +
+                '<a class="photo-link" target="_blank" href="' + photoUrl + '">' +
+                '<img src="https://upload.wikimedia.org/wikipedia/commons/a/a8/Mapillary_logo.png" style="height: 14px;"/>' +
+                '</a>';
+
+
+                var icon = new L.DivIcon({
+                    className: 'photo-details',
+                    html: container.innerHTML,
+                    iconAnchor: [width / 2, height / 2]
+                });
+
+                var marker = new L.Marker(e.target._latlng, {
+                    icon: icon,
+                    zIndexOffset: offset
+                });
+
+                marker.on('click', function (e) {
+                    me.removeLayer(e.target);
+                });
+
+                layer.viewedImage = marker;
+                me.viewedImage = marker;
+
+                me.addLayer(marker);
+            });
+
+            if (this.options.onEachPhoto) {
+                this.options.onEachPhoto.call(this, layer, record);
+            }
+
+        },
+        setIcon: function (record, options) {
+            var title = record.location;
+            var iconSize = new L.Point(40, 40);
+            var photoUrl = record.map_image_versions[0].url;
+            var icon = new L.DivIcon({
+                iconSize: iconSize,
+                className: '',
+                html: '<img class="photo" onload="this.style.opacity=1" title="' + title + '" src="' + photoUrl + '"/>'
+            });
+
+            return icon;
+        }
+    },
+    requestPhotos: function () {
+
+        var me = this;
+        var bounds = this._map.getBounds();
+        var southWest = bounds.getSouthWest();
+        var northEast = bounds.getNorthEast();
+
+        while (me._calls.length > 0) {
+            me._calls.pop().abort();
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var data = JSON.parse(xhr.responseText);
+
+                me._count = data.length;
+
+                me.fire('photosAvailable', data);
+                me.clearLayers();
+                me.addData(data);
+            }
+        };
+        xhr.open('GET', 'http://api.mapillary.com/v1/im/search?min-lat=' + southWest.lat + '&max-lat=' + northEast.lat + '&min-lon=' + southWest.lng + '&max-lon=' + northEast.lng + '&max-results=50', true);
+        xhr.send(null);
+
+        me._calls.push(xhr);
     }
 });
 

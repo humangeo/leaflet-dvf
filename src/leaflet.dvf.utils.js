@@ -8,7 +8,7 @@ if (!Array.prototype.indexOf) {
             }
         }
         return -1;
-    }
+    };
 }
 
 // Add the keys method to the Object class if it doesn't exist
@@ -167,7 +167,7 @@ L.Util.pointToGeoJSON = function () {
             coordinates: [this._latlng[1], this._latlng[0]]
         },
         properties: {}
-    }
+    };
 
     for (var key in this.options) {
         if (this.options.hasOwnProperty(key)) {
@@ -195,7 +195,7 @@ L.Util.updateLayer = function (layer, updateFunction) {
 
 L.CategoryLegend = L.Class.extend({
     initialize: function (options) {
-        L.Util.setOptions(this, options);
+        L.setOptions(this, options);
     },
 
     generate: function (options) {
@@ -235,7 +235,8 @@ L.CategoryLegend = L.Class.extend({
  */
 L.LegendIcon = L.DivIcon.extend({
     initialize: function (fields, layerOptions, options) {
-        var container = document.createElement('div');
+        var fragment = document.createDocumentFragment();
+        var container = document.createElement('div', '', fragment);
         var legendContent = L.DomUtil.create('div', 'legend', container);
         var legendTitle = L.DomUtil.create('div', 'title', legendContent);
         var legendBox = L.DomUtil.create('div', 'legend-box', legendContent);
@@ -287,6 +288,14 @@ L.GeometryUtils = {
     },
 
     getGeoJSONLocation: function (geoJSON, record, locationTextField, recordToLayer) {
+        var locationTextFunction = function (record) {
+            return L.Util.getFieldValue(record, locationTextField);
+        };
+
+        if (locationTextField && (typeof locationTextField === 'function')) {
+            locationTextFunction = locationTextField;
+        }
+
         var geoJSONLayer = new L.GeoJSON(geoJSON, {
             pointToLayer: function (feature, latlng) {
                 var location = {
@@ -317,7 +326,7 @@ L.GeometryUtils = {
 
     // Merges a set of properties into the properties of each feature of a GeoJSON FeatureCollection
     mergeProperties: function (properties, featureCollection, mergeKey) {
-        var features = featureCollection['features'];
+        var features = featureCollection.features;
         var featureIndex = L.GeometryUtils.indexFeatureCollection(features, mergeKey);
         var property;
         var mergeValue;
@@ -374,7 +383,7 @@ L.GeometryUtils = {
                             type: 'GeometryCollection',
                             geometries: [feature.geometry, existingFeature.geometry]
                         }
-                    }
+                    };
                 }
                 else {
                     existingFeature.geometry.geometries.push(feature.geometry);
@@ -505,7 +514,7 @@ L.SVGPathBuilder = L.Class.extend({
         this._points = points || [];
         this._innerPoints = innerPoints || [];
 
-        L.Util.setOptions(this, options);
+        L.setOptions(this, options);
     },
 
     options: {
@@ -518,7 +527,9 @@ L.SVGPathBuilder = L.Class.extend({
         if (points.length > 0) {
 
             var point = points[0];
-            var digits = digits !== null ? digits : 2;
+
+            digits = digits !== null ? digits : 2;
+
             var startChar = 'M';
             var lineToChar = 'L';
             var closePath = 'Z';
@@ -547,7 +558,12 @@ L.SVGPathBuilder = L.Class.extend({
     },
 
     addPoint: function (point, inner) {
-        inner ? this._innerPoints.push(point) : this._points.push(point);
+        if (inner) {
+            this._innerPoints.push(point);
+        }
+        else {
+            this._points.push(point);
+        }
     },
 
     build: function (digits) {
@@ -638,7 +654,8 @@ L.StyleConverter = {
     },
 
     setCSSProperty: function (element, key, value, keyMap) {
-        var keyMap = keyMap || L.StyleConverter.keyMap;
+        keyMap = keyMap || L.StyleConverter.keyMap;
+
         var cssProperty = keyMap[key];
         var cssText = '';
 
@@ -736,10 +753,17 @@ L.HTMLUtils = {
     buildTable: function (obj, className, ignoreFields) {
         className = className || 'table table-condensed table-striped table-bordered';
 
-        var table = L.DomUtil.create('table', className);
+        var fragment = document.createDocumentFragment();
+        var table = L.DomUtil.create('table', className, fragment);
         var thead = L.DomUtil.create('thead', '', table);
         var tbody = L.DomUtil.create('tbody', '', table);
-        thead.innerHTML = '<tr><th>Name</th><th>Value</th></tr>';
+
+        var thead_tr = L.DomUtil.create('tr', '', thead);
+        var thead_values = ['Name', 'Value'];
+        for (var i = 0, l = thead_values.length; i < l; i++) {
+            var thead_th = L.DomUtil.create('th', '', thead_tr);
+            thead_th.innerHTML = thead_values[i];
+        }
 
         ignoreFields = ignoreFields || [];
 
@@ -760,7 +784,13 @@ L.HTMLUtils = {
                     container.appendChild(L.HTMLUtils.buildTable(value, ignoreFields));
                     value = container.innerHTML;
                 }
-                tbody.innerHTML += '<tr><td>' + property + '</td><td>' + value + '</td></tr>';
+
+                var tbody_tr = L.DomUtil.create('tr', '', tbody);
+                var tbody_values = [property, value];
+                for (i = 0, l = tbody_values.length; i < l; i++) {
+                    var tbody_td = L.DomUtil.create('td', '', tbody_tr);
+                    tbody_td.innerHTML = tbody_values[i];
+                }
             }
         }
 
@@ -778,8 +808,8 @@ L.AnimationUtils = {
         var duration = options.duration || 500;
         var linearFunctions = {};
         var easeFunction = options.easeFunction || function (step) {
-                return step
-            };
+            return step;
+        };
         var complete = options.complete;
         var step = duration / frames;
 
@@ -851,7 +881,10 @@ L.Color = L.Class.extend({
      * @return  Array           The HSL representation
      */
     rgbToHSL: function (r, g, b) {
-        r /= 255, g /= 255, b /= 255;
+        r /= 255;
+        g /= 255;
+        b /= 255;
+
         var max = Math.max(r, g, b), min = Math.min(r, g, b);
         var h, s, l = (max + min) / 2;
 
@@ -891,18 +924,18 @@ L.Color = L.Class.extend({
     hslToRGB: function (h, s, l) {
         var r, g, b;
 
-        if (s == 0) {
+        var hue2rgb = function (p, q, t) {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+        };
+
+        if (s === 0) {
             r = g = b = l; // achromatic
         } else {
-            function hue2rgb(p, q, t) {
-                if (t < 0) t += 1;
-                if (t > 1) t -= 1;
-                if (t < 1 / 6) return p + (q - p) * 6 * t;
-                if (t < 1 / 2) return q;
-                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-                return p;
-            }
-
             var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
             var p = 2 * l - q;
             r = hue2rgb(p, q, h + 1 / 3);

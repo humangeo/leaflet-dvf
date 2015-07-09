@@ -30,6 +30,17 @@ var TextFunctions = TextFunctions || {
             if (layer.options.text) {
                 this._createText(layer);
             }
+
+            if (layer.options.wordCloud) {
+                var options = layer.options.wordCloud;
+
+                if (options.words.length > 0) {
+                    var me = this;
+                    setTimeout(function () {
+                        me._createWordCloudPattern(options);
+                    }, 0);
+                }
+            }
         },
 
         __setPath: L.SVG.prototype._setPath,
@@ -161,6 +172,7 @@ var TextFunctions = TextFunctions || {
             }
 
             this._container.appendChild(layer._text);
+
         }
     };
 
@@ -239,24 +251,67 @@ var PathFunctions = PathFunctions || {
             }
         },
 
+        _createMarker: function (type, options) {
+            if (!this._defs) {
+                this._createDefs();
+            }
+
+            this._markers = this._markers || {};
+            this._markerPath = this._markerPath || {};
+
+            if (this._markers[type]) {
+                this._defs.removeChild(this._markers[type]);
+            }
+
+            this._markers[type] = L.SVG.create('marker');
+
+            var markerGuid = L.Util.guid();
+
+            var exaggeration = options.exaggeration || 2;
+            var size = 2 * exaggeration;
+
+            this._markers[type].setAttribute('id', markerGuid);
+            this._markers[type].setAttribute('markerWidth', size);
+            this._markers[type].setAttribute('markerHeight', size);
+            this._markers[type].setAttribute('refX', exaggeration);
+            this._markers[type].setAttribute('refY', exaggeration);
+            this._markers[type].setAttribute('orient', 'auto');
+            this._markers[type].setAttribute('markerUnits', 'strokeWidth');
+
+            this._markerPath[type] = L.SVG.create('path');
+
+            if (options.reverse) {
+                this._markerPath[type].setAttribute('d', 'M0,' + exaggeration + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + exaggeration);
+            }
+            else {
+                this._markerPath[type].setAttribute('d', 'M' + size + ',' + exaggeration + ' L0,' + size + ' L0,0 L' + size + ',' + exaggeration);
+            }
+
+            this._markerPath[type].setAttribute('style', 'fill: ' + this.options.color + '; opacity: ' + this.options.opacity);
+
+            this._markers[type].appendChild(this._markerPath[type]);
+
+            this._defs.appendChild(this._markers[type]);
+        },
+
         _createGradient: function (layer) {
-            this._createDefs();
+            if (!this._defs) {
+                this._createDefs();
+            }
 
             var options = layer.options !== true ? L.extend({}, layer.options) : {};
+            var gradientGuid = L.Util.guid();
+            this._gradientGuid = gradientGuid;
 
             var gradient;
             var gradientOptions;
-            var vectorOptions;
-
-            gradientOptions = options.gradient || {};
-
-            if (gradientOptions.gradientType == "radial") {
+            if (options.gradientType == "radial") {
                 gradient = L.SVG.create("radialGradient");
-                vectorOptions = gradientOptions.radial || {cx: '50%', cy: '50%', r: '50%', fx: '50%', fy: '50%'};
+                gradientOptions = options.radial || {cx: '50%', cy: '50%', r: '50%', fx: '50%', fy: '50%'};
             } else {
                 gradient = L.SVG.create("linearGradient");
-                var vector = gradientOptions.vector || [["0%", "0%"], ["100%", "100%"]];
-                vectorOptions = {
+                var vector = options.vector || [["0%", "0%"], ["100%", "100%"]];
+                gradientOptions = {
                     x1: vector[0][0],
                     x2: vector[1][0],
                     y1: vector[0][1],
@@ -264,7 +319,13 @@ var PathFunctions = PathFunctions || {
                 };
             }
 
-            var stops = gradientOptions.stops || [
+            gradientOptions.id = "grad" + gradientGuid;
+
+            if (options.gradientUnits) {
+                gradient.setAttribute('gradientUnits', options.gradientUnits);
+            }
+
+            var stops = options.stops || [
                     {
                         offset: '0%',
                         style: {
@@ -281,10 +342,10 @@ var PathFunctions = PathFunctions || {
                     }
                 ];
 
-            gradient.setAttribute('id', L.stamp(gradient));
+            var key;
 
-            for (var key in vectorOptions) {
-                gradient.setAttribute(key, vectorOptions[key]);
+            for (key in gradientOptions) {
+                gradient.setAttribute(key, gradientOptions[key]);
             }
 
             for (var i = 0; i < stops.length; ++i) {
@@ -329,7 +390,6 @@ var PathFunctions = PathFunctions || {
             this._createDefs();
 
             var filter = L.SVG.create('filter');
-
             var feOffset = L.SVG.create('feOffset');
             var feGaussianBlur = L.SVG.create('feGaussianBlur');
             var feBlend = L.SVG.create('feBlend');
@@ -585,11 +645,388 @@ var PathFunctions = PathFunctions || {
             if (layer._shape) {
                 this._container.insertBefore(layer._shape, layer._path.nextSibling);
             }
+
+            if (layer.options.wordCloud) {
+                var options = layer.options.wordCloud;
+                var me = layer;
+
+                if (options.words.length > 0) {
+                    setTimeout(function () {
+                        me._createWordCloudPattern(options);
+                    }, 0);
+                }
+            }
+        },
+
+        /*
+        _createCustomElement: function (tag, attributes) {
+            var element = this._createElement(tag);
+
+            for (var key in attributes) {
+                if (attributes.hasOwnProperty(key)) {
+                    element.setAttribute(key, attributes[key]);
+                }
+            }
+
+            return element;
+        },
+
+        _createImage: function (imageOptions) {
+            var image = this._createElement('image');
+            image.setAttribute('width', imageOptions.width);
+            image.setAttribute('height', imageOptions.height);
+            image.setAttribute('x', imageOptions.x || 0);
+            image.setAttribute('y', imageOptions.y || 0);
+            image.setAttributeNS(L.Path.XLINK_NS, 'xlink:href', imageOptions.url);
+
+            return image;
+        },
+
+        _createPattern: function (patternOptions) {
+
+            if (this._pattern) {
+                this._defs.removeChild(this._pattern);
+            }
+
+            var pattern = this._createCustomElement('pattern', patternOptions);
+
+            this._pattern = pattern;
+
+            return pattern;
+        },
+        */
+
+        _createWordCloudPattern: function (wordCloudOptions) {
+            var patternGuid = ''; //L.Util.guid();
+            var patternOptions = wordCloudOptions.patternOptions = wordCloudOptions.patternOptions || {};
+
+            if (!this._defs) {
+                this._createDefs();
+            }
+
+            wordCloudOptions.textField = wordCloudOptions.textField || 'key';
+            wordCloudOptions.countField = wordCloudOptions.countField || 'doc_count';
+
+            for (var i = 0; i < wordCloudOptions.words.length; ++i) {
+                var word = wordCloudOptions.words[i];
+
+                patternGuid += word[wordCloudOptions.textField] + "_" + word[wordCloudOptions.countField];
+            }
+
+            if (patternGuid !== this._wordCloudGuid) {
+                this._wordCloudGuid = patternGuid;
+
+                // Hash words to see if we need to create a new word cloud pattern or use the existing one
+                var clonedPath = L.SVG.create('path');
+                clonedPath.setAttribute('d', this._path.getAttribute('d'));
+                clonedPath.setAttribute('id', patternGuid);
+
+                patternOptions.id = patternGuid;
+                patternOptions.patternUnits = patternOptions.patternUnits || 'userSpaceOnUse'; //'objectBoundingBox';
+                //patternOptions.patternContentUnits = 'userSpaceOnUse';
+
+                var bbox = this.getBounds();
+
+                var bounds = new L.Bounds(this._map.project(bbox.getNorthWest()), this._map.project(bbox.getSouthEast()));
+                var ratio = bounds.getSize().x / bounds.getSize().y;
+
+                patternOptions.width = patternOptions.width || 500;
+                patternOptions.height = patternOptions.height || (500 * ratio) || 500;
+
+                patternOptions.width = Math.min(patternOptions.width, patternOptions.height);
+                patternOptions.height = patternOptions.width;
+                //patternOptions.width = bounds.getSize().x || 500;
+                //patternOptions.height = bounds.getSize().y || 500;
+
+                this._wordCloud = L.SVG.create('g');
+
+                //this._container.appendChild(this._wordCloud);
+                this._wordPattern = this._createPattern(patternOptions);
+                this._wordPattern.appendChild(this._wordCloud);
+
+                this._defs.appendChild(this._wordPattern);
+
+                this._createWordCloud(this._wordCloud, wordCloudOptions);
+            }
+
+            var existingFill = this._path.getAttribute('fill');
+
+            if (existingFill.indexOf(this._wordCloudGuid) === -1) {
+                this._path.setAttribute('fill', 'url(#' + this._wordCloudGuid + ')');
+            }
+
+        },
+
+        _createWordCloud: function (element, wordCloudOptions) {
+            //var fragment = document.createDocumentFragment();
+            var width = wordCloudOptions.patternOptions.width;
+            var height = wordCloudOptions.patternOptions.height;
+            var words = wordCloudOptions.words;
+            var anchor = this.getTextAnchor();
+            var rect = L.SVG.create('rect');
+            var countField = wordCloudOptions.countField;
+            var textField = wordCloudOptions.textField;
+            var rotation = wordCloudOptions.rotation || function (d) {
+                    return 0;
+                }; //function(d) { return scale(~~(Math.random() * d[countField])); }
+            rect.setAttribute('width', width);
+            rect.setAttribute('height', height);
+            rect.style.fill = this.options.fillColor || '#000';
+            rect.setAttribute('transform', "translate(" + -width / 2 + ',' + -height / 2 + ")");
+            element.appendChild(rect);
+
+            var draw = function (words, element) {
+                return function (words) {
+                    var id = "svg" + L.Util.guid();
+                    d3.select(element)
+                        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+                        .selectAll("text")
+                        .data(words)
+                        .enter().append("text")
+                        .style("font-size", function (d) {
+                            return d.size + "px";
+                        })
+                        .style("font-family", wordCloudOptions.fontFamily || 'Impact')
+                        .style("fill", function (d, i) {
+                            return fill(i);
+                        })
+                        .attr("text-anchor", "middle")
+                        .attr("transform", function (d) {
+                            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                        })
+                        .text(function (d) {
+                            return d[textField];
+                        });
+                };
+            };
+
+            var fill = wordCloudOptions.textFillColor || d3.scale.category20();
+            var scale = d3.scale.linear();
+
+            var max = words[0][countField];
+            var min = words[words.length - 1][countField];
+
+            var fontSize = wordCloudOptions.fontSize || d3.scale.log().domain([min, max]).range([10, 40]);
+
+            scale.domain([0, 10]).range([-60, 60]);
+
+            d3.layout.cloud().size([width, height])
+                .spiral('rectangular')
+                .timeInterval(Infinity)
+                .words(words)
+                .padding(5)
+                .rotate(rotation)
+                .font(wordCloudOptions.fontFamily || 'Impact')
+                .fontSize(function (d) {
+                    return fontSize(d[countField]);
+                })
+                .on("end", draw(words, element))
+                .start();
+
+            return element;
+
         }
 
+        /*
+        _createShape: function (type, shapeOptions) {
+            if (this._shape) {
+                this._container.removeChild(this._shape);
+            }
+
+            var shape = this._createCustomElement(type, shapeOptions);
+
+            return shape;
+        },
+
+        // Override this in inheriting classes
+        _applyCustomStyles: function () {
+        },
+
+        _createFillPattern: function (imageOptions) {
+            var patternGuid = L.Util.guid();
+            var patternOptions = imageOptions.pattern;
+
+            patternOptions.id = patternGuid;
+            patternOptions.patternUnits = patternOptions.patternUnits || 'objectBoundingBox';
+
+            var pattern = this._createPattern(patternOptions);
+            var image = this._createImage(imageOptions.image);
+
+            image.setAttributeNS(L.Path.XLINK_NS, 'xlink:href', imageOptions.url);
+
+            pattern.appendChild(image);
+
+            if (!this._defs) {
+                this._createDefs();
+            }
+
+            this._defs.appendChild(pattern);
+            this._path.setAttribute('fill', 'url(#' + patternGuid + ')');
+        },
+
+        _getDefaultDiameter: function (radius) {
+            return 1.75 * radius;
+        },
+
+        // Added for image circle
+        _createShapeImage: function (imageOptions) {
+
+            imageOptions = imageOptions || {};
+
+            var patternGuid = L.Util.guid();
+
+            var radius = this.options.radius || Math.max(this.options.radiusX, this.options.radiusY);
+            var diameter = this._getDefaultDiameter(radius);
+            var imageSize = imageOptions.imageSize || new L.Point(diameter, diameter);
+
+            var circleSize = imageOptions.radius || diameter / 2;
+
+            var shapeOptions = imageOptions.shape || {
+                    circle: {
+                        r: circleSize,
+                        cx: 0,
+                        cy: 0
+                    }
+                };
+
+            var patternOptions = imageOptions.pattern || {
+                    width: imageSize.x,
+                    height: imageSize.y,
+                    x: 0,
+                    y: 0
+                };
+
+            var shapeKeys = Object.keys(shapeOptions);
+            var shapeType = shapeKeys.length > 0 ? shapeKeys[0] : 'circle';
+
+            shapeOptions[shapeType].fill = 'url(#' + patternGuid + ')';
+
+            var shape = this._createShape(shapeType, shapeOptions[shapeType]);
+
+            if (this.options.clickable) {
+                shape.setAttribute('class', 'leaflet-clickable');
+            }
+
+            patternOptions.id = patternGuid;
+            patternOptions.patternUnits = patternOptions.patternUnits || 'objectBoundingBox';
+
+            var pattern = this._createPattern(patternOptions);
+
+            imageOptions = imageOptions.image || {
+                width: imageSize.x,
+                height: imageSize.y,
+                x: 0,
+                y: 0,
+                url: this.options.imageCircleUrl
+            };
+
+            var image = this._createImage(imageOptions);
+            image.setAttributeNS(L.Path.XLINK_NS, 'xlink:href', imageOptions.url);
+
+            pattern.appendChild(image);
+            this._defs.appendChild(pattern);
+            this._container.insertBefore(shape, this._defs);
+
+            this._shape = shape;
+
+            var me = this;
+
+            this._shape.addEventListener('mouseover', function () {
+                me.fire('mouseover');
+            });
+
+            this._shape.addEventListener('mouseout', function () {
+                me.fire('mouseout');
+            });
+
+            this._shape.addEventListener('mousemove', function () {
+                me.fire('mousemove');
+            });
+
+            var anchorPoint = this.getTextAnchor();
+
+            if (this._shape && anchorPoint) {
+                if (this._shape.tagName === 'circle' || this._shape.tagName === 'ellipse') {
+                    this._shape.setAttribute('cx', anchorPoint.x);
+                    this._shape.setAttribute('cy', anchorPoint.y);
+                }
+                else {
+                    var width = this._shape.getAttribute('width');
+                    var height = this._shape.getAttribute('height');
+                    this._shape.setAttribute('x', anchorPoint.x - Number(width) / 2);
+                    this._shape.setAttribute('y', anchorPoint.y - Number(height) / 2);
+                }
+            }
+        },
+
+        _updateStyle: function (layer) {
+            this.__updateStyle.call(this, layer);
+
+            var context = layer ? layer : this;
+
+            if (context.options.stroke) {
+                if (context.options.lineCap) {
+                    context._path.setAttribute('stroke-linecap', context.options.lineCap);
+                }
+
+                if (context.options.lineJoin) {
+                    context._path.setAttribute('stroke-linejoin', context.options.lineJoin);
+                }
+            }
+
+            if (context.options.markers) {
+                for (var key in context.options.markers) {
+                    if (context.options.markers.hasOwnProperty(key)) {
+                        context._createMarker(key, context.options.markers[key]);
+                        context._path.setAttribute('marker-' + key, 'url(#' + context._markers[key].getAttribute('id') + ')');
+                    }
+                }
+            }
+
+            if (context.options.gradient) {
+                context._createGradient(context.options.gradient);
+
+                if (context.options.stroke && !context.options.fill) {
+                    context._path.setAttribute('stroke', 'url(#' + context._gradient.getAttribute('id') + ')');
+                }
+                else {
+                    context._path.setAttribute('fill', 'url(#' + context._gradient.getAttribute('id') + ')');
+                }
+            }
+            else if (!context.options.fill) {
+                context._path.setAttribute('fill', 'none');
+            }
+
+            if (context.options.dropShadow) {
+                context._createDropShadow();
+
+                context._path.setAttribute('filter', 'url(#' + context._dropShadow.getAttribute('id') + ')');
+            }
+            else {
+                context._path.removeAttribute('filter');
+            }
+
+            if (context.options.fillPattern) {
+                context._createFillPattern(context.options.fillPattern);
+            }
+
+            if (context.options.wordCloud) {
+                var options = context.options.wordCloud;
+
+                if (options.words.length > 0) {
+                    var me = this;
+                    setTimeout(function () {
+                        me._createWordCloudPattern(options);
+                    }, 0);
+                }
+            }
+
+            context._applyCustomStyles();
+
+        }
+        */
     };
 
-/*
  if (L.SVG) {
  // Potential fix for working with 0.8
  var SVGStyleFunctions = L.Util.extend(PathFunctions, {
@@ -603,7 +1040,7 @@ var PathFunctions = PathFunctions || {
  L.SVG.include(SVGStyleFunctions);
  L.SVG.include(SVGTextFunctions);
  }
- */
+
 
 // Extend the TextFunctions above and change the __updatePath reference, since
 // _updatePath for a line/polygon is different than for a regular path
@@ -659,7 +1096,7 @@ var PolylineFunctions = {
 
         return centerPoint;
     }
-}
+};
 
 L.extend(L.Polyline.prototype, PolylineFunctions);
 
@@ -667,7 +1104,7 @@ L.Polyline.prototype.getTextAnchor = function () {
     var center = this.getCenter();
 
     return this._map.latLngToLayerPoint(center);
-}
+};
 /*
  L.Polyline.include(LineTextFunctions);
  L.CircleMarker.include(TextFunctions);
@@ -893,26 +1330,50 @@ L.MapMarker = L.Path.extend({
         radius = !inner ? radius : this.options.innerRadius;
 
         return new L.Point(this._point.x + this.options.position.x + radius * Math.cos(angle), this._point.y - 2 * markerRadius + this.options.position.y - radius * Math.sin(angle));
-    },
-
-    _applyCustomStyles: function () {
-        // Added for image circle
-        if (this.options.shapeImage || this.options.imageCircleUrl) {
-            this._renderer._createShapeImage(this);
-        }
-    },
-
-    toGeoJSON: function () {
-        var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
-
-        geoJSON.properties = this.options;
-
-        return geoJSON;
     }
 });
 
-L.mapMarker = function (centerLatLng, options) {
-    return new L.MapMarker(centerLatLng, options);
+/*
+if (L.SVG) {
+    // Potential fix for working with 0.8
+    var SVGStyleFunctions = L.Util.extend(PathFunctions, {
+        __updateStyle: L.SVG.prototype._updateStyle
+    });
+
+    var SVGTextFunctions = L.Util.extend(TextFunctions, {
+        __updatePath: L.SVG.prototype._updatePath
+    });
+
+    L.SVG.include(SVGStyleFunctions);
+    L.SVG.include(SVGTextFunctions);
+}
+*/
+
+// Extend the TextFunctions above and change the __updatePath reference, since
+// _updatePath for a line/polygon is different than for a regular path
+var LineTextFunctions = L.extend({}, TextFunctions);
+//LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
+
+// Pulled from the Leaflet discussion here:  https://github.com/Leaflet/Leaflet/pull/1586
+// This is useful for getting a centroid/anchor point for centering text or other SVG markup
+LineTextFunctions.getCenter = function () {
+    var latlngs = this._latlngs,
+        len = latlngs.length,
+        i, j, p1, p2, f, center;
+
+    for (i = 0, j = len - 1, area = 0, lat = 0, lng = 0; i < len; j = i++) {
+        p1 = latlngs[i];
+        p2 = latlngs[j];
+        f = p1.lat * p2.lng - p2.lat * p1.lng;
+        lat += (p1.lat + p2.lat) * f;
+        lng += (p1.lng + p2.lng) * f;
+        area += f / 2;
+    }
+
+    center = area ? new L.LatLng(lat / (6 * area), lng / (6 * area)) : latlngs[0];
+    center.area = area;
+
+    return center;
 };
 
 L.extend(L.LatLng, {
@@ -923,9 +1384,55 @@ L.extend(L.LatLng, {
 
 /*
  * Draws a regular polygon marker on the map given a radius (or x and y radii) in pixels
+// Sets the text anchor to the centroid of a line/polygon
+LineTextFunctions.getTextAnchor = function () {
+    var center = this.getCenter();
+
+    return this._map.latLngToLayerPoint(center);
+};
+
+L.Polyline.include(LineTextFunctions);
+L.CircleMarker.include(TextFunctions);
+
+L.Path.include(PathFunctions);
+L.Polygon.include(PathFunctions);
+L.Polyline.include(PathFunctions);
+L.CircleMarker.include(PathFunctions);
+
+L.CircleMarker = L.CircleMarker.extend({
+    _applyCustomStyles: function () {
+        // Added for image circle
+        if (this.options.shapeImage || this.options.imageCircleUrl) {
+            this._createShapeImage(this.options.shapeImage);
+        }
+    },
+
+    getTextAnchor: function () {
+        var point = null;
+
+        if (this._point) {
+            point = new L.Point(this._point.x, this._point.y);
+        }
+
+        return point;
+    }
+});
+
+/*
+ * Rotates a point the provided number of degrees about another point.  Code inspired/borrowed from OpenLayers
+ */
+L.Point.prototype.rotate = function (angle, point) {
+    var radius = this.distanceTo(point);
+    var theta = (angle * L.LatLng.DEG_TO_RAD) + Math.atan2(this.y - point.y, this.x - point.x);
+    this.x = point.x + (radius * Math.cos(theta));
+    this.y = point.y + (radius * Math.sin(theta));
+};
+
+/*
+ * Draws a Leaflet map marker using SVG rather than an icon, allowing the marker to be dynamically styled
  */
 L.RegularPolygonMarker = L.Path.extend({
-    includes: TextFunctions,
+    //includes: TextFunctions,
 
     initialize: function (centerLatLng, options) {
         L.setOptions(this, options);
@@ -1130,10 +1637,6 @@ L.RegularPolygonMarker = L.Path.extend({
         return geoJSON;
     }
 });
-
-L.regularPolygonMarker = function (centerLatLng, options) {
-    return new L.RegularPolygonMarker(centerLatLng, options);
-};
 
 // Displays a star on the map
 L.StarMarker = L.RegularPolygonMarker.extend({
@@ -1398,15 +1901,11 @@ L.SVGMarker = L.Path.extend({
             addSVG();
         }
 
-        return 'M0 0';
+        return 'M0,0';
     },
 
     toGeoJSON: function () {
-        var geoJSON = L.Marker.prototype.toGeoJSON.call(this);
-
-        geoJSON.properties = this.options;
-
-        return geoJSON;
+        return pointToGeoJSON.call(this);
     }
 
 });

@@ -56,7 +56,7 @@
 <script type="text/javascript" src="../data/us-10m.js"></script>
 <script type="text/javascript" src="../data/countyStats.js"></script>
 <script type="text/javascript" src="../data/countyNames.js"></script>
-<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
@@ -140,6 +140,9 @@
 
     var options = {
         locationMode: L.LocationModes.LOOKUP,
+        getIndexKey: function (location, record) {
+            return location.text;
+        },
         recordsField: null,
         codeField: 'FIPS',
         locationLookup: countyPolygons, // A GeoJSON FeatureCollection that will be used to lookup boundaries/location

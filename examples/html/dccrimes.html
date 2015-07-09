@@ -47,7 +47,6 @@
         </div>
     </div>
 </div>
-
 <div class="container-fluid">
     <div class="row-fluid">
         <div id="map"></div>
@@ -71,11 +70,11 @@
 </script>
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
 <script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
 <script type="text/javascript" src="../lib/jsts/jsts.js"></script>
 <script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
 <script type="text/javascript" src="../data/dccrimestats.js"></script>
 <script type="text/javascript" src="../data/dcprecinctstopo.js"></script>
@@ -114,12 +113,6 @@
         });
 
         baseLayer.addTo(map);
-
-        // Define a fill color function for Romney (light red to red) and a fill color function for Obama (light blue to blue)
-        var fillColorFunctionObama = new L.HSLLuminosityFunction(new L.Point(crimeStats.precincts[0].count, 0.95), new L.Point(crimeStats.precincts[crimeStats.precincts.length - 1].count, 0.4), {
-            outputHue: 240,
-            outputSaturation: '100%'
-        });
 
         var opacityFunction = new L.PiecewiseFunction([new L.LinearFunction(new L.Point(0, 0), new L.Point(1, 0.7)), new L.LinearFunction(new L.Point(1, 0.7), new L.Point(55, 0.7))]);
 
@@ -168,13 +161,6 @@
                     fillColor: colorFunction,
                     color: colorFunction
                 }
-                /*
-                 'count': {
-                 displayName: 'Total',
-                 fillColor: fillColorFunctionObama,
-                 fillOpacity: opacityFunction
-                 }
-                 */
             },
             layerOptions: {
                 fillOpacity: 0.4,
@@ -209,7 +195,7 @@
                 stroke: true, //true
                 fillOpacity: 1.0,
                 opacity: 1,
-                weight: 1,
+                weight: 0.6,
                 //radius: 20,
                 barWidth: 4,
                 width: 4,
@@ -258,7 +244,6 @@
         map.addLayer(crimeChartLayer);
 
     });
-
 </script>
 </body>
 </html>

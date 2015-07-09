@@ -117,17 +117,14 @@
 </script>
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
-<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js">
-    <
-    script
-    type = "text/javascript"
-    src = "http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js" ></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script type="text/javascript" src = "http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js" ></script>
 <script type="text/javascript" src="../data/flightData.js"></script>
 <script type="text/javascript" src="../data/usAirports.js"></script>
 <script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+
 <script type="text/javascript">
 
 
@@ -310,7 +307,10 @@
                         opacity: 0.8,
                         weight: 0.5,
                         fillOpacity: 1.0,
-                        distanceToHeight: new L.LinearFunction([0, 5], [1000, 200])
+                        distanceToHeight: new L.LinearFunction([0, 5], [1000, 200]),
+                        markers: {
+                            end: true
+                        }
                     },
                     legendOptions: {
                         width: 200,

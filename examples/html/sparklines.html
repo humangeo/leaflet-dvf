@@ -57,13 +57,12 @@
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.2.1/moment.min.js"></script>
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
 <script type="text/javascript" src="../lib/geohash.js"></script>
-<script type="text/javascript"
-        src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
 <script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+
 <script type="text/javascript">
 
     $(document).ready(function () {
@@ -1578,7 +1577,15 @@
                 opacity: 1,
                 weight: 0.4,
                 gradient: true,
-                dropShadow: true
+                dropShadow: false,
+                dataPointHighlightStyle: {
+                    weight: 2.0,
+                    opacity: 1.0,
+                    color: '#333',
+                    lineCap: 'square',
+                    dropShadow: false,
+                    dashArray: [5, 5]
+                }
             },
             tooltipOptions: {
                 iconSize: new L.Point(100, 60),

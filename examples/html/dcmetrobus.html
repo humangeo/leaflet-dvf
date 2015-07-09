@@ -78,11 +78,11 @@
 </script>
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
 <script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+
 <script type="text/javascript">
     map = null;
     var lastLayer;
@@ -169,14 +169,14 @@
                             layerOptions: {
                                 levels: 2,
                                 numberOfSides: 50,
-                                radius: 10,
+                                radius: 12,
                                 weight: 0.3,
                                 color: '#000',
                                 opacity: 0.5,
-                                stroke: false,
+                                stroke: true,
                                 fillOpacity: 0.8,
                                 dropShadow: false,
-                                gradient: true
+                                gradient: false
                             },
                             tooltipOptions: {
                                 iconSize: new L.Point(90, 90),
@@ -205,6 +205,7 @@
                                     weight: 2
                                 });
                                 trackLayer.addLatLng(location.center);
+
                                 return trackLayer;
                             }
                         });

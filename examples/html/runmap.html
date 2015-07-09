@@ -80,12 +80,11 @@
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.2.1/moment.min.js"></script>
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
-<script type="text/javascript"
-        src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
 <script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
+
 <script type="text/javascript">
 
     $(document).ready(function () {
@@ -827,14 +826,17 @@
         layerControl.addOverlay(dataLayer, 'Flow Line');
 
         var runData = [];
-        var wpts = data.gpx.wpt
+        var wpts = data.gpx.wpt;
+        var minEle = 1000;
+        var maxEle = -1000;
         for (var i = 0; i < wpts.length; ++i) {
             var wpt = wpts[i];
             var latlng = new L.LatLng(wpt.lat, wpt.lon);
 
             latlng.weight = wpt.ele * 2;
 
-            console.log(wpt.ele);
+            maxEle = wpt.ele * 2 > maxEle ? wpt.ele * 2 : maxEle;
+            minEle = wpt.ele * 2 < minEle ? wpt.ele * 2 : minEle;
 
             runData.push(latlng);
         }
@@ -842,8 +844,11 @@
         var weightedPolylineTest = new L.WeightedPolyline(runData, {
             fill: true,
             fillColor: '#0033ff',
-            fillOpacity: 1,
-            stroke: false
+            fillOpacity: 0.8,
+            stroke: false,
+            dropShadow: true,
+            gradient: true,
+            weightToColor: new L.HSLHueFunction([minEle, 60], [maxEle, -30])
         });
 
         map.addLayer(weightedPolylineTest);

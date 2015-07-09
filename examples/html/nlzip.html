@@ -47,7 +47,7 @@
 </script>
 <script type="text/javascript" src="../data/NETPOPZ2.js"></script>
 <script type="text/javascript" src="../data/NETZIP2.js"></script>
-<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 <script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
@@ -155,9 +155,6 @@
 
     map.addLayer(nlPopLayerSymbol);
     layerControl.addOverlay(nlPopLayerSymbol, 'Proportional Symbol');
-
-    console.log(nlPopLayerSymbol.toGeoJSON());
-
 </script>
 </body>
 </html>

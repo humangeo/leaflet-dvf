@@ -6,8 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
-
-    <!-- Le styles -->
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style>
         body {
@@ -38,6 +36,13 @@
             height: 0px !important;
             vertical-align: middle;
             border-left: none !important;
+        }
+
+        .line-legend .legend-box {
+            width: 0px;
+            height: 0px !important;
+            border-top: none !important;
+            border-right: none !important;
         }
 
     </style>
@@ -92,7 +97,7 @@
 </script>
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="../js/leaflet-0.8.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
 <script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
@@ -584,15 +589,9 @@
         var displayOptions = {
             survivors: {
                 weight: weightFunction,
+                lineWeight: weightFunction,
                 color: colorFunction,
-                displayName: 'Survivors over Time' //,
-                /*
-                 text: function (value) {
-                 return {
-                 text: value
-                 }
-                 }
-                 */
+                displayName: 'Survivors over Time'
             }
         };
 
@@ -612,6 +611,9 @@
             includeLayer: function (record) {
                 return record.group === "1";
             },
+            tooltipOptions: {
+                className: 'leaflet-div-icon line-legend'
+            },
             displayOptions: displayOptions,
             onEachSegment: onEachSegment
         });
@@ -625,6 +627,9 @@
             includeLayer: function (record) {
                 return record.group === "2";
             },
+            tooltipOptions: {
+                className: 'leaflet-div-icon line-legend'
+            },
             displayOptions: displayOptions,
             onEachSegment: onEachSegment
         });
@@ -637,6 +642,9 @@
             layerOptions: layerOptions,
             includeLayer: function (record) {
                 return record.group === "3";
+            },
+            tooltipOptions: {
+                className: 'leaflet-div-icon line-legend'
             },
             displayOptions: displayOptions,
             onEachSegment: onEachSegment

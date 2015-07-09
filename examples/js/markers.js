@@ -277,26 +277,39 @@ $(document).ready(function() {
 
 		// Specifying this option allows you to customize the SVG elements to your liking or style
 		// items in the SVG image dynamically
-		options.setStyle = function (svg) {
-			//$svg.find('#Blue_1_').css('fill', color);
-			//$svg.find('path, circle').css('fill', color);
-			//$svg.find('#path4941').css('fill', color);
-			//$svg.find('path').css('stroke', color);
-			$(svg).find('rect').css('fill', color);
+		var styleFunction = function (color) {
+			return function (svg) {
+				//$svg.find('#Blue_1_').css('fill', color);
+				//$svg.find('path, circle').css('fill', color);
+				//$svg.find('#path4941').css('fill', color);
+				//$svg.find('path').css('stroke', color);
+				$(svg).find('rect').css('fill', color);
+				
+			};
 		};
+		
+		options.setStyle = styleFunction(color);
 
 		var marker = new L.SVGMarker(latlng, options); //new L.StarMarker(latlng, options);
 
-		marker.on('mouseover', function (e) {
-			marker.setStyle({
-				setStyle: function (svg) {
-					$(svg).find('rect').css('fill', 'blue');
-				}
-			});
+		marker.on('click', function () {
+			if (marker.options.oldStyle) {
+				marker.options.setStyle = marker.options.oldStyle;
+				marker.redraw();
+				marker.options.oldStyle = null;
+			}
+			else {
+				marker.options.oldStyle = marker.options.setStyle;
+				marker.options.setStyle = function (svg) {
+					var $eye1 = $(svg).find('path:first');
+					
+					$eye1.attr('transform', $eye1.attr('transform') + ' scale(1.2,1.2)');			
+				};
+				
+				marker.redraw();
+			}
 		});
-
-
-
+		
 		return marker;
 	});
 

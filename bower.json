@@ -1,6 +1,6 @@
 {
   "name": "leaflet-dvf",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "homepage": "https://github.com/humangeo/leaflet-dvf",
   "authors": [
     "Scott Fairgrieve <https://github.com/sfairgrieve>"
@@ -15,7 +15,7 @@
   ],
   "dependencies": {
     "jsts": "https://github.com/bjornharrtell/jsts",
-    "Leaflet": "https://github.com/Leaflet/Leaflet",
+    "leaflet": "~0.7.3",
     "geohash-js": "git://github.com/thurmda/geohash-js",
     "underscore": "~1.6.0",
     "moment": "~2.8.1"

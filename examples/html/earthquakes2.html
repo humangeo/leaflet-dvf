@@ -185,19 +185,25 @@ $(document).ready(function() {
 
 	layerControl.addTo(map);
 
-	// Function for requesting the latest earthquakes from USGS
-	var getData = function () {
+    $.ajaxSetup({
+        cache:true
+    });
 
-		if (lastLayer) {
-			map.removeLayer(lastLayer);
-		}
+    // Function for requesting the latest earthquakes from USGS
+    var getData = function () {
 
-		$.ajax({
-			url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
-			type: 'GET',
-			dataType: 'jsonp'
-		});
-	};
+        if (lastLayer) {
+            map.removeLayer(lastLayer);
+        }
+
+        $.ajax({
+            //url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
+            url: 'http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojsonp',
+            type: 'GET',
+            dataType: 'jsonp',
+            jsonp: false
+        });
+    };
 
 	// Get the latest earthquake data
 	getData();

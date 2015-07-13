@@ -196,7 +196,7 @@ L.ColorFunction = L.LinearFunction.extend({
         this._mapOutput = function (parts) {
             var outputParts = [];
 
-            for (var i = 0; i < this._parts.length; ++i) {
+            for (var i = 0, len = this._parts.length; i < len; ++i) {
                 var part = this._parts[i];
                 outputParts.push(parts[part]);
             }
@@ -546,7 +546,7 @@ L.ColorClassFunction = L.PiecewiseFunction.extend({
 
         L.Util.setOptions(this, options);
 
-        for (var i = 0; i < classBreaks.length - 1; ++i) {
+        for (var i = 0, len = classBreaks.length - 1; i < len; ++i) {
             var start = classBreaks[i],
                 end = classBreaks[i + 1],
                 startColor = colors[i],

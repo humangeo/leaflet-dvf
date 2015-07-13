@@ -497,7 +497,7 @@ L.ArcedPolyline = L.Path.extend({
     _project: function () {
         this._points = [];
 
-        for (var i = 0; i < this._latlngs.length; ++i) {
+        for (var i = 0, len = this._latlngs.length; i < len; ++i) {
             this._points.push(this._map.latLngToLayerPoint(this._latlngs[i]));
         }
     },
@@ -511,7 +511,7 @@ L.ArcedPolyline = L.Path.extend({
     getBounds: function () {
         var bounds = new L.LatLngBounds();
 
-        for (var i = 0; i < this._latlngs.length; ++i) {
+        for (var i = 0, len = this._latlngs.length; i < len; ++i) {
             bounds.extend(this._latlngs[i]);
         }
 
@@ -545,7 +545,7 @@ L.ArcedPolyline = L.Path.extend({
 
         var parts = [];
 
-        for (var i = 0; i < this._points.length - 1; ++i) {
+        for (var i = 0, len = this._points.length - 1; i < len; ++i) {
             parts.push(this.drawSegment(this._points[i], this._points[i + 1]));
         }
 

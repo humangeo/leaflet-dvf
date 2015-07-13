@@ -9,7 +9,7 @@
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/vis/3.6.4/vis.css"/>
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../lib/leaflet-1.0/leaflet.css" type="text/css" media="screen"/>
     <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
     <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
     <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
@@ -81,6 +81,7 @@
             background-color: rgba(20, 20, 20, 0.9);
             height: 200px;
             border: none;
+            z-index: 10000;
         }
 
         .vis.timeline .customStyle1 {
@@ -181,6 +182,7 @@
             height: 250px;
             border-radius: 125px;
             background-color: rgba(40, 40, 40, 0.7);
+            z-index: 10000;
         }
 
         div.info div.measure {
@@ -679,12 +681,12 @@
                     color: '#333',
                     weight: 10,
                     fill: true,
-                    gradient: true,
+                    gradient: {
+                        gradientUnits: 'userSpaceOnUse'
+                    },
                     fillOpacity: 0.7,
                     opacity: 0.8,
-                    stroke: !polygon,
-                    gradientUnits: 'userSpaceOnUse'
-                    //weight: 0.5
+                    stroke: !polygon
                 },
                 onEachSegment: function (record1, record2, line, deltas, distance, velocity) {
                     line.bindPopup($(L.HTMLUtils.buildTable(deltas)).wrap('<div/>').parent().html());

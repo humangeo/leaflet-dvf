@@ -1066,7 +1066,7 @@ L.DataLayer = L.LayerGroup.extend({
                             var scaleFunction = new L.LinearFunction([breaks[0], 0], [breaks[breaks.length - 1], legendWidth]);
                             var lastWidth = 0;
                             var width = 0;
-                            for (var i = 1; i < breaks.length; ++i) {
+                            for (var i = 1, len = breaks.length; i < len; ++i) {
                                 width = scaleFunction.evaluate(breaks[i]);
                                 segmentWidths.push(width - lastWidth - 2 * weight);
                                 lastWidth = width;
@@ -1131,7 +1131,7 @@ L.DataLayer = L.LayerGroup.extend({
                 var json = layer.toGeoJSON();
 
                 if (json.type === 'FeatureCollection' && json.features) {
-                    for (var i = 0; i < json.features.length; ++i) {
+                    for (var i = 0, len = json.features.length; i < len; ++i) {
                         jsons.push(json.features[i]);
                     }
                 }
@@ -1400,7 +1400,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
 
         // Iterate through the photos and calculate the timestamp of the upload date using
         // moment js
-        for (var i = 0; i < photos.length; ++i) {
+        for (var i = 0, len = photos.length; i < len; ++i) {
             var photo = photos[i];
             var timestamp = moment(photo.upload_date, L.PanoramioLayer.UPLOAD_DATE_FORMAT);
 
@@ -1423,7 +1423,7 @@ L.PanoramioLayer = L.PanoramioLayer.extend({
     calculateSizeByPopularity: function (data) {
         var photos = data.photos;
 
-        for (var i = 0; i < photos.length; ++i) {
+        for (var i = 0, len = photos.length; i < len; ++i) {
             photos[i].index = i;
         }
 

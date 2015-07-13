@@ -84,7 +84,8 @@ $(document).ready(function() {
 				y: 0
 			},
 			offset: 0,
-			numberOfSides: index + 3
+			numberOfSides: index + 3,
+            interactive: true
 		};
 
 		options.rotation = (options.numberOfSides % 2 === 0 ? 180 : 90)/options.numberOfSides;
@@ -94,18 +95,21 @@ $(document).ready(function() {
 		var marker = new L.RegularPolygonMarker(latlng, options);
 
 		marker.on('mousedown', function (e) {
+            map.dragging.disable();
 			var mouseMoveFunction = function (e) {
-				marker.setLatLng(e.latlng);//.redraw();
+				marker.setLatLng(e.latlng);
 			};
 
 			map.on('mousemove', mouseMoveFunction);
 
 			map.on('mouseup', function (e) {
 				map.off('mousemove', mouseMoveFunction);
+                map.dragging.enable();
 			});
 
 			marker.on('mouseup', function (e) {
 				map.off('mousemove', mouseMoveFunction);
+                map.dragging.enable();
 			});
 		});
 
@@ -232,8 +236,22 @@ $(document).ready(function() {
 			marker.redraw();
 		};
 
-		setTimeout(updateFunction, 1000/60);
+		//setTimeout(updateFunction, 1000/60);
 		//setInterval(updateFunction, 1000);
+
+        var animation = new L.Animation(function (time) {
+            return (time % 60000)/10;
+        }, function (progress) {
+            angle = progress % 360;
+
+            this._el.setStyle({
+                rotation: angle
+            });
+
+            this._el.redraw();
+        });
+
+        animation.run(marker);
 
 		marker.bindPopup('Test');
 		return marker;
@@ -255,7 +273,8 @@ $(document).ready(function() {
 			offset: 0,
 			//rotation: Math.random() * 360,
 			numberOfPoints: index + 5,
-			clickable: true
+			clickable: true,
+            interactive: true
 		};
 
 		options.innerRadius = options.radius/2;
@@ -290,7 +309,7 @@ $(document).ready(function() {
 		
 		options.setStyle = styleFunction(color);
 
-		var marker = new L.SVGMarker(latlng, options); //new L.StarMarker(latlng, options);
+		var marker = new L.SVGMarker(latlng, options);
 
 		marker.on('click', function () {
 			if (marker.options.oldStyle) {
@@ -474,7 +493,7 @@ $(document).ready(function() {
 			},
 			'dataPoint3': {
 				fillColor: '#9E9AC8',
-				minValue: 0,
+				minValue: -40,
 				maxValue: 20,
 				maxHeight: 30,
 				displayText: function (value) {

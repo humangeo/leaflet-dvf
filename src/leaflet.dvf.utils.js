@@ -72,7 +72,7 @@ L.Util.setFieldValue = function (record, fieldName, value) {
     var pointer = record;
     var part;
 
-    for (var i = 0; i < keyParts.length - 1; ++i) {
+    for (var i = 0, len = keyParts.length - 1; i < len; ++i) {
         part = keyParts[i];
         pointer[part] = pointer[part] || {};
         pointer = pointer[part];
@@ -427,7 +427,7 @@ L.GeometryUtils = {
         var fromKey;
         var toKey;
 
-        for (var i = 0; i < mapLinks.length; ++i) {
+        for (var i = 0, len = mapLinks.length; i < len; ++i) {
             maps.push({});
         }
 
@@ -473,7 +473,7 @@ L.GeometryUtils = {
                 var totalCentroidX = 0;
                 var totalCentroidY = 0;
 
-                for (var i = 0; i < jstsFeature.features.length; ++i) {
+                for (var i = 0, len = jstsFeature.features.length; i < len; ++i) {
                     centroid = jstsFeature.features[i].geometry.getCentroid();
 
                     totalCentroidX += centroid.coordinate.x;
@@ -541,11 +541,11 @@ L.SVGPathBuilder = L.Class.extend({
                 closePath = 'xe';
             }
 
-            pathString = startChar + point.x.toFixed(digits) + ',' + point.y.toFixed(digits);
+            pathString = startChar + point.x.toFixed(digits) + ' ' + point.y.toFixed(digits);
 
             for (var index = 1; index < points.length; index++) {
                 point = points[index];
-                pathString += lineToChar + point.x.toFixed(digits) + ',' + point.y.toFixed(digits);
+                pathString += lineToChar + point.x.toFixed(digits) + ' ' + point.y.toFixed(digits);
             }
 
             if (this.options.closePath) {
@@ -993,7 +993,7 @@ L.Color = L.Class.extend({
         else {
             var parts = [this._rgb[0].toString(16), this._rgb[1].toString(16), this._rgb[2].toString(16)];
 
-            for (var i = 0; i < parts.length; ++i) {
+            for (var i = 0, len = parts.length; i < len; ++i) {
                 if (parts[i].length === 1) {
                     parts[i] = '0' + parts[i];
                 }
@@ -1130,7 +1130,7 @@ L.hslColor = function (colorDef) {
 /*
  * A generic animation class based on the L.PosAnimation code from Leaflet
  */
-L.Animation = L.Class.extend({
+L.Animation = L.Evented.extend({
 
     initialize: function (easeFunction, animateFrame) {
         this._easeFunction = easeFunction; // Function that takes time as an input parameter
@@ -1138,11 +1138,13 @@ L.Animation = L.Class.extend({
     },
 
     run: function (el, options) { // (HTMLElement, Point[, Number, Number])
+        options = options || {};
+
         this.stop();
 
         this._el = el;
         this._inProgress = true;
-        this._duration = options.duration || 0.25;
+        this._duration = options.duration || 0;
 
         this._animationOptions = options;
         this._startTime = +new Date();
@@ -1171,8 +1173,8 @@ L.Animation = L.Class.extend({
         var elapsed = (+new Date()) - this._startTime,
             duration = this._duration * 1000;
 
-        if (elapsed < duration) {
-            this._runFrame(this._easeFunction(elapsed / duration));
+        if (duration === 0 || elapsed < duration) {
+            this._runFrame(this._easeFunction(elapsed / (duration || 1)));
         } else {
             this._runFrame(1);
             this._complete();

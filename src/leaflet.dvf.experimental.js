@@ -794,53 +794,56 @@ L.WeightedLineSegment = L.Path.extend({
         var deltaY = p2.y - p1.y;
         var vector;
 
-        this.options.gradientUnits = this.options.gradientUnits || 'objectBoundingBox';
+        if (this.options.gradient) {
+            this.options.gradient.gradientUnits = this.options.gradient.gradientUnits || 'objectBoundingBox';
 
-        if (deltaX !== 0 || deltaY !== 0) {
-            if (this.options.gradientUnits === 'objectBoundingBox') {
-                var angle = Math.atan(deltaY / deltaX);
-                var directionX = deltaX / Math.abs(deltaX);
-                var directionY = deltaY / Math.abs(deltaY);
+            if (deltaX !== 0 || deltaY !== 0) {
+                if (this.options.gradient.gradientUnits === 'objectBoundingBox') {
+                    var angle = Math.atan(deltaY / deltaX);
+                    var directionX = deltaX / Math.abs(deltaX);
+                    var directionY = deltaY / Math.abs(deltaY);
 
-                p1 = new L.Point(50 + 50 * Math.cos(angle + Math.PI), 50 + 50 * Math.sin(angle + Math.PI));
-                p2 = new L.Point(50 + 50 * Math.cos(angle), 50 + 50 * Math.sin(angle));
+                    p1 = new L.Point(50 + 50 * Math.cos(angle + Math.PI), 50 + 50 * Math.sin(angle + Math.PI));
+                    p2 = new L.Point(50 + 50 * Math.cos(angle), 50 + 50 * Math.sin(angle));
 
-                if (directionX < 0) {
-                    var temp = p1;
-                    p1 = p2;
-                    p2 = temp;
-                }
-                vector = [[p1.x.toFixed(2) + '%', p1.y.toFixed(2) + '%'], [p2.x.toFixed(2) + '%', p2.y.toFixed(2) + '%']];
-            }
-            else {
-                vector = [[p1.x.toFixed(2), p1.y.toFixed(2)], [p2.x.toFixed(2), p2.y.toFixed(2)]];
-            }
-            var color1 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint1.lineWeight) : (this._weightedPoint1.fillColor || this._weightedPoint1.color);
-            var color2 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint2.lineWeight) : (this._weightedPoint2.fillColor || this._weightedPoint2.color);
-            var opacity1 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint1.lineWeight) : 1;
-            var opacity2 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint2.lineWeight) : 1;
-
-            this.options.gradient = {
-                vector: vector,
-                stops: [
-                    {
-                        offset: '0%',
-                        style: {
-                            color: color1,
-                            opacity: opacity1
-                        }
-                    },
-                    {
-                        offset: '100%',
-                        style: {
-                            color: color2,
-                            opacity: opacity2
-                        }
+                    if (directionX < 0) {
+                        var temp = p1;
+                        p1 = p2;
+                        p2 = temp;
                     }
-                ]
-            };
+                    vector = [[p1.x.toFixed(2) + '%', p1.y.toFixed(2) + '%'], [p2.x.toFixed(2) + '%', p2.y.toFixed(2) + '%']];
+                }
+                else {
+                    vector = [[p1.x.toFixed(2), p1.y.toFixed(2)], [p2.x.toFixed(2), p2.y.toFixed(2)]];
+                }
+                var color1 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint1.lineWeight) : (this._weightedPoint1.fillColor || this._weightedPoint1.color);
+                var color2 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint2.lineWeight) : (this._weightedPoint2.fillColor || this._weightedPoint2.color);
+                var opacity1 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint1.lineWeight) : 1;
+                var opacity2 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint2.lineWeight) : 1;
 
-            this.setStyle(this.options);
+                this.options.gradient = {
+                    gradientUnits: this.options.gradientUnits,
+                    vector: vector,
+                    stops: [
+                        {
+                            offset: '0%',
+                            style: {
+                                color: color1,
+                                opacity: opacity1
+                            }
+                        },
+                        {
+                            offset: '100%',
+                            style: {
+                                color: color2,
+                                opacity: opacity2
+                            }
+                        }
+                    ]
+                };
+
+                this.setStyle(this.options);
+            }
         }
     },
 
@@ -903,7 +906,7 @@ L.WeightedLineSegment = L.Path.extend({
         var bounds = new L.LatLngBounds();
         var point;
 
-        for (var i = 0; i < this._latlngs.length; ++i) {
+        for (var i = 0, len = this._latlngs.length; i < len; ++i) {
             bounds.extend(this._latlngs[i]);
         }
 
@@ -1011,7 +1014,7 @@ L.WeightedFlowLine = L.FlowLine.extend({
                         angle: angleValues[0]
                     }, options.layerOptions));
 
-                    for (var i = 1; i < keys.length - 1; ++i) {
+                    for (var i = 1, len = keys.length - 1; i < len; ++i) {
                         p1 = p2;
                         p2 = this._getLocation(records[keys[i + 1]], keys[i + 1]).center;
 
@@ -1109,7 +1112,7 @@ L.WeightedPolyline = L.FeatureGroup.extend({
                 lineWeight: p1.weight
             });
 
-            for (var i = 1; i < this._latlngs.length - 1; ++i) {
+            for (var i = 1, len = this._latlngs.length - 1; i < len; ++i) {
                 p1 = this._latlngs[i];
                 p2 = this._latlngs[i + 1];
 

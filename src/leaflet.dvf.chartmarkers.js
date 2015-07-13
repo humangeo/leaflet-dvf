@@ -240,7 +240,7 @@ L.ChartMarker = L.FeatureGroup.extend({
  */
 L.BarChartMarker = L.ChartMarker.extend({
     initialize: function (centerLatLng, options) {
-        L.Util.setOptions(this, options);
+        L.setOptions(this, options);
 
         L.ChartMarker.prototype.initialize.call(this, centerLatLng, options);
     },

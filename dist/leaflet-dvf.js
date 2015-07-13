@@ -2588,7 +2588,7 @@ var TextFunctions = TextFunctions || {
 
         // If path is true, then create a textPath element and append it
         // to the text element; otherwise, populate the text element with a text node
-        if (options.path) {
+        if (options.path && layer._path) {
 
             var pathOptions = options.path;
 
@@ -2648,13 +2648,15 @@ var TextFunctions = TextFunctions || {
         }
 
         //this._container.appendChild(layer._text);
-        var referencedNode = layer._path.nextSibling;
+        if (layer._path) {
+            var referencedNode = layer._path.nextSibling;
 
-        if (!referencedNode) {
-            this._container.firstChild.insertBefore(layer._text, referencedNode);
-        }
-        else {
-            this._container.firstChild.appendChild(layer._text);
+            if (!referencedNode) {
+                this._container.firstChild.insertBefore(layer._text, referencedNode);
+            }
+            else {
+                this._container.firstChild.appendChild(layer._text);
+            }
         }
 
     }
@@ -2692,13 +2694,13 @@ var PathFunctions = PathFunctions || {
         if (layer._shapePattern) {
             this._defs.appendChild(layer._shapePattern);
         }
-        if (layer._shape) {
+        if (layer._shape && layer._path) {
             this._container.firstChild.insertBefore(layer._shape, layer._path.nextSibling);
         }
         if (layer._pathDef) {
             this._defs.appendChild(layer._pathDef);
         }
-        if (layer._text) {
+        if (layer._text && layer._path) {
             this._container.firstChild.insertBefore(layer._text, layer._path.nextSibling);
         }
     },
@@ -2965,6 +2967,7 @@ var PathFunctions = PathFunctions || {
         image.setAttribute('height', imageOptions.height);
         image.setAttribute('x', imageOptions.x || 0);
         image.setAttribute('y', imageOptions.y || 0);
+        image.setAttribute('preserveAspectRatio', imageOptions.preserveAspectRatio || 'xMidYMid meet');
         image.setAttributeNS(L.Path.XLINK_NS, 'xlink:href', imageOptions.url);
 
         return image;
@@ -3090,36 +3093,38 @@ var PathFunctions = PathFunctions || {
         var context = layer ? layer : this;
         var guid;
 
-        if (context.options.markers) {
-            for (var key in context.options.markers) {
-                if (context.options.markers.hasOwnProperty(key)) {
-                    this._createMarker(context, key, context.options.markers[key]);
-                    context._path.setAttribute('marker-' + key, 'url(#' + context._markers[key].getAttribute('id') + ')');
+        if (context._path) {
+            if (context.options.markers) {
+                for (var key in context.options.markers) {
+                    if (context.options.markers.hasOwnProperty(key)) {
+                        this._createMarker(context, key, context.options.markers[key]);
+                        context._path.setAttribute('marker-' + key, 'url(#' + context._markers[key].getAttribute('id') + ')');
+                    }
                 }
             }
-        }
 
-        if (context.options.gradient) {
-            guid = this._createGradient(context);
+            if (context.options.gradient) {
+                guid = this._createGradient(context);
 
-            context._path.setAttribute('fill', 'url(#' + guid + ')');
-        }
-        else if (!context.options.fill) {
-            context._path.setAttribute('fill', 'none');
-        }
+                context._path.setAttribute('fill', 'url(#' + guid + ')');
+            }
+            else if (!context.options.fill) {
+                context._path.setAttribute('fill', 'none');
+            }
 
-        if (context.options.dropShadow) {
-            guid = this._createDropShadow(context);
+            if (context.options.dropShadow) {
+                guid = this._createDropShadow(context);
 
-            context._path.setAttribute('filter', 'url(#' + guid + ')');
-        }
-        else {
-            context._path.removeAttribute('filter');
-        }
+                context._path.setAttribute('filter', 'url(#' + guid + ')');
+            }
+            else {
+                context._path.removeAttribute('filter');
+            }
 
-        if (context.options.fillPattern) {
-            guid = this._createFillPattern(context);
-            context._path.setAttribute('fill', 'url(#' + guid + ')');
+            if (context.options.fillPattern) {
+                guid = this._createFillPattern(context);
+                context._path.setAttribute('fill', 'url(#' + guid + ')');
+            }
         }
 
         if (context._applyCustomStyles) {
@@ -3138,7 +3143,7 @@ var PathFunctions = PathFunctions || {
         if (layer._shapePattern) {
             this._defs.appendChild(layer._shapePattern);
         }
-        if (layer._shape) {
+        if (layer._shape && layer._path) {
             this._container.insertBefore(layer._shape, layer._path.nextSibling);
         }
 
@@ -3172,7 +3177,7 @@ var PathFunctions = PathFunctions || {
             patternGuid += word[wordCloudOptions.textField] + "_" + word[wordCloudOptions.countField];
         }
 
-        if (patternGuid !== layer._wordCloudGuid) {
+        if (patternGuid !== layer._wordCloudGuid && layer._path) {
             layer._wordCloudGuid = patternGuid;
 
             // Hash words to see if we need to create a new word cloud pattern or use the existing one
@@ -3209,10 +3214,12 @@ var PathFunctions = PathFunctions || {
             this._createWordCloud(layer, layer._wordCloud, wordCloudOptions);
         }
 
-        var existingFill = layer._path.getAttribute('fill');
+        if (layer._path) {
+            var existingFill = layer._path.getAttribute('fill');
 
-        if (existingFill.indexOf(layer._wordCloudGuid) === -1) {
-            layer._path.setAttribute('fill', 'url(#' + layer._wordCloudGuid + ')');
+            if (existingFill.indexOf(layer._wordCloudGuid) === -1) {
+                layer._path.setAttribute('fill', 'url(#' + layer._wordCloudGuid + ')');
+            }
         }
 
     },
@@ -3775,7 +3782,9 @@ L.RegularPolygonMarker = L.Path.extend({
             }
         }
 
-        this._path.setAttribute('shape-rendering', 'geometricPrecision');
+        if (this._path) {
+            this._path.setAttribute('shape-rendering', 'geometricPrecision');
+        }
         return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
 
@@ -4093,7 +4102,9 @@ L.MapMarker = L.Path.extend({
             }
         }
 
-        this._path.setAttribute('shape-rendering', 'geometricPrecision');
+        if (this._path) {
+            this._path.setAttribute('shape-rendering', 'geometricPrecision');
+        }
         return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
 
@@ -4192,8 +4203,8 @@ L.SVGMarker = L.Path.extend({
 
     _updateBounds: function () {
         var map = this._map,
-            radiusX = 5,
-            radiusY = 5,
+            radiusX = 200,
+            radiusY = 200,
             deltaX = radiusX * Math.cos(Math.PI / 4),
             deltaY = radiusY * Math.sin(Math.PI / 4),
             point = map.project(this._latlng),
@@ -4203,8 +4214,8 @@ L.SVGMarker = L.Path.extend({
     },
 
     _update: function () {
-        if (this._map) {
-            this._renderer._setPath(this, this.getPathString());
+        if (this._map && this._path) {
+            this.updateSVG();
         }
     },
 
@@ -4217,102 +4228,158 @@ L.SVGMarker = L.Path.extend({
         return this._latlng;
     },
 
-    getPathString: function () {
+    onAdd: function () {
         var me = this;
-
-        var addSVG = function () {
-            if (me._g) {
-                L.DomUtil.remove(me._g);
-            }
-            var g = L.SVG.create('g');
-            me._renderer._container.appendChild(g);
-            me._g = g;
-
-
-
-            /*
-             while (g.nodeName.toLowerCase() !== 'g') {
-             g = g.parentNode;
-             }
-             */
-
-            if (me.options.interactive) {
-                g.setAttribute('class', 'leaflet-interactive');
-                me.addInteractiveTarget(g);
-            }
-
-            var data = me._data;
-            var svg = data.nodeName.toLowerCase() === 'svg' ? data.cloneNode(true) : data.querySelector('svg').cloneNode(true);
-
-            if (me.options.setStyle) {
-                me.options.setStyle.call(me, svg);
-            }
-
-            var elementWidth = svg.getAttribute('width');
-            var elementHeight = svg.getAttribute('height');
-
-            var width = elementWidth ? elementWidth.replace('px', '') : '100%';
-            var height = elementHeight ? elementHeight.replace('px', '') : '100%';
-
-            // If the width is 100% (meaning that no width is provided), then set the width and height to the size specified in the options
-            if (width === '100%') {
-                width = me.options.size.x;
-                height = me.options.size.y;
-
-                svg.setAttribute('width', width + (String(width).indexOf('%') !== -1 ? '' : 'px'));
-                svg.setAttribute('height', height + (String(height).indexOf('%') !== -1 ? '' : 'px'));
-            }
-
-            var size = me.options.size || new L.Point(width, height);
-
-            var scaleSize = new L.Point(size.x / width, size.y / height);
-
-            var old = g.getElementsByTagName('svg');
-            if (old.length > 0) {
-                old[0].parentNode.removeChild(old[0]);
-            }
-            g.appendChild(svg);
-
-            if (me.options.interactive) {
-                svg.setAttribute('class', 'leaflet-interactive');
-                me.addInteractiveTarget(svg);
-            }
-
-            var transforms = [];
-            var anchor = me.options.anchor || new L.Point(-size.x / 2, -size.y / 2);
-            var x = me._point.x + anchor.x;
-            var y = me._point.y + anchor.y;
-
-            transforms.push('translate(' + x + ' ' + y + ')');
-            transforms.push('scale(' + scaleSize.x + ' ' + scaleSize.y + ')');
-
-            if (me.options.rotation) {
-                transforms.push('rotate(' + me.options.rotation + ' ' + (width / 2) + ' ' + (height / 2) + ')'); //' ' + -1 * anchor.x + ' ' + -1 * anchor.y + ')');
-            }
-
-            g.setAttribute('transform', transforms.join(' '));
-        };
-
+        this._renderer = this._map.getRenderer(this);
         if (!this._data) {
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function () {
                 if (this.readyState === 4 && this.status === 200) {
                     me._data = this.responseXML;
-                    addSVG();
+                    me._reset();
+                    me.addSVG();
+                    me.updateSVG();
                 }
             };
             xhr.open('GET', this._svg, true);
             xhr.send(null);
         }
         else {
-            addSVG();
+            me._reset();
+            me.addSVG();
+            me.updateSVG();
         }
 
-        return 'M0 0L50 0L50 50L0 50Z';
+
+    },
+
+    addSVG: function () {
+        var me = this;
+        var data = me._data;
+        me._svgEl = data.nodeName.toLowerCase() === 'svg' ? data.cloneNode(true) : data.querySelector('svg').cloneNode(true);
+
+        if (!me._g) {
+            var g = L.SVG.create('g');
+            me._g = g;
+            me._g.id = L.stamp(me._g);
+            me._svgEl.id = L.stamp(me._svgEl);
+            me._g.appendChild(me._svgEl);
+
+            me._path = me._g;
+
+            me._renderer._rootGroup.appendChild(me._path);
+            me.addInteractiveTarget(me._path);
+
+            //var children = me._svgEl.childNodes;
+
+            //for (var i = 0, len = children.length; i < len; ++i) {
+            //    me.addInteractiveTarget(children[i]);
+            //    L.DomUtil.addClass(children[i], 'leaflet-interactive');
+            //}
+
+            if (me.options.interactive) {
+                L.DomUtil.addClass(me._g, 'leaflet-interactive');
+                //L.DomUtil.addClass(me._svgEl, 'leaflet-interactive');
+                //me.addInteractiveTarget(me._svgEl);
+
+                //var childG = me._svgEl.querySelector('g');
+
+                //if (childG) {
+                //    L.DomUtil.addClass(childG, 'leaflet-interactive');
+                //    me.addInteractiveTarget(childG);
+                //}
+
+                //var children = me._svgEl.childNodes;
+
+                var interact = function (node) {
+                    var children = node.children;
+
+                    if (node.id) {
+                        node.id = L.stamp(node);
+                    }
+
+                    //me.addInteractiveTarget(node);
+                    //L.DomUtil.addClass(node, 'leaflet-interactive');
+
+                    if (children) {
+                        for (var i = 0, len = children.length; i < len; ++i) {
+                            interact(children[i]);
+                        }
+                    }
+                };
+
+                interact(me._svgEl);
+
+            }
+        }
+    },
+
+    updateSVG: function () {
+        var me = this;
+
+        var options = me.options || {};
+        me._g.setAttribute('pointer-events', options.pointerEvents || (options.interactive ? 'visiblePainted' : 'none'));
+
+        if (options.setStyle) {
+            options.setStyle.call(me, me._svgEl);
+        }
+
+        var elementWidth = me._svgEl.getAttribute('width');
+        var elementHeight = me._svgEl.getAttribute('height');
+
+        var width = elementWidth ? elementWidth.replace('px', '') : '100%';
+        var height = elementHeight ? elementHeight.replace('px', '') : '100%';
+
+        // If the width is 100% (meaning that no width is provided), then set the width and height to the size specified in the options
+        if (width === '100%') {
+            width = options.size.x;
+            height = options.size.y;
+
+            me._svgEl.setAttribute('width', width + (String(width).indexOf('%') !== -1 ? '' : 'px'));
+            me._svgEl.setAttribute('height', height + (String(height).indexOf('%') !== -1 ? '' : 'px'));
+        }
+
+        var size = options.size || new L.Point(width, height);
+
+        var scaleSize = new L.Point(size.x / width, size.y / height);
+
+
+
+        /*
+         if (me.options.interactive) {
+         L.DomUtil.addClass(me._g, 'leaflet-interactive');
+         L.DomUtil.addClass(me._svgEl, 'leaflet-interactive');
+         var pathEls = me._svgEl.getElementsByTagNameNS('http://www.w3.org/2000/svg', 'g');
+
+         for (var i = 0, len = pathEls.length; i < len; ++i) {
+         me.addInteractiveTarget(pathEls[i]);
+         L.DomUtil.addClass(pathEls[i], 'leaflet-interactive');
+         }
+         me.addInteractiveTarget(me._svgEl);
+         }
+         */
+
+        var transforms = [];
+        var anchor = options.anchor || new L.Point(-size.x / 2, -size.y / 2);
+        var x = me._point.x + anchor.x;
+        var y = me._point.y + anchor.y;
+
+        transforms.push('translate(' + x + ' ' + y + ')');
+        transforms.push('scale(' + scaleSize.x + ' ' + scaleSize.y + ')');
+
+        if (me.options.rotation) {
+            transforms.push('rotate(' + options.rotation + ' ' + (width / 2) + ' ' + (height / 2) + ')'); //' ' + -1 * anchor.x + ' ' + -1 * anchor.y + ')');
+        }
+
+        me._g.setAttribute('transform', transforms.join(' '));
+    },
+
+    getElement: function () {
+        return me._g;
     },
 
     redraw: function () {
-        if (this._map) {
+        if (this._map && this._path) {
             this._renderer._updatePath(this);
         }
         return this;

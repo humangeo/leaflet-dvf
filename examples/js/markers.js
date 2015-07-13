@@ -273,7 +273,7 @@ $(document).ready(function() {
 			offset: 0,
 			//rotation: Math.random() * 360,
 			numberOfPoints: index + 5,
-			clickable: true,
+			//clickable: true,
             interactive: true
 		};
 
@@ -302,23 +302,29 @@ $(document).ready(function() {
 				//$svg.find('path, circle').css('fill', color);
 				//$svg.find('#path4941').css('fill', color);
 				//$svg.find('path').css('stroke', color);
-				$(svg).find('rect').css('fill', color);
+                var $eye1 = $(svg).find('path:first');
+
+                $eye1.attr('transform', $eye1.attr('transform').replace(/ scale\(1\.2,1\.2\)/gi,''));
+                $(svg).find('rect').css('fill', color);
 				
 			};
 		};
-		
+
+        options.defaultStyle = styleFunction(color);
 		options.setStyle = styleFunction(color);
 
 		var marker = new L.SVGMarker(latlng, options);
 
+        //marker.bindPopup('Test');
+
+
 		marker.on('click', function () {
-			if (marker.options.oldStyle) {
-				marker.options.setStyle = marker.options.oldStyle;
+			if (marker._clicked) {
+				marker.options.setStyle = marker.options.defaultStyle;
 				marker.redraw();
-				marker.options.oldStyle = null;
+                marker._clicked = false;
 			}
 			else {
-				marker.options.oldStyle = marker.options.setStyle;
 				marker.options.setStyle = function (svg) {
 					var $eye1 = $(svg).find('path:first');
 					
@@ -326,6 +332,7 @@ $(document).ready(function() {
 				};
 				
 				marker.redraw();
+                marker._clicked = true;
 			}
 		});
 		

@@ -281,12 +281,12 @@
 
         div.legend-box {
             border-radius: 50%;
-            -moz-transform: scale(0.5, 0.5); /* IE 9 */
-            -moz-transform-origin: 0% 0%;
-            -webkit-transform: scale(0.5, 0.5); /* Chrome, Safari, Opera */
-            -webkit-transform-origin: 0% 0%;
-            transform: scale(0.5, 0.5);
-            transform-origin: 0% 0%;
+            *-moz-transform: scale(0.5, 0.5); /* IE 9 */
+            *-moz-transform-origin: 0% 0%;
+            *-webkit-transform: scale(0.5, 0.5); /* Chrome, Safari, Opera */
+            *-webkit-transform-origin: 0% 0%;
+            *transform: scale(0.5, 0.5);
+            *transform-origin: 0% 0%;
             display: inline-block;
         }
     </style>
@@ -682,7 +682,7 @@
                     weight: 10,
                     fill: true,
                     gradient: {
-                        gradientUnits: polygon ? 'objectBoundingBox' : 'userSpaceOnUse'
+                        gradientUnits: 'userSpaceOnUse'//polygon ? 'objectBoundingBox' : 'userSpaceOnUse'
                     },
                     fillOpacity: 0.7,
                     opacity: 0.8,

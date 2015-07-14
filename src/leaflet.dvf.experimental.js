@@ -756,15 +756,18 @@ L.WeightedLineSegment = L.Path.extend({
     },
 
     _project: function () {
+        var me = this;
         this._points = this._getPoints();
         if ((typeof this.options.fill !== 'undefined' && this.options.fill && this.options.gradient) || (this.options.stroke && !this.options.fill && this.options.gradient)) {
-            this._setGradient();
+            me._setGradient();
         }
     },
 
     _update: function () {
         if (this._map) {
-            this._renderer._setPath(this, this.getPathString());
+            //if (!this._map._animatingZoom) {
+                this._renderer._setPath(this, this.getPathString());
+            //}
         }
     },
 
@@ -780,15 +783,10 @@ L.WeightedLineSegment = L.Path.extend({
 
     projectLatlngs: function () {
         var me = this;
-        var map = me._map;
         this._points = this._getPoints();
 
         if ((typeof this.options.fill !== 'undefined' && this.options.fill && this.options.gradient) || (this.options.stroke && !this.options.fill && this.options.gradient)) {
-            if (!map._animatingZoom) {
-                setTimeout(function () {
-                    me._setGradient();
-                }, 0);
-            }
+            me._setGradient();
         }
     },
 
@@ -849,7 +847,8 @@ L.WeightedLineSegment = L.Path.extend({
                     ]
                 };
 
-                this.setStyle(this.options);
+                this._renderer._createGradient(this);
+                //this.setStyle(this.options);
             }
         }
     },

@@ -624,3 +624,7 @@ L.CategoryFunction = L.Class.extend({
         return this._categoryKeys;
     }
 });
+
+L.categoryFunction = function (categoryMap, options) {
+    return new L.CategoryFunction(categoryMap, options);
+};

@@ -1,5 +1,28 @@
 L.Path.XLINK_NS = 'http://www.w3.org/1999/xlink';
 
+var DomUtilFunctions = DomUtilFunctions || {
+    setStyle: function(element, style) {
+        var styleString = '';
+
+        for (var key in style) {
+            styleString += key + ': ' + style[key] + ';';
+        }
+
+        element.setAttribute('style', styleString);
+
+        return element;
+    },
+    setAttr: function (element, attr) {
+        for (var key in attr) {
+            element.setAttribute(key, attr[key]);
+        }
+
+        return element;
+    }
+};
+
+L.extend(L.DomUtil, DomUtilFunctions);
+
 /*
  * Functions that support displaying text on an SVG path
  */
@@ -63,32 +86,11 @@ var TextFunctions = TextFunctions || {
     _createText: function (layer) {
         var options = layer.options.text || {};
 
-        // Set element style
-        var setStyle = function (element, style) {
-            var styleString = '';
-
-            for (var key in style) {
-                styleString += key + ': ' + style[key] + ';';
-            }
-
-            element.setAttribute('style', styleString);
-
-            return element;
-        };
-
-        // Set attributes for an element
-        var setAttr = function (element, attr) {
-            for (var key in attr) {
-                element.setAttribute(key, attr[key]);
-            }
-
-            return element;
-        };
-
         if (layer._text) {
             L.DomUtil.remove(layer._text);
             layer.text = null;
         }
+
         if (layer._pathDef) {
             L.DomUtil.remove(layer._pathDef);
             layer._pathDef = null;
@@ -122,11 +124,11 @@ var TextFunctions = TextFunctions || {
             }
 
             if (pathOptions.attr) {
-                setAttr(textPath, pathOptions.attr);
+                L.DomUtil.setAttr(textPath, pathOptions.attr);
             }
 
             if (pathOptions.style) {
-                setStyle(textPath, pathOptions.style);
+                L.DomUtil.setStyle(textPath, pathOptions.style);
             }
 
             textPath.setAttributeNS(L.Path.XLINK_NS, 'xlink:href', '#' + L.stamp(clonedPath));
@@ -152,12 +154,12 @@ var TextFunctions = TextFunctions || {
 
         //attributes
         if (options.attr) {
-            setAttr(layer._text, options.attr);
+            L.DomUtil.setAttr(layer._text, options.attr);
         }
 
         //style
         if (options.style) {
-            setStyle(layer._text, options.style);
+            L.DomUtil.setStyle(layer._text, options.style);
         }
 
         //this._container.appendChild(layer._text);
@@ -315,7 +317,7 @@ var PathFunctions = PathFunctions || {
         var gradientOptions;
         var gradientType = options.gradientType || 'linear';
 
-        gradient = this._gradient || L.SVG.create(gradientType + 'Gradient');
+        gradient = layer._gradient || L.SVG.create(gradientType + 'Gradient');
 
         if (gradientType === "radial") {
             //gradient = L.SVG.create("radialGradient");
@@ -331,7 +333,7 @@ var PathFunctions = PathFunctions || {
             };
         }
 
-        gradientOptions.id = L.stamp(gradient);
+        gradientOptions.id = gradient.id || L.stamp(gradient);
 
         if (options.gradientUnits) {
             gradient.setAttribute('gradientUnits', options.gradientUnits);
@@ -360,9 +362,13 @@ var PathFunctions = PathFunctions || {
             gradient.setAttribute(key, gradientOptions[key]);
         }
 
+        //L.DomUtil.empty(gradient);
+        var children = gradient.children;
+        var childLength = children.length;
+
         for (var i = 0, len = stops.length; i < len; ++i) {
             var stop = stops[i];
-            var stopElement = L.SVG.create('stop');
+            var stopElement = childLength > i ? children[i] : L.SVG.create('stop');
 
             stop.style = stop.style || {};
 
@@ -385,7 +391,9 @@ var PathFunctions = PathFunctions || {
                 stopElement.setAttribute(key, stopProperty);
             }
 
-            gradient.appendChild(stopElement);
+            if (childLength <= i) {
+                gradient.appendChild(stopElement);
+            }
         }
 
         layer._gradient = gradient;
@@ -599,49 +607,48 @@ var PathFunctions = PathFunctions || {
     _updateStyle: function (layer) {
         this.__updateStyle.call(this, layer);
 
-        if (layer.options.text) {
-            layer._renderer._createText(layer);
-        }
-
-        var context = layer ? layer : this;
         var guid;
 
-        if (context._path) {
-            if (context.options.markers) {
+        if (layer._path) {
+            if (layer.options.text) {
+                layer._renderer._createText(layer);
+            }
+
+            if (layer.options.markers) {
                 for (var key in context.options.markers) {
-                    if (context.options.markers.hasOwnProperty(key)) {
-                        this._createMarker(context, key, context.options.markers[key]);
-                        context._path.setAttribute('marker-' + key, 'url(#' + context._markers[key].getAttribute('id') + ')');
+                    if (layer.options.markers.hasOwnProperty(key)) {
+                        this._createMarker(layer, key, layer.options.markers[key]);
+                        layer._path.setAttribute('marker-' + key, 'url(#' + layer._markers[key].getAttribute('id') + ')');
                     }
                 }
             }
 
-            if (context.options.gradient) {
-                guid = this._createGradient(context);
+            if (layer.options.gradient) {
+                guid = this._createGradient(layer);
 
-                context._path.setAttribute('fill', 'url(#' + guid + ')');
+                layer._path.setAttribute('fill', 'url(#' + guid + ')');
             }
-            else if (!context.options.fill) {
-                context._path.setAttribute('fill', 'none');
+            else if (!layer.options.fill) {
+                layer._path.setAttribute('fill', 'none');
             }
 
-            if (context.options.dropShadow) {
-                guid = this._createDropShadow(context);
+            if (layer.options.dropShadow) {
+                guid = this._createDropShadow(layer);
 
-                context._path.setAttribute('filter', 'url(#' + guid + ')');
+                layer._path.setAttribute('filter', 'url(#' + guid + ')');
             }
             else {
-                context._path.removeAttribute('filter');
+                layer._path.removeAttribute('filter');
             }
 
-            if (context.options.fillPattern) {
-                guid = this._createFillPattern(context);
-                context._path.setAttribute('fill', 'url(#' + guid + ')');
+            if (layer.options.fillPattern) {
+                guid = this._createFillPattern(layer);
+                layer._path.setAttribute('fill', 'url(#' + guid + ')');
             }
         }
 
-        if (context._applyCustomStyles) {
-            context._applyCustomStyles();
+        if (layer._applyCustomStyles) {
+            layer._applyCustomStyles();
         }
 
         if (layer._gradient) {
@@ -806,261 +813,7 @@ var PathFunctions = PathFunctions || {
         return element;
 
     }
-
-    /*
-    _createShape: function (type, shapeOptions) {
-        if (this._shape) {
-            this._container.removeChild(this._shape);
-        }
-
-        var shape = this._createCustomElement(type, shapeOptions);
-
-        return shape;
-    },
-
-    // Override this in inheriting classes
-    _applyCustomStyles: function () {
-    },
-
-    _createFillPattern: function (imageOptions) {
-        var patternGuid = L.Util.guid();
-        var patternOptions = imageOptions.pattern;
-
-        patternOptions.id = patternGuid;
-        patternOptions.patternUnits = patternOptions.patternUnits || 'objectBoundingBox';
-
-        var pattern = this._createPattern(patternOptions);
-        var image = this._createImage(imageOptions.image);
-
-        image.setAttributeNS(L.Path.XLINK_NS, 'xlink:href', imageOptions.url);
-
-        pattern.appendChild(image);
-
-        if (!this._defs) {
-            this._createDefs();
-        }
-
-        this._defs.appendChild(pattern);
-        this._path.setAttribute('fill', 'url(#' + patternGuid + ')');
-    },
-
-    _getDefaultDiameter: function (radius) {
-        return 1.75 * radius;
-    },
-
-    // Added for image circle
-    _createShapeImage: function (imageOptions) {
-
-        imageOptions = imageOptions || {};
-
-        var patternGuid = L.Util.guid();
-
-        var radius = this.options.radius || Math.max(this.options.radiusX, this.options.radiusY);
-        var diameter = this._getDefaultDiameter(radius);
-        var imageSize = imageOptions.imageSize || new L.Point(diameter, diameter);
-
-        var circleSize = imageOptions.radius || diameter / 2;
-
-        var shapeOptions = imageOptions.shape || {
-                circle: {
-                    r: circleSize,
-                    cx: 0,
-                    cy: 0
-                }
-            };
-
-        var patternOptions = imageOptions.pattern || {
-                width: imageSize.x,
-                height: imageSize.y,
-                x: 0,
-                y: 0
-            };
-
-        var shapeKeys = Object.keys(shapeOptions);
-        var shapeType = shapeKeys.length > 0 ? shapeKeys[0] : 'circle';
-
-        shapeOptions[shapeType].fill = 'url(#' + patternGuid + ')';
-
-        var shape = this._createShape(shapeType, shapeOptions[shapeType]);
-
-        if (this.options.clickable) {
-            shape.setAttribute('class', 'leaflet-clickable');
-        }
-
-        patternOptions.id = patternGuid;
-        patternOptions.patternUnits = patternOptions.patternUnits || 'objectBoundingBox';
-
-        var pattern = this._createPattern(patternOptions);
-
-        imageOptions = imageOptions.image || {
-            width: imageSize.x,
-            height: imageSize.y,
-            x: 0,
-            y: 0,
-            url: this.options.imageCircleUrl
-        };
-
-        var image = this._createImage(imageOptions);
-        image.setAttributeNS(L.Path.XLINK_NS, 'xlink:href', imageOptions.url);
-
-        pattern.appendChild(image);
-        this._defs.appendChild(pattern);
-        this._container.insertBefore(shape, this._defs);
-
-        this._shape = shape;
-
-        var me = this;
-
-        this._shape.addEventListener('mouseover', function () {
-            me.fire('mouseover');
-        });
-
-        this._shape.addEventListener('mouseout', function () {
-            me.fire('mouseout');
-        });
-
-        this._shape.addEventListener('mousemove', function () {
-            me.fire('mousemove');
-        });
-
-        var anchorPoint = this.getTextAnchor();
-
-        if (this._shape && anchorPoint) {
-            if (this._shape.tagName === 'circle' || this._shape.tagName === 'ellipse') {
-                this._shape.setAttribute('cx', anchorPoint.x);
-                this._shape.setAttribute('cy', anchorPoint.y);
-            }
-            else {
-                var width = this._shape.getAttribute('width');
-                var height = this._shape.getAttribute('height');
-                this._shape.setAttribute('x', anchorPoint.x - Number(width) / 2);
-                this._shape.setAttribute('y', anchorPoint.y - Number(height) / 2);
-            }
-        }
-    },
-
-    _updateStyle: function (layer) {
-        this.__updateStyle.call(this, layer);
-
-        var context = layer ? layer : this;
-
-        if (context.options.stroke) {
-            if (context.options.lineCap) {
-                context._path.setAttribute('stroke-linecap', context.options.lineCap);
-            }
-
-            if (context.options.lineJoin) {
-                context._path.setAttribute('stroke-linejoin', context.options.lineJoin);
-            }
-        }
-
-        if (context.options.markers) {
-            for (var key in context.options.markers) {
-                if (context.options.markers.hasOwnProperty(key)) {
-                    context._createMarker(key, context.options.markers[key]);
-                    context._path.setAttribute('marker-' + key, 'url(#' + context._markers[key].getAttribute('id') + ')');
-                }
-            }
-        }
-
-        if (context.options.gradient) {
-            context._createGradient(context.options.gradient);
-
-            if (context.options.stroke && !context.options.fill) {
-                context._path.setAttribute('stroke', 'url(#' + context._gradient.getAttribute('id') + ')');
-            }
-            else {
-                context._path.setAttribute('fill', 'url(#' + context._gradient.getAttribute('id') + ')');
-            }
-        }
-        else if (!context.options.fill) {
-            context._path.setAttribute('fill', 'none');
-        }
-
-        if (context.options.dropShadow) {
-            context._createDropShadow();
-
-            context._path.setAttribute('filter', 'url(#' + context._dropShadow.getAttribute('id') + ')');
-        }
-        else {
-            context._path.removeAttribute('filter');
-        }
-
-        if (context.options.fillPattern) {
-            context._createFillPattern(context.options.fillPattern);
-        }
-
-        if (context.options.wordCloud) {
-            var options = context.options.wordCloud;
-
-            if (options.words.length > 0) {
-                var me = this;
-                setTimeout(function () {
-                    me._createWordCloudPattern(options);
-                }, 0);
-            }
-        }
-
-        context._applyCustomStyles();
-
-    }
-    */
 };
-
-/*
- if (L.SVG) {
- // Potential fix for working with 0.8
- var SVGStyleFunctions = L.Util.extend(PathFunctions, {
- __updateStyle: L.SVG.prototype._updateStyle
- });
-
- var SVGTextFunctions = L.Util.extend(TextFunctions, {
- __updatePath: L.SVG.prototype._updatePath
- });
-
- L.SVG.include(SVGStyleFunctions);
- L.SVG.include(SVGTextFunctions);
- }
-*/
-
-// Extend the TextFunctions above and change the __updatePath reference, since
-// _updatePath for a line/polygon is different than for a regular path
-//var LineTextFunctions = L.extend({}, TextFunctions);
-//LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
-
-// Pulled from the Leaflet discussion here:  https://github.com/Leaflet/Leaflet/pull/1586
-// This is useful for getting a centroid/anchor point for centering text or other SVG markup
-/*
- LineTextFunctions.getCenter = function (layer) {
- var latlngs = layer._latlngs,
- len = latlngs.length,
- i, j, p1, p2, f, center;
-
- for (i = 0, j = len - 1, area = 0, lat = 0, lng = 0; i < len; j = i++) {
- p1 = latlngs[i];
- p2 = latlngs[j];
- f = p1.lat * p2.lng - p2.lat * p1.lng;
- lat += (p1.lat + p2.lat) * f;
- lng += (p1.lng + p2.lng) * f;
- area += f / 2;
- }
-
- center = area ? new L.LatLng(lat / (6 * area), lng / (6 * area)) : latlngs[0];
- center.area = area;
-
- return center;
- };
- */
-
-// Sets the text anchor to the centroid of a line/polygon
-/*
- * TODO: this breaks dcmetrobus example when hovering
- LineTextFunctions.getTextAnchor = function (layer) {
- var center = this.getCenter(layer);
-
- return layer._map.latLngToLayerPoint(center);
- };
- */
 
 /**
  * Extend L.Polyline with an alternative getCenter method.  The current getCenter method

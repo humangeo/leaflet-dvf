@@ -779,10 +779,16 @@ L.WeightedLineSegment = L.Path.extend({
     },
 
     projectLatlngs: function () {
+        var me = this;
+        var map = me._map;
         this._points = this._getPoints();
 
         if ((typeof this.options.fill !== 'undefined' && this.options.fill && this.options.gradient) || (this.options.stroke && !this.options.fill && this.options.gradient)) {
-            this._setGradient();
+            if (!map._animatingZoom) {
+                setTimeout(function () {
+                    me._setGradient();
+                }, 0);
+            }
         }
     },
 
@@ -816,13 +822,14 @@ L.WeightedLineSegment = L.Path.extend({
                 else {
                     vector = [[p1.x.toFixed(2), p1.y.toFixed(2)], [p2.x.toFixed(2), p2.y.toFixed(2)]];
                 }
+
                 var color1 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint1.lineWeight) : (this._weightedPoint1.fillColor || this._weightedPoint1.color);
                 var color2 = this.options.weightToColor ? this.options.weightToColor.evaluate(this._weightedPoint2.lineWeight) : (this._weightedPoint2.fillColor || this._weightedPoint2.color);
                 var opacity1 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint1.lineWeight) : 1;
                 var opacity2 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint2.lineWeight) : 1;
 
                 this.options.gradient = {
-                    gradientUnits: this.options.gradientUnits,
+                    gradientUnits: this.options.gradient.gradientUnits,
                     vector: vector,
                     stops: [
                         {
@@ -934,7 +941,7 @@ L.WeightedLineSegment.include(LineTextFunctions);
  */
 L.WeightedFlowLine = L.FlowLine.extend({
     initialize: function (data, options) {
-        L.Util.setOptions(this, options);
+        L.setOptions(this, options);
         L.FlowLine.prototype.initialize.call(this, data, options);
         this._loaded = false;
     },

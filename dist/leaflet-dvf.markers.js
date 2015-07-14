@@ -2697,7 +2697,7 @@ var PathFunctions = PathFunctions || {
         var gradientOptions;
         var gradientType = options.gradientType || 'linear';
 
-        gradient = this._gradient || L.SVG.create(gradientType + 'Gradient');
+        gradient = layer._gradient || L.SVG.create(gradientType + 'Gradient');
 
         if (gradientType === "radial") {
             //gradient = L.SVG.create("radialGradient");
@@ -2713,7 +2713,7 @@ var PathFunctions = PathFunctions || {
             };
         }
 
-        gradientOptions.id = L.stamp(gradient);
+        gradientOptions.id = gradient.id || L.stamp(gradient);
 
         if (options.gradientUnits) {
             gradient.setAttribute('gradientUnits', options.gradientUnits);
@@ -2742,9 +2742,13 @@ var PathFunctions = PathFunctions || {
             gradient.setAttribute(key, gradientOptions[key]);
         }
 
+        //L.DomUtil.empty(gradient);
+        var children = gradient.children;
+        var childLength = children.length;
+
         for (var i = 0, len = stops.length; i < len; ++i) {
             var stop = stops[i];
-            var stopElement = L.SVG.create('stop');
+            var stopElement = childLength > i ? children[i] : L.SVG.create('stop');
 
             stop.style = stop.style || {};
 
@@ -2767,7 +2771,9 @@ var PathFunctions = PathFunctions || {
                 stopElement.setAttribute(key, stopProperty);
             }
 
-            gradient.appendChild(stopElement);
+            if (childLength <= i) {
+                gradient.appendChild(stopElement);
+            }
         }
 
         layer._gradient = gradient;
@@ -2981,49 +2987,48 @@ var PathFunctions = PathFunctions || {
     _updateStyle: function (layer) {
         this.__updateStyle.call(this, layer);
 
-        if (layer.options.text) {
-            layer._renderer._createText(layer);
-        }
-
-        var context = layer ? layer : this;
         var guid;
 
-        if (context._path) {
-            if (context.options.markers) {
+        if (layer._path) {
+            if (layer.options.text) {
+                layer._renderer._createText(layer);
+            }
+
+            if (layer.options.markers) {
                 for (var key in context.options.markers) {
-                    if (context.options.markers.hasOwnProperty(key)) {
-                        this._createMarker(context, key, context.options.markers[key]);
-                        context._path.setAttribute('marker-' + key, 'url(#' + context._markers[key].getAttribute('id') + ')');
+                    if (layer.options.markers.hasOwnProperty(key)) {
+                        this._createMarker(layer, key, layer.options.markers[key]);
+                        layer._path.setAttribute('marker-' + key, 'url(#' + layer._markers[key].getAttribute('id') + ')');
                     }
                 }
             }
 
-            if (context.options.gradient) {
-                guid = this._createGradient(context);
+            if (layer.options.gradient) {
+                guid = this._createGradient(layer);
 
-                context._path.setAttribute('fill', 'url(#' + guid + ')');
+                layer._path.setAttribute('fill', 'url(#' + guid + ')');
             }
-            else if (!context.options.fill) {
-                context._path.setAttribute('fill', 'none');
+            else if (!layer.options.fill) {
+                layer._path.setAttribute('fill', 'none');
             }
 
-            if (context.options.dropShadow) {
-                guid = this._createDropShadow(context);
+            if (layer.options.dropShadow) {
+                guid = this._createDropShadow(layer);
 
-                context._path.setAttribute('filter', 'url(#' + guid + ')');
+                layer._path.setAttribute('filter', 'url(#' + guid + ')');
             }
             else {
-                context._path.removeAttribute('filter');
+                layer._path.removeAttribute('filter');
             }
 
-            if (context.options.fillPattern) {
-                guid = this._createFillPattern(context);
-                context._path.setAttribute('fill', 'url(#' + guid + ')');
+            if (layer.options.fillPattern) {
+                guid = this._createFillPattern(layer);
+                layer._path.setAttribute('fill', 'url(#' + guid + ')');
             }
         }
 
-        if (context._applyCustomStyles) {
-            context._applyCustomStyles();
+        if (layer._applyCustomStyles) {
+            layer._applyCustomStyles();
         }
 
         if (layer._gradient) {

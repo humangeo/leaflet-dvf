@@ -2657,12 +2657,12 @@ var TextFunctions = TextFunctions || {
         if (layer._path) {
             var referencedNode = layer._path.nextSibling;
 
-            if (!referencedNode) {
+            //if (!referencedNode) {
                 this._container.firstChild.insertBefore(layer._text, referencedNode);
-            }
-            else {
-                this._container.firstChild.appendChild(layer._text);
-            }
+            //}
+            //else {
+            //    this._container.firstChild.appendChild(layer._text);
+            //}
         }
 
     }
@@ -2706,9 +2706,12 @@ var PathFunctions = PathFunctions || {
         if (layer._pathDef) {
             this._defs.appendChild(layer._pathDef);
         }
+
+        /*
         if (layer._text && layer._path) {
             this._container.firstChild.insertBefore(layer._text, layer._path.nextSibling);
         }
+        */
     },
 
     // __updatePath: L.SVG.prototype._updatePath,
@@ -2725,7 +2728,6 @@ var PathFunctions = PathFunctions || {
                 }, 0);
             }
         }
-
     },
 
     // __removePath: L.SVG.prototype._removePath,

@@ -16,6 +16,10 @@ module.exports = function(grunt) {
                 },
                 src: ['src/copyright.js', 'src/leaflet.dvf.linearfunctions.js', 'src/leaflet.dvf.utils.js', 'src/leaflet.dvf.palettes.js', 'src/leaflet.dvf.markers.js', 'src/leaflet.dvf.chartmarkers.js'],
                 dest: 'dist/<%= pkg.name %>.markers.js'
+            },
+            css: {
+                src: ['src/css/dvf.css'],
+                dest: 'dist/css/dvf.css'
             }
         },
         uglify: {
@@ -74,6 +78,6 @@ module.exports = function(grunt) {
     grunt.registerTask('test', ['jshint']);
 
     grunt.registerTask('default', ['jshint', 'concat', 'uglify']);
-    grunt.registerTask('all', ['jshint', 'concat:all', 'uglify:all']);
+    grunt.registerTask('all', ['jshint', 'concat:all', 'concat:css', 'uglify:all']);
     grunt.registerTask('markers', ['jshint', 'concat:markers', 'uglify:markers']);
 };

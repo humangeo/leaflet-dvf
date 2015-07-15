@@ -729,7 +729,7 @@ L.Util.getFieldValue = function (record, fieldName) {
         var bracketIndex = -1;
         var testValue;
 
-        for (var partIndex = 0; partIndex < parts.length; ++partIndex) {
+        for (var partIndex = 0, len = parts.length; partIndex < len; ++partIndex) {
             part = parts[partIndex];
 
             bracketIndex = part.indexOf('[');
@@ -887,8 +887,6 @@ L.LegendIcon = L.DivIcon.extend({
         }
 
         L.StyleConverter.applySVGStyle(legendBox, layerOptions);
-
-        legendBox.style.height = '5px';
 
         options.html = container.innerHTML;
         options.className = options.className || 'legend-icon';
@@ -1226,6 +1224,12 @@ L.StyleConverter = {
             }
         },
         weight: {
+            property: ['border-width'],
+            valueFunction: function (value) {
+                return Math.ceil(value) + 'px';
+            }
+        },
+        lineWeight: {
             property: ['border-width'],
             valueFunction: function (value) {
                 return Math.ceil(value) + 'px';
@@ -5685,6 +5689,13 @@ L.DataLayer = L.LayerGroup.extend({
 
                     this.locationToLayer(location, record);
                 }
+                else if (this._layerIndex) {
+                    var key = this.options.getIndexKey.call(this, location, record);
+                    if (key in this._layerIndex) {
+                        this.removeLayer(this._layerIndex[key]);
+                        delete this._layerIndex[key];
+                    }
+                }
             }
         }
     },
@@ -6011,15 +6022,10 @@ L.DataLayer = L.LayerGroup.extend({
         var layerOptions = L.extend({}, this.options.layerOptions);
         var layer;
         var legendDetails = {};
-        var includeLayer = true;
         var me = this;
-
-        if (this._includeFunction) {
-            includeLayer = this._includeFunction.call(this, record);
-        }
+        var includeLayer = this._shouldLoadRecord(record);
 
         if (includeLayer) {
-
             var dynamicOptions = this._getDynamicOptions(record);
 
             layerOptions = dynamicOptions.layerOptions;
@@ -6764,6 +6770,7 @@ L.ChoroplethDataLayer = L.DataLayer.extend({
     _getLayer: function (location, layerOptions, record) {
 
         if (location.location instanceof L.LatLng) {
+            this._markerFunction = this.options.getMarker || this._getMarker;
             location.location = this._markerFunction.call(this, location.location, layerOptions, record);
         }
         else if (location.location instanceof L.LatLngBounds) {
@@ -8420,9 +8427,7 @@ L.WeightedLineSegment = L.Path.extend({
 
     _update: function () {
         if (this._map) {
-            //if (!this._map._animatingZoom) {
-                this._renderer._setPath(this, this.getPathString());
-            //}
+            this._renderer._setPath(this, this.getPathString());
         }
     },
 
@@ -8503,7 +8508,6 @@ L.WeightedLineSegment = L.Path.extend({
                 };
 
                 this._renderer._createGradient(this);
-                //this.setStyle(this.options);
             }
         }
     },

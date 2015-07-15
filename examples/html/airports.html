@@ -236,6 +236,9 @@
             includeLayer: function (record) {
                 return false;
             },
+            getIndexKey: function (location, record) {
+                return record.airport1 + '_' + record.airport2;
+            },
             setHighlight: function (style) {
                 style.opacity = 1.0;
 

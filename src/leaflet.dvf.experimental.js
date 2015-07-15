@@ -765,9 +765,7 @@ L.WeightedLineSegment = L.Path.extend({
 
     _update: function () {
         if (this._map) {
-            //if (!this._map._animatingZoom) {
-                this._renderer._setPath(this, this.getPathString());
-            //}
+            this._renderer._setPath(this, this.getPathString());
         }
     },
 
@@ -848,7 +846,6 @@ L.WeightedLineSegment = L.Path.extend({
                 };
 
                 this._renderer._createGradient(this);
-                //this.setStyle(this.options);
             }
         }
     },

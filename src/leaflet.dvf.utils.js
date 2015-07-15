@@ -97,7 +97,7 @@ L.Util.getFieldValue = function (record, fieldName) {
         var bracketIndex = -1;
         var testValue;
 
-        for (var partIndex = 0; partIndex < parts.length; ++partIndex) {
+        for (var partIndex = 0, len = parts.length; partIndex < len; ++partIndex) {
             part = parts[partIndex];
 
             bracketIndex = part.indexOf('[');
@@ -255,8 +255,6 @@ L.LegendIcon = L.DivIcon.extend({
         }
 
         L.StyleConverter.applySVGStyle(legendBox, layerOptions);
-
-        legendBox.style.height = '5px';
 
         options.html = container.innerHTML;
         options.className = options.className || 'legend-icon';
@@ -594,6 +592,12 @@ L.StyleConverter = {
             }
         },
         weight: {
+            property: ['border-width'],
+            valueFunction: function (value) {
+                return Math.ceil(value) + 'px';
+            }
+        },
+        lineWeight: {
             property: ['border-width'],
             valueFunction: function (value) {
                 return Math.ceil(value) + 'px';

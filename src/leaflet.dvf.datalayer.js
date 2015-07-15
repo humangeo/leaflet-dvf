@@ -523,6 +523,13 @@ L.DataLayer = L.LayerGroup.extend({
 
                     this.locationToLayer(location, record);
                 }
+                else if (this._layerIndex) {
+                    var key = this.options.getIndexKey.call(this, location, record);
+                    if (key in this._layerIndex) {
+                        this.removeLayer(this._layerIndex[key]);
+                        delete this._layerIndex[key];
+                    }
+                }
             }
         }
     },
@@ -849,15 +856,10 @@ L.DataLayer = L.LayerGroup.extend({
         var layerOptions = L.extend({}, this.options.layerOptions);
         var layer;
         var legendDetails = {};
-        var includeLayer = true;
         var me = this;
-
-        if (this._includeFunction) {
-            includeLayer = this._includeFunction.call(this, record);
-        }
+        var includeLayer = this._shouldLoadRecord(record);
 
         if (includeLayer) {
-
             var dynamicOptions = this._getDynamicOptions(record);
 
             layerOptions = dynamicOptions.layerOptions;
@@ -1602,6 +1604,7 @@ L.ChoroplethDataLayer = L.DataLayer.extend({
     _getLayer: function (location, layerOptions, record) {
 
         if (location.location instanceof L.LatLng) {
+            this._markerFunction = this.options.getMarker || this._getMarker;
             location.location = this._markerFunction.call(this, location.location, layerOptions, record);
         }
         else if (location.location instanceof L.LatLngBounds) {

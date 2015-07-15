@@ -64,6 +64,22 @@
             *border-radius: 3px;
         }
 
+        #info {
+            margin: 10px;
+            position: absolute;
+            top: 200px;
+            right: 0px;
+            width: 400px;
+            height: 400px;
+            overflow-y: auto;
+            max-height: 400px;
+            z-index: 10000;
+        }
+
+        #info table {
+            background-color: #fff;
+        }
+
     </style>
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
     <link href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
@@ -96,6 +112,7 @@
 <div class="container-fluid">
     <div class="row-fluid">
         <div id="map"></div>
+        <div id="info" class="leaflet-control-legend"><span style="font-style: italic; font-size: 16px;">Click on airport to view details</span></div>
     </div>
 </div>
 
@@ -130,9 +147,9 @@
 
     $(document).ready(function () {
         var map;
+        var $info = $('#info');
+        var $map = $('#map');
         var resize = function () {
-            var $map = $('#map');
-
             $map.height($(window).height() - $('div.navbar').outerHeight());
 
             if (map) {
@@ -208,6 +225,64 @@
 
         var sizeFunction = new L.LinearFunction([1, 16], [253, 48]);
 
+        var options = {
+            recordsField: null,
+            locationMode: L.LocationModes.CUSTOM,
+            fromField: 'airport1',
+            toField: 'airport2',
+            codeField: null,
+            getLocation: getLocation,
+            getEdge: L.Graph.EDGESTYLE.ARC,
+            includeLayer: function (record) {
+                return false;
+            },
+            setHighlight: function (style) {
+                style.opacity = 1.0;
+
+                return style;
+            },
+            unsetHighlight: function (style) {
+                style.opacity = 0.8;
+
+                return style;
+            },
+            layerOptions: {
+                fill: false,
+                opacity: 0.5,
+                weight: 0.5,
+                fillOpacity: 1.0,
+                distanceToHeight: new L.LinearFunction([0, 20], [1000, 300]),
+                markers: {
+                    end: true
+                }
+            },
+            legendOptions: {
+                width: 200,
+                numSegments: 5,
+                className: 'legend-line'
+            },
+            tooltipOptions: {
+                iconSize: new L.Point(80, 64),
+                iconAnchor: new L.Point(-5, 64),
+                className: 'leaflet-div-icon line-legend'
+            },
+            displayOptions: {
+                cnt: {
+                    weight: new L.LinearFunction([0, 1], [maxCount, 14]),
+                    color: new L.HSLHueFunction([0, 200], [maxCount, 330], {
+                        outputLuminosity: '60%'
+                    }),
+                    displayName: 'Flights'
+                }
+            },
+            onEachRecord: function (layer, record) {
+                layer.bindPopup($(L.HTMLUtils.buildTable(record)).wrap('<div/>').parent().html());
+            }
+        };
+
+        var allLayer = new L.Graph(flights, options);
+        map.addLayer(allLayer);
+
         var airportsLayer = new L.MarkerDataLayer(airportsLookup, {
             recordsField: null,
             locationMode: L.LocationModes.LATLNG,
@@ -267,7 +342,14 @@
                 return icon;
             },
             onEachRecord: function (layer, record) {
-                layer.bindPopup($(L.HTMLUtils.buildTable(record)).wrap('<div/>').parent().html());
+                layer.on('click', function () {
+                    $info.empty();
+                    $info.append($(L.HTMLUtils.buildTable(record)).wrap('<div/>').parent().html());
+                    allLayer.options.includeLayer = function (newRecord) {
+                       return newRecord.airport1 === record.code || newRecord.airport2 === record.code;
+                    };
+                    allLayer.reloadData();
+                });
             }
         });
 
@@ -281,60 +363,13 @@
                 // Create a graph layer that draws lines from the location in the fromField to the location in the toField.
                 // In this case, we'll use a custom locationMode and implement the getLocation function to lookup the airport
                 // location from the airport data we have available.
-                var flightLayer = new L.Graph(flights, {
-                    recordsField: null,
-                    locationMode: L.LocationModes.CUSTOM,
-                    fromField: 'airport1',
-                    toField: 'airport2',
-                    codeField: null,
-                    getLocation: getLocation,
-                    getEdge: L.Graph.EDGESTYLE.ARC,
+                var airportOptions = L.extend(options, {
                     includeLayer: function (record) {
                         return record.airline === key;
-                    },
-                    setHighlight: function (style) {
-                        style.opacity = 1.0;
-
-                        return style;
-                    },
-                    unsetHighlight: function (style) {
-                        style.opacity = 0.8;
-
-                        return style;
-                    },
-                    layerOptions: {
-                        fill: false,
-                        opacity: 0.8,
-                        weight: 0.5,
-                        fillOpacity: 1.0,
-                        distanceToHeight: new L.LinearFunction([0, 5], [1000, 200]),
-                        markers: {
-                            end: true
-                        }
-                    },
-                    legendOptions: {
-                        width: 200,
-                        numSegments: 5,
-                        className: 'legend-line'
-                    },
-                    tooltipOptions: {
-                        iconSize: new L.Point(80, 64),
-                        iconAnchor: new L.Point(-5, 64),
-                        className: 'leaflet-div-icon line-legend'
-                    },
-                    displayOptions: {
-                        cnt: {
-                            weight: new L.LinearFunction([0, 1], [maxCount, 14]),
-                            color: new L.HSLHueFunction([0, 200], [maxCount, 330], {
-                                outputLuminosity: '60%'
-                            }),
-                            displayName: 'Flights'
-                        }
-                    },
-                    onEachRecord: function (layer, record) {
-                        layer.bindPopup($(L.HTMLUtils.buildTable(record)).wrap('<div/>').parent().html());
                     }
-                });
+                })
+
+                var flightLayer = new L.Graph(flights, airportOptions);
 
                 layerControl.addOverlay(flightLayer, key);
 
@@ -344,7 +379,7 @@
                     legendControl.addLayer(flightLayer);
 
                     // Add each layer to the map
-                    map.addLayer(flightLayer);
+                    //map.addLayer(flightLayer);
                 }
                 count++;
             }

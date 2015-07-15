@@ -2657,12 +2657,7 @@ var TextFunctions = TextFunctions || {
         if (layer._path) {
             var referencedNode = layer._path.nextSibling;
 
-            //if (!referencedNode) {
-                this._container.firstChild.insertBefore(layer._text, referencedNode);
-            //}
-            //else {
-            //    this._container.firstChild.appendChild(layer._text);
-            //}
+            this._container.firstChild.insertBefore(layer._text, referencedNode);
         }
 
     }
@@ -3108,7 +3103,7 @@ var PathFunctions = PathFunctions || {
             }
 
             if (layer.options.markers) {
-                for (var key in context.options.markers) {
+                for (var key in layer.options.markers) {
                     if (layer.options.markers.hasOwnProperty(key)) {
                         this._createMarker(layer, key, layer.options.markers[key]);
                         layer._path.setAttribute('marker-' + key, 'url(#' + layer._markers[key].getAttribute('id') + ')');
@@ -5638,6 +5633,7 @@ L.DataLayer = L.LayerGroup.extend({
         var markerLayer;
 
         if (location) {
+            this._markerFunction = this.options.getMarker || this._getMarker;
             markerLayer = this._markerFunction.call(this, location, options, record);
             markerLayer.boundaryLayer = boundaryLayer;
         }
@@ -5667,6 +5663,7 @@ L.DataLayer = L.LayerGroup.extend({
     },
 
     _shouldLoadRecord: function (record) {
+        this._includeFunction = this.options.filter || this.options.includeLayer;
         return this._includeFunction ? this._includeFunction.call(this, record) : true;
     },
 

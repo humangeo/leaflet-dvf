@@ -612,7 +612,7 @@ var PathFunctions = PathFunctions || {
             }
 
             if (layer.options.markers) {
-                for (var key in context.options.markers) {
+                for (var key in layer.options.markers) {
                     if (layer.options.markers.hasOwnProperty(key)) {
                         this._createMarker(layer, key, layer.options.markers[key]);
                         layer._path.setAttribute('marker-' + key, 'url(#' + layer._markers[key].getAttribute('id') + ')');

@@ -471,6 +471,7 @@ L.DataLayer = L.LayerGroup.extend({
         var markerLayer;
 
         if (location) {
+            this._markerFunction = this.options.getMarker || this._getMarker;
             markerLayer = this._markerFunction.call(this, location, options, record);
             markerLayer.boundaryLayer = boundaryLayer;
         }
@@ -500,6 +501,7 @@ L.DataLayer = L.LayerGroup.extend({
     },
 
     _shouldLoadRecord: function (record) {
+        this._includeFunction = this.options.filter || this.options.includeLayer;
         return this._includeFunction ? this._includeFunction.call(this, record) : true;
     },
 

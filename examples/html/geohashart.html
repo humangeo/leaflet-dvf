@@ -57,7 +57,7 @@
 <script type="text/javascript" src="../lib/jsts/jsts.js"></script>
 <script type="text/javascript" src="../lib/date.format.js"></script>
 <script type="text/javascript" src="../lib/geohash.js"></script>
-<script type="text/javascript" src="../lib/tilefilter/TileLayer.Filter.js"></script>
+<script type="text/javascript" src="../lib/tilefilter/leaflet-tilefilter.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
 <script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 
@@ -117,6 +117,7 @@
             detectRetina: true
         }); //new L.StamenTileLayer('watercolor');
 
+        baseLayer.setFilter(L.ImageFilters.Presets.CSS.Grayscale);
         baseLayer.addTo(map);
 
         var imageLayer = L.imageOverlay('../data/do_n17_8070_34nw.2013.jpg', new L.LatLngBounds([38.8792916666, -77.113874999], [38.88267222, -77.109419444]));
@@ -220,45 +221,6 @@
                 var func = function (layer, i) {
                     return function () {
 
-                        /*
-                         baseLayer.setFilter(function () {
-                         console.log('hue-rotate: ' + i);
-                         new L.CombinedFilter(this, {
-                         cssFilter: function () { new L.CSSFilter(this, {
-                         filters: ['brightness(110%)', 'hue-rotate(' + i + 'deg)']
-                         }).render()},
-                         channelFilter: L.ImageFilters.Presets.CanvasChannel.ColorizeRed
-                         }).render();
-                         });
-                         */
-
-
-                        baseLayer.setFilter(function () {
-                            return new L.CanvasFilter(this, {
-                                channelFilter: function (imageData) {
-                                    return new L.CanvasChannelFilter(imageData, {
-                                        filters: [
-                                            new L.ChannelFilters.Grayscale(),
-                                            //new L.ChannelFilters.Invert(),
-                                            //new L.ChannelFilters.Adjust({
-                                            //	adjustments: [40, 40, 40]
-                                            //})
-                                            //new L.ChannelFilters.Colorize({
-                                            //	channel: 0,
-                                            //	values: [90, 90]
-                                            //}),
-                                            //new L.ChannelFilters.HSLAdjust({
-                                            //	adjustments: [i, -0.8, 0.0]
-                                            //}),
-                                            //new L.ChannelFilters.Adjust({
-                                            //	adjustments: [40, 40, 40]
-                                            //})
-                                        ]
-                                    }).render();
-                                }
-                            }).render();
-                        });
-
                         var layerBounds = layer.getBounds();
                         var sw = layerBounds.getSouthWest();
                         var ne = layerBounds.getNorthEast();
@@ -317,23 +279,6 @@
 
                         map.addLayer(errorLine);
 
-                        geohashSizeLayer = new L.CircleMarker(layerBounds.getCenter(), {
-                            fillOpacity: 0.5,
-                            stroke: false,
-                            radius: 100,
-                            fillColor: 'hsl(' + ((i + 180) % 360) + ',100%,50%)',
-                            text: {
-                                text: layer.options.geohash.length,
-                                style: {
-                                    'font-size': '100px',
-                                    'text-rendering': 'optimizeLegibility',
-                                    'fill': 'hsl(' + i + ',100%,85%)'
-                                }
-                            }
-                        });
-
-                        map.addLayer(geohashSizeLayer);
-
                         geohashTextLayer = new L.Rectangle(layerBounds, {
                             fill: false,
                             stroke: false,
@@ -353,6 +298,23 @@
                         });
 
                         map.addLayer(geohashTextLayer);
+
+                        geohashSizeLayer = new L.CircleMarker(layerBounds.getCenter(), {
+                            fillOpacity: 0.5,
+                            stroke: false,
+                            radius: 100,
+                            fillColor: 'hsl(' + ((i + 180) % 360) + ',100%,50%)',
+                            text: {
+                                text: layer.options.geohash.length,
+                                style: {
+                                    'font-size': '100px',
+                                    'text-rendering': 'optimizeLegibility',
+                                    'fill': 'hsl(' + i + ',100%,85%)'
+                                }
+                            }
+                        });
+
+                        map.addLayer(geohashSizeLayer);
 
                         map.fitBounds(layer.getBounds().pad(0.05));
                     };

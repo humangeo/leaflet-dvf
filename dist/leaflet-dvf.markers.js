@@ -2498,8 +2498,12 @@ var TextFunctions = TextFunctions || {
             var pathOptions = options.path;
 
             var clonedPath = L.SVG.create('path');
-            clonedPath.setAttribute('d', layer._path.getAttribute('d'));
+            var existingDef = layer._path.getAttribute('d');
+
             clonedPath.setAttribute('id', L.stamp(clonedPath));
+            if (existingDef) {
+                clonedPath.setAttribute('d', existingDef);
+            }
 
             this._createDefs();
 

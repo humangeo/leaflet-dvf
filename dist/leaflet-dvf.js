@@ -7601,6 +7601,11 @@ L.arcedPolyline = function (latlngs, options) {
             .addListener(container, 'mouseout', this.toggleSize)
             .addListener(container, 'touchstart', this.toggleSize)
             .addListener(container, 'touchend', this.toggleSize)
+            .addListener(container, 'mousedown', L.DomEvent.stopPropagation)
+            .addListener(container, {
+                mousewheel: L.DomEvent.stopPropagation,
+                MozMousePixelScroll: L.DomEvent.preventDefault
+            })
             .addListener(container, 'click', L.DomEvent.stopPropagation)
             .addListener(container, 'click', L.DomEvent.preventDefault);
 

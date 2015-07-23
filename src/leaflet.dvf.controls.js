@@ -26,13 +26,16 @@ L.Control.Legend = L.Control.extend({
 
 		this.toggleSize = L.bind(this.toggleSize, this);
 
-		L.DomEvent
-		.addListener(container, 'mouseover', this.toggleSize)
-		.addListener(container, 'mouseout', this.toggleSize)
-		.addListener(container, 'touchstart', this.toggleSize)
-		.addListener(container, 'touchend', this.toggleSize)
-		.addListener(container, 'click', L.DomEvent.stopPropagation)
-		.addListener(container, 'click', L.DomEvent.preventDefault);
+        L.DomEvent
+            .addListener(container, 'mouseover', this.toggleSize)
+            .addListener(container, 'mouseout', this.toggleSize)
+            .addListener(container, 'touchstart', this.toggleSize)
+            .addListener(container, 'touchend', this.toggleSize)
+            .addListener(container, 'mousedown', L.DomEvent.stopPropagation)
+            .addListener(container, 'mousewheel', L.DomEvent.stopPropagation)
+            .addListener(container, 'MozMousePixelScroll', L.DomEvent.preventDefault)
+            .addListener(container, 'click', L.DomEvent.stopPropagation)
+            .addListener(container, 'click', L.DomEvent.preventDefault);
 
 		return container;
 	},

@@ -773,10 +773,10 @@ L.WeightedLineSegment = L.Polyline.extend({
 		var deltaY = p2.y - p1.y;
 		var vector;
 
-        this.options.gradientUnits = this.options.gradientUnits || 'objectBoundingBox';
+        this.options.gradient.gradientUnits = this.options.gradient.gradientUnits || 'objectBoundingBox';
 
 		if (deltaX !== 0 || deltaY !== 0) {
-            if (this.options.gradientUnits === 'objectBoundingBox') {
+            if (this.options.gradient.gradientUnits === 'objectBoundingBox') {
                 var angle = Math.atan(deltaY / deltaX);
                 var directionX = deltaX / Math.abs(deltaX);
                 var directionY = deltaY / Math.abs(deltaY);
@@ -800,6 +800,7 @@ L.WeightedLineSegment = L.Polyline.extend({
 			var opacity2 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint2.lineWeight) : 1;
 
 			this.options.gradient = {
+                gradientUnits: this.options.gradient.gradientUnits,
 				vector: vector,
 				stops: [
 					{

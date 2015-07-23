@@ -331,7 +331,6 @@
 	<script type="text/javascript" src="../lib/tilefilter/TileLayer.Filter.js"></script>
 	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/vis/3.6.4/vis.min.js"></script>
 	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
 	<script type="text/javascript">
 
 $(document).ready(function() {
@@ -677,11 +676,12 @@ $(document).ready(function() {
 				color: '#333',
 				weight: 10,
 				fill: true,
-				gradient: true,
+				gradient: {
+                    gradientUnits: 'userSpaceOnUse'
+                },
 				fillOpacity: 0.7,
 				opacity: 0.8,
 				stroke: !polygon,
-                gradientUnits: 'userSpaceOnUse'
 				//weight: 0.5
 			},
 			onEachSegment: function (record1, record2, line, deltas, distance, velocity) {

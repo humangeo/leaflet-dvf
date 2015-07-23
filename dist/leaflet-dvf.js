@@ -2677,94 +2677,100 @@ var PathFunctions = PathFunctions || {
         this._defs.appendChild(this._markers[type]);
     },
 
-	_createGradient: function (options) {
-		if (!this._defs) {
-			this._createDefs();
-		}
-
-		if (this._gradient) {
-			this._defs.removeChild(this._gradient);
-		}
-
-		options = options !== true ? L.extend({}, options) : {};
-		var gradientGuid = L.Util.guid();
-		this._gradientGuid = gradientGuid;
-
-		var gradient;
-		var gradientOptions;
-		if (options.gradientType == "radial") {
-			gradient = this._createElement("radialGradient");
-			gradientOptions = options.radial || { cx: '50%', cy: '50%', r: '50%', fx: '50%', fy: '50%' };
-		} else {
-			gradient = this._createElement("linearGradient");
-			var vector = options.vector || [ [ "0%", "0%" ], [ "100%", "100%" ] ];
-			gradientOptions = {
-				x1: vector[0][0],
-				x2: vector[1][0],
-				y1: vector[0][1],
-				y2: vector[1][1]
-			};
-		}
-		gradientOptions.id = "grad" + gradientGuid;
-
-        if (this.options.gradientUnits) {
-            gradient.setAttribute('gradientUnits', this.options.gradientUnits);
+    _createGradient: function (options) {
+        if (!this._defs) {
+            this._createDefs();
         }
 
-		var stops = options.stops || [
-			{
-				offset: '0%',
-				style: {
-					color: 'rgb(255, 255, 255)',
-					opacity: 1
-				}
-			},
-			{
-				offset: '60%',
-				style: {
-					color: this.options.fillColor || this.options.color,
-					opacity: 1
-				}
-			}
-		];
+        options = options !== true ? L.extend({}, options) : {};
+        var gradient = this._gradient;
+        var gradientOptions;
+        var gradientType = options.gradientType || 'linear';
 
-		var key;
-		
-		for (key in gradientOptions) {
-			gradient.setAttribute(key, gradientOptions[key]);
-		}
+        if (!gradient) {
+            gradient = this._createElement(gradientType + 'Gradient');
+            gradient.id = L.stamp(gradient);
+            this._defs.appendChild(gradient);
+            this._gradient = gradient;
+        }
 
-		for (var i = 0; i < stops.length; ++i) {
-			var stop = stops[i];
-			var stopElement = this._createElement('stop');
+        if (gradientType === "radial") {
+            gradientOptions = options.radial || {cx: '50%', cy: '50%', r: '50%', fx: '50%', fy: '50%'};
+        } else {
+            var vector = options.vector || [["0%", "0%"], ["100%", "100%"]];
+            gradientOptions = {
+                x1: vector[0][0],
+                x2: vector[1][0],
+                y1: vector[0][1],
+                y2: vector[1][1]
+            };
+        }
 
-			stop.style = stop.style || {};
+        gradientOptions.id = gradient.id;
 
-			for (key in stop) {
-				var stopProperty = stop[key];
+        if (options.gradientUnits) {
+            gradient.setAttribute('gradientUnits', options.gradientUnits);
+        }
 
-				if (key === 'style') {
-					var styleProperty = '';
+        var stops = options.stops || [
+                {
+                    offset: '0%',
+                    style: {
+                        color: 'rgb(255, 255, 255)',
+                        opacity: 1
+                    }
+                },
+                {
+                    offset: '60%',
+                    style: {
+                        color: this.options.fillColor || this.options.color,
+                        opacity: 1
+                    }
+                }
+            ];
 
-					stopProperty.color = stopProperty.color || (this.options.fillColor || this.options.color);
-					stopProperty.opacity = typeof stopProperty.opacity === 'undefined' ? 1 : stopProperty.opacity;
+        var key;
 
-					for (var propKey in stopProperty) {
-						styleProperty += 'stop-' + propKey + ':' + stopProperty[propKey] + ';';
-					}
+        for (key in gradientOptions) {
+            gradient.setAttribute(key, gradientOptions[key]);
+        }
 
-					stopProperty = styleProperty;
-				}
+        var children = gradient.children;
+        var childLength = children.length;
 
-				stopElement.setAttribute(key, stopProperty);
-			}
+        for (var i = 0, len = stops.length; i < len; ++i) {
+            var stop = stops[i];
+            var stopElement = childLength > i ? children[i] : this._createElement('stop');
 
-			gradient.appendChild(stopElement);
-		}
+            stop.style = stop.style || {};
 
-		this._gradient = gradient;
-		this._defs.appendChild(gradient);
-	},
+            for (key in stop) {
+                var stopProperty = stop[key];
+
+                if (key === 'style') {
+                    var styleProperty = '';
+
+                    stopProperty.color = stopProperty.color || (this.options.fillColor || this.options.color);
+                    stopProperty.opacity = typeof stopProperty.opacity === 'undefined' ? 1 : stopProperty.opacity;
+
+                    for (var propKey in stopProperty) {
+                        styleProperty += 'stop-' + propKey + ':' + stopProperty[propKey] + ';';
+                    }
+
+                    stopProperty = styleProperty;
+                }
+
+                stopElement.setAttribute(key, stopProperty);
+            }
+
+            if (childLength <= i) {
+                gradient.appendChild(stopElement);
+            }
+        }
+
+        this._gradient = gradient;
+        return gradientOptions.id;
+    },
 
 	_createDropShadow: function (options) {
 
@@ -3147,13 +3153,13 @@ var PathFunctions = PathFunctions || {
         }
 
 		if (context.options.gradient) {
-			context._createGradient(context.options.gradient);
+			var guid = context._createGradient(context.options.gradient);
 
             if (context.options.stroke && !context.options.fill) {
-                context._path.setAttribute('stroke', 'url(#' + context._gradient.getAttribute('id') + ')');
+                context._path.setAttribute('stroke', 'url(#' + guid + ')');
             }
             else {
-                context._path.setAttribute('fill', 'url(#' + context._gradient.getAttribute('id') + ')');
+                context._path.setAttribute('fill', 'url(#' + guid + ')');
             }
 		}
 		else if (!context.options.fill) {
@@ -7217,13 +7223,16 @@ L.arcedPolyline = function (latlngs, options) {
 
 		this.toggleSize = L.bind(this.toggleSize, this);
 
-		L.DomEvent
-		.addListener(container, 'mouseover', this.toggleSize)
-		.addListener(container, 'mouseout', this.toggleSize)
-		.addListener(container, 'touchstart', this.toggleSize)
-		.addListener(container, 'touchend', this.toggleSize)
-		.addListener(container, 'click', L.DomEvent.stopPropagation)
-		.addListener(container, 'click', L.DomEvent.preventDefault);
+        L.DomEvent
+            .addListener(container, 'mouseover', this.toggleSize)
+            .addListener(container, 'mouseout', this.toggleSize)
+            .addListener(container, 'touchstart', this.toggleSize)
+            .addListener(container, 'touchend', this.toggleSize)
+            .addListener(container, 'mousedown', L.DomEvent.stopPropagation)
+            .addListener(container, 'mousewheel', L.DomEvent.stopPropagation)
+            .addListener(container, 'MozMousePixelScroll', L.DomEvent.preventDefault)
+            .addListener(container, 'click', L.DomEvent.stopPropagation)
+            .addListener(container, 'click', L.DomEvent.preventDefault);
 
 		return container;
 	},
@@ -8060,10 +8069,10 @@ L.WeightedLineSegment = L.Polyline.extend({
 		var deltaY = p2.y - p1.y;
 		var vector;
 
-        this.options.gradientUnits = this.options.gradientUnits || 'objectBoundingBox';
+        this.options.gradient.gradientUnits = this.options.gradient.gradientUnits || 'objectBoundingBox';
 
 		if (deltaX !== 0 || deltaY !== 0) {
-            if (this.options.gradientUnits === 'objectBoundingBox') {
+            if (this.options.gradient.gradientUnits === 'objectBoundingBox') {
                 var angle = Math.atan(deltaY / deltaX);
                 var directionX = deltaX / Math.abs(deltaX);
                 var directionY = deltaY / Math.abs(deltaY);
@@ -8087,6 +8096,7 @@ L.WeightedLineSegment = L.Polyline.extend({
 			var opacity2 = this.options.weightToOpacity ? this.options.weightToOpacity.evaluate(this._weightedPoint2.lineWeight) : 1;
 
 			this.options.gradient = {
+                gradientUnits: this.options.gradient.gradientUnits,
 				vector: vector,
 				stops: [
 					{

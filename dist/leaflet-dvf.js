@@ -5337,6 +5337,7 @@ L.DataLayer = L.LayerGroup.extend({
 		var markerLayer;
 		
 		if (location) {
+            this._markerFunction = this.options.getMarker || this._getMarker;
 			markerLayer = this._markerFunction.call(this, location, options, record);
 			markerLayer.boundaryLayer = boundaryLayer;
 		}
@@ -5366,7 +5367,8 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 
 	_shouldLoadRecord: function (record) {
-		return this._includeFunction ? this._includeFunction.call(this, record) : true;
+        this._includeFunction = this.options.filter || this.options.includeLayer;
+        return this._includeFunction ? this._includeFunction.call(this, record) : true;
 	},
 
 	_loadRecords: function (records) {
@@ -5387,6 +5389,13 @@ L.DataLayer = L.LayerGroup.extend({
 
 					this.locationToLayer(location, record);
 				}
+                else if (this._layerIndex) {
+                    var key = this.options.getIndexKey.call(this, location, record);
+                    if (key in this._layerIndex) {
+                        this.removeLayer(this._layerIndex[key]);
+                        delete this._layerIndex[key];
+                    }
+                }
 			}
 		}
 	},

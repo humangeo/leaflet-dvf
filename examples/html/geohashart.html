@@ -117,7 +117,7 @@
             detectRetina: true
         }); //new L.StamenTileLayer('watercolor');
 
-        baseLayer.setFilter(L.ImageFilters.Presets.CSS.Grayscale);
+        baseLayer.setCSSFilter(L.ImageFilters.Presets.CSS.Grayscale);
         baseLayer.addTo(map);
 
         var imageLayer = L.imageOverlay('../data/do_n17_8070_34nw.2013.jpg', new L.LatLngBounds([38.8792916666, -77.113874999], [38.88267222, -77.109419444]));

@@ -627,7 +627,12 @@ var PathFunctions = PathFunctions || {
             if (layer.options.gradient) {
                 guid = this._createGradient(layer);
 
-                layer._path.setAttribute('fill', 'url(#' + guid + ')');
+                if (layer.options.stroke && !layer.options.fill) {
+                    layer._path.setAttribute('stroke', 'url(#' + guid + ')');
+                }
+                else {
+                    layer._path.setAttribute('fill', 'url(#' + guid + ')');
+                }
             }
             else if (!layer.options.fill) {
                 layer._path.setAttribute('fill', 'none');

@@ -3017,7 +3017,12 @@ var PathFunctions = PathFunctions || {
             if (layer.options.gradient) {
                 guid = this._createGradient(layer);
 
-                layer._path.setAttribute('fill', 'url(#' + guid + ')');
+                if (layer.options.stroke && !layer.options.fill) {
+                    layer._path.setAttribute('stroke', 'url(#' + guid + ')');
+                }
+                else {
+                    layer._path.setAttribute('fill', 'url(#' + guid + ')');
+                }
             }
             else if (!layer.options.fill) {
                 layer._path.setAttribute('fill', 'none');
@@ -4253,10 +4258,12 @@ L.ChartMarker = L.FeatureGroup.extend({
             var newPoint;
             var offset = 5;
 
-            newX = x < 0 ? iconSize.x - x + offset : -x - offset;
-            newY = y < 0 ? iconSize.y - y + offset : -y - offset;
+            if (iconSize) {
+                newX = x < 0 ? iconSize.x - x + offset : -x - offset;
+                newY = y < 0 ? iconSize.y - y + offset : -y - offset;
 
-            newPoint = new L.Point(newX, newY);
+                newPoint = new L.Point(newX, newY);
+            }
 
             var legendOptions = {};
             var displayText = currentOptions.displayText ? currentOptions.displayText(value) : value;
@@ -4269,7 +4276,7 @@ L.ChartMarker = L.FeatureGroup.extend({
             var icon = new L.LegendIcon(legendOptions, currentOptions, {
                 className: 'leaflet-div-icon',
                 iconSize: tooltipOptions ? tooltipOptions.iconSize : iconSize,
-                iconAnchor: newPoint
+                iconAnchor: newPoint || new L.Point(-5, 0)
             });
 
             currentOptions.marker = new L.Marker(self._latlng, {

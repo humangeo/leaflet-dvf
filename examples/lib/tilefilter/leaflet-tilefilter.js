@@ -101,7 +101,7 @@ L.Color = L.Class.extend({
             rgbString = "rgba(" + this._rgb[0].toFixed(0) + "," + this._rgb[1].toFixed(0) + "," + this._rgb[2].toFixed(0) + "," + this._a.toFixed(1) + ")";
         } else {
             var parts = [ this._rgb[0].toString(16), this._rgb[1].toString(16), this._rgb[2].toString(16) ];
-            for (var i = 0; i < parts.length; ++i) {
+            for (var i = 0, len = parts.length; i < len; ++i) {
                 if (parts[i].length === 1) {
                     parts[i] = "0" + parts[i];
                 }
@@ -498,14 +498,14 @@ L.CanvasChannelFilter = L.AlphaChannelFilter.extend({
     updateChannels: function(channels) {
     	channels = L.AlphaChannelFilter.prototype.updateChannels.call(this, channels);
         var filters = this.options.filters;
-        for (var i = 0; i < filters.length; ++i) {
+        for (var i = 0, len = filters.length; i < len; ++i) {
             channels = filters[i].updateChannels(channels);
         }
         return channels;
     },
     updatePixel: function (pixel) {
     	var filters = this.options.filters;
-        for (var i = 0; i < filters.length; ++i) {
+        for (var i = 0, len = filters.length; i < len; ++i) {
             pixel = filters[i].updatePixel(pixel);
         }
         return pixel;
@@ -575,7 +575,7 @@ L.ChannelFilters.Threshold = L.ChannelFilters.Grayscale.extend({
     updatePixel: function (pixel) {
     	var color = new L.Color32(pixel);
 
-        for (var i = 0; i < this._keys.length; ++i) {
+        for (var i = 0, len = this._keys.length; i < len; ++i) {
             color[this._keys[i]](color[this._keys[i]]() >= this.options.thresholds[i] ? this.options.trueValues[i] : this.options.falseValues[i]);
         }
 
@@ -698,7 +698,7 @@ L.ChannelFilters.Adjust = L.ChannelFilter.extend({
     },
     updatePixel: function (pixel) {
         var color = new L.Color32(pixel);
-        for (var i = 0; i < this._keys.length; ++i) {
+        for (var i = 0, len = this._keys.length; i < len; ++i) {
             color[this._keys[i]](Math.min(Math.max(color[this._keys[i]]() + this.options.adjustments[i], 0), 255));
         }
         return color.toInt();
@@ -882,7 +882,7 @@ L.CSSFilter = L.ImageFilter.extend({
         prefixes: [ "-webkit-", "-moz-", "-ms-", "-o-", "" ]
     },
     render: function(element, image, ctx) {
-        for (var i = 0; i < L.CSSFilter.prefixes.length; ++i) {
+        for (var i = 0, len = L.CSSFilter.prefixes.length; i < len; ++i) {
             element.style.cssText += " " + L.CSSFilter.prefixes[i] + "filter: " + this.options.filters.join(" ") + ";";
         }
     }
@@ -944,9 +944,7 @@ L.ImageFilters.GenerateCanvasFilter = function (filters) {
 
 L.ImageFilters.Presets = {
     CSS: {
-        None: function() {
-            return this;
-        },
+        None: L.ImageFilters.GenerateCSSFilter([ "none" ]),
         Brightness200: L.ImageFilters.GenerateCSSFilter([ "brightness(200%)" ]),
         Brightness180: L.ImageFilters.GenerateCSSFilter([ "brightness(180%)" ]),
         Brightness160: L.ImageFilters.GenerateCSSFilter([ "brightness(160%)" ]),
@@ -1092,23 +1090,46 @@ L.ImageFilters.Presets = {
 L.ImageFilterFunctions = {
     __loadTile: L.TileLayer.prototype._loadTile,
     __tileOnLoad: L.TileLayer.prototype._tileOnLoad,
+    __update: L.TileLayer.prototype._update,
     setFilter: function(filter) {
         this.options.filter = filter;
-        /*
-        for (var key in this._tiles) {
-            var xyParts = key.split(':');
-            var tilePoint = new L.Point(Number(xyParts[0]), Number(xyParts[1]));
-            tilePoint.z = Number(xyParts[2]);
-            this._tileReady(tilePoint, null, this._tiles[key]);
-        }
-        this._update();
-        */
         this.redraw();
         return this;
+    },
+    setCSSFilter: function (filter) {
+        this._cssChanged = true;
+        this.options.cssFilter = filter;
+        this._applyCSSFilter();
+        return this;
+    },
+    _applyCSSFilter: function () {
+        if (this._container && this._cssChanged) {
+            this._container.cssText = "";
+
+            if (this.options.cssFilter) {
+                this.options.cssFilter.call(this, this._container);
+            }
+
+            this._cssChanged = false;
+        }
+    },
+    _update: function () {
+        this.__update.call(this);
+
+        this._applyCSSFilter();
     },
     clearFilter: function() {
         this.options.filter = null;
         return this.redraw();
+    },
+    clearCSSFilter: function () {
+        this.setCSSFilter(null);
+    },
+    clearAllFilters: function () {
+        this.options.filter = null;
+        this.options.cssFilter = null;
+        this._cssChanged = true;
+        this.redraw();
     },
     _tileOnLoad: function(done, tile) {
         var filter = this.options.filter;
@@ -1143,34 +1164,16 @@ L.TileLayer.CanvasTMS = L.TileLayer.extend({
         var me = this;
         return function () {
             try {
-                var filter = tile.options.filter || function (data) {
-                    return data;
-                };
+                var filter = tile.options.filter || L.ImageFilters.Presets.CanvasChannel.None;
 
                 img._layer = tile;
                 filter.call(tile, tile, img, ctx);
             }
             finally {
                 done();
-                //me._tileOnLoad.call(me, L.bind(me._tileReady, me, coords, null, tile), tile);
             }
         };
     },
-    /*
-    removeTiles: function (tiles) {
-        for (var key in tiles) {
-            this._removeTile(key);
-        }
-    },
-    redraw: function () {
-        if (this._map) {
-            var oldTiles = L.extend({}, this._tiles);
-            this._update();
-            this.removeTiles(oldTiles);
-        }
-        return this;
-    },
-    */
     createTile: function (coords, done) {
         var tile = L.DomUtil.create('canvas', 'leaflet-tile');
         tile.width = tile.height = this.options.tileSize;

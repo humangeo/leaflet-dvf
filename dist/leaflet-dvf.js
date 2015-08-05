@@ -136,6 +136,13 @@ L.LinearFunction = L.Class.extend({
         return yValues;
     },
 
+    evaluatePercent: function (percent) {
+        var percentOffset = this._xRange * percent;
+        var x = this._minPoint.x + percentOffset;
+
+        return this.evaluate(x);
+    },
+
     samplePoints: function (count) {
         count = Math.max(count, 2);
 
@@ -2676,6 +2683,50 @@ var TextFunctions = TextFunctions || {
  */
 var PathFunctions = PathFunctions || {
     __updateStyle: L.SVG.prototype._updateStyle,
+    _finishPathAnimation: function (layer, animationEnd) {
+        return function () {
+            var dashArray = layer.options.dashArray || [0, 0];
+            layer._path.style.strokeDasharray = dashArray.join(' ');
+            layer._path.style.strokeDashoffset = 0;
+
+            if (animationEnd) {
+                animationEnd(layer);
+            }
+        };
+    },
+    _animatePath: function (layer) {
+        var path = layer._path;
+        var length = path.getTotalLength();
+        var animationOptions = layer.options.animatePath !== true ? L.extend({}, layer.options.animatePath) : {};
+        var property = animationOptions.property || 'stroke-dashoffset';
+        var duration = animationOptions.duration || '2s';
+        var timingFunction = animationOptions.timingFunction || 'ease-in-out';
+        var transition = [property, duration, timingFunction].join(' ');
+
+        path.style.transition = path.style.MozTransition = 'none';
+        path.style.transition = path.style.WebkitTransition = 'none';
+        path.style.transition = path.style.MsTransition = 'none';
+        // Set up the starting positions
+        path.style.strokeDasharray = length + ' ' + length;
+        path.style.strokeDashoffset = length;
+        // Trigger a layout so styles are calculated & the browser
+        // picks up the starting position before animating
+        path.getBoundingClientRect();
+        // Define our transition
+        path.style.transition = path.style.MozTransition = transition;
+        path.style.transition = path.style.WebkitTransition = transition;
+        path.style.transition = path.style.MsTransition = transition;
+        // Go!
+        path.style.strokeDashoffset = '0';
+
+        L.DomEvent.on(path, {
+            transitionEnd: this._finishPathAnimation(layer, animationOptions.animationEnd),
+            mozTransitionEnd: this._finishPathAnimation(layer, animationOptions.animationEnd),
+            msTransitionEnd: this._finishPathAnimation(layer, animationOptions.animationEnd),
+            webkitTransitionEnd: this._finishPathAnimation(layer, animationOptions.animationEnd),
+            oTransitionEnd: this._finishPathAnimation(layer, animationOptions.animationEnd)
+        });
+    },
 
     _createDefs: function () {
         if (!this._defs) {
@@ -2710,6 +2761,9 @@ var PathFunctions = PathFunctions || {
             this._defs.appendChild(layer._pathDef);
         }
 
+        if (layer.options.animatePath) {
+            this._animatePath(layer);
+        }
         /*
         if (layer._text && layer._path) {
             this._container.firstChild.insertBefore(layer._text, layer._path.nextSibling);
@@ -3330,6 +3384,51 @@ var PolylineFunctions = {
         }
 
         return centerPoint;
+    },
+    _buildDistanceIndex: function () {
+        if (!this._index) {
+            var latlngs = this._latlngs;
+            var total = 0.0;
+
+            this._index = [0.0];
+
+            for (var i = 0, len = latlngs.length; i < len - 1; ++i) {
+                total += latlngs[i].distanceTo(latlngs[i + 1]);
+                this._index.push(total);
+            }
+
+            this._totalDistance = total;
+        }
+        return this;
+    },
+    _clearDistanceIndex: function () {
+        this._totalDistance = 0.0;
+        this._index = null;
+        return this;
+    },
+    _distanceToPoints: function (distance) {
+        var points = null;
+
+        for (var i = 0, len = this._index.length; i < len - 1; ++i) {
+            if (distance >= this._index[i] && distance < this._index[i + 1]) {
+                points = [this._latlngs[i], this._latlngs[i + 1]];
+            }
+        }
+
+        return points;
+    },
+    _animateLine: function (options) {
+        // Loop through latlngs and create functions that interpolate b/w them
+        var functions = [];
+        var latlngs = this._latlngs.slice();
+
+        // Create an index of distance to points
+        for (var i = 0, len = latlngs.length; i < len - 1; ++i) {
+            functions.push(new L.LinearFunction(latlngs[i], latlngs[i - 1]));
+        }
+        var interpolateFunction = new L.PiecewiseFunction(functions);
+
+
     }
 };
 
@@ -5962,7 +6061,7 @@ L.DataLayer = L.LayerGroup.extend({
     _recursiveLayerUpdate: function (layer, callee) {
         var me = this;
 
-        if (layer.eachLayer) {
+        if (layer.eachLayer && !(layer instanceof L.FeatureGroup)) {
             layer.eachLayer(function (subLayer) {
                 me._recursiveLayerUpdate(subLayer, callee);
             });

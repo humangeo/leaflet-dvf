@@ -79,7 +79,6 @@
         #info table {
             background-color: #fff;
         }
-
     </style>
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
     <link href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
@@ -257,6 +256,11 @@
                 distanceToHeight: new L.LinearFunction([0, 20], [1000, 300]),
                 markers: {
                     end: true
+                },
+                animatePath: {
+                    property: 'stroke-dashoffset',
+                    duration: '1.5s',
+                    timingFunction: 'ease-in-out'
                 }
             },
             legendOptions: {

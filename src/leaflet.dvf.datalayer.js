@@ -785,7 +785,7 @@ L.DataLayer = L.LayerGroup.extend({
     _recursiveLayerUpdate: function (layer, callee) {
         var me = this;
 
-        if (layer.eachLayer) {
+        if (layer.eachLayer && !(layer instanceof L.FeatureGroup)) {
             layer.eachLayer(function (subLayer) {
                 me._recursiveLayerUpdate(subLayer, callee);
             });

@@ -475,7 +475,7 @@ L.arcedFlowLine = function (data, options) {
  * Custom arced polyline implementation.  Draws segments as arcs rather than straight lines.
  */
 L.ArcedPolyline = L.Path.extend({
-    includes: TextFunctions,
+    includes: L.extend({}, TextFunctions, PolylineFunctions),
 
     initialize: function (latlngs, options) {
         L.setOptions(this, options);
@@ -521,6 +521,7 @@ L.ArcedPolyline = L.Path.extend({
     setLatLngs: function (latlngs) {
         this._latlngs = latlngs;
         this.redraw();
+        return this;
     },
 
     getLatLngs: function () {

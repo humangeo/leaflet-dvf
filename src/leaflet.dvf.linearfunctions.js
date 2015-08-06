@@ -134,10 +134,15 @@ L.LinearFunction = L.Class.extend({
     },
 
     evaluatePercent: function (percent) {
+        return this.getPointAtPercent(percent).y;
+    },
+
+    getPointAtPercent: function (percent) {
         var percentOffset = this._xRange * percent;
         var x = this._minPoint.x + percentOffset;
+        var y = this.evaluate(x);
 
-        return this.evaluate(x);
+        return new L.Point(x, y);
     },
 
     samplePoints: function (count) {

@@ -806,51 +806,68 @@ L.HTMLUtils = {
  * Provides basic animation of numeric properties.  TODO:  Change this to use L.Util.requestAnimFrame
  */
 L.AnimationUtils = {
+    // From:  http://gizma.com/easing/
+    easingFunctions: {
+        linear: function (t,d) {
+            return t / d;
+        },
+        easeIn: function (t, d) {
+            return Math.pow(t / d, 5);
+        },
+        easeOut: function (t, d) {
+            return 1 - Math.pow(1 - (t / d), 5);
+        },
+        easeInOut: function (t, d) {
+            t /= d/2;
+            if (t < 1) return 0.5*Math.pow(t, 4);
+            t -= 2;
+            return -0.5 * (Math.pow(t, 4) - 2);
+        }
+    },
     animate: function (layer, from, to, options) {
-        var delay = options.delay || 0;
-        var frames = options.frames || 30;
         var duration = options.duration || 500;
         var linearFunctions = {};
-        var easeFunction = options.easeFunction || function (step) {
-            return step;
-        };
-        var complete = options.complete;
-        var step = duration / frames;
+        var easing = options.easing || L.AnimationUtils.easingFunctions.linear;
+        var animationEnd = options.animationEnd;
 
         for (var key in from) {
-            if (key != 'color' && key != 'fillColor' && to[key]) {
-                linearFunctions[key] = new L.LinearFunction([0, from[key]], [frames - 1, to[key]]);
+            if (key !== 'color' && key !== 'fillColor' && to[key]) {
+                linearFunctions[key] = new L.LinearFunction([0, from[key]], [1, to[key]]);
             }
-            else if (key == 'color' || key == 'fillColor') {
-                linearFunctions[key] = new L.RGBColorBlendFunction(0, frames - 1, from[key], to[key]);
+            else if ((key === 'color' || key === 'fillColor') && (from[key] !== to[key])) {
+                var fromColor = L.Color.getColor(from[key]);
+                var toColor = L.Color.getColor(to[key]);
+                linearFunctions[key] = new L.RGBColorBlendFunction(0, 1, fromColor.toRGBString(), toColor.toRGBString());
             }
         }
 
         var layerOptions = {};
-
-        var frame = 0;
+        var start = (+new Date());
 
         var updateLayer = function () {
-            for (var key in linearFunctions) {
-                layerOptions[key] = linearFunctions[key].evaluate(frame);
-            }
+            var delta = (+new Date()) - start;
+            var percent = easing(delta, duration);
 
-            layer.options = L.extend({}, layer.options, layerOptions);
-            layer.setStyle(layer.options).redraw();
+            if (percent < 1) {
+                for (var key in linearFunctions) {
+                    layerOptions[key] = linearFunctions[key].evaluate(percent);
+                }
 
-            frame++;
-
-            step = easeFunction(step);
-
-            if (frame < frames) {
-                setTimeout(updateLayer, step);
+                layer.options = L.extend({}, layer.options, layerOptions);
+                layer.setStyle(layer.options).redraw();
+                layer._animId = L.Util.requestAnimFrame(updateLayer);
             }
             else {
-                complete();
+                L.Util.cancelAnimFrame(layer._animId);
+                layer._animId = null;
+
+                if (animationEnd) {
+                    animationEnd();
+                }
             }
         };
 
-        setTimeout(updateLayer, delay);
+        layer._animId = L.Util.requestAnimFrame(updateLayer);
     }
 };
 
@@ -859,6 +876,16 @@ L.AnimationUtils = {
  * These functions will be used to provide backwards compatibility with browsers that don't support hsl
  */
 L.Color = L.Class.extend({
+    statics: {
+        getColor: function (colorDef) {
+            if (colorDef.indexOf('#') > -1 || colorDef.indexOf('rgb') > -1) {
+                return new L.RGBColor(colorDef);
+            }
+            else {
+                return new L.HSLColor(colorDef);
+            }
+        }
+    },
     initialize: function (colorDef) {
         this._rgb = [0, 0, 0];
         this._hsl = [0, 1, 0.5];

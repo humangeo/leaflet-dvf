@@ -151,7 +151,21 @@ $(document).ready(function() {
 
 		options.innerRadius = options.radius/2;
 
-		return new L.RegularPolygonMarker(latlng, options);
+		var marker = new L.RegularPolygonMarker(latlng, options);
+
+        marker.on('click', function () {
+            var radius = Math.random() * 70 + 10;
+            L.AnimationUtils.animate(marker, marker.options, L.extend({}, options, {
+                fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)',
+                radius: radius,
+                innerRadius: radius/2,
+                rotation: Math.random() * 360
+            }), {
+                duration: 1000
+            })
+        });
+
+        return marker;
 	});
 
 	addMarkers('Stars', -4.0, 0.0, 2.0, 5, function (latlng, index) {
@@ -176,7 +190,20 @@ $(document).ready(function() {
 
 		var marker = new L.StarMarker(latlng, options);
 
-		return marker;
+        marker.on('click', function () {
+            var radius = Math.random() * 70 + 10;
+            L.AnimationUtils.animate(marker, marker.options, L.extend({}, options, {
+                fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)',
+                radius: radius,
+                innerRadius: radius/2,
+                rotation: Math.random() * 360
+            }), {
+                duration: 1000,
+                easing: L.AnimationUtils.easingFunctions.easeOut
+            })
+        });
+
+        return marker;
 	});
 
 	addMarkers('Custom SVG', -10.0, 0.0, 2.0, 5, function (latlng, index) {

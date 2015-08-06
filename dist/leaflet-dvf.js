@@ -137,10 +137,15 @@ L.LinearFunction = L.Class.extend({
     },
 
     evaluatePercent: function (percent) {
+        return this.getPointAtPercent(percent).y;
+    },
+
+    getPointAtPercent: function (percent) {
         var percentOffset = this._xRange * percent;
         var x = this._minPoint.x + percentOffset;
+        var y = this.evaluate(x);
 
-        return this.evaluate(x);
+        return new L.Point(x, y);
     },
 
     samplePoints: function (count) {
@@ -1445,51 +1450,68 @@ L.HTMLUtils = {
  * Provides basic animation of numeric properties.  TODO:  Change this to use L.Util.requestAnimFrame
  */
 L.AnimationUtils = {
+    // From:  http://gizma.com/easing/
+    easingFunctions: {
+        linear: function (t,d) {
+            return t / d;
+        },
+        easeIn: function (t, d) {
+            return Math.pow(t / d, 5);
+        },
+        easeOut: function (t, d) {
+            return 1 - Math.pow(1 - (t / d), 5);
+        },
+        easeInOut: function (t, d) {
+            t /= d/2;
+            if (t < 1) return 0.5*Math.pow(t, 4);
+            t -= 2;
+            return -0.5 * (Math.pow(t, 4) - 2);
+        }
+    },
     animate: function (layer, from, to, options) {
-        var delay = options.delay || 0;
-        var frames = options.frames || 30;
         var duration = options.duration || 500;
         var linearFunctions = {};
-        var easeFunction = options.easeFunction || function (step) {
-            return step;
-        };
-        var complete = options.complete;
-        var step = duration / frames;
+        var easing = options.easing || L.AnimationUtils.easingFunctions.linear;
+        var animationEnd = options.animationEnd;
 
         for (var key in from) {
-            if (key != 'color' && key != 'fillColor' && to[key]) {
-                linearFunctions[key] = new L.LinearFunction([0, from[key]], [frames - 1, to[key]]);
+            if (key !== 'color' && key !== 'fillColor' && to[key]) {
+                linearFunctions[key] = new L.LinearFunction([0, from[key]], [1, to[key]]);
             }
-            else if (key == 'color' || key == 'fillColor') {
-                linearFunctions[key] = new L.RGBColorBlendFunction(0, frames - 1, from[key], to[key]);
+            else if ((key === 'color' || key === 'fillColor') && (from[key] !== to[key])) {
+                var fromColor = L.Color.getColor(from[key]);
+                var toColor = L.Color.getColor(to[key]);
+                linearFunctions[key] = new L.RGBColorBlendFunction(0, 1, fromColor.toRGBString(), toColor.toRGBString());
             }
         }
 
         var layerOptions = {};
-
-        var frame = 0;
+        var start = (+new Date());
 
         var updateLayer = function () {
-            for (var key in linearFunctions) {
-                layerOptions[key] = linearFunctions[key].evaluate(frame);
-            }
+            var delta = (+new Date()) - start;
+            var percent = easing(delta, duration);
 
-            layer.options = L.extend({}, layer.options, layerOptions);
-            layer.setStyle(layer.options).redraw();
+            if (percent < 1) {
+                for (var key in linearFunctions) {
+                    layerOptions[key] = linearFunctions[key].evaluate(percent);
+                }
 
-            frame++;
-
-            step = easeFunction(step);
-
-            if (frame < frames) {
-                setTimeout(updateLayer, step);
+                layer.options = L.extend({}, layer.options, layerOptions);
+                layer.setStyle(layer.options).redraw();
+                layer._animId = L.Util.requestAnimFrame(updateLayer);
             }
             else {
-                complete();
+                L.Util.cancelAnimFrame(layer._animId);
+                layer._animId = null;
+
+                if (animationEnd) {
+                    animationEnd();
+                }
             }
         };
 
-        setTimeout(updateLayer, delay);
+        layer._animId = L.Util.requestAnimFrame(updateLayer);
     }
 };
 
@@ -1498,6 +1520,16 @@ L.AnimationUtils = {
  * These functions will be used to provide backwards compatibility with browsers that don't support hsl
  */
 L.Color = L.Class.extend({
+    statics: {
+        getColor: function (colorDef) {
+            if (colorDef.indexOf('#') > -1 || colorDef.indexOf('rgb') > -1) {
+                return new L.RGBColor(colorDef);
+            }
+            else {
+                return new L.HSLColor(colorDef);
+            }
+        }
+    },
     initialize: function (colorDef) {
         this._rgb = [0, 0, 0];
         this._hsl = [0, 1, 0.5];
@@ -2694,7 +2726,7 @@ var PathFunctions = PathFunctions || {
             }
         };
     },
-    _animatePath: function (layer) {
+    animatePath: function (layer) {
         var path = layer._path;
         var length = path.getTotalLength();
         var animationOptions = layer.options.animatePath !== true ? L.extend({}, layer.options.animatePath) : {};
@@ -2735,7 +2767,6 @@ var PathFunctions = PathFunctions || {
         }
     },
 
-    // __addPath: L.SVG.prototype._addPath,
     _addPath: function (layer) {
 
         // this.__addPath(layer);
@@ -2762,16 +2793,10 @@ var PathFunctions = PathFunctions || {
         }
 
         if (layer.options.animatePath) {
-            this._animatePath(layer);
+            this.animatePath(layer);
         }
-        /*
-        if (layer._text && layer._path) {
-            this._container.firstChild.insertBefore(layer._text, layer._path.nextSibling);
-        }
-        */
     },
 
-    // __updatePath: L.SVG.prototype._updatePath,
     _updatePath: function (layer) {
         TextFunctions._updatePath.call(this, layer);
 
@@ -2787,9 +2812,7 @@ var PathFunctions = PathFunctions || {
         }
     },
 
-    // __removePath: L.SVG.prototype._removePath,
     _removePath: function (layer) {
-        // this.__removePath(layer);
 
         TextFunctions._removePath.call(this, layer);
 
@@ -3406,29 +3429,65 @@ var PolylineFunctions = {
         this._index = null;
         return this;
     },
-    _distanceToPoints: function (distance) {
+    _distanceToPoints: function (latlngs, distance) {
         var points = null;
 
-        for (var i = 0, len = this._index.length; i < len - 1; ++i) {
-            if (distance >= this._index[i] && distance < this._index[i + 1]) {
-                points = [this._latlngs[i], this._latlngs[i + 1]];
+        if (distance >= this._totalDistance) {
+            points = [latlngs[latlngs.length - 1], latlngs[latlngs.length - 1]];
+        }
+        else {
+            for (var i = 0, len = this._index.length; i < len - 1; ++i) {
+                if (distance >= this._index[i] && distance < this._index[i + 1]) {
+                    points = [latlngs[i], latlngs[i + 1]];
+                }
             }
         }
 
         return points;
     },
-    _animateLine: function (options) {
-        // Loop through latlngs and create functions that interpolate b/w them
-        var functions = [];
+    _getInterpolator: function (points) {
+        return new L.LinearFunction([points[0].lng, points[0].lat], [points[1].lng, points[1].lat]);
+    },
+    animateLine: function (options) {
+        var duration = options.duration || 1000;
+        var easing = options.easing || L.AnimationUtils.easingFunctions.linear;
+        var animationEnd = options.animationEnd;
+        var start = (+new Date());
+        var me = this;
+
+        this._buildDistanceIndex();
+
+        var timeToDistance = this._totalDistance/duration;
+
         var latlngs = this._latlngs.slice();
+        var animate = function (timestamp) {
+            var elapsedTime = (+new Date()) - start;
+            var distance = elapsedTime * timeToDistance;
+            var points = me._distanceToPoints(latlngs, distance);
+            var index = latlngs.indexOf(points[0]);
+            var interpolator = me._getInterpolator(points);
+            var percent = easing(elapsedTime, duration);
+            var interpolatedPoint = interpolator.getPointAtPercent(percent);
 
-        // Create an index of distance to points
-        for (var i = 0, len = latlngs.length; i < len - 1; ++i) {
-            functions.push(new L.LinearFunction(latlngs[i], latlngs[i - 1]));
-        }
-        var interpolateFunction = new L.PiecewiseFunction(functions);
+            me.setLatLngs(latlngs.slice(0, index + 1).concat(new L.LatLng(interpolatedPoint.y, interpolatedPoint.x)));
 
+            if (percent >= 1) {
+                L.Util.cancelAnimFrame(this._animId);
+                me.trigger('animationComplete');
 
+                if (animationEnd) {
+                    animationEnd();
+                }
+            }
+            else {
+                this._animId = L.Util.requestAnimFrame(animate);
+            }
+
+            interpolator = null;
+            interpolatedPoint = null;
+        };
+
+        this._animId = L.Util.requestAnimFrame(animate);
     }
 };
 
@@ -4136,26 +4195,8 @@ L.SVGMarker = L.Path.extend({
             me._renderer._rootGroup.appendChild(me._path);
             me.addInteractiveTarget(me._path);
 
-            //var children = me._svgEl.childNodes;
-
-            //for (var i = 0, len = children.length; i < len; ++i) {
-            //    me.addInteractiveTarget(children[i]);
-            //    L.DomUtil.addClass(children[i], 'leaflet-interactive');
-            //}
-
             if (me.options.interactive) {
                 L.DomUtil.addClass(me._g, 'leaflet-interactive');
-                //L.DomUtil.addClass(me._svgEl, 'leaflet-interactive');
-                //me.addInteractiveTarget(me._svgEl);
-
-                //var childG = me._svgEl.querySelector('g');
-
-                //if (childG) {
-                //    L.DomUtil.addClass(childG, 'leaflet-interactive');
-                //    me.addInteractiveTarget(childG);
-                //}
-
-                //var children = me._svgEl.childNodes;
 
                 var interact = function (node) {
                     var children = node.children;
@@ -4163,9 +4204,6 @@ L.SVGMarker = L.Path.extend({
                     if (node.id) {
                         node.id = L.stamp(node);
                     }
-
-                    //me.addInteractiveTarget(node);
-                    //L.DomUtil.addClass(node, 'leaflet-interactive');
 
                     if (children) {
                         for (var i = 0, len = children.length; i < len; ++i) {
@@ -4208,23 +4246,6 @@ L.SVGMarker = L.Path.extend({
         var size = options.size || new L.Point(width, height);
 
         var scaleSize = new L.Point(size.x / width, size.y / height);
-
-
-
-        /*
-         if (me.options.interactive) {
-         L.DomUtil.addClass(me._g, 'leaflet-interactive');
-         L.DomUtil.addClass(me._svgEl, 'leaflet-interactive');
-         var pathEls = me._svgEl.getElementsByTagNameNS('http://www.w3.org/2000/svg', 'g');
-
-         for (var i = 0, len = pathEls.length; i < len; ++i) {
-         me.addInteractiveTarget(pathEls[i]);
-         L.DomUtil.addClass(pathEls[i], 'leaflet-interactive');
-         }
-         me.addInteractiveTarget(me._svgEl);
-         }
-         */
-
         var transforms = [];
         var anchor = options.anchor || new L.Point(-size.x / 2, -size.y / 2);
         var x = me._point.x + anchor.x;
@@ -4234,7 +4255,7 @@ L.SVGMarker = L.Path.extend({
         transforms.push('scale(' + scaleSize.x + ' ' + scaleSize.y + ')');
 
         if (me.options.rotation) {
-            transforms.push('rotate(' + options.rotation + ' ' + (width / 2) + ' ' + (height / 2) + ')'); //' ' + -1 * anchor.x + ' ' + -1 * anchor.y + ')');
+            transforms.push('rotate(' + options.rotation + ' ' + (width / 2) + ' ' + (height / 2) + ')');
         }
 
         me._g.setAttribute('transform', transforms.join(' '));
@@ -6061,7 +6082,7 @@ L.DataLayer = L.LayerGroup.extend({
     _recursiveLayerUpdate: function (layer, callee) {
         var me = this;
 
-        if (layer.eachLayer && !(layer instanceof L.FeatureGroup)) {
+        if (layer.eachLayer) {
             layer.eachLayer(function (subLayer) {
                 me._recursiveLayerUpdate(subLayer, callee);
             });
@@ -7594,7 +7615,7 @@ L.arcedFlowLine = function (data, options) {
  * Custom arced polyline implementation.  Draws segments as arcs rather than straight lines.
  */
 L.ArcedPolyline = L.Path.extend({
-    includes: TextFunctions,
+    includes: L.extend({}, TextFunctions, PolylineFunctions),
 
     initialize: function (latlngs, options) {
         L.setOptions(this, options);
@@ -7640,6 +7661,7 @@ L.ArcedPolyline = L.Path.extend({
     setLatLngs: function (latlngs) {
         this._latlngs = latlngs;
         this.redraw();
+        return this;
     },
 
     getLatLngs: function () {

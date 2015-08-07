@@ -1041,8 +1041,6 @@ L.Point.prototype.rotate = function (angle, point) {
  * Draws a Leaflet map marker using SVG rather than an icon, allowing the marker to be dynamically styled
  */
 L.RegularPolygonMarker = L.Path.extend({
-    //includes: TextFunctions,
-
     initialize: function (centerLatLng, options) {
         L.setOptions(this, options);
 

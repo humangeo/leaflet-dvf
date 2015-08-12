@@ -172,7 +172,6 @@ var TextFunctions = TextFunctions || {
 
             this._container.firstChild.insertBefore(layer._text, referencedNode);
         }
-
     }
 };
 
@@ -234,8 +233,6 @@ var PathFunctions = PathFunctions || {
     },
 
     _addPath: function (layer) {
-
-        // this.__addPath(layer);
 
         TextFunctions._addPath.call(this, layer);
 
@@ -311,11 +308,18 @@ var PathFunctions = PathFunctions || {
         layer._markers = layer._markers || {};
         layer._markerPath = layer._markerPath || {};
 
+        /*
         if (layer._markers[type]) {
             this._defs.removeChild(layer._markers[type]);
         }
+        */
 
-        layer._markers[type] = layer._markers[type] || L.SVG.create('marker');
+        if (!layer._markers[type]) {
+            layer._markers[type] = L.SVG.create('marker');
+            this._defs.appendChild(layer._markers[type]);
+        }
+
+        //layer._markers[type] = layer._markers[type] || L.SVG.create('marker');
 
         var markerGuid = L.Util.guid();
 
@@ -330,7 +334,10 @@ var PathFunctions = PathFunctions || {
         layer._markers[type].setAttribute('orient', 'auto');
         layer._markers[type].setAttribute('markerUnits', 'strokeWidth');
 
-        layer._markerPath[type] = L.SVG.create('path');
+        if (!layer._markerPath[type]) {
+            layer._markerPath[type] = L.SVG.create('path');
+            layer._markers[type].appendChild(layer._markerPath[type]);
+        }
 
         if (options.reverse) {
             layer._markerPath[type].setAttribute('d', 'M0,' + exaggeration + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + exaggeration);
@@ -341,9 +348,9 @@ var PathFunctions = PathFunctions || {
 
         layer._markerPath[type].setAttribute('style', 'fill: ' + layer.options.color + '; opacity: ' + layer.options.opacity);
 
-        layer._markers[type].appendChild(layer._markerPath[type]);
 
-        this._defs.appendChild(layer._markers[type]);
+
+        //this._defs.appendChild(layer._markers[type]);
     },
 
     _createGradient: function (layer) {
@@ -402,7 +409,7 @@ var PathFunctions = PathFunctions || {
         }
 
         //L.DomUtil.empty(gradient);
-        var children = gradient.children;
+        var children = gradient.childNodes;
         var childLength = children.length;
 
         for (var i = 0, len = stops.length; i < len; ++i) {
@@ -448,7 +455,7 @@ var PathFunctions = PathFunctions || {
         var feGaussianBlur = filter.querySelector('feGaussianBlur') || L.SVG.create('feGaussianBlur');
         var feBlend = filter.querySelector('feBlend') || L.SVG.create('feBlend');
 
-        var options = layer.options.dropShadow && Object.keys(layer.options.dropShadow).length > 0 ? layer.options.dropShadow : {
+        var options = layer.options.dropShadow && typeof(layer.options.dropShadow) === 'object' && Object.keys(layer.options.dropShadow).length > 0 ? layer.options.dropShadow : {
             width: '200%',
             height: '200%'
         };
@@ -587,19 +594,19 @@ var PathFunctions = PathFunctions || {
         var circleSize = imageOptions.radius || diameter / 2;
 
         var shapeOptions = imageOptions.shape || {
-                circle: {
-                    r: circleSize,
-                    cx: 0,
-                    cy: 0
-                }
-            };
+            circle: {
+                r: circleSize,
+                cx: 0,
+                cy: 0
+            }
+        };
 
         var patternOptions = imageOptions.pattern || {
-                width: imageSize.x,
-                height: imageSize.y,
-                x: 0,
-                y: 0
-            };
+            width: imageSize.x,
+            height: imageSize.y,
+            x: 0,
+            y: 0
+        };
 
         patternOptions.patternUnits = patternOptions.patternUnits || 'objectBoundingBox';
 
@@ -708,7 +715,7 @@ var PathFunctions = PathFunctions || {
             this._defs.appendChild(layer._shapePattern);
         }
         if (layer._shape && layer._path) {
-            this._container.insertBefore(layer._shape, layer._path.nextSibling);
+            this._container.firstChild.insertBefore(layer._shape, layer._path.nextSibling);
         }
 
         if (layer.options.wordCloud) {
@@ -725,7 +732,7 @@ var PathFunctions = PathFunctions || {
 
     _createWordCloudPattern: function (layer) {
         var wordCloudOptions = layer.options.wordCloud || {};
-        var patternGuid = ''; //L.Util.guid();
+        var patternGuid = '';
         var patternOptions = wordCloudOptions.patternOptions || {};
 
         if (!this._defs) {
@@ -905,6 +912,7 @@ var PolylineFunctions = {
             for (var i = 0, len = this._index.length; i < len - 1; ++i) {
                 if (distance >= this._index[i] && distance < this._index[i + 1]) {
                     points = [latlngs[i], latlngs[i + 1]];
+                    break;
                 }
             }
         }
@@ -915,6 +923,7 @@ var PolylineFunctions = {
         return new L.LinearFunction([points[0].lng, points[0].lat], [points[1].lng, points[1].lat]);
     },
     animateLine: function (options) {
+        /*
         var duration = options.duration || 1000;
         var easing = options.easing || L.AnimationUtils.easingFunctions.linear;
         var animationEnd = options.animationEnd;
@@ -954,6 +963,17 @@ var PolylineFunctions = {
         };
 
         this._animId = L.Util.requestAnimFrame(animate);
+        */
+        var updater = function (latlngs) {
+            return function (layer, points, interpolatedPoint) {
+                var index = latlngs.indexOf(points[0]);
+                layer.setLatLngs(latlngs.slice(0, index + 1).concat(new L.LatLng(interpolatedPoint.y, interpolatedPoint.x)));
+            };
+        };
+
+        L.AnimationUtils.animateLine(this, L.extend({}, {
+            update: updater(this._latlngs.slice())
+        }, options));
     }
 };
 
@@ -1412,10 +1432,10 @@ L.MapMarker = L.Path.extend({
 
     projectLatLngs: function () {
         this._point = this._map.latLngToLayerPoint(this._latlng);
-        this._points = this._getPoints();
+        this._points = this._getPoints(this._point, false, this.options);
 
         if (this.options.innerRadius > 0) {
-            this._innerPoints = this._getPoints(true).reverse();
+            this._innerPoints = this._getPoints(this._point, true, this.options).reverse();
         }
     },
 
@@ -1494,29 +1514,31 @@ L.MapMarker = L.Path.extend({
         if (this._path) {
             this._path.setAttribute('shape-rendering', 'geometricPrecision');
         }
+
         return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
 
     getTextAnchor: function () {
-        return new L.Point(this._point.x, this._point.y - 2 * this.options.radius);
+        var anchorPoint = this.options.position ? this._point.add(new L.Point(this.options.position.x, this.options.position.y)) : this._point;
+        return new L.Point(anchorPoint.x, anchorPoint.y - 2 * this.options.radius);
     },
 
-    _getPoints: function (inner) {
+    _getPoints: function (point, inner, options) {
         var maxDegrees = !inner ? 210 : 360;
-        var angleSize = !inner ? maxDegrees / 50 : maxDegrees / Math.max(this.options.numberOfSides, 3);
-        var degrees = !inner ? maxDegrees : maxDegrees + this.options.rotation;
-        var angle = !inner ? -30 : this.options.rotation;
+        var angleSize = !inner ? maxDegrees / 50 : maxDegrees / Math.max(options.numberOfSides, 3);
+        var degrees = !inner ? maxDegrees : maxDegrees + options.rotation;
+        var angle = !inner ? -30 : options.rotation;
         var points = [];
         var newPoint;
         var angleRadians;
-        var radius = this.options.radius;
+        var radius = options.radius;
         var multiplier = Math.sqrt(0.75);
 
         var toRad = function (number) {
             return number * L.LatLng.DEG_TO_RAD;
         };
 
-        var startPoint = this._point;
+        var startPoint = options.position ? point.add(new L.Point(options.position.x, options.position.y)) : point;
 
         if (!inner) {
             points.push(startPoint);
@@ -1529,7 +1551,7 @@ L.MapMarker = L.Path.extend({
 
             // Calculate the point the radius pixels away from the center point at the
             // given angle;
-            newPoint = this._getPoint(angleRadians, radius, inner);
+            newPoint = this._getPoint(startPoint, angleRadians, radius, inner, options);
 
             // Add the point to the latlngs array
             points.push(newPoint);
@@ -1545,12 +1567,12 @@ L.MapMarker = L.Path.extend({
         return points;
     },
 
-    _getPoint: function (angle, radius, inner) {
+    _getPoint: function (point, angle, radius, inner, options) {
         var markerRadius = radius;
 
-        radius = !inner ? radius : this.options.innerRadius;
+        radius = !inner ? radius : options.innerRadius;
 
-        return new L.Point(this._point.x + this.options.position.x + radius * Math.cos(angle), this._point.y - 2 * markerRadius + this.options.position.y - radius * Math.sin(angle));
+        return new L.Point(point.x + radius * Math.cos(angle), point.y - 2 * markerRadius - radius * Math.sin(angle));
     },
 
     _applyCustomStyles: function () {
@@ -1663,7 +1685,7 @@ L.SVGMarker = L.Path.extend({
                 L.DomUtil.addClass(me._g, 'leaflet-interactive');
 
                 var interact = function (node) {
-                    var children = node.children;
+                    var children = node.childNodes;
 
                     if (node.id) {
                         node.id = L.stamp(node);

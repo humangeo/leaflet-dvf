@@ -52,6 +52,7 @@ L.LinearFunction = L.Class.extend({
         this._minPoint = minPoint;
         this._maxPoint = maxPoint;
         this._xRange = maxPoint.x - minPoint.x;
+        this._yRange = maxPoint.y - minPoint.y;
 
         this._calculateParameters(minPoint, maxPoint);
 
@@ -104,7 +105,7 @@ L.LinearFunction = L.Class.extend({
         y = Number((this._slope * x).toFixed(6)) + Number(this._b.toFixed(6));
 
         if (this._postProcess) {
-            y = this._postProcess(y);
+            y = this._postProcess(y, x);
         }
 
         return y;
@@ -138,9 +139,10 @@ L.LinearFunction = L.Class.extend({
     },
 
     getPointAtPercent: function (percent) {
-        var percentOffset = this._xRange * percent;
-        var x = this._minPoint.x + percentOffset;
-        var y = this.evaluate(x);
+        var percentOffsetX = this._xRange * percent;
+        var percentOffsetY = this._yRange * percent;
+        var x = this._minPoint.x + percentOffsetX;
+        var y = this._minPoint.y + percentOffsetY;
 
         return new L.Point(x, y);
     },
@@ -536,7 +538,7 @@ L.PiecewiseFunction = L.LinearFunction.extend({
             y = currentFunction.evaluate(x);
 
             if (this._postProcess) {
-                y = this._postProcess(y);
+                y = this._postProcess(y, x);
             }
         }
 
@@ -626,7 +628,7 @@ L.CategoryFunction = L.Class.extend({
         y = this._categoryMap[x];
 
         if (this._postProcess) {
-            y = this._postProcess(y);
+            y = this._postProcess(y, x);
         }
 
         return y;

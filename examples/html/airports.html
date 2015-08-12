@@ -288,10 +288,9 @@
                 layer.bindPopup($(L.HTMLUtils.buildTable(record)).wrap('<div/>').parent().html());
 
                 location.location.animateLine({
-                    duration: 3000,
+                    duration: Math.random() * 5000 + 500,
                     easing: L.AnimationUtils.easingFunctions.easeOut
                 });
-
             }
         };
 

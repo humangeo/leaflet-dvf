@@ -824,20 +824,32 @@ L.AnimationUtils = {
             return -0.5 * (Math.pow(t, 4) - 2);
         }
     },
-    animate: function (layer, from, to, options) {
+    animate: function (layer, options) {
+        var from = options.from || {};
+        var to = options.to || {};
         var duration = options.duration || 500;
         var linearFunctions = {};
         var easing = options.easing || L.AnimationUtils.easingFunctions.linear;
         var animationEnd = options.animationEnd;
 
         for (var key in from) {
-            if (key !== 'color' && key !== 'fillColor' && to[key]) {
+            if (key !== 'color' && key !== 'fillColor' && key !== 'position' && to[key]) {
                 linearFunctions[key] = new L.LinearFunction([0, from[key]], [1, to[key]]);
             }
             else if ((key === 'color' || key === 'fillColor') && (from[key] !== to[key])) {
                 var fromColor = L.Color.getColor(from[key]);
                 var toColor = L.Color.getColor(to[key]);
                 linearFunctions[key] = new L.RGBColorBlendFunction(0, 1, fromColor.toRGBString(), toColor.toRGBString());
+            }
+            else if (key === 'position' && to[key]) {
+                linearFunctions[key] = new L.LinearFunction([from[key].x, from[key].y], [to[key].x, to[key].y], {
+                    postProcess: function (y, x) {
+                        return {
+                            x: x,
+                            y: y
+                        };
+                    }
+                });
             }
         }
 
@@ -868,6 +880,123 @@ L.AnimationUtils = {
         };
 
         layer._animId = L.Util.requestAnimFrame(updateLayer);
+    },
+    buildDistanceIndex: function (latlngs) {
+        var index = {};
+        var total = 0.0;
+
+        index.index = [0.0];
+
+        for (var i = 0, len = latlngs.length; i < len - 1; ++i) {
+            total += latlngs[i].distanceTo(latlngs[i + 1]);
+            index.index.push(total);
+        }
+
+        index.totalDistance = total;
+        return index;
+    },
+    distanceToPoints: function (latlngs, index, distance, lastIndex) {
+        var points = null;
+        var info = {};
+
+        if (distance >= index.totalDistance) {
+            info.distances = [index.totalDistance, index.totalDistance];
+            info.points = [latlngs[latlngs.length - 1], latlngs[latlngs.length - 1]];
+            info.index = latlngs.length - 1;
+        }
+        else {
+            for (var i = lastIndex, len = index.index.length; i < len - 1; ++i) {
+                if (distance >= index.index[i] && distance < index.index[i + 1]) {
+                    info.distances = [index.index[i], index.index[i + 1]];
+                    info.points = [latlngs[i], latlngs[i + 1]];
+                    info.index = i;
+                    break;
+                }
+            }
+        }
+
+        return info;
+    },
+    getInterpolator: function (points) {
+        return new L.LinearFunction([points[0].lng, points[0].lat], [points[1].lng, points[1].lat]);
+    },
+    animateLine: function (layer, options) {
+        var from = options.from || {};
+        var to = options.to || {};
+        var path = options.path || layer._latlngs || [];
+        var duration = options.duration || 1000;
+        var easing = options.easing || L.AnimationUtils.easingFunctions.linear;
+        var animationEnd = options.animationEnd;
+        var start = (+new Date());
+        var me = this;
+        var styleFunctions = {};
+        var distanceIndex = this.buildDistanceIndex(path);
+        var timeToDistance = distanceIndex.totalDistance/duration;
+        var update = options.update || function (layer, points, interpolatedPoint) {
+            layer.setLatLng(new L.LatLng(interpolatedPoint.y, interpolatedPoint.x));
+        };
+
+        for (var key in from) {
+            if (key !== 'color' && key !== 'fillColor' && key !== 'position' && to[key]) {
+                styleFunctions[key] = new L.LinearFunction([0, from[key]], [1, to[key]]);
+            }
+            else if ((key === 'color' || key === 'fillColor') && (from[key] !== to[key])) {
+                var fromColor = L.Color.getColor(from[key]);
+                var toColor = L.Color.getColor(to[key]);
+                styleFunctions[key] = new L.RGBColorBlendFunction(0, 1, fromColor.toRGBString(), toColor.toRGBString());
+            }
+            else if (key === 'position' && to[key]) {
+                styleFunctions[key] = new L.LinearFunction([from[key].x, from[key].y], [to[key].x, to[key].y], {
+                    postProcess: function (y, x) {
+                        return {
+                            x: x,
+                            y: y
+                        };
+                    }
+                });
+            }
+        }
+
+        var lastIndex = 0;
+
+        var animate = function (timestamp) {
+            var elapsedTime = (+new Date()) - start;
+            var distance = elapsedTime * timeToDistance;
+            var info = me.distanceToPoints(path, distanceIndex, distance, lastIndex);
+            var pointPercent = info.distances[0]/distanceIndex.totalDistance;
+            var pointPercent1 = info.distances[1]/distanceIndex.totalDistance;
+            var interpolator = me.getInterpolator(info.points);
+            var percent = easing(elapsedTime, duration);
+            var relativePercent = (percent - pointPercent)/((pointPercent1 - pointPercent) || 1);
+            var interpolatedPoint = interpolator.getPointAtPercent(relativePercent);
+            var layerOptions = {};
+
+            update(layer, info.points, interpolatedPoint);
+
+            lastIndex = info.index;
+
+            if (percent >= 1) {
+                L.Util.cancelAnimFrame(layer._animId);
+
+                if (animationEnd) {
+                    animationEnd();
+                }
+            }
+            else {
+                for (var key in styleFunctions) {
+                    layerOptions[key] = styleFunctions[key].evaluate(percent);
+                }
+
+                layer.options = L.extend({}, layer.options, layerOptions);
+                layer.setStyle(layer.options);
+                layer._animId = L.Util.requestAnimFrame(animate);
+            }
+
+            interpolator = null;
+            interpolatedPoint = null;
+        };
+
+        layer._animId = L.Util.requestAnimFrame(animate);
     }
 };
 

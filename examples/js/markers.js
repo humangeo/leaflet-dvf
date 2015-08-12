@@ -155,14 +155,41 @@ $(document).ready(function() {
 
         marker.on('click', function () {
             var radius = Math.random() * 70 + 10;
-            L.AnimationUtils.animate(marker, marker.options, L.extend({}, options, {
-                fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)',
-                radius: radius,
-                innerRadius: radius/2,
-                rotation: Math.random() * 360
-            }), {
-                duration: 1000
-            })
+
+            /*
+            var regPolygon = new L.RegularPolygon(new L.LatLng(0, 0), {
+                radius: Math.random() * 200000 + 1000000,
+                fill: false,
+                opacity: 0.5,
+                numberOfSides: 500
+            });
+
+            map.addLayer(regPolygon);
+
+            L.AnimationUtils.animateLine(marker, {
+                path: regPolygon._getLatLngs(),
+                from: marker.options,
+                to: L.extend({}, options, {
+                    fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)',
+                    radius: radius,
+                    innerRadius: radius/2,
+                    rotation: Math.random() * 360
+                }),
+                duration: 10000
+            });
+            */
+
+            L.AnimationUtils.animate(marker, {
+                duration: 1000,
+                easing: L.AnimationUtils.easingFunctions.easeOut,
+                from: marker.options,
+                to: L.extend({}, options, {
+                    fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)',
+                    radius: radius,
+                    innerRadius: radius/2,
+                    rotation: Math.random() * 360
+                })
+            });
         });
 
         return marker;
@@ -192,15 +219,18 @@ $(document).ready(function() {
 
         marker.on('click', function () {
             var radius = Math.random() * 70 + 10;
-            L.AnimationUtils.animate(marker, marker.options, L.extend({}, options, {
-                fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)',
-                radius: radius,
-                innerRadius: radius/2,
-                rotation: Math.random() * 360
-            }), {
+
+            L.AnimationUtils.animate(marker, {
                 duration: 1000,
-                easing: L.AnimationUtils.easingFunctions.easeOut
-            })
+                easing: L.AnimationUtils.easingFunctions.easeOut,
+                from: marker.options,
+                to: L.extend({}, options, {
+                    fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)',
+                    radius: radius,
+                    innerRadius: radius/2,
+                    rotation: Math.random() * 360
+                })
+            });
         });
 
         return marker;
@@ -374,10 +404,6 @@ $(document).ready(function() {
 			fillColor: 'hsl(' + colorValue + ',100%,50%)',
 			fillOpacity: 0.7,
 			rotation: 0.0,
-			position: {
-				x: 0,
-				y: 0
-			},
 			offset: 0,
 			radius: (Math.random() * 30) + 5,
 			innerRadius: 0
@@ -441,7 +467,21 @@ $(document).ready(function() {
 		};
 		*/
 
-		return new L.MapMarker(latlng, options);
+        var marker = new L.MapMarker(latlng, options);
+
+        marker.on('click', function () {
+            L.AnimationUtils.animate(marker, {
+                duration: 1000,
+                easing: L.AnimationUtils.easingFunctions.easeOut,
+                from: marker.options,
+                to: L.extend({}, options, {
+                    fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)',
+                    radius: Math.floor(Math.random() * 50 + 20)
+                })
+            });
+        });
+
+		return marker;
 	});
 
 	addMarkers('Radial Meter Markers', -8.0, 0.0, 2.0, 5, function (latlng, index) {

@@ -55,6 +55,7 @@ L.LinearFunction = L.Class.extend({
         this._minPoint = minPoint;
         this._maxPoint = maxPoint;
         this._xRange = maxPoint.x - minPoint.x;
+        this._yRange = maxPoint.y - minPoint.y;
 
         this._calculateParameters(minPoint, maxPoint);
 
@@ -107,7 +108,7 @@ L.LinearFunction = L.Class.extend({
         y = Number((this._slope * x).toFixed(6)) + Number(this._b.toFixed(6));
 
         if (this._postProcess) {
-            y = this._postProcess(y);
+            y = this._postProcess(y, x);
         }
 
         return y;
@@ -141,9 +142,10 @@ L.LinearFunction = L.Class.extend({
     },
 
     getPointAtPercent: function (percent) {
-        var percentOffset = this._xRange * percent;
-        var x = this._minPoint.x + percentOffset;
-        var y = this.evaluate(x);
+        var percentOffsetX = this._xRange * percent;
+        var percentOffsetY = this._yRange * percent;
+        var x = this._minPoint.x + percentOffsetX;
+        var y = this._minPoint.y + percentOffsetY;
 
         return new L.Point(x, y);
     },
@@ -539,7 +541,7 @@ L.PiecewiseFunction = L.LinearFunction.extend({
             y = currentFunction.evaluate(x);
 
             if (this._postProcess) {
-                y = this._postProcess(y);
+                y = this._postProcess(y, x);
             }
         }
 
@@ -629,7 +631,7 @@ L.CategoryFunction = L.Class.extend({
         y = this._categoryMap[x];
 
         if (this._postProcess) {
-            y = this._postProcess(y);
+            y = this._postProcess(y, x);
         }
 
         return y;
@@ -1468,20 +1470,32 @@ L.AnimationUtils = {
             return -0.5 * (Math.pow(t, 4) - 2);
         }
     },
-    animate: function (layer, from, to, options) {
+    animate: function (layer, options) {
+        var from = options.from || {};
+        var to = options.to || {};
         var duration = options.duration || 500;
         var linearFunctions = {};
         var easing = options.easing || L.AnimationUtils.easingFunctions.linear;
         var animationEnd = options.animationEnd;
 
         for (var key in from) {
-            if (key !== 'color' && key !== 'fillColor' && to[key]) {
+            if (key !== 'color' && key !== 'fillColor' && key !== 'position' && to[key]) {
                 linearFunctions[key] = new L.LinearFunction([0, from[key]], [1, to[key]]);
             }
             else if ((key === 'color' || key === 'fillColor') && (from[key] !== to[key])) {
                 var fromColor = L.Color.getColor(from[key]);
                 var toColor = L.Color.getColor(to[key]);
                 linearFunctions[key] = new L.RGBColorBlendFunction(0, 1, fromColor.toRGBString(), toColor.toRGBString());
+            }
+            else if (key === 'position' && to[key]) {
+                linearFunctions[key] = new L.LinearFunction([from[key].x, from[key].y], [to[key].x, to[key].y], {
+                    postProcess: function (y, x) {
+                        return {
+                            x: x,
+                            y: y
+                        };
+                    }
+                });
             }
         }
 
@@ -1512,6 +1526,123 @@ L.AnimationUtils = {
         };
 
         layer._animId = L.Util.requestAnimFrame(updateLayer);
+    },
+    buildDistanceIndex: function (latlngs) {
+        var index = {};
+        var total = 0.0;
+
+        index.index = [0.0];
+
+        for (var i = 0, len = latlngs.length; i < len - 1; ++i) {
+            total += latlngs[i].distanceTo(latlngs[i + 1]);
+            index.index.push(total);
+        }
+
+        index.totalDistance = total;
+        return index;
+    },
+    distanceToPoints: function (latlngs, index, distance, lastIndex) {
+        var points = null;
+        var info = {};
+
+        if (distance >= index.totalDistance) {
+            info.distances = [index.totalDistance, index.totalDistance];
+            info.points = [latlngs[latlngs.length - 1], latlngs[latlngs.length - 1]];
+            info.index = latlngs.length - 1;
+        }
+        else {
+            for (var i = lastIndex, len = index.index.length; i < len - 1; ++i) {
+                if (distance >= index.index[i] && distance < index.index[i + 1]) {
+                    info.distances = [index.index[i], index.index[i + 1]];
+                    info.points = [latlngs[i], latlngs[i + 1]];
+                    info.index = i;
+                    break;
+                }
+            }
+        }
+
+        return info;
+    },
+    getInterpolator: function (points) {
+        return new L.LinearFunction([points[0].lng, points[0].lat], [points[1].lng, points[1].lat]);
+    },
+    animateLine: function (layer, options) {
+        var from = options.from || {};
+        var to = options.to || {};
+        var path = options.path || layer._latlngs || [];
+        var duration = options.duration || 1000;
+        var easing = options.easing || L.AnimationUtils.easingFunctions.linear;
+        var animationEnd = options.animationEnd;
+        var start = (+new Date());
+        var me = this;
+        var styleFunctions = {};
+        var distanceIndex = this.buildDistanceIndex(path);
+        var timeToDistance = distanceIndex.totalDistance/duration;
+        var update = options.update || function (layer, points, interpolatedPoint) {
+            layer.setLatLng(new L.LatLng(interpolatedPoint.y, interpolatedPoint.x));
+        };
+
+        for (var key in from) {
+            if (key !== 'color' && key !== 'fillColor' && key !== 'position' && to[key]) {
+                styleFunctions[key] = new L.LinearFunction([0, from[key]], [1, to[key]]);
+            }
+            else if ((key === 'color' || key === 'fillColor') && (from[key] !== to[key])) {
+                var fromColor = L.Color.getColor(from[key]);
+                var toColor = L.Color.getColor(to[key]);
+                styleFunctions[key] = new L.RGBColorBlendFunction(0, 1, fromColor.toRGBString(), toColor.toRGBString());
+            }
+            else if (key === 'position' && to[key]) {
+                styleFunctions[key] = new L.LinearFunction([from[key].x, from[key].y], [to[key].x, to[key].y], {
+                    postProcess: function (y, x) {
+                        return {
+                            x: x,
+                            y: y
+                        };
+                    }
+                });
+            }
+        }
+
+        var lastIndex = 0;
+
+        var animate = function (timestamp) {
+            var elapsedTime = (+new Date()) - start;
+            var distance = elapsedTime * timeToDistance;
+            var info = me.distanceToPoints(path, distanceIndex, distance, lastIndex);
+            var pointPercent = info.distances[0]/distanceIndex.totalDistance;
+            var pointPercent1 = info.distances[1]/distanceIndex.totalDistance;
+            var interpolator = me.getInterpolator(info.points);
+            var percent = easing(elapsedTime, duration);
+            var relativePercent = (percent - pointPercent)/((pointPercent1 - pointPercent) || 1);
+            var interpolatedPoint = interpolator.getPointAtPercent(relativePercent);
+            var layerOptions = {};
+
+            update(layer, info.points, interpolatedPoint);
+
+            lastIndex = info.index;
+
+            if (percent >= 1) {
+                L.Util.cancelAnimFrame(layer._animId);
+
+                if (animationEnd) {
+                    animationEnd();
+                }
+            }
+            else {
+                for (var key in styleFunctions) {
+                    layerOptions[key] = styleFunctions[key].evaluate(percent);
+                }
+
+                layer.options = L.extend({}, layer.options, layerOptions);
+                layer.setStyle(layer.options);
+                layer._animId = L.Util.requestAnimFrame(animate);
+            }
+
+            interpolator = null;
+            interpolatedPoint = null;
+        };
+
+        layer._animId = L.Util.requestAnimFrame(animate);
     }
 };
 
@@ -2706,7 +2837,6 @@ var TextFunctions = TextFunctions || {
 
             this._container.firstChild.insertBefore(layer._text, referencedNode);
         }
-
     }
 };
 
@@ -2768,8 +2898,6 @@ var PathFunctions = PathFunctions || {
     },
 
     _addPath: function (layer) {
-
-        // this.__addPath(layer);
 
         TextFunctions._addPath.call(this, layer);
 
@@ -2845,11 +2973,18 @@ var PathFunctions = PathFunctions || {
         layer._markers = layer._markers || {};
         layer._markerPath = layer._markerPath || {};
 
+        /*
         if (layer._markers[type]) {
             this._defs.removeChild(layer._markers[type]);
         }
+        */
 
-        layer._markers[type] = layer._markers[type] || L.SVG.create('marker');
+        if (!layer._markers[type]) {
+            layer._markers[type] = L.SVG.create('marker');
+            this._defs.appendChild(layer._markers[type]);
+        }
+
+        //layer._markers[type] = layer._markers[type] || L.SVG.create('marker');
 
         var markerGuid = L.Util.guid();
 
@@ -2864,7 +2999,10 @@ var PathFunctions = PathFunctions || {
         layer._markers[type].setAttribute('orient', 'auto');
         layer._markers[type].setAttribute('markerUnits', 'strokeWidth');
 
-        layer._markerPath[type] = L.SVG.create('path');
+        if (!layer._markerPath[type]) {
+            layer._markerPath[type] = L.SVG.create('path');
+            layer._markers[type].appendChild(layer._markerPath[type]);
+        }
 
         if (options.reverse) {
             layer._markerPath[type].setAttribute('d', 'M0,' + exaggeration + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + exaggeration);
@@ -2875,9 +3013,9 @@ var PathFunctions = PathFunctions || {
 
         layer._markerPath[type].setAttribute('style', 'fill: ' + layer.options.color + '; opacity: ' + layer.options.opacity);
 
-        layer._markers[type].appendChild(layer._markerPath[type]);
 
-        this._defs.appendChild(layer._markers[type]);
+
+        //this._defs.appendChild(layer._markers[type]);
     },
 
     _createGradient: function (layer) {
@@ -2936,7 +3074,7 @@ var PathFunctions = PathFunctions || {
         }
 
         //L.DomUtil.empty(gradient);
-        var children = gradient.children;
+        var children = gradient.childNodes;
         var childLength = children.length;
 
         for (var i = 0, len = stops.length; i < len; ++i) {
@@ -2982,7 +3120,7 @@ var PathFunctions = PathFunctions || {
         var feGaussianBlur = filter.querySelector('feGaussianBlur') || L.SVG.create('feGaussianBlur');
         var feBlend = filter.querySelector('feBlend') || L.SVG.create('feBlend');
 
-        var options = layer.options.dropShadow && Object.keys(layer.options.dropShadow).length > 0 ? layer.options.dropShadow : {
+        var options = layer.options.dropShadow && typeof(layer.options.dropShadow) === 'object' && Object.keys(layer.options.dropShadow).length > 0 ? layer.options.dropShadow : {
             width: '200%',
             height: '200%'
         };
@@ -3121,19 +3259,19 @@ var PathFunctions = PathFunctions || {
         var circleSize = imageOptions.radius || diameter / 2;
 
         var shapeOptions = imageOptions.shape || {
-                circle: {
-                    r: circleSize,
-                    cx: 0,
-                    cy: 0
-                }
-            };
+            circle: {
+                r: circleSize,
+                cx: 0,
+                cy: 0
+            }
+        };
 
         var patternOptions = imageOptions.pattern || {
-                width: imageSize.x,
-                height: imageSize.y,
-                x: 0,
-                y: 0
-            };
+            width: imageSize.x,
+            height: imageSize.y,
+            x: 0,
+            y: 0
+        };
 
         patternOptions.patternUnits = patternOptions.patternUnits || 'objectBoundingBox';
 
@@ -3242,7 +3380,7 @@ var PathFunctions = PathFunctions || {
             this._defs.appendChild(layer._shapePattern);
         }
         if (layer._shape && layer._path) {
-            this._container.insertBefore(layer._shape, layer._path.nextSibling);
+            this._container.firstChild.insertBefore(layer._shape, layer._path.nextSibling);
         }
 
         if (layer.options.wordCloud) {
@@ -3259,7 +3397,7 @@ var PathFunctions = PathFunctions || {
 
     _createWordCloudPattern: function (layer) {
         var wordCloudOptions = layer.options.wordCloud || {};
-        var patternGuid = ''; //L.Util.guid();
+        var patternGuid = '';
         var patternOptions = wordCloudOptions.patternOptions || {};
 
         if (!this._defs) {
@@ -3439,6 +3577,7 @@ var PolylineFunctions = {
             for (var i = 0, len = this._index.length; i < len - 1; ++i) {
                 if (distance >= this._index[i] && distance < this._index[i + 1]) {
                     points = [latlngs[i], latlngs[i + 1]];
+                    break;
                 }
             }
         }
@@ -3449,6 +3588,7 @@ var PolylineFunctions = {
         return new L.LinearFunction([points[0].lng, points[0].lat], [points[1].lng, points[1].lat]);
     },
     animateLine: function (options) {
+        /*
         var duration = options.duration || 1000;
         var easing = options.easing || L.AnimationUtils.easingFunctions.linear;
         var animationEnd = options.animationEnd;
@@ -3488,6 +3628,17 @@ var PolylineFunctions = {
         };
 
         this._animId = L.Util.requestAnimFrame(animate);
+        */
+        var updater = function (latlngs) {
+            return function (layer, points, interpolatedPoint) {
+                var index = latlngs.indexOf(points[0]);
+                layer.setLatLngs(latlngs.slice(0, index + 1).concat(new L.LatLng(interpolatedPoint.y, interpolatedPoint.x)));
+            };
+        };
+
+        L.AnimationUtils.animateLine(this, L.extend({}, {
+            update: updater(this._latlngs.slice())
+        }, options));
     }
 };
 
@@ -3575,8 +3726,6 @@ L.Point.prototype.rotate = function (angle, point) {
  * Draws a Leaflet map marker using SVG rather than an icon, allowing the marker to be dynamically styled
  */
 L.RegularPolygonMarker = L.Path.extend({
-    //includes: TextFunctions,
-
     initialize: function (centerLatLng, options) {
         L.setOptions(this, options);
 
@@ -3948,10 +4097,10 @@ L.MapMarker = L.Path.extend({
 
     projectLatLngs: function () {
         this._point = this._map.latLngToLayerPoint(this._latlng);
-        this._points = this._getPoints();
+        this._points = this._getPoints(this._point, false, this.options);
 
         if (this.options.innerRadius > 0) {
-            this._innerPoints = this._getPoints(true).reverse();
+            this._innerPoints = this._getPoints(this._point, true, this.options).reverse();
         }
     },
 
@@ -4030,29 +4179,31 @@ L.MapMarker = L.Path.extend({
         if (this._path) {
             this._path.setAttribute('shape-rendering', 'geometricPrecision');
         }
+
         return new L.SVGPathBuilder(this._points, this._innerPoints).build(6);
     },
 
     getTextAnchor: function () {
-        return new L.Point(this._point.x, this._point.y - 2 * this.options.radius);
+        var anchorPoint = this.options.position ? this._point.add(new L.Point(this.options.position.x, this.options.position.y)) : this._point;
+        return new L.Point(anchorPoint.x, anchorPoint.y - 2 * this.options.radius);
     },
 
-    _getPoints: function (inner) {
+    _getPoints: function (point, inner, options) {
         var maxDegrees = !inner ? 210 : 360;
-        var angleSize = !inner ? maxDegrees / 50 : maxDegrees / Math.max(this.options.numberOfSides, 3);
-        var degrees = !inner ? maxDegrees : maxDegrees + this.options.rotation;
-        var angle = !inner ? -30 : this.options.rotation;
+        var angleSize = !inner ? maxDegrees / 50 : maxDegrees / Math.max(options.numberOfSides, 3);
+        var degrees = !inner ? maxDegrees : maxDegrees + options.rotation;
+        var angle = !inner ? -30 : options.rotation;
         var points = [];
         var newPoint;
         var angleRadians;
-        var radius = this.options.radius;
+        var radius = options.radius;
         var multiplier = Math.sqrt(0.75);
 
         var toRad = function (number) {
             return number * L.LatLng.DEG_TO_RAD;
         };
 
-        var startPoint = this._point;
+        var startPoint = options.position ? point.add(new L.Point(options.position.x, options.position.y)) : point;
 
         if (!inner) {
             points.push(startPoint);
@@ -4065,7 +4216,7 @@ L.MapMarker = L.Path.extend({
 
             // Calculate the point the radius pixels away from the center point at the
             // given angle;
-            newPoint = this._getPoint(angleRadians, radius, inner);
+            newPoint = this._getPoint(startPoint, angleRadians, radius, inner, options);
 
             // Add the point to the latlngs array
             points.push(newPoint);
@@ -4081,12 +4232,12 @@ L.MapMarker = L.Path.extend({
         return points;
     },
 
-    _getPoint: function (angle, radius, inner) {
+    _getPoint: function (point, angle, radius, inner, options) {
         var markerRadius = radius;
 
-        radius = !inner ? radius : this.options.innerRadius;
+        radius = !inner ? radius : options.innerRadius;
 
-        return new L.Point(this._point.x + this.options.position.x + radius * Math.cos(angle), this._point.y - 2 * markerRadius + this.options.position.y - radius * Math.sin(angle));
+        return new L.Point(point.x + radius * Math.cos(angle), point.y - 2 * markerRadius - radius * Math.sin(angle));
     },
 
     _applyCustomStyles: function () {
@@ -4199,7 +4350,7 @@ L.SVGMarker = L.Path.extend({
                 L.DomUtil.addClass(me._g, 'leaflet-interactive');
 
                 var interact = function (node) {
-                    var children = node.children;
+                    var children = node.childNodes;
 
                     if (node.id) {
                         node.id = L.stamp(node);

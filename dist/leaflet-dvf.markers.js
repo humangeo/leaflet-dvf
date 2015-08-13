@@ -2954,7 +2954,7 @@ var PathFunctions = PathFunctions || {
         }
 
         var children = gradient.childNodes;
-        var childLength = children.length;
+        var childLength = children ? children.length : 0;
 
         for (var i = 0, len = stops.length; i < len; ++i) {
             var stop = stops[i];

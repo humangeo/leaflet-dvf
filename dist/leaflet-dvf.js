@@ -3059,7 +3059,7 @@ var PathFunctions = PathFunctions || {
         }
 
         var children = gradient.childNodes;
-        var childLength = children.length;
+        var childLength = children ? children.length : 0;
 
         for (var i = 0, len = stops.length; i < len; ++i) {
             var stop = stops[i];
@@ -7045,14 +7045,14 @@ L.ChartDataLayer = L.DataLayer.extend({
         var marker;
 
         if (latLng) {
-            marker = this._getMarker(latLng, options);
+            marker = this._getMarker(latLng, options, record);
             marker.boundaryLayer = boundaryLayer;
         }
 
         return marker;
     },
 
-    _getMarker: function (latLng, options) {
+    _getMarker: function (latLng, options, record) {
         // Override this in inheriting classes
     },
 
@@ -7074,7 +7074,7 @@ L.BarChartDataLayer = L.ChartDataLayer.extend({
         L.ChartDataLayer.prototype.initialize.call(this, data, options);
     },
 
-    _getMarker: function (latLng, options) {
+    _getMarker: function (latLng, options, record) {
         return new L.BarChartMarker(latLng, options);
     }
 });
@@ -7091,7 +7091,7 @@ L.RadialBarChartDataLayer = L.ChartDataLayer.extend({
         L.ChartDataLayer.prototype.initialize.call(this, data, options);
     },
 
-    _getMarker: function (latLng, options) {
+    _getMarker: function (latLng, options, record) {
         return new L.RadialBarChartMarker(latLng, options);
     }
 });
@@ -7108,7 +7108,7 @@ L.PieChartDataLayer = L.ChartDataLayer.extend({
         L.ChartDataLayer.prototype.initialize.call(this, data, options);
     },
 
-    _getMarker: function (latLng, options) {
+    _getMarker: function (latLng, options, record) {
         return new L.PieChartMarker(latLng, options);
     }
 });
@@ -7125,7 +7125,7 @@ L.CoxcombChartDataLayer = L.ChartDataLayer.extend({
         L.ChartDataLayer.prototype.initialize.call(this, data, options);
     },
 
-    _getMarker: function (latLng, options) {
+    _getMarker: function (latLng, options, record) {
         return new L.CoxcombChartMarker(latLng, options);
     }
 });
@@ -7142,7 +7142,7 @@ L.StackedRegularPolygonDataLayer = L.ChartDataLayer.extend({
         L.ChartDataLayer.prototype.initialize.call(this, data, options);
     },
 
-    _getMarker: function (latLng, options) {
+    _getMarker: function (latLng, options, record) {
         return new L.StackedRegularPolygonMarker(latLng, options);
     }
 });
@@ -7159,7 +7159,7 @@ L.StackedPieChartDataLayer = L.ChartDataLayer.extend({
         L.ChartDataLayer.prototype.initialize.call(this, data, options);
     },
 
-    _getMarker: function (latLng, options) {
+    _getMarker: function (latLng, options, record) {
         return new L.StackedPieChartMarker(latLng, options);
     }
 });
@@ -7181,7 +7181,7 @@ L.RadialMeterMarkerDataLayer = L.DataLayer.extend({
     },
 
     _getLayer: function (latLng, layerOptions, record) {
-        this._addBoundary(latLng, layerOptions);
+        this._addBoundary(latLng, layerOptions, record);
 
         latLng = this._processLocation(latLng);
 
@@ -7207,13 +7207,13 @@ L.RadialMeterMarkerDataLayer = L.DataLayer.extend({
         var marker;
 
         if (latLng) {
-            marker = this._getMarker(latLng, options);
+            marker = this._getMarker(latLng, options, record);
         }
 
         return marker;
     },
 
-    _getMarker: function (latLng, options) {
+    _getMarker: function (latLng, options, record) {
         return new L.RadialMeterMarker(latLng, options);
     }
 });

@@ -258,7 +258,7 @@ $(document).ready(function() {
 		options.innerRadius = options.radius/2;
 
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/8/8b/Globe_font_awesome.svg';
-		options.svg = 'http://upload.wikimedia.org/wikipedia/commons/8/8b/Green_Arrow_Up_Darker.svg';
+		options.svg = '../img/greenarrow.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/c/c2/F_icon.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/43/Feed-icon.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/48/Location_indicator_icon.svg';
@@ -342,7 +342,7 @@ $(document).ready(function() {
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/c/c2/F_icon.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/43/Feed-icon.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/48/Location_indicator_icon.svg';
-		options.svg = 'http://upload.wikimedia.org/wikipedia/commons/0/05/Robot_icon.svg';
+		options.svg = '../img/robot.svg';
 
 		var width = Math.max(40, Math.random() * 100);
 		options.size = new L.Point(width, width);
@@ -355,10 +355,6 @@ $(document).ready(function() {
 		// items in the SVG image dynamically
 		var styleFunction = function (color) {
 			return function (svg) {
-				//$svg.find('#Blue_1_').css('fill', color);
-				//$svg.find('path, circle').css('fill', color);
-				//$svg.find('#path4941').css('fill', color);
-				//$svg.find('path').css('stroke', color);
                 var $eye1 = $(svg).find('path:first');
 
                 $eye1.attr('transform', $eye1.attr('transform').replace(/ scale\(1\.2,1\.2\)/gi,''));

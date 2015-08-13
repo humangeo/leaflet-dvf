@@ -2726,7 +2726,6 @@ var TextFunctions = TextFunctions || {
             L.DomUtil.setStyle(layer._text, options.style);
         }
 
-        //this._container.appendChild(layer._text);
         if (layer._path) {
             var referencedNode = layer._path.nextSibling;
 
@@ -2868,18 +2867,10 @@ var PathFunctions = PathFunctions || {
         layer._markers = layer._markers || {};
         layer._markerPath = layer._markerPath || {};
 
-        /*
-        if (layer._markers[type]) {
-            this._defs.removeChild(layer._markers[type]);
-        }
-        */
-
         if (!layer._markers[type]) {
             layer._markers[type] = L.SVG.create('marker');
             this._defs.appendChild(layer._markers[type]);
         }
-
-        //layer._markers[type] = layer._markers[type] || L.SVG.create('marker');
 
         var markerGuid = L.Util.guid();
 
@@ -2907,10 +2898,6 @@ var PathFunctions = PathFunctions || {
         }
 
         layer._markerPath[type].setAttribute('style', 'fill: ' + layer.options.color + '; opacity: ' + layer.options.opacity);
-
-
-
-        //this._defs.appendChild(layer._markers[type]);
     },
 
     _createGradient: function (layer) {
@@ -2926,10 +2913,8 @@ var PathFunctions = PathFunctions || {
         gradient = layer._gradient || L.SVG.create(gradientType + 'Gradient');
 
         if (gradientType === "radial") {
-            //gradient = L.SVG.create("radialGradient");
             gradientOptions = options.radial || {cx: '50%', cy: '50%', r: '50%', fx: '50%', fy: '50%'};
         } else {
-            //gradient = L.SVG.create("linearGradient");
             var vector = options.vector || [["0%", "0%"], ["100%", "100%"]];
             gradientOptions = {
                 x1: vector[0][0],
@@ -2968,7 +2953,6 @@ var PathFunctions = PathFunctions || {
             gradient.setAttribute(key, gradientOptions[key]);
         }
 
-        //L.DomUtil.empty(gradient);
         var children = gradient.childNodes;
         var childLength = children.length;
 
@@ -3003,7 +2987,7 @@ var PathFunctions = PathFunctions || {
         }
 
         layer._gradient = gradient;
-        return gradientOptions.id; //return L.stamp(gradient);
+        return gradientOptions.id;
     },
 
     _createDropShadow: function (layer) {
@@ -3064,10 +3048,6 @@ var PathFunctions = PathFunctions || {
             filter.appendChild(feGaussianBlur);
             filter.appendChild(feBlend);
         }
-
-        //if (layer._dropShadow) {
-        //    L.DomUtil.remove(layer._dropShadow);
-        //}
 
         layer._dropShadow = filter;
 
@@ -3317,8 +3297,7 @@ var PathFunctions = PathFunctions || {
             clonedPath.setAttribute('id', patternGuid);
 
             patternOptions.id = patternGuid;
-            patternOptions.patternUnits = patternOptions.patternUnits || 'userSpaceOnUse'; //'objectBoundingBox';
-            //patternOptions.patternContentUnits = 'userSpaceOnUse';
+            patternOptions.patternUnits = patternOptions.patternUnits || 'userSpaceOnUse';
 
             var bbox = layer.getBounds();
 
@@ -3330,12 +3309,8 @@ var PathFunctions = PathFunctions || {
 
             patternOptions.width = Math.min(patternOptions.width, patternOptions.height);
             patternOptions.height = patternOptions.width;
-            //patternOptions.width = bounds.getSize().x || 500;
-            //patternOptions.height = bounds.getSize().y || 500;
 
             layer._wordCloud = L.SVG.create('g');
-
-            //this._container.appendChild(this._wordCloud);
             layer._wordPattern = this._createPattern(patternOptions);
             layer._wordPattern.id = patternGuid;
             layer._wordPattern.appendChild(layer._wordCloud);
@@ -3356,7 +3331,6 @@ var PathFunctions = PathFunctions || {
     },
 
     _createWordCloud: function (layer, element, wordCloudOptions) {
-        //var fragment = document.createDocumentFragment();
         var width = wordCloudOptions.patternOptions.width;
         var height = wordCloudOptions.patternOptions.height;
         var words = wordCloudOptions.words;
@@ -3366,7 +3340,7 @@ var PathFunctions = PathFunctions || {
         var textField = wordCloudOptions.textField;
         var rotation = wordCloudOptions.rotation || function (d) {
             return 0;
-        }; //function(d) { return scale(~~(Math.random() * d[countField])); }
+        };
         rect.setAttribute('width', width);
         rect.setAttribute('height', height);
         rect.style.fill = layer.options.fillColor || '#000';
@@ -3483,47 +3457,6 @@ var PolylineFunctions = {
         return new L.LinearFunction([points[0].lng, points[0].lat], [points[1].lng, points[1].lat]);
     },
     animateLine: function (options) {
-        /*
-        var duration = options.duration || 1000;
-        var easing = options.easing || L.AnimationUtils.easingFunctions.linear;
-        var animationEnd = options.animationEnd;
-        var start = (+new Date());
-        var me = this;
-
-        this._buildDistanceIndex();
-
-        var timeToDistance = this._totalDistance/duration;
-
-        var latlngs = this._latlngs.slice();
-        var animate = function (timestamp) {
-            var elapsedTime = (+new Date()) - start;
-            var distance = elapsedTime * timeToDistance;
-            var points = me._distanceToPoints(latlngs, distance);
-            var index = latlngs.indexOf(points[0]);
-            var interpolator = me._getInterpolator(points);
-            var percent = easing(elapsedTime, duration);
-            var interpolatedPoint = interpolator.getPointAtPercent(percent);
-
-            me.setLatLngs(latlngs.slice(0, index + 1).concat(new L.LatLng(interpolatedPoint.y, interpolatedPoint.x)));
-
-            if (percent >= 1) {
-                L.Util.cancelAnimFrame(this._animId);
-                me.trigger('animationComplete');
-
-                if (animationEnd) {
-                    animationEnd();
-                }
-            }
-            else {
-                this._animId = L.Util.requestAnimFrame(animate);
-            }
-
-            interpolator = null;
-            interpolatedPoint = null;
-        };
-
-        this._animId = L.Util.requestAnimFrame(animate);
-        */
         var updater = function (latlngs) {
             return function (layer, points, interpolatedPoint) {
                 var index = latlngs.indexOf(points[0]);
@@ -3577,7 +3510,6 @@ L.extend(L.GeoJSON, {
 // Extend the TextFunctions above and change the __updatePath reference, since
 // _updatePath for a line/polygon is different than for a regular path
 var LineTextFunctions = L.extend({}, TextFunctions);
-//LineTextFunctions.__updatePath = L.Polyline.prototype._updatePath;
 
 // Pulled from the Leaflet discussion here:  https://github.com/Leaflet/Leaflet/pull/1586
 // This is useful for getting a centroid/anchor point for centering text or other SVG markup

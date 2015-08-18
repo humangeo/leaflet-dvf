@@ -32,6 +32,8 @@
     <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
     <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
     <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/MarkerCluster.Default.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/MarkerCluster.css" type="text/css" media="screen"/>
 </head>
 
 <body>
@@ -80,11 +82,13 @@
 <script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
+<script type="text/javascript" src="../lib/leaflet.markercluster-src.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
 <script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 
 <script type="text/javascript">
     map = null;
+    markers = null;
     var lastLayer;
     var legendControl;
 
@@ -188,7 +192,9 @@
         });
 
         // Add the data layer to the map
-        map.addLayer(dataLayer);
+        dataLayer._map = map;
+        legendControl.addLayer(dataLayer);
+        markers.addLayer(dataLayer);
 
         lastLayer = dataLayer;
     };
@@ -217,6 +223,7 @@
         // Initialize the map
         map = L.map('map').setView([0.0, 0.0], 2);
 
+        markers = new L.MarkerClusterGroup();
         var baseLayer = new L.StamenTileLayer('toner', {
             detectRetina: true
         });
@@ -228,7 +235,7 @@
         });
 
         // Initialize the legend control and add it to the map
-        var legendControl = new L.Control.Legend();
+        legendControl = new L.Control.Legend();
 
         legendControl.addTo(map);
 
@@ -239,6 +246,8 @@
 
         layerControl.addTo(map);
 
+        map.addLayer(markers);
+
         $.ajaxSetup({
             cache:true
         });
@@ -247,7 +256,7 @@
         var getData = function () {
 
             if (lastLayer) {
-                map.removeLayer(lastLayer);
+                markers.removeLayer(lastLayer);
             }
 
             $.ajax({

@@ -665,10 +665,10 @@ L.DataLayer = L.LayerGroup.extend({
                 icon: icon
             });
 
-            self.addLayer(tooltip);
+            self._map.addLayer(tooltip);
 
             if (self.tooltip) {
-                self.removeLayer(self.tooltip);
+                self._map.removeLayer(self.tooltip);
                 self.tooltip = null;
             }
 
@@ -701,7 +701,7 @@ L.DataLayer = L.LayerGroup.extend({
             e.target.isHighlighted = false;
 
             if (self.tooltip) {
-                self.removeLayer(self.tooltip);
+                self._map.removeLayer(self.tooltip);
                 self.tooltip = null;
             }
 
@@ -990,7 +990,7 @@ L.DataLayer = L.LayerGroup.extend({
 
         }
 
-        i.style.width = segmentWidth + 'px';
+        i.style.width = ~~segmentWidth + 'px';
 
         return i;
     },

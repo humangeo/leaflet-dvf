@@ -1279,6 +1279,12 @@ L.StyleConverter = {
                 return 2 * value + 'px';
             }
         },
+        radiusY: {
+            property: ['height'],
+            valueFunction: function (value) {
+                return 2 * value + 'px';
+            }
+        },
         fillOpacity: {
             property: ['opacity'],
             valueFunction: function (value) {
@@ -6045,10 +6051,10 @@ L.DataLayer = L.LayerGroup.extend({
                 icon: icon
             });
 
-            self.addLayer(tooltip);
+            self._map.addLayer(tooltip);
 
             if (self.tooltip) {
-                self.removeLayer(self.tooltip);
+                self._map.removeLayer(self.tooltip);
                 self.tooltip = null;
             }
 
@@ -6081,7 +6087,7 @@ L.DataLayer = L.LayerGroup.extend({
             e.target.isHighlighted = false;
 
             if (self.tooltip) {
-                self.removeLayer(self.tooltip);
+                self._map.removeLayer(self.tooltip);
                 self.tooltip = null;
             }
 
@@ -6370,7 +6376,7 @@ L.DataLayer = L.LayerGroup.extend({
 
         }
 
-        i.style.width = segmentWidth + 'px';
+        i.style.width = ~~segmentWidth + 'px';
 
         return i;
     },
@@ -9186,7 +9192,6 @@ L.LayeredRegularPolygonMarker = L.MarkerGroup.extend({
     },
 
     setStyle: function (options) {
-        // TODO:  Implement this
         options.levels = options.levels || 2;
         var markers = [];
         var radiusX = options.radiusX || options.radius;

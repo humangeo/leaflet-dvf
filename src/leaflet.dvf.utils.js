@@ -633,6 +633,12 @@ L.StyleConverter = {
                 return 2 * value + 'px';
             }
         },
+        radiusY: {
+            property: ['height'],
+            valueFunction: function (value) {
+                return 2 * value + 'px';
+            }
+        },
         fillOpacity: {
             property: ['opacity'],
             valueFunction: function (value) {

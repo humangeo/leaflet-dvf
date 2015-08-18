@@ -1304,7 +1304,6 @@ L.LayeredRegularPolygonMarker = L.MarkerGroup.extend({
     },
 
     setStyle: function (options) {
-        // TODO:  Implement this
         options.levels = options.levels || 2;
         var markers = [];
         var radiusX = options.radiusX || options.radius;

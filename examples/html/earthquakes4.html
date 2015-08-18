@@ -192,6 +192,10 @@
         });
 
         // Add the data layer to the map
+        if (lastLayer) {
+            legendControl.removeLayer(lastLayer);
+        }
+        
         legendControl.addLayer(dataLayer);
         markers.addLayer(dataLayer);
 

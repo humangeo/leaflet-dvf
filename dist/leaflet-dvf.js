@@ -6051,14 +6051,14 @@ L.DataLayer = L.LayerGroup.extend({
                 icon: icon
             });
 
-            self._map.addLayer(tooltip);
+            target._map.addLayer(tooltip);
 
-            if (self.tooltip) {
-                self._map.removeLayer(self.tooltip);
-                self.tooltip = null;
+            if (target.tooltip) {
+                target._map.removeLayer(target.tooltip);
+                target.tooltip = null;
             }
 
-            self.tooltip = tooltip;
+            target.tooltip = tooltip;
 
             if (setHighlight) {
                 layerOptions = setHighlight(layerOptions);
@@ -6073,25 +6073,26 @@ L.DataLayer = L.LayerGroup.extend({
         };
 
         var move = function (e) {
-            if (self.tooltip) {
-                self.tooltip.setLatLng(e.latlng);
+            var target = e.target;
+            if (target.tooltip) {
+                target.tooltip.setLatLng(e.latlng);
             }
         };
 
         var unhighlight = function (e) {
 
             // Addresses https://github.com/humangeo/leaflet-dvf/issues/30
-            if (!e.target.isHighlighted) {
+            var target = e.target;
+            if (!target.isHighlighted) {
                 return;
             }
-            e.target.isHighlighted = false;
+            target.isHighlighted = false;
 
-            if (self.tooltip) {
-                self._map.removeLayer(self.tooltip);
-                self.tooltip = null;
+            if (target.tooltip) {
+                target._map.removeLayer(target.tooltip);
+                target.tooltip = null;
             }
 
-            var target = e.target;
             var layerOptions = this.options || target.options;
 
             if (unsetHighlight) {

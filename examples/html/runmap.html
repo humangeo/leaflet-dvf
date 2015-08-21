@@ -24,16 +24,20 @@
             width: 350px;
         }
 
-        .legend-line {
+        div.legend-line {
             margin-bottom: 20px;
         }
 
-        .legend-line div.scale-bars i {
+        div.legend-line div.scale-bars i {
             background: none !important;
             width: 0px;
             height: 0px !important;
             vertical-align: middle;
             border-left: none !important;
+        }
+
+        div.line-legend {
+            padding: 20px;
         }
 
         .line-legend .legend-box {
@@ -810,6 +814,10 @@
                 className: 'legend-line',
                 numSegments: 10
             },
+            tooltipOptions: {
+                className: 'line-legend leaflet-div-icon',
+                iconSize: null
+            },
             displayOptions: {
                 ele: {
                     displayName: 'Elevation',
@@ -844,7 +852,7 @@
         var weightedPolylineTest = new L.WeightedPolyline(runData, {
             fill: true,
             fillColor: '#0033ff',
-            fillOpacity: 0.8,
+            fillOpacity: 0.5,
             stroke: false,
             dropShadow: true,
             gradient: true,

@@ -1066,6 +1066,7 @@ L.WeightedPolyline = L.FeatureGroup.extend({
 
     setLatLngs: function (latlngs) {
         this._latlngs = latlngs;
+        this._loaded = true;
         this._loadComponents();
         this.redraw();
     },
@@ -1103,46 +1104,49 @@ L.WeightedPolyline = L.FeatureGroup.extend({
 
     // TODO:  Move some of these calculations to the WeightedLineSegment class - specifically angle calculation
     _loadComponents: function () {
-        var angles = [];
-        var p1 = this._latlngs[0];
-        var p2 = this._latlngs[1];
-        var angleValues = this._getAngles(p1, p2);
+        if (!this._loaded) {
+            var angles = [];
+            var p1 = this._latlngs[0];
+            var p2 = this._latlngs[1];
+            var angleValues = this._getAngles(p1, p2);
 
-        if (angleValues.length > 0) {
-            angles.push({
-                latlng: p1,
-                angle: angleValues[0],
-                lineWeight: p1.weight
-            });
-
-            for (var i = 1, len = this._latlngs.length - 1; i < len; ++i) {
-                p1 = this._latlngs[i];
-                p2 = this._latlngs[i + 1];
-
-                // LatLngs to layer coords
-                angleValues = this._getAngles(p1, p2);
-
+            if (angleValues.length > 0) {
                 angles.push({
                     latlng: p1,
                     angle: angleValues[0],
                     lineWeight: p1.weight
                 });
 
+                for (var i = 1, len = this._latlngs.length - 1; i < len; ++i) {
+                    p1 = this._latlngs[i];
+                    p2 = this._latlngs[i + 1];
+
+                    // LatLngs to layer coords
+                    angleValues = this._getAngles(p1, p2);
+
+                    angles.push({
+                        latlng: p1,
+                        angle: angleValues[0],
+                        lineWeight: p1.weight
+                    });
+
+                    this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));
+
+                    angles = angles.slice(1);
+                }
+
+                p1 = L.extend({}, p2);
+                p2 = this._latlngs[this._latlngs.length - 1];
+
+                angles.push({
+                    latlng: p1,
+                    angle: angles[0].angle,
+                    lineWeight: p2.weight
+                });
+
                 this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));
-
-                angles = angles.slice(1);
             }
-
-            p1 = L.extend({}, p2);
-            p2 = this._latlngs[this._latlngs.length - 1];
-
-            angles.push({
-                latlng: p1,
-                angle: angles[0].angle,
-                lineWeight: p2.weight
-            });
-
-            this.addLayer(new L.WeightedLineSegment(angles[0], angles[1], this.options));
+            this._loaded = true;
         }
     }
 });

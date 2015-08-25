@@ -435,7 +435,7 @@ L.DataLayer = L.LayerGroup.extend({
 
             style = style || this.options.boundaryStyle || L.extend({}, options, {
                 fillOpacity: 0.2,
-                clickable: false
+                interactive: false
             });
 
             layer.setStyle(style);

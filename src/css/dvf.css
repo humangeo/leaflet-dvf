@@ -112,7 +112,7 @@ div.leaflet-div-icon div div.key {
 }
 
 .data-layer-legend {
-    padding: 8px;
+    padding: 8px 0px;
 }
 
 .data-layer-legend .legend-box, .data-layer-legend .key {

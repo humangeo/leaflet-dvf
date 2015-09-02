@@ -19,7 +19,6 @@ div.leaflet-div-icon {
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#e6e6e6', GradientType=0);
     border-color: #e6e6e6 #e6e6e6 #bfbfbf;
     border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-    filter: progid:dximagetransform.microsoft.gradient(enabled=false);
     border: 1px solid #cccccc;
     border-bottom-color: #b3b3b3;
     -webkit-border-radius: 10px;
@@ -51,7 +50,7 @@ div.legend-box {
     width: 10px;
     height: 10px;
     display: inline-block;
-    margin-right: 4px;
+    margin-right: 8px;
     border: solid 1px #000;
     margin-bottom: 0px;
 }
@@ -112,7 +111,7 @@ div.leaflet-div-icon div div.key {
 }
 
 .data-layer-legend {
-    padding: 8px;
+    padding: 8px 0px;
 }
 
 .data-layer-legend .legend-box, .data-layer-legend .key {

@@ -371,6 +371,11 @@ L.DataLayer = L.LayerGroup.extend({
             }
         }
 
+        if (me.tooltip) {
+            me._map.removeLayer(me.tooltip);
+            me.tooltip = null;
+        }
+
         map.off('zoomend', me._zoomFunction, me);
     },
 
@@ -667,12 +672,12 @@ L.DataLayer = L.LayerGroup.extend({
 
             target._map.addLayer(tooltip);
 
-            if (target.tooltip) {
-                target._map.removeLayer(target.tooltip);
-                target.tooltip = null;
+            if (self.tooltip) {
+                target._map.removeLayer(self.tooltip);
+                self.tooltip = null;
             }
 
-            target.tooltip = tooltip;
+            self.tooltip = tooltip;
 
             if (setHighlight) {
                 layerOptions = setHighlight(layerOptions);
@@ -688,8 +693,8 @@ L.DataLayer = L.LayerGroup.extend({
 
         var move = function (e) {
             var target = e.target;
-            if (target.tooltip) {
-                target.tooltip.setLatLng(e.latlng);
+            if (self.tooltip) {
+                self.tooltip.setLatLng(e.latlng);
             }
         };
 
@@ -702,9 +707,9 @@ L.DataLayer = L.LayerGroup.extend({
             }
             target.isHighlighted = false;
 
-            if (target.tooltip) {
-                target._map.removeLayer(target.tooltip);
-                target.tooltip = null;
+            if (self.tooltip) {
+                target._map.removeLayer(self.tooltip);
+                self.tooltip = null;
             }
 
             var layerOptions = this.options || target.options;

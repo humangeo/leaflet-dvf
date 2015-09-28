@@ -597,7 +597,7 @@ L.DataLayer = L.LayerGroup.extend({
     },
 
     setOptions: function (options) {
-        this.options = options;
+        L.setOptions(this, options);
         this.reloadData();
         return this;
     },

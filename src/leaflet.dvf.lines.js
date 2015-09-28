@@ -491,7 +491,10 @@ L.ArcedPolyline = L.Path.extend({
         fill: false,
         gradient: false,
         dropShadow: false,
-        optimizeSpeed: false
+        optimizeSpeed: false,
+
+        // Can be Q or C
+        mode: 'C'
     },
 
     _project: function () {
@@ -531,10 +534,34 @@ L.ArcedPolyline = L.Path.extend({
     drawSegment: function (point1, point2) {
         var distance = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
         var heightOffset = this.options.distanceToHeight.evaluate(distance);
+        var offset1 = point1;
+        var offset2 = point2;
+        var controlPoint;
+        var segmentFunction;
+        var parts = [];
 
         this._angle = Math.atan((2 * heightOffset) / (0.5 * distance));
 
-        var parts = ['M', point1.x, ',', point1.y, ' C', point1.x, ',', point1.y - heightOffset, ' ', point2.x, ',', point2.y - heightOffset, ' ', point2.x, ',', point2.y];
+        // If the mode is Q (quadratic), then set the first and only offset to 50% of the line distance
+        // Otherwise if controlPointOffsets are specified then use those
+        if (this.options.mode === 'Q') {
+            segmentFunction = new L.LinearFunction(point1, point2);
+            offset1 = segmentFunction.getPointAtPercent(0.5);
+        }
+        else if (this.options.controlPointOffsets) {
+            segmentFunction = new L.LinearFunction(point1, point2);
+            offset1 = segmentFunction.getPointAtPercent(this.options.controlPointOffsets.x);
+            offset2 = segmentFunction.getPointAtPercent(1.0 - this.options.controlPointOffsets.y);
+        }
+
+        // Setup the SVG path syntax based on Q vs. C curves
+        controlPoint = this.options.mode === 'C' ?
+            ['C', offset1.x, ',', offset1.y - heightOffset, offset2.x, ',', offset2.y - heightOffset] :
+            ['Q', offset1.x, ',', offset1.y - heightOffset];
+
+        parts = ['M', point1.x, ',', point1.y,].concat(controlPoint).concat([point2.x, ',', point2.y]);
+
+        segmentFunction = null;
 
         return parts.join(' ');
     },

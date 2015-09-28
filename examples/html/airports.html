@@ -254,6 +254,12 @@
                 weight: 0.5,
                 fillOpacity: 1.0,
                 distanceToHeight: new L.LinearFunction([0, 20], [1000, 300]),
+
+                //The starting and ending percentages (0 - 1) along the line at which to position control points
+                //controlPointOffsets: new L.Point(0.2, 0.2),
+
+                // Q or C for quadratic or cubic bezier
+                mode: 'C',
                 markers: {
                     end: true
                 },

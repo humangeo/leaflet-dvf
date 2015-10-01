@@ -257,7 +257,10 @@
                 distanceToHeight: new L.LinearFunction([0, 20], [1000, 300]),
                 markers: {
                     end: true
-                }
+                },
+
+                // Use Q for quadratic and C for cubic
+                mode: 'Q'
             },
             legendOptions: {
                 width: 200,

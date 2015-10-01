@@ -52,7 +52,8 @@ L.LinearFunction = L.Class.extend({
 		this._minPoint = minPoint;
 		this._maxPoint = maxPoint;
 		this._xRange = maxPoint.x - minPoint.x;
-		
+        this._yRange = maxPoint.y - minPoint.y;
+
 		this._calculateParameters(minPoint, maxPoint);
 		
 		return this;
@@ -149,6 +150,19 @@ L.LinearFunction = L.Class.extend({
 		
 		return points;
 	},
+
+    evaluatePercent: function (percent) {
+        return this.getPointAtPercent(percent).y;
+    },
+
+    getPointAtPercent: function (percent) {
+        var percentOffsetX = this._xRange * percent;
+        var percentOffsetY = this._yRange * percent;
+        var x = this._minPoint.x + percentOffsetX;
+        var y = this._minPoint.y + percentOffsetY;
+
+        return new L.Point(x, y);
+    },
 	
 	getIntersectionPoint: function (otherFunction) {
 		var point = null;

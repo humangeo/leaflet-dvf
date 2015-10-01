@@ -595,6 +595,12 @@ L.DataLayer = L.LayerGroup.extend({
 		return this;
 	},
 
+    setOptions: function (options) {
+        L.Util.setOptions(this, options);
+        this.reloadData();
+        return this;
+    },
+
 	setData: function (data) {
 		this._data = data;
 		this.reloadData();

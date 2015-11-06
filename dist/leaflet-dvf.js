@@ -56,7 +56,7 @@ L.LinearFunction = L.Class.extend({
 		this._maxPoint = maxPoint;
 		this._xRange = maxPoint.x - minPoint.x;
         this._yRange = maxPoint.y - minPoint.y;
-        
+
 		this._calculateParameters(minPoint, maxPoint);
 		
 		return this;
@@ -5397,10 +5397,10 @@ L.DataLayer = L.LayerGroup.extend({
 				record = this.options.deriveProperties ? this.options.deriveProperties(record) : record;
 				
 				var includeLayer = this._shouldLoadRecord(record);
+              
+                location = this._getLocation(record, recordIndex);
 
 				if (includeLayer) {
-					location = this._getLocation(record, recordIndex);
-
 					this.locationToLayer(location, record);
 				}
                 else if (this._layerIndex) {

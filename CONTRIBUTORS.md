@@ -18,4 +18,5 @@ Leaflet DVF is made possible by contributions from:
 * Clint Harris [clintharris](https://github.com/clintharris)
 * Michiel Leegwater [mleegwt](https://github.com/mleegwt)
 * [jack-r-abbit](https://github.com/jack-r-abbit)
+* [moosehawk](https://github.com/moosehawk)
 

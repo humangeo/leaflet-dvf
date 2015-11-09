@@ -5909,9 +5909,9 @@ L.DataLayer = L.LayerGroup.extend({
 
                 var includeLayer = this._shouldLoadRecord(record);
 
+                location = this._getLocation(record, recordIndex);
+                
                 if (includeLayer) {
-                    location = this._getLocation(record, recordIndex);
-
                     this.locationToLayer(location, record);
                 }
                 else if (this._layerIndex) {

@@ -350,6 +350,9 @@ L.RGBColorBlendFunction = L.LinearFunction.extend({
 
         this._minX = minX;
         this._maxX = maxX;
+        this._xRange = maxX - minX;
+        this._minPoint = new L.Point(minX, rgbMinColor);
+        this._maxPoint = new L.Point(maxX, rgbMaxColor);
 
         this._redFunction = new L.LinearFunction(new L.Point(minX, red1), new L.Point(maxX, red2));
         this._greenFunction = new L.LinearFunction(new L.Point(minX, green1), new L.Point(maxX, green2));
@@ -861,15 +864,16 @@ L.CategoryLegend = L.Class.extend({
         }
 
         for (var key in legendOptions) {
-            categoryOptions = legendOptions[key];
+            if (legendOptions.hasOwnProperty(key)) {
+                var categoryOptions = legendOptions[key];
+                var displayName = categoryOptions.displayName || key;
 
-            var displayName = categoryOptions.displayName || key;
+                var legendElement = L.DomUtil.create('div', 'data-layer-legend', legend);
+                var legendBox = L.DomUtil.create('div', 'legend-box', legendElement);
 
-            var legendElement = L.DomUtil.create('div', 'data-layer-legend', legend);
-            var legendBox = L.DomUtil.create('div', 'legend-box', legendElement);
-
-            L.DomUtil.create('div', 'key', legendElement).innerHTML = displayName;
-            L.StyleConverter.applySVGStyle(legendBox, categoryOptions);
+                L.DomUtil.create('div', 'key', legendElement).innerHTML = displayName;
+                L.StyleConverter.applySVGStyle(legendBox, categoryOptions);
+            }
         }
 
         return container.innerHTML;
@@ -2986,29 +2990,46 @@ var PathFunctions = PathFunctions || {
         var markerGuid = L.Util.guid();
 
         var exaggeration = options.exaggeration || 2;
-        var size = 2 * exaggeration;
+        var size = options.size || 2 * exaggeration;
+        var halfSize = size/2;
+        var style = L.extend({
+            fill: layer.options.color,
+            opacity: layer.options.opacity,
+            radius: halfSize,
+            numberOfSides: 3,
+            rotation: 0,
+            position: new L.Point(halfSize, halfSize)
+        }, options.style);
 
         layer._markers[type].setAttribute('id', markerGuid);
         layer._markers[type].setAttribute('markerWidth', size);
         layer._markers[type].setAttribute('markerHeight', size);
-        layer._markers[type].setAttribute('refX', exaggeration);
-        layer._markers[type].setAttribute('refY', exaggeration);
-        layer._markers[type].setAttribute('orient', 'auto');
-        layer._markers[type].setAttribute('markerUnits', 'strokeWidth');
+        layer._markers[type].setAttribute('refX', halfSize);
+        layer._markers[type].setAttribute('refY', halfSize);
+        layer._markers[type].setAttribute('orient', options.orient || 'auto');
+        layer._markers[type].setAttribute('markerUnits', options.markerUnits || 'strokeWidth');
 
         if (!layer._markerPath[type]) {
             layer._markerPath[type] = L.SVG.create('path');
             layer._markers[type].appendChild(layer._markerPath[type]);
         }
 
+        var points = new L.RegularPolygonMarker(new L.LatLng(0,0),{})._getPoints(new L.Point(0,0), false, style);
+        var d = new L.SVGPathBuilder(points, [], {
+            closePath: true
+        }).build(6);
+
+        /*
         if (options.reverse) {
-            layer._markerPath[type].setAttribute('d', 'M0,' + exaggeration + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + exaggeration);
+            layer._markerPath[type].setAttribute('d', 'M0,' + halfSize + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + halfSize);
         }
         else {
-            layer._markerPath[type].setAttribute('d', 'M' + size + ',' + exaggeration + ' L0,' + size + ' L0,0 L' + size + ',' + exaggeration);
+            layer._markerPath[type].setAttribute('d', 'M' + size + ',' + halfSize + ' L0,' + size + ' L0,0 L' + size + ',' + halfSize);
         }
+        */
+        layer._markerPath[type].setAttribute('d', d);
 
-        layer._markerPath[type].setAttribute('style', 'fill: ' + layer.options.color + '; opacity: ' + layer.options.opacity);
+        layer._markerPath[type].setAttribute('style', 'fill: ' + style.fill + '; opacity: ' + style.opacity);
     },
 
     _createGradient: function (layer) {
@@ -5669,7 +5690,8 @@ L.DataLayer = L.LayerGroup.extend({
             layerStyle.fillOpacity *= 1.5;
 
             return layerStyle;
-        }
+        },
+        removeOldLayers: false
     },
 
     initialize: function (data, options) {
@@ -5898,6 +5920,7 @@ L.DataLayer = L.LayerGroup.extend({
 
     _loadRecords: function (records) {
         var location;
+        var keys = {};
 
         records = this._preProcessRecords(records);
 
@@ -5910,16 +5933,31 @@ L.DataLayer = L.LayerGroup.extend({
                 var includeLayer = this._shouldLoadRecord(record);
 
                 location = this._getLocation(record, recordIndex);
-                
+
+                var key = this.options.getIndexKey ? this.options.getIndexKey.call(this, location, record) : null;
+
                 if (includeLayer) {
                     this.locationToLayer(location, record);
                 }
                 else if (this._layerIndex) {
-                    var key = this.options.getIndexKey.call(this, location, record);
                     if (key in this._layerIndex) {
                         this.removeLayer(this._layerIndex[key]);
                         delete this._layerIndex[key];
                     }
+                }
+
+                if (key) {
+                    keys[key] = true;
+                }
+            }
+        }
+
+        // Prune off any existing layers in the index
+        if (this._layerIndex && this.options.removeOldLayers) {
+            for (var layerKey in this._layerIndex) {
+                if (!(layerKey in keys)) {
+                    this.removeLayer(this._layerIndex[layerKey]);
+                    delete this._layerIndex[layerKey];
                 }
             }
         }

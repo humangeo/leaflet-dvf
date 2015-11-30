@@ -283,7 +283,8 @@ L.DataLayer = L.LayerGroup.extend({
             layerStyle.fillOpacity *= 1.5;
 
             return layerStyle;
-        }
+        },
+        removeOldLayers: false
     },
 
     initialize: function (data, options) {
@@ -512,6 +513,7 @@ L.DataLayer = L.LayerGroup.extend({
 
     _loadRecords: function (records) {
         var location;
+        var keys = {};
 
         records = this._preProcessRecords(records);
 
@@ -524,16 +526,31 @@ L.DataLayer = L.LayerGroup.extend({
                 var includeLayer = this._shouldLoadRecord(record);
 
                 location = this._getLocation(record, recordIndex);
-                
+
+                var key = this.options.getIndexKey ? this.options.getIndexKey.call(this, location, record) : null;
+
                 if (includeLayer) {
                     this.locationToLayer(location, record);
                 }
                 else if (this._layerIndex) {
-                    var key = this.options.getIndexKey.call(this, location, record);
                     if (key in this._layerIndex) {
                         this.removeLayer(this._layerIndex[key]);
                         delete this._layerIndex[key];
                     }
+                }
+
+                if (key) {
+                    keys[key] = true;
+                }
+            }
+        }
+
+        // Prune off any existing layers in the index
+        if (this._layerIndex && this.options.removeOldLayers) {
+            for (var layerKey in this._layerIndex) {
+                if (!(layerKey in keys)) {
+                    this.removeLayer(this._layerIndex[layerKey]);
+                    delete this._layerIndex[layerKey];
                 }
             }
         }

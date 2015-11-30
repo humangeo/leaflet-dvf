@@ -215,15 +215,16 @@ L.CategoryLegend = L.Class.extend({
         }
 
         for (var key in legendOptions) {
-            categoryOptions = legendOptions[key];
+            if (legendOptions.hasOwnProperty(key)) {
+                var categoryOptions = legendOptions[key];
+                var displayName = categoryOptions.displayName || key;
 
-            var displayName = categoryOptions.displayName || key;
+                var legendElement = L.DomUtil.create('div', 'data-layer-legend', legend);
+                var legendBox = L.DomUtil.create('div', 'legend-box', legendElement);
 
-            var legendElement = L.DomUtil.create('div', 'data-layer-legend', legend);
-            var legendBox = L.DomUtil.create('div', 'legend-box', legendElement);
-
-            L.DomUtil.create('div', 'key', legendElement).innerHTML = displayName;
-            L.StyleConverter.applySVGStyle(legendBox, categoryOptions);
+                L.DomUtil.create('div', 'key', legendElement).innerHTML = displayName;
+                L.StyleConverter.applySVGStyle(legendBox, categoryOptions);
+            }
         }
 
         return container.innerHTML;

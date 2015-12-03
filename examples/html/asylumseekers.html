@@ -432,6 +432,7 @@
                     iconSize: null,
                     className: 'leaflet-div-icon line-legend'
                 },
+                removeUnreferencedLayers: true,
                 displayOptions: {
                     region: {
                         color: new L.CategoryFunction(regions),
@@ -451,6 +452,9 @@
                     }
                 }
             };
+
+            var migrationGraph = new L.Graph([], options);
+            layerControl.addOverlay(migrationGraph, 'Asylum Seekers');
 
             var choropleth = new L.ChoroplethDataLayer(countriesLookup, {
                 recordsField: null,
@@ -490,14 +494,23 @@
                         color: new L.CategoryFunction(regions),
                         displayName: 'Region'
                     }
+                },
+                onEachRecord: function (layer, record) {
+                    var clickFunction = function (migrationGraph, record) {
+                        return function () {
+                            migrationGraph.options.includeLayer = function (newRecord) {
+                                return newRecord.Destination === record.name || newRecord.Origin === record.name;
+                            };
+                            migrationGraph.reloadData();
+                        };
+                    };
+
+                    layer.on('click', clickFunction(migrationGraph, record));
                 }
             });
 
             map.addLayer(choropleth);
             layerControl.addOverlay(choropleth, 'Regions');
-
-            var migrationGraph = new L.Graph([], options);
-            layerControl.addOverlay(migrationGraph, 'Asylum Seekers');
 
             map.addLayer(migrationGraph);
 

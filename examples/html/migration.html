@@ -333,7 +333,6 @@
                 var regionValue = originRegion.region.trim();
 
                 areas[areaValue] = areas[areaValue] || areaColorChoices.shift();
-                //console.log(areaValue);
                 regions[regionValue] = regionValue === 'Various/Unknown' ? '#e3e3e3' : regions[regionValue] || colors.pop(); //areaColorMap[areaValue].shift();  //colors.pop();
 
                 record.area = areaValue;
@@ -377,32 +376,9 @@
                 totalByCountry[record.Destination].value += valueNum;
             });
 
-            console.log(cumulative);
             var timeIndex = _.groupBy(migrationData, function (record) {
                 return record.Year;
             });
-
-            /*
-            var layer = new L.DataLayer(totalByCountry, {
-                recordsField: null,
-                locationMode: L.LocationModes.CUSTOM,
-                codeField: null,
-                getLocation: getLocation,
-                layerOptions: {
-                    numberOfSides: 50
-                },
-                displayOptions: {
-                    value: {
-                        fillColor: new L.HSLHueFunction([minCount, 60], [maxCount, 15], {
-                            outputLuminosity: '60%'
-                        }),
-                        radius: new L.LinearFunction([minCount, 10], [maxCount, 50])
-                    }
-                }
-            });
-
-            map.addLayer(layer);
-            */
 
             var weightFunction = new L.LinearFunction([minCumulative, 0.1], [maxCumulative, 30]);
             var exaggerationFunction = new L.LinearFunction([minCumulative, 4], [maxCumulative, 60]);
@@ -427,30 +403,19 @@
                 },
                 layerOptions: {
                     fill: false,
-                    //dashArray: [1,1],
                     opacity: 0.9,
                     weight: 0.5,
                     fillOpacity: 1.0,
                     distanceToHeight: new L.LinearFunction([0, 20], [1000, 300]),
-
-                    //The starting and ending percentages (0 - 1) along the line at which to position control points
-                    //controlPointOffsets: new L.Point(0.2, 0.2),
-
                     // Q or C for quadratic or cubic bezier
                     mode: 'C',
-                    //markers: {
-                    //    end: true
-                    //},
                     lineJoin: 'square',
                     lineCap: 'butt',
-
                     animatePath: {
                         property: 'stroke-dashoffset',
                         duration: '1.0s',
                         timingFunction: 'ease-in-out'
                     }
-
-
                 },
                 legendOptions: {
                     width: 200,
@@ -462,7 +427,7 @@
                     iconSize: null,
                     className: 'leaflet-div-icon line-legend'
                 },
-                removeOldLayers: false,
+                removeUnreferencedLayers: false,
                 displayOptions: {
                     region: {
                         displayName: 'Region',
@@ -538,7 +503,7 @@
                             migrationGraph.options.includeLayer = function (newRecord) {
                                 return newRecord.Destination === record.name || newRecord.Origin === record.name;
                             };
-                            migrationGraph.reloadData();
+                            migrationGraph.reloadData(true);
                         };
                     };
 
@@ -547,23 +512,8 @@
             });
 
             layerControl.addOverlay(choropleth, 'Regions');
-
-
-            /*
-            for (var regionName in regions) {
-                var $regionElement = $('<h3>' + regionName + '</h3>').css('color', regions[regionName]);
-                $regionElement.on('click', function () {
-                    var regionText = $(this).text();
-                    migrationGraph.options.includeLayer = function (newRecord) {
-                        return newRecord.DestinationRegion === regionText || newRecord.OriginRegion === regionText;
-                    };
-                    migrationGraph.reloadData();
-                });
-                $('#regions').append($regionElement);
-            }
-            */
-
             map.addLayer(migrationGraph);
+
             var $info = $('#info');
             var updateGraph = function (g, year) {
                 setTimeout(function () {

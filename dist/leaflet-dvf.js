@@ -5691,7 +5691,7 @@ L.DataLayer = L.LayerGroup.extend({
 
             return layerStyle;
         },
-        removeOldLayers: false
+        removeUnreferencedLayers: false
     },
 
     initialize: function (data, options) {
@@ -5918,7 +5918,7 @@ L.DataLayer = L.LayerGroup.extend({
         return this._includeFunction ? this._includeFunction.call(this, record) : true;
     },
 
-    _loadRecords: function (records) {
+    _loadRecords: function (records, removeUnreferencedLayers) {
         var location;
         var keys = {};
 
@@ -5953,7 +5953,7 @@ L.DataLayer = L.LayerGroup.extend({
         }
 
         // Prune off any existing layers in the index
-        if (this._layerIndex && this.options.removeOldLayers) {
+        if (this._layerIndex && (removeUnreferencedLayers || this.options.removeUnreferencedLayers)) {
             for (var layerKey in this._layerIndex) {
                 if (!(layerKey in keys)) {
                     this.removeLayer(this._layerIndex[layerKey]);
@@ -6031,7 +6031,7 @@ L.DataLayer = L.LayerGroup.extend({
         this.reloadData();
     },
 
-    reloadData: function () {
+    reloadData: function (removeUnreferencedLayers) {
         if (!this._layerIndex) {
             this.clearLayers();
 
@@ -6039,7 +6039,7 @@ L.DataLayer = L.LayerGroup.extend({
         }
 
         if (this._data) {
-            this.addData(this._data);
+            this.addData(this._data, removeUnreferencedLayers);
         }
 
         this.fire('legendChanged', this);
@@ -6047,7 +6047,7 @@ L.DataLayer = L.LayerGroup.extend({
         return this;
     },
 
-    addData: function (data) {
+    addData: function (data, removeUnreferencedLayers) {
         var records = this.options.recordsField !== null && this.options.recordsField.length > 0 ? L.Util.getFieldValue(data, this.options.recordsField) : data;
 
         if (this.options.getIndexKey && !this._layerIndex) {
@@ -6059,7 +6059,7 @@ L.DataLayer = L.LayerGroup.extend({
             this._preloadLocations(records);
         }
         else {
-            this._loadRecords(records);
+            this._loadRecords(records, removeUnreferencedLayers);
         }
 
         this._data = data;

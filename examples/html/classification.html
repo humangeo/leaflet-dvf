@@ -220,6 +220,10 @@ $(document).ready(function() {
 
 	layerControl.addTo(map);
 
+	$.ajaxSetup({
+		cache:true
+	});
+
 	// Function for requesting the latest earthquakes from USGS
 	var getData = function () {
 
@@ -228,9 +232,11 @@ $(document).ready(function() {
 		}
 
 		$.ajax({
-			url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
+			//url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
+			url: 'http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojsonp',
 			type: 'GET',
-			dataType: 'jsonp'
+			dataType: 'jsonp',
+			jsonp: false
 		});
 	};
 

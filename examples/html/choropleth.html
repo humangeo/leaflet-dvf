@@ -43,7 +43,7 @@
     <div class="container-fluid">
     	<div class="row-fluid">
 			<div id="map" class="span9"></div>
-			<div id="legend" class="span3"></div>
+			<div id="legend" class="span3"><div class="buttons"><button id="btn-add" class="btn">Add</button><button id="btn-remove" class="btn">Remove</button></div></div>
 		</div>
 	</div>
 	<script>
@@ -89,18 +89,13 @@ $(document).ready(function() {
 	resize();
 	
 	// Initialize the map
-	map = L.map('map').setView([38.895843, -77.043085], 15);
+	map = L.map('map').setView([39.7492, -104.9903], 15);
 	
 	var baseLayer = new L.StamenTileLayer('toner', {
 		detectRetina: true
 	}).addTo(map);
 	
 	baseLayer.addTo(map);
-	
-	// Initialize the legend control and add it to the map
-	var legendControl = new L.Control.Legend();
-	
-	legendControl.addTo(map);
 	
 	var choroplethLayer = new L.ChoroplethDataLayer(featuresTest, {
 		recordsLayer: 'features',
@@ -117,8 +112,17 @@ $(document).ready(function() {
 			color: '#000000'
 		}
 	});
-	
-	map.addLayer(choroplethLayer);
+
+	$('#btn-add').on('click', function (e) {
+		map.addLayer(choroplethLayer);
+	});
+
+	$('#btn-remove').on('click', function (e) {
+		if (map.hasLayer(choroplethLayer)) {
+			map.removeLayer(choroplethLayer);
+		}
+	});
+
 });
 	</script>
 </body>

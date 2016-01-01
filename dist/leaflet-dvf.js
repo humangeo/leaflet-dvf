@@ -2749,7 +2749,7 @@ var PathFunctions = PathFunctions || {
             gradient.setAttribute(key, gradientOptions[key]);
         }
 
-        var children = gradient.children;
+        var children = gradient.childNodes;
         var childLength = children.length;
 
         for (var i = 0, len = stops.length; i < len; ++i) {

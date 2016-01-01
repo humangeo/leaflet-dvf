@@ -56,7 +56,7 @@ L.LinearFunction = L.Class.extend({
 		this._maxPoint = maxPoint;
 		this._xRange = maxPoint.x - minPoint.x;
         this._yRange = maxPoint.y - minPoint.y;
-        
+
 		this._calculateParameters(minPoint, maxPoint);
 		
 		return this;
@@ -2644,7 +2644,7 @@ var PathFunctions = PathFunctions || {
             gradient.setAttribute(key, gradientOptions[key]);
         }
 
-        var children = gradient.children;
+        var children = gradient.childNodes;
         var childLength = children.length;
 
         for (var i = 0, len = stops.length; i < len; ++i) {

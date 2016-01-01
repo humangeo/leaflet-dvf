@@ -372,8 +372,8 @@
 
             map.addLayer(layer);
             */
-            var weightFunction = new L.LinearFunction([minCount, 0.1], [maxCount, 20]);
-            var exaggerationFunction = new L.LinearFunction([minCount, 4], [maxCount, 45]);
+            var weightFunction = new L.LinearFunction([minCount, 0.2], [maxCount, 30]);
+            var exaggerationFunction = new L.LinearFunction([minCount, 4], [maxCount, 60]);
             var options = {
                 recordsField: null,
                 locationMode: L.LocationModes.CUSTOM,
@@ -501,6 +501,9 @@
                             migrationGraph.options.includeLayer = function (newRecord) {
                                 return newRecord.Destination === record.name || newRecord.Origin === record.name;
                             };
+
+                            migrationGraph.options.displayOptions.Value.weight = new L.LinearFunction([1, 3], [200000, 100])
+
                             migrationGraph.reloadData();
                         };
                     };

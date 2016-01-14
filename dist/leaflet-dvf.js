@@ -6258,7 +6258,7 @@ L.DataLayer = L.LayerGroup.extend({
         var includeLayer = this._shouldLoadRecord(record);
 
         if (includeLayer) {
-            var dynamicOptions = this._getDynamicOptions(record);
+            var dynamicOptions = this.options.dynamicOptions ? this.options.dynamicOptions(record) : this._getDynamicOptions(record);
 
             layerOptions = dynamicOptions.layerOptions;
             legendDetails = dynamicOptions.legendDetails;

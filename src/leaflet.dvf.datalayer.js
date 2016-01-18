@@ -1636,7 +1636,8 @@ L.ChartDataLayer = L.DataLayer.extend({
 		var marker;
 
 		if (latLng) {
-			marker = this._getMarker(latLng, options);
+			this._markerFunction = this.options.getMarker || this._getMarker;
+			marker = this._markerFunction.call(this, latLng, options, record);
 			marker.boundaryLayer = boundaryLayer;
 		}
 

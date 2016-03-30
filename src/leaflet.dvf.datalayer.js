@@ -799,7 +799,7 @@ L.DataLayer = L.LayerGroup.extend({
                     for (var layerProperty in propertyOptions) {
                         valueFunction = propertyOptions[layerProperty];
 
-                        layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : (valueFunction.call ? valueFunction.call(this, fieldValue) : valueFunction);
+                        layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : (valueFunction.call ? valueFunction.call(this, fieldValue, record) : valueFunction);
                     }
                 }
             }

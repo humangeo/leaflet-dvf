@@ -205,7 +205,6 @@
 <script type="text/javascript" src="../../dist/data/countryData.min.js"></script>
 <script type="text/javascript">
 
-
     $(document).ready(function () {
         var map;
         var $info = $('#info');
@@ -369,10 +368,23 @@
                 totalByYear[record.Year] = totalByYear[record.Year] || 0;
                 totalByYear[record.Year] += valueNum;
 
-                totalByCountry[record.Origin] = totalByCountry[record.Origin] || {};
-                totalByCountry[record.Destination] = totalByCountry[record.Destination] || {};
+                totalByCountry[record.Origin] = totalByCountry[record.Origin] || {
+                    value: 0,
+                    min: 200000000,
+                    max: 0
+                };
+                totalByCountry[record.Destination] = totalByCountry[record.Destination] || {
+                    value: 0,
+                    min: 200000000,
+                    max: 0
+                };
 
+                totalByCountry[record.Origin].min = Math.min(totalByCountry[record.Origin].min, valueNum);
+                totalByCountry[record.Origin].max = Math.max(totalByCountry[record.Origin].max, valueNum);
                 totalByCountry[record.Origin].value -= valueNum;
+
+                totalByCountry[record.Destination].min = Math.min(totalByCountry[record.Destination].min, valueNum);
+                totalByCountry[record.Destination].max = Math.max(totalByCountry[record.Destination].max, valueNum);
                 totalByCountry[record.Destination].value += valueNum;
             });
 
@@ -411,11 +423,11 @@
                     mode: 'C',
                     lineJoin: 'square',
                     lineCap: 'butt',
-                    animatePath: {
+                    /*animatePath: {
                         property: 'stroke-dashoffset',
                         duration: '1.0s',
                         timingFunction: 'ease-in-out'
-                    }
+                    }*/
                 },
                 legendOptions: {
                     width: 200,
@@ -458,6 +470,9 @@
             var migrationGraph = new L.Graph([], options);
             layerControl.addOverlay(migrationGraph, 'Refugee Migration');
 
+            var countryMin = 2000000000000;
+            var countryMax = 0;
+
             var choropleth = new L.ChoroplethDataLayer(countriesLookup, {
                 recordsField: null,
                 locationMode: L.LocationModes.CUSTOM,
@@ -499,10 +514,32 @@
                 },
                 onEachRecord: function (layer, record) {
                     var clickFunction = function (migrationGraph, record) {
+                        /*
+                        var weightFunction = function (record) {
+                            return function (value, newRecord) {
+                                return new L.LinearFunction([totalByCountry[record.name].min, 1], [totalByCountry[record.name].max, 80]).evaluate(value);
+                            }
+                        };
+                        */
+
+
                         return function () {
                             migrationGraph.options.includeLayer = function (newRecord) {
                                 return newRecord.Destination === record.name || newRecord.Origin === record.name;
                             };
+
+                            var weightFunction = new L.LinearFunction([minCumulative, 1], [maxCumulative, 80]);
+                            migrationGraph.options.displayOptions.Cumulative.weight = weightFunction; //weightFunction(record);
+
+                            migrationGraph.options.displayOptions.Cumulative.markers = function (value) {
+                                return {
+                                    end: {
+                                        size: 2 * exaggerationFunction.evaluate(value),
+                                        markerUnits: 'userSpaceOnUse'
+                                    }
+                                };
+                            };
+
                             migrationGraph.reloadData(true);
                         };
                     };

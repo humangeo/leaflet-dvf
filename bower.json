@@ -18,7 +18,7 @@
   ],
   "dependencies": {
     "jsts": "https://github.com/bjornharrtell/jsts",
-    "leaflet": "~0.7.3",
+    "leaflet": "~1.0.0-beta.2",
     "geohash-js": "git://github.com/thurmda/geohash-js",
     "underscore": "~1.6.0",
     "moment": "~2.8.1"

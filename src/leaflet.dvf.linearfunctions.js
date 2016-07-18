@@ -658,4 +658,7 @@
     L.categoryFunction = function (categoryMap, options) {
         return new L.CategoryFunction(categoryMap, options);
     };
+    
+    return L;
+
 }, window));

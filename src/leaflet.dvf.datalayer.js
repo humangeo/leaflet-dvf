@@ -1870,4 +1870,7 @@
     L.radialMeterMarkerDataLayer = function (data, options) {
         return new L.RadialMeterMarkerDataLayer(data, options);
     };
+    
+    return L;
+
 }, window));

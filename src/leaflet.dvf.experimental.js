@@ -1499,4 +1499,7 @@
             me._calls.push(xhr);
         }
     });
+
+    return L;
+
 }, window));

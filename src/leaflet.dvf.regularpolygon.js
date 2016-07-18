@@ -120,4 +120,7 @@
     L.regularPolygon = function (centerLatLng, options) {
         return new L.RegularPolygon(centerLatLng, options);
     };
+    
+    return L;
+
 }, window));

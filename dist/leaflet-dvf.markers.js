@@ -661,6 +661,9 @@
     L.categoryFunction = function (categoryMap, options) {
         return new L.CategoryFunction(categoryMap, options);
     };
+    
+    return L;
+
 }, window));;// indexOf doesn't work in IE 8 and below, so add this method if it doesn't exist
 // Copied from:  http://stackoverflow.com/questions/1744310/how-to-fix-array-indexof-in-javascript-for-ie-browsers
 (function (factory, window) {
@@ -2039,6 +2042,9 @@
             this.fire('end');
         }
     });
+
+    return L;
+
 }, window));;// @preserve This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
 // Adapted from:  https://raw.github.com/mbostock/d3/master/lib/colorbrewer/colorbrewer.js
 (function (factory, window) {
@@ -2614,6 +2620,9 @@
         }
 
     });
+
+    return L;
+
 }, window));;(function (factory, window) {
 
     // define an AMD module that relies on 'leaflet'
@@ -4383,6 +4392,9 @@
     L.markerGroup = function (latlng, markers) {
         return new L.MarkerGroup(latlng, markers);
     };
+    
+    return L;
+
 }, window));;/*
  * Class for a drawing a bar marker on the map.  This is the basis for the BarChartMarker
  */
@@ -5364,5 +5376,7 @@
 	        }
 	    }
 	});
+
+	return L;
 
 }, window));

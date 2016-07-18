@@ -980,4 +980,6 @@
 	    }
 	});
 
+	return L;
+
 }, window));

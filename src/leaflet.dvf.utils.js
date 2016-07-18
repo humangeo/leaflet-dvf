@@ -1376,4 +1376,7 @@
             this.fire('end');
         }
     });
+
+    return L;
+
 }, window));

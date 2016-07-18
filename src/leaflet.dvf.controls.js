@@ -115,4 +115,7 @@
     L.control.legend = function (options) {
         return new L.Control.Legend(options);
     };
+    
+    return L;
+
 }, window));

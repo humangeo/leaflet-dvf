@@ -1767,4 +1767,7 @@
     L.markerGroup = function (latlng, markers) {
         return new L.MarkerGroup(latlng, markers);
     };
+    
+    return L;
+
 }, window));

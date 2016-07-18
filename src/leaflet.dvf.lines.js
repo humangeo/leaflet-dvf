@@ -491,7 +491,7 @@
      * Custom arced polyline implementation.  Draws segments as arcs rather than straight lines.
      */
     L.ArcedPolyline = L.Path.extend({
-        includes: L.extend({}, TextFunctions, PolylineFunctions),
+        includes: L.extend({}, L.TextFunctions, L.PolylineFunctions),
 
         initialize: function (latlngs, options) {
             L.setOptions(this, options);

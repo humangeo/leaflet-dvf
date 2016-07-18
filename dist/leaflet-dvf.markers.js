@@ -2659,10 +2659,10 @@
     /*
      * Functions that support displaying text on an SVG path
      */
-    var TextFunctions = TextFunctions || {
+    L.TextFunctions = L.TextFunctions || {
         __addPath: L.SVG.prototype._addPath,
         _addPath: function (layer) {
-            TextFunctions.__addPath.call(this, layer);
+            L.TextFunctions.__addPath.call(this, layer);
             if (layer.options.text) {
                 this._createText(layer);
             }
@@ -2866,7 +2866,7 @@
 
         _addPath: function (layer) {
 
-            TextFunctions._addPath.call(this, layer);
+            L.TextFunctions._addPath.call(this, layer);
 
             if (layer._gradient) {
                 this._defs.appendChild(layer._gradient);
@@ -2893,7 +2893,7 @@
         },
 
         _updatePath: function (layer) {
-            TextFunctions._updatePath.call(this, layer);
+            L.TextFunctions._updatePath.call(this, layer);
 
             var me = this;
             if (layer.options.wordCloud) {
@@ -2909,7 +2909,7 @@
 
         _removePath: function (layer) {
 
-            TextFunctions._removePath.call(this, layer);
+            L.TextFunctions._removePath.call(this, layer);
 
             if (layer._gradient) {
                 L.DomUtil.remove(layer._gradient);
@@ -3477,7 +3477,7 @@
      * Extend L.Polyline with an alternative getCenter method.  The current getCenter method
      * doesn't account for the case where you have a line with the same starting/ending point
      */
-    var PolylineFunctions = {
+    L.PolylineFunctions = {
         _getCenter: L.Polyline.prototype.getCenter,
         getCenter: function () {
             var centerPoint = this._getCenter.call(this);
@@ -3543,7 +3543,7 @@
         }
     };
 
-    L.extend(L.Polyline.prototype, PolylineFunctions);
+    L.extend(L.Polyline.prototype, L.PolylineFunctions);
 
     L.Polyline.prototype.getTextAnchor = function () {
         var center = this.getCenter();
@@ -3551,7 +3551,7 @@
         return this._map.latLngToLayerPoint(center);
     };
 
-    L.extend(L.SVG.prototype, TextFunctions, PathFunctions);
+    L.extend(L.SVG.prototype, L.TextFunctions, PathFunctions);
 
     /*
      * Rotates a point the provided number of degrees about another point.  Code inspired/borrowed from OpenLayers
@@ -3580,13 +3580,13 @@
         }
     });
 
-    // Extend the TextFunctions above and change the __updatePath reference, since
+    // Extend the L.TextFunctions above and change the __updatePath reference, since
     // _updatePath for a line/polygon is different than for a regular path
-    var LineTextFunctions = L.extend({}, TextFunctions);
+    L.LineTextFunctions = L.extend({}, L.TextFunctions);
 
     // Pulled from the Leaflet discussion here:  https://github.com/Leaflet/Leaflet/pull/1586
     // This is useful for getting a centroid/anchor point for centering text or other SVG markup
-    LineTextFunctions.getCenter = function () {
+    L.LineTextFunctions.getCenter = function () {
         var latlngs = this._latlngs,
             len = latlngs.length,
             i, j, p1, p2, f, center;
@@ -3963,7 +3963,7 @@
      */
     L.MapMarker = L.Path.extend({
 
-        // includes: TextFunctions,
+        // includes: L.TextFunctions,
 
         initialize: function (centerLatLng, options) {
             L.setOptions(this, options);

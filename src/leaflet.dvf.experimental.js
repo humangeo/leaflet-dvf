@@ -946,7 +946,7 @@
         }
     });
 
-    L.WeightedLineSegment.include(LineTextFunctions);
+    L.WeightedLineSegment.include(L.LineTextFunctions);
 
     /*
      * 

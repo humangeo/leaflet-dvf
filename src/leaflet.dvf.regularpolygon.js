@@ -1,22 +1,7 @@
 /*
  * Draws a regular polygon on the map given a radius in meters
  */
- (function (factory, window) {
-
-     // define an AMD module that relies on 'leaflet'
-     if (typeof define === 'function' && define.amd) {
-         define(['leaflet'], factory);
-
-     // define a Common JS module that relies on 'leaflet'
-     } else if (typeof exports === 'object') {
-         module.exports = factory(require('leaflet'));
-     }
-
-     // attach your plugin to the global 'L' variable
-     if (typeof window !== 'undefined' && window.L) {
-         window.L.YourPlugin = factory(L);
-     }
- }(function (L) {
+(function (window, document, undefined) {
     L.RegularPolygon = L.Polygon.extend({
         statics: {
             R: 6378.137,
@@ -121,6 +106,4 @@
         return new L.RegularPolygon(centerLatLng, options);
     };
     
-    return L;
-
-}, window));
+}(window, document));

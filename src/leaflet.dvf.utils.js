@@ -1,21 +1,6 @@
 // indexOf doesn't work in IE 8 and below, so add this method if it doesn't exist
 // Copied from:  http://stackoverflow.com/questions/1744310/how-to-fix-array-indexof-in-javascript-for-ie-browsers
-(function (factory, window) {
-
-    // define an AMD module that relies on 'leaflet'
-    if (typeof define === 'function' && define.amd) {
-        define(['leaflet'], factory);
-
-    // define a Common JS module that relies on 'leaflet'
-    } else if (typeof exports === 'object') {
-        module.exports = factory(require('leaflet'));
-    }
-
-    // attach your plugin to the global 'L' variable
-    if (typeof window !== 'undefined' && window.L) {
-        window.L.YourPlugin = factory(L);
-    }
-}(function (L) {
+(function (window, document, undefined) {
     if (!Array.prototype.indexOf) {
         Array.prototype.indexOf = function (obj, start) {
             for (var i = (start || 0), j = this.length; i < j; i++) {
@@ -1377,6 +1362,4 @@
         }
     });
 
-    return L;
-
-}, window));
+}(window, document));

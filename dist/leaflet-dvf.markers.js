@@ -4,22 +4,7 @@
  */;/*
  * Class for interpolating values along a line using a linear equation
  */
- (function (factory, window) {
-
-    // define an AMD module that relies on 'leaflet'
-    if (typeof define === 'function' && define.amd) {
-        define(['leaflet'], factory);
-
-    // define a Common JS module that relies on 'leaflet'
-    } else if (typeof exports === 'object') {
-        module.exports = factory(require('leaflet'));
-    }
-
-    // attach your plugin to the global 'L' variable
-    if (typeof window !== 'undefined' && window.L) {
-        window.L.YourPlugin = factory(L);
-    }
-}(function (L) {
+(function (window, document, undefined) {
     L.LinearFunction = L.Class.extend({
         options: {
             constrainX: false
@@ -662,26 +647,9 @@
         return new L.CategoryFunction(categoryMap, options);
     };
     
-    return L;
-
-}, window));;// indexOf doesn't work in IE 8 and below, so add this method if it doesn't exist
+}(window, document));;// indexOf doesn't work in IE 8 and below, so add this method if it doesn't exist
 // Copied from:  http://stackoverflow.com/questions/1744310/how-to-fix-array-indexof-in-javascript-for-ie-browsers
-(function (factory, window) {
-
-    // define an AMD module that relies on 'leaflet'
-    if (typeof define === 'function' && define.amd) {
-        define(['leaflet'], factory);
-
-    // define a Common JS module that relies on 'leaflet'
-    } else if (typeof exports === 'object') {
-        module.exports = factory(require('leaflet'));
-    }
-
-    // attach your plugin to the global 'L' variable
-    if (typeof window !== 'undefined' && window.L) {
-        window.L.YourPlugin = factory(L);
-    }
-}(function (L) {
+(function (window, document, undefined) {
     if (!Array.prototype.indexOf) {
         Array.prototype.indexOf = function (obj, start) {
             for (var i = (start || 0), j = this.length; i < j; i++) {
@@ -2043,26 +2011,9 @@
         }
     });
 
-    return L;
-
-}, window));;// @preserve This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
+}(window, document));;// @preserve This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
 // Adapted from:  https://raw.github.com/mbostock/d3/master/lib/colorbrewer/colorbrewer.js
-(function (factory, window) {
-
-    // define an AMD module that relies on 'leaflet'
-    if (typeof define === 'function' && define.amd) {
-        define(['leaflet'], factory);
-
-    // define a Common JS module that relies on 'leaflet'
-    } else if (typeof exports === 'object') {
-        module.exports = factory(require('leaflet'));
-    }
-
-    // attach your plugin to the global 'L' variable
-    if (typeof window !== 'undefined' && window.L) {
-        window.L.YourPlugin = factory(L);
-    }
-}(function (L) {
+(function (window, document, undefined) {
     L.ColorBrewer = {
         Sequential: {
             YlGn: {
@@ -2621,24 +2572,7 @@
 
     });
 
-    return L;
-
-}, window));;(function (factory, window) {
-
-    // define an AMD module that relies on 'leaflet'
-    if (typeof define === 'function' && define.amd) {
-        define(['leaflet'], factory);
-
-    // define a Common JS module that relies on 'leaflet'
-    } else if (typeof exports === 'object') {
-        module.exports = factory(require('leaflet'));
-    }
-
-    // attach your plugin to the global 'L' variable
-    if (typeof window !== 'undefined' && window.L) {
-        window.L.YourPlugin = factory(L);
-    }
-}(function (L) {
+}(window, document));;(function (window, document, undefined) {
 
     L.Path.XLINK_NS = 'http://www.w3.org/1999/xlink';
 
@@ -4393,28 +4327,11 @@
         return new L.MarkerGroup(latlng, markers);
     };
     
-    return L;
-
-}, window));;/*
+}(window, document));;/*
  * Class for a drawing a bar marker on the map.  This is the basis for the BarChartMarker
  */
 
-(function (factory, window) {
-
-    // define an AMD module that relies on 'leaflet'
-    if (typeof define === 'function' && define.amd) {
-        define(['leaflet'], factory);
-
-    // define a Common JS module that relies on 'leaflet'
-    } else if (typeof exports === 'object') {
-        module.exports = factory(require('leaflet'));
-    }
-
-    // attach your plugin to the global 'L' variable
-    if (typeof window !== 'undefined' && window.L) {
-        window.L.YourPlugin = factory(L);
-    }
-	}(function (L) {
+(function (window, document, undefined) {
 	L.BarMarker = L.Path.extend({
 	    initialize: function (centerLatLng, options) {
 	        L.setOptions(this, options);
@@ -5377,6 +5294,4 @@
 	    }
 	});
 
-	return L;
-
-}, window));
+}(window, document));

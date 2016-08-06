@@ -299,7 +299,7 @@
                 pointToLayer: function (feature, latlng) {
                     var location = {
                         location: latlng,
-                        text: locationTextField ? L.Util.getFieldValue(record, locationTextField) : [latlng.lat.toFixed(3), latlng.lng.toFixed(3)].join(', '),
+                        text: locationTextFunction ? locationTextFunction(record) : [latlng.lat.toFixed(3), latlng.lng.toFixed(3)].join(', '),
                         center: latlng
                     };
 
@@ -318,7 +318,7 @@
 
             return {
                 location: geoJSONLayer,
-                text: locationTextField ? L.Util.getFieldValue(record, locationTextField) : null,
+                text: locationTextFunction ? locationTextFunction(record) : null,
                 center: center
             };
         },

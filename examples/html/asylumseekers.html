@@ -246,7 +246,8 @@
             dataType: 'text'
         }), $.ajax({
             //url: '../data/unhcr_asylum_seekers_2015.csv',
-            url: '../data/unhcr_asylum_seekers_20160126.csv',
+            //url: '../data/unhcr_asylum_seekers_20160126.csv',
+            url: '../data/unhcr_asylum_seekers_20160804.csv',
             type: 'GET',
             dataType: 'text'
         })];
@@ -336,8 +337,9 @@
                 minCount = Math.min(minCount, valueNum);
                 maxCount = Math.max(maxCount, valueNum);
 
-                totalByMonth[record.Month] = totalByMonth[record.Month] || 0;
-                totalByMonth[record.Month] += valueNum;
+                var monthKey = record.Month + ' ' + record.Year;
+                totalByMonth[monthKey] = totalByMonth[monthKey] || 0;
+                totalByMonth[monthKey] += valueNum;
 
                 totalByCountry[record.Origin] = totalByCountry[record.Origin] || {};
                 totalByCountry[record.Destination] = totalByCountry[record.Destination] || {};
@@ -347,9 +349,10 @@
             });
 
             console.log(cumulative);
-            var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November'];
+            var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            var years = [2015, 2016];
             var timeIndex = _.groupBy(migrationData, function (record) {
-                return record.Month;
+                return record.Month + ' ' + record.Year;
             });
 
             /*
@@ -528,16 +531,51 @@
 
             var $info = $('#info');
             var updateGraph = function (g, month, index) {
-                setTimeout(function () {
-                    $info.find('h1').html(month);
-                    $info.find('h2').html('Asylum Seekers: ' + Humanize.compactInteger(totalByMonth[month], 1));
-                    $info.find('h3').html('Paths: ' + timeIndex[month].length);
-                    g.setData(timeIndex[month]);
-                }, (index + 1) * 2000);
+                var timeoutFunc = function (month) {
+                    return function () {
+                        if (month in timeIndex) {
+                            $info.find('h1').html(month);
+                            $info.find('h2').html('Asylum Seekers: ' + Humanize.compactInteger(totalByMonth[month], 1));
+                            $info.find('h3').html('Paths: ' + timeIndex[month].length);
+
+                            g.setData(timeIndex[month]);
+                        }
+                    }
+                };
+
+                setTimeout(timeoutFunc(month), (index + 1) * 2000);
             };
-            _.each(months, function (month, index) {
-                updateGraph(migrationGraph, month, index);
+
+            var indexKeys = [];
+
+            _.each(years, function (year) {
+                var keyFunc = function (year) {
+                    return function (month) {
+                        indexKeys.push(month + ' ' + year);
+                    };
+                }
+                _.each(months, keyFunc(year));
             });
+
+            console.log(indexKeys);
+
+            _.each(indexKeys, function (key, index) {
+                updateGraph(migrationGraph, key, index);
+            });
+
+            /*
+            _.each(years, function (year, y) {
+                var monthFunc = function (year, y) {
+                    return function (month, m) {
+                        console.log(month + ' ' + year);
+                        console.log(y + m + 1);
+                        updateGraph(migrationGraph, month + ' ' + year, y + m + 1);
+                    };
+                };
+
+                _.each(months, monthFunc(year, y));
+            });
+            */
 
         });
     });

@@ -330,7 +330,7 @@
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
-<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
 <script type="text/javascript" src="../lib/tilefilter/leaflet-tilefilter.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/vis/3.6.4/vis.min.js"></script>
@@ -376,19 +376,13 @@
 
         baseLayer.setCSSFilter(filter);
 
+        baseLayer.addTo(map);
+
         var terrainLayer = new L.StamenTileLayer('terrain', {
             detectRetina: true
         });
 
         terrainLayer.setCSSFilter(filter);
-
-        var osmLayer = new L.TileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', {
-            detectRetina: true
-        });
-
-        osmLayer.setCSSFilter(filter);
-
-        osmLayer.addTo(map);
 
         var groups = new vis.DataSet();
         groups.add({
@@ -434,8 +428,7 @@
 
         var layerControl = new L.Control.Layers({
             'Stamen Toner': baseLayer,
-            'Stamen Terrain': terrainLayer,
-            'MapQuest OSM': osmLayer
+            'Stamen Terrain': terrainLayer
         });
 
         layerControl.addTo(map);

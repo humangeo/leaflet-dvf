@@ -140,7 +140,7 @@
     var options = {
         locationMode: L.LocationModes.LOOKUP,
         getIndexKey: function (location, record) {
-            return location.text;
+            return location ? location.text : 'unknown';
         },
         recordsField: null,
         codeField: 'FIPS',

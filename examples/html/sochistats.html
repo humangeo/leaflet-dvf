@@ -8,325 +8,334 @@
     <meta name="author" content="">
     <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
-      
-      #map {
-      	background: url(http://subtlepatterns.com/patterns/paper.png);
-      }
-      
-      .leaflet-tile-pane {
-      	opacity: 0.5;
-      }
-      
-      div.legend {
-      	background: url(http://upload.wikimedia.org/wikipedia/de/thumb/0/08/Logo_Sochi_2014.svg/608px-Logo_Sochi_2014.svg.png);
-		background-size: 50%;
-		background-repeat: no-repeat;
-		background-position: 100px 20px;
-      }
-      
-      div.leaflet-control-legend {
-      	max-height: 500px;
-      }
+        body {
+            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
+
+        #map {
+            background: url(http://subtlepatterns.com/patterns/paper.png);
+        }
+
+        .leaflet-tile-pane {
+            opacity: 0.5;
+        }
+
+        div.legend {
+            background: url(http://upload.wikimedia.org/wikipedia/de/thumb/0/08/Logo_Sochi_2014.svg/608px-Logo_Sochi_2014.svg.png);
+            background-size: 50%;
+            background-repeat: no-repeat;
+            background-position: 100px 20px;
+        }
+
+        div.leaflet-control-legend {
+            max-height: 500px;
+        }
     </style>
-    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css" >
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen" />
-	<link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="../lib/leaflet-1.0/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
 </head>
 
 <body>
-	<div class="navbar">
-      <div class="navbar-inner">
+<div class="navbar">
+    <div class="navbar-inner">
         <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="#">Sochi Medal Counts</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">Sochi Medal Counts</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
         </div>
-      </div>
     </div>
+</div>
 
-    <div class="container-fluid">
-    	<div class="row-fluid">
-			<div id="map"></div>
-		</div>
-	</div>
-	<script>
-	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div id="map"></div>
+    </div>
+</div>
+<script>
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'http://www.google-analytics.com/analytics.js', 'ga');
 
-	  ga('create', 'UA-42733116-1', 'humangeo.github.io');
-	  ga('send', 'pageview');
-	</script>
-	<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-	<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
-	<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
-	<script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-	<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
-	<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
-	<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
-	<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
-	<script type="text/javascript" src="../../src/leaflet.dvf.experimental.js"></script>
-	<script type="text/javascript" src="../../dist/data/countryData.min.js"></script>
-	<script type="text/javascript">
-map = null;
-var lastLayer;
-var legendControl;
+    ga('create', 'UA-42733116-1', 'humangeo.github.io');
+    ga('send', 'pageview');
+</script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
+<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
+<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
 
-$(document).ready(function() {
+<script type="text/javascript" src="../../dist/data/countryData.min.js"></script>
+<script type="text/javascript">
+    map = null;
+    var lastLayer;
+    var legendControl;
 
-	// Function for resizing the map to fill the available space on the screen
-	var resize = function () {
-		var $map = $('#map');
+    $(document).ready(function () {
 
-		$map.height($(window).height() - $('div.navbar').outerHeight());
+        // Function for resizing the map to fill the available space on the screen
+        var resize = function () {
+            var $map = $('#map');
 
-		if (map) {
-			map.invalidateSize();
-		}
-	};
+            $map.height($(window).height() - $('div.navbar').outerHeight());
 
-	// Resize the map element on window resize
-	$(window).on('resize', function () {
-		resize();
-	});
+            if (map) {
+                map.invalidateSize();
+            }
+        };
 
-	// Resize the map element
-	resize();
+        // Resize the map element on window resize
+        $(window).on('resize', function () {
+            resize();
+        });
 
-	// Initialize the map
-	map = L.map('map').setView([0.0, 0.0], 2);
-	map.attributionControl.addAttribution('Medal counts from the <a href="http://www.kimonolabs.com/sochi/docs">Kimono Labs Sochi API</a>');
-	
-	// Add a CloudMade tile layer with style #999
-	// Add the Stamen toner tiles as a base layer
-	var baseLayer = new L.StamenTileLayer('toner', {
-		detectRetina: true
-	}).addTo(map);
+        // Resize the map element
+        resize();
 
-	baseLayer.addTo(map);
+        // Initialize the map
+        map = L.map('map').setView([0.0, 0.0], 2);
+        map.attributionControl.addAttribution('Medal counts from the <a href="http://www.kimonolabs.com/sochi/docs">Kimono Labs Sochi API</a>');
 
-	// Initialize the legend control and add it to the map
-	var legendControl = new L.Control.Legend();
+        // Add a CloudMade tile layer with style #999
+        // Add the Stamen toner tiles as a base layer
+        var baseLayer = new L.StamenTileLayer('toner', {
+            detectRetina: true
+        }).addTo(map);
 
-	legendControl.addTo(map);
+        baseLayer.addTo(map);
 
-	var layerControl = new L.Control.Layers({
-		'Cloudmade': baseLayer,
-	});
+        // Initialize the legend control and add it to the map
+        var legendControl = new L.Control.Legend();
 
-	layerControl.addTo(map);
+        legendControl.addTo(map);
 
-	//fields=medals_historical_by_year,medals,id,name,flag,abbr&limit=200
-	//$.getJSON("http://sochi.kimonolabs.com/api/countries?apikey=02f5cef421e2c6c2f57454e7a0898204&fields=medals_historical_by_year,medals,id,name,flag,abbr&limit=200", null, function (data) {			
-	//$.getJSON("http://sochi.kimonolabs.com/api/countries?apikey=02f5cef421e2c6c2f57454e7a0898204&limit=100", null, function (data) {			
-	$.getJSON('../data/countries_historical.json', null, function(data) {
-			var statsData = data.data;
+        var layerControl = new L.Control.Layers({
+            'Cloudmade': baseLayer
+        });
 
-			for (var i = 0; i < statsData.length; ++i) {
-				var abbr = statsData[i].abbr;
+        layerControl.addTo(map);
 
-				abbr = abbr === 'IRI' ? 'IRN' : abbr;
-				abbr = abbr === 'IVB' ? 'VGB' : abbr;
-				abbr = abbr === 'ISV' ? 'VIR' : abbr;
-				
-				if (abbr in L.alpha3Lookup) {
-					var lookup = L.isoFipsLookup[abbr].toLowerCase();
+        //fields=medals_historical_by_year,medals,id,name,flag,abbr&limit=200
+        //$.getJSON("http://sochi.kimonolabs.com/api/countries?apikey=02f5cef421e2c6c2f57454e7a0898204&fields=medals_historical_by_year,medals,id,name,flag,abbr&limit=200", null, function (data) {
+        //$.getJSON("http://sochi.kimonolabs.com/api/countries?apikey=02f5cef421e2c6c2f57454e7a0898204&limit=100", null, function (data) {
+        $.getJSON('../data/countries_historical.json', null, function (data) {
+            var statsData = data.data;
 
-					statsData[i].flag = 'https://www.cia.gov/library/publications/the-world-factbook/graphics/flags/large/' + lookup + '-lgflag.gif'
-				}
-				else {
-					console.log(statsData[i]);
-				}
-			}
-				
-			var countLayer = new L.StackedRegularPolygonDataLayer(data, {
-				recordsField: 'data',
-				locationMode: L.LocationModes.COUNTRY,
-				codeField: 'abbr',
-				includeBoundary: true,
-				boundaryStyle: function (record, layer) {
-					return {
-						fillPattern: {
-							url: record.flag,
-							pattern: {
-								width: '100px',
-								height: '66px',
-								patternUnits: 'userSpaceOnUse'
-							},
-							image: {
-								width: '113px',
-								height: '87px'
-							}
-						},
-						fillOpacity: 0.7,
-						weight: 2,
-						color: '#303030',
-						opacity: 1.0,
-						clickable: false
-					}
-				},
-				legendOptions: {
-					title: 'Medals'
-				},
-				tooltipOptions: {
-					iconSize: new L.Point(100, 70),
-					iconAnchor: new L.Point(-5, 70)
-				},
-				chartOptions: {
-					'medals.gold':{
-						color: 'black',
-						fillColor: 'gold',
-						minValue: 0,
-						maxValue: 30,
-						minRadius: 0,
-						maxRadius: 100,
-						displayName: 'Gold'
-					},
-					'medals.silver':{
-						color: 'black',
-						fillColor: 'silver',
-						minValue: 0,
-						maxValue: 30,
-						minRadius: 0,
-						maxRadius: 100,
-						displayName: 'Silver'
-					},
-					'medals.bronze':{
-						color: 'black',
-						fillColor: '#8C7853',
-						minValue: 0,
-						maxValue: 30,
-						minRadius: 0,
-						maxRadius: 100,
-						displayName: 'Bronze'
-					}
-				},
-				layerOptions: {
-					fillOpacity: 0.9,
-					opacity: 1,
-					weight: 0.3,
-					width: 8,
-					numberOfSides: 100,
-					gradient: true,
-					dropShadow: false,
-					//lineCap: 'square',
-					//lineJoin: 'miter'//,
-					stroke: true
-				}
-			});
-			
-			/*
-			var countLayer = new L.SparklineDataLayer(data, {
-				recordsField: 'data',
-				codeField: 'abbr',
-				locationMode: L.LocationModes.COUNTRY,
-				includeBoundary: true,
-				seriesField: 'medals_historical_by_year',
-				boundaryStyle: function (record, layer) {
-					return {
-						fillPattern: {
-							url: record.flag,
-							pattern: {
-								width: '212px',
-								height: '172px',
-								patternUnits: 'userSpaceOnUse',
-								patternContentUnits: 'Default'
-							},
-							image: {
-								width: '212px',
-								height: '172px'
-							}
-						},
-						fillOpacity: 0.5,
-						weight: 2,
-						color: '#303030',
-						opacity: 1.0
-					}
-				},
-				chartOptions: {
-					total: {
-						xField: "0",
-						yField: "1.total",
-						fill: true,
-						fillColor: '#303030',
-						color: 'black',
-						displayName: 'Total',
-						fillOpacity: 0.4,
-						gradient: true
-					},
-					'bronze': {
-						xField: "0",
-						yField: "1.broze",
-						fill: false,
-						fillColor: '#8C7853',
-						color: '#8C7853',
-						displayName: 'Bronze',
-						fillOpacity: 0.9,
-						weight: 6
-					},
-					
-					'silver': {
-						xField: "0",
-						yField: "1.silver",
-						fill: false,
-						fillColor: 'silver',
-						color: 'silver',
-						displayName: 'Silver',
-						fillOpacity: 0.6,
-						weight: 4
-					},
-					
-					'gold':{
-						xField: "0",
-						yField: "1.gold",
-						fill: false,
-						fillColor: 'gold',
-						color: 'gold',
-						displayName: 'Gold',
-						fillOpacity: 0.3, 
-						weight: 2
-					}
-					
-				},
-				layerOptions: {
-					size: new L.Point(200, 150),
-					fillOpacity: 0.9,
-					opacity: 1,
-					weight: 0.4,
-					gradient: false,
-					dropShadow: true,
-					lineCap: 'square',
-					lineJoin: 'mitre'
-				},
-				legendOptions: {
-					title: 'Medal Counts by Year'
-				},
-				tooltipOptions: {
-					iconSize: new L.Point(100, 60),
-					iconAnchor: new L.Point(-5, 100)
-				}
-			});
-			*/
-			map.addLayer(countLayer);
-			
-		});
+            for (var i = 0; i < statsData.length; ++i) {
+                var abbr = statsData[i].abbr;
 
-});
-	</script>
+                abbr = abbr === 'IRI' ? 'IRN' : abbr;
+                abbr = abbr === 'IVB' ? 'VGB' : abbr;
+                abbr = abbr === 'ISV' ? 'VIR' : abbr;
+
+                if (abbr in L.alpha3Lookup) {
+                    var lookup = L.isoFipsLookup[abbr].toLowerCase();
+
+                    statsData[i].flag = 'https://www.cia.gov/library/publications/the-world-factbook/graphics/flags/large/' + lookup + '-lgflag.gif'
+                }
+                else {
+                    console.log(statsData[i]);
+                }
+            }
+
+            var countLayer = new L.StackedRegularPolygonDataLayer(data, {
+                recordsField: 'data',
+                locationMode: L.LocationModes.COUNTRY,
+                codeField: 'abbr',
+                includeBoundary: true,
+                boundaryStyle: function (record, layer) {
+                    return {
+                        fillPattern: {
+                            url: record.flag,
+                            pattern: {
+                                width: '100px',
+                                height: '66px',
+                                patternUnits: 'userSpaceOnUse'
+                            },
+                            image: {
+                                width: '113px',
+                                height: '87px'
+                            }
+                        },
+                        fillOpacity: 0.7,
+                        weight: 2,
+                        color: '#303030',
+                        opacity: 1.0,
+                        clickable: false
+                    }
+                },
+                legendOptions: {
+                    title: 'Medals'
+                },
+                tooltipOptions: {
+                    iconSize: new L.Point(100, 70),
+                    iconAnchor: new L.Point(-5, 70)
+                },
+                chartOptions: {
+                    'medals.gold': {
+                        color: 'black',
+                        fillColor: 'gold',
+                        minValue: 0,
+                        maxValue: 30,
+                        minRadius: 0,
+                        maxRadius: 100,
+                        displayName: 'Gold'
+                    },
+                    'medals.silver': {
+                        color: 'black',
+                        fillColor: 'silver',
+                        minValue: 0,
+                        maxValue: 30,
+                        minRadius: 0,
+                        maxRadius: 100,
+                        displayName: 'Silver'
+                    },
+                    'medals.bronze': {
+                        color: 'black',
+                        fillColor: '#8C7853',
+                        minValue: 0,
+                        maxValue: 30,
+                        minRadius: 0,
+                        maxRadius: 100,
+                        displayName: 'Bronze'
+                    }
+                },
+                layerOptions: {
+                    fillOpacity: 0.9,
+                    opacity: 1,
+                    weight: 0.3,
+                    width: 8,
+                    numberOfSides: 100,
+                    gradient: true,
+                    dropShadow: false,
+                    //lineCap: 'square',
+                    //lineJoin: 'miter'//,
+                    stroke: true
+                }
+            });
+
+            /*
+             var countLayer = new L.SparklineDataLayer(data, {
+             recordsField: 'data',
+             codeField: 'abbr',
+             locationMode: L.LocationModes.COUNTRY,
+             includeBoundary: true,
+             seriesField: 'medals_historical_by_year',
+             boundaryStyle: function (record, layer) {
+             return {
+             fillPattern: {
+             url: record.flag,
+             pattern: {
+             width: '212px',
+             height: '172px',
+             patternUnits: 'userSpaceOnUse',
+             patternContentUnits: 'Default'
+             },
+             image: {
+             width: '212px',
+             height: '172px'
+             }
+             },
+             fillOpacity: 0.5,
+             weight: 2,
+             color: '#303030',
+             opacity: 1.0
+             }
+             },
+             chartOptions: {
+             total: {
+             xField: "0",
+             yField: "1.total",
+             fill: true,
+             fillColor: '#303030',
+             color: 'black',
+             displayName: 'Total',
+             fillOpacity: 0.4,
+             gradient: true
+             },
+             'bronze': {
+             xField: "0",
+             yField: "1.broze",
+             fill: false,
+             fillColor: '#8C7853',
+             color: '#8C7853',
+             displayName: 'Bronze',
+             fillOpacity: 0.9,
+             weight: 6
+             },
+
+             'silver': {
+             xField: "0",
+             yField: "1.silver",
+             fill: false,
+             fillColor: 'silver',
+             color: 'silver',
+             displayName: 'Silver',
+             fillOpacity: 0.6,
+             weight: 4
+             },
+
+             'gold':{
+             xField: "0",
+             yField: "1.gold",
+             fill: false,
+             fillColor: 'gold',
+             color: 'gold',
+             displayName: 'Gold',
+             fillOpacity: 0.3,
+             weight: 2
+             }
+
+             },
+             layerOptions: {
+             size: new L.Point(200, 150),
+             fillOpacity: 0.9,
+             opacity: 1,
+             weight: 0.4,
+             gradient: false,
+             dropShadow: true,
+             lineCap: 'square',
+             lineJoin: 'mitre'
+             },
+             legendOptions: {
+             title: 'Medal Counts by Year'
+             },
+             tooltipOptions: {
+             iconSize: new L.Point(100, 60),
+             iconAnchor: new L.Point(-5, 100)
+             }
+             });
+             */
+            map.addLayer(countLayer);
+
+        });
+
+    });
+</script>
 </body>
 </html>

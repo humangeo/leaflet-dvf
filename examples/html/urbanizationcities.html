@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Examples - City Populations (1950 - 2030)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <link rel="stylesheet" href="../lib/leaflet-1.0/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
+    <style>
+        #map {
+            background-image: url('../img/subtlepatterns/irongrip/irongrip.png');
+        }
+
+        #map div.leaflet-tile-pane {
+            opacity: 0.3;
+        }
+
+        div.leaflet-control-legend {
+            width: 400px;
+            max-height: 80px;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .legend-line {
+            margin-bottom: 20px;
+        }
+
+        .legend-line div.scale-bars i {
+            background: none !important;
+            width: 0px;
+            height: 0px !important;
+            vertical-align: middle;
+            border-left: none !important;
+        }
+
+        .line-legend .legend-box {
+            width: 0px;
+            height: 0px !important;
+            border-top: none !important;
+            border-right: none !important;
+        }
+
+        #info {
+            color: #fff;
+            margin: 10px;
+            position: absolute;
+            top: 200px;
+            right: 0px;
+            width: 400px;
+            overflow-y: auto;
+            z-index: 999;
+        }
+
+        #info table {
+            background-color: #fff;
+        }
+
+        div.leaflet-div-icon {
+            background-color: rgba(20,20,20,0.7);
+            border-radius: 0px;
+            background-image: none;
+            color: #fff;
+            border: none;
+            text-align: left;
+            padding: 20px;
+            min-width: 200px;
+        }
+
+        div.leaflet-div-icon div.legend-box {
+            width: 134px;
+            height: 20px;
+            display: block;
+        }
+
+        div.leaflet-div-icon div.legend-values {
+            margin-top: 20px;
+        }
+
+        div.leaflet-div-icon div.key {
+            display: block;
+            font-weight: bold;
+            font-size: 17px;
+            line-height: 17px;
+            margin-top: 10px;
+        }
+
+        div.leaflet-div-icon div.value {
+            display: block;
+            font-size: 15px;
+            line-height: 15px;
+            width: 100%;
+            margin: 10px 0px;
+        }
+
+        div.leaflet-div-icon div.title {
+            display: block;
+            font-size: 15px;
+            line-height: 15px;
+            width: 100%;
+            margin: 10px 0px;
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        .leaflet-bar a.leaflet-disabled {
+            background-color: #222;
+            color: #333;
+        }
+
+        .leaflet-bar a, .leaflet-bar a:hover {
+            color: #fff;
+            background-color: #222;
+        }
+
+        .leaflet-bar a, .leaflet-control-layers-toggle {
+            background-color: #222;
+        }
+
+        .leaflet-control-layers-expanded {
+            background: #222;
+        }
+
+        .leaflet-control-layers .leaflet-control-layers-list, .leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+            background-color: #222;
+            color: #fff;
+        }
+
+        .leaflet-container .leaflet-control-attribution {
+            background: #222;
+            color: #ccc;
+        }
+
+        .leaflet-control-attribution a, .leaflet-control-attribution a:hover {
+            color: #999;
+        }
+    </style>
+</head>
+
+<body>
+<div class="navbar navbar-inverse">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">City Populations (1950 - 2030)</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div id="map"></div>
+        <div id="info"><h1></h1></div>
+    </div>
+</div>
+
+<script>
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+                    (i[r].q = i[r].q || []).push(arguments)
+                }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'http://www.google-analytics.com/analytics.js', 'ga');
+
+    ga('create', 'UA-42733116-1', 'humangeo.github.io');
+    ga('send', 'pageview');
+</script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
+<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script type="text/javascript" src = "http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js" ></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+<script type="text/javascript" src="../../dist/data/countryData.min.js"></script>
+<script type="text/javascript">
+
+
+    $(document).ready(function () {
+        var map;
+        var $info = $('#info');
+        var $map = $('#map');
+        var resize = function () {
+            $map.height($(window).height() - $('div.navbar').outerHeight());
+
+            if (map) {
+                map.invalidateSize();
+            }
+        };
+
+        $(window).on('resize', function () {
+            resize();
+        });
+
+        resize();
+
+        map = L.map('map').setView([0, 0], 3);
+
+        // Add the Stamen toner tiles as a base layer
+        var baseLayer = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',{
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+        }).addTo(map);
+
+        // Add a layer control
+        var layerControl = L.control.layers().addTo(map);
+
+        // Add a legend control
+        var legendControl = L.control.legend({
+            autoAdd: true
+        }).addTo(map);
+
+        // Lump all of the requests together so that they can be used w/ promises
+        // We want to start processing the data when all requests complete
+        var ajaxRequests = [$.ajax({
+            url: '../data/unhcr-refugee-countries.csv',
+            type: 'GET',
+            dataType: 'text'
+        }), $.ajax({
+            url: '../data/un_pop_cities_300k.csv',
+            type: 'GET',
+            dataType: 'text'
+        })];
+
+        var minPercent = 0;
+        var maxPercent = 100;
+        $.when.apply($, ajaxRequests).done(function () {
+            var countryFile = arguments[0][0];
+            var dataFile = arguments[1][0];
+
+            var countries = d3.csv.parse(countryFile);
+            var urbanCities = d3.csv.parse(dataFile);
+            var timeIndex = {};
+            var minPop = 0;
+            var maxPop = 0;
+            for (var i = 1950; i <= 2030; i += 5) {
+                timeIndex[i] = [];
+
+                for (var j = 0, len = urbanCities.length; j < len; ++j) {
+                    var popValue = urbanCities[j][i.toString()].replace(' ','');
+                    timeIndex[i].push({name: urbanCities[j]['Urban Agglomeration'], lat: urbanCities[j].Latitude, lng: urbanCities[j].Longitude, value: popValue});
+
+                    if (!isNaN(popValue)) {
+                        var value = Number(popValue);
+                        minPop = Math.min(minPop, value);
+                        maxPop = Math.max(maxPop, value);
+                    }
+                }
+            }
+
+            var colorFunction = new L.CustomColorFunction(minPop, maxPop, L.ColorBrewer.Sequential.YlOrRd['3'].slice(0), {
+                interpolate: true
+            });
+            var layer = new L.DataLayer([], {
+                recordsField: null,
+                locationMode: L.LocationModes.LATLNG,
+                latitudeField: 'lat',
+                longitudeField: 'lng',
+                locationTextField: 'name',
+                layerOptions: {
+                    weight: 0.1,
+                    opacity: 0.7,
+                    fillColor: '#ff0000',
+                    fillOpacity: 1.0,
+                    fill: true,
+                    stroke: true,
+                    numberOfSides: 50
+                },
+                displayOptions: {
+                    name: {
+                        displayName: 'Urban Area',
+                        displayText: function (value) {
+                            return value;
+                        },
+                        excludeFromLegend: true
+                    },
+                    value: {
+                        radius: new L.LinearFunction([minPop, 6], [maxPop, 60]),
+                        //weight: new L.LinearFunction([minPop, 0.1], [maxPop, 0.8]),
+                        fillColor: colorFunction,
+                        color: colorFunction,
+                        displayName: 'Population (Thousands)',
+                        gradient: function (value) {
+                            return {
+                                gradientType: 'radial',
+                                stops: [
+                                    {
+                                        offset: '0%',
+                                        style: {
+                                            color: colorFunction.evaluate(value),
+                                            opacity: 1
+                                        }
+                                    },
+                                    {
+                                        offset: '30%',
+                                        style: {
+                                            color: colorFunction.evaluate(value),
+                                            opacity: 0.5
+                                        }
+                                    },
+                                    {
+                                        offset: '100%',
+                                        style: {
+                                            color: colorFunction.evaluate(value),
+                                            opacity: 0
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                legendOptions: {
+                    gradient: true
+                },
+                tooltipOptions: {
+                    iconAnchor: new L.Point(-10, 0),
+                    iconSize: null,
+                }
+            });
+
+            map.addLayer(layer);
+            var updateLayer = function (l, year, index) {
+                setTimeout(function () {
+                    $('#info h1').text(year);
+                    l.setData(timeIndex[year]);
+                }, (index + 1) * 800);
+            };
+            var index = 0;
+            for (var year in timeIndex) {
+                updateLayer(layer, year, index);
+                index += 1;
+            };
+
+        });
+    });
+</script>
+</body>
+</html>

@@ -84,7 +84,8 @@ $(document).ready(function() {
 				y: 0
 			},
 			offset: 0,
-			numberOfSides: index + 3
+			numberOfSides: index + 3,
+            interactive: true
 		};
 
 		options.rotation = (options.numberOfSides % 2 === 0 ? 180 : 90)/options.numberOfSides;
@@ -94,18 +95,21 @@ $(document).ready(function() {
 		var marker = new L.RegularPolygonMarker(latlng, options);
 
 		marker.on('mousedown', function (e) {
+            map.dragging.disable();
 			var mouseMoveFunction = function (e) {
-				marker.setLatLng(e.latlng);//.redraw();
+				marker.setLatLng(e.latlng);
 			};
 
 			map.on('mousemove', mouseMoveFunction);
 
 			map.on('mouseup', function (e) {
 				map.off('mousemove', mouseMoveFunction);
+                map.dragging.enable();
 			});
 
 			marker.on('mouseup', function (e) {
 				map.off('mousemove', mouseMoveFunction);
+                map.dragging.enable();
 			});
 		});
 
@@ -147,7 +151,48 @@ $(document).ready(function() {
 
 		options.innerRadius = options.radius/2;
 
-		return new L.RegularPolygonMarker(latlng, options);
+		var marker = new L.RegularPolygonMarker(latlng, options);
+
+        marker.on('click', function () {
+            var radius = Math.random() * 70 + 10;
+
+            /*
+            var regPolygon = new L.RegularPolygon(new L.LatLng(0, 0), {
+                radius: Math.random() * 200000 + 1000000,
+                fill: false,
+                opacity: 0.5,
+                numberOfSides: 500
+            });
+
+            map.addLayer(regPolygon);
+
+            L.AnimationUtils.animateLine(marker, {
+                path: regPolygon._getLatLngs(),
+                from: marker.options,
+                to: L.extend({}, options, {
+                    fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)',
+                    radius: radius,
+                    innerRadius: radius/2,
+                    rotation: Math.random() * 360
+                }),
+                duration: 10000
+            });
+            */
+
+            L.AnimationUtils.animate(marker, {
+                duration: 1000,
+                easing: L.AnimationUtils.easingFunctions.easeOut,
+                from: marker.options,
+                to: L.extend({}, options, {
+                    fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)',
+                    radius: radius,
+                    innerRadius: radius/2,
+                    rotation: Math.random() * 360
+                })
+            });
+        });
+
+        return marker;
 	});
 
 	addMarkers('Stars', -4.0, 0.0, 2.0, 5, function (latlng, index) {
@@ -172,7 +217,23 @@ $(document).ready(function() {
 
 		var marker = new L.StarMarker(latlng, options);
 
-		return marker;
+        marker.on('click', function () {
+            var radius = Math.random() * 70 + 10;
+
+            L.AnimationUtils.animate(marker, {
+                duration: 1000,
+                easing: L.AnimationUtils.easingFunctions.easeOut,
+                from: marker.options,
+                to: L.extend({}, options, {
+                    fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)',
+                    radius: radius,
+                    innerRadius: radius/2,
+                    rotation: Math.random() * 360
+                })
+            });
+        });
+
+        return marker;
 	});
 
 	addMarkers('Custom SVG', -10.0, 0.0, 2.0, 5, function (latlng, index) {
@@ -197,7 +258,7 @@ $(document).ready(function() {
 		options.innerRadius = options.radius/2;
 
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/8/8b/Globe_font_awesome.svg';
-		options.svg = 'http://upload.wikimedia.org/wikipedia/commons/8/8b/Green_Arrow_Up_Darker.svg';
+		options.svg = '../img/greenarrow.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/c/c2/F_icon.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/43/Feed-icon.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/48/Location_indicator_icon.svg';
@@ -232,8 +293,22 @@ $(document).ready(function() {
 			marker.redraw();
 		};
 
-		setTimeout(updateFunction, 1000/60);
+		//setTimeout(updateFunction, 1000/60);
 		//setInterval(updateFunction, 1000);
+
+        var animation = new L.Animation(function (time) {
+            return (time % 60000)/10;
+        }, function (progress) {
+            angle = progress % 360;
+
+            this._el.setStyle({
+                rotation: angle
+            });
+
+            this._el.redraw();
+        });
+
+        animation.run(marker);
 
 		marker.bindPopup('Test');
 		return marker;
@@ -255,7 +330,8 @@ $(document).ready(function() {
 			offset: 0,
 			//rotation: Math.random() * 360,
 			numberOfPoints: index + 5,
-			clickable: true
+			//clickable: true,
+            interactive: true
 		};
 
 		options.innerRadius = options.radius/2;
@@ -266,7 +342,7 @@ $(document).ready(function() {
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/c/c2/F_icon.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/43/Feed-icon.svg';
 		//options.svg = 'http://upload.wikimedia.org/wikipedia/commons/4/48/Location_indicator_icon.svg';
-		options.svg = 'http://upload.wikimedia.org/wikipedia/commons/0/05/Robot_icon.svg';
+		options.svg = '../img/robot.svg';
 
 		var width = Math.max(40, Math.random() * 100);
 		options.size = new L.Point(width, width);
@@ -279,27 +355,29 @@ $(document).ready(function() {
 		// items in the SVG image dynamically
 		var styleFunction = function (color) {
 			return function (svg) {
-				//$svg.find('#Blue_1_').css('fill', color);
-				//$svg.find('path, circle').css('fill', color);
-				//$svg.find('#path4941').css('fill', color);
-				//$svg.find('path').css('stroke', color);
-				$(svg).find('rect').css('fill', color);
+                var $eye1 = $(svg).find('path:first');
+
+                $eye1.attr('transform', $eye1.attr('transform').replace(/ scale\(1\.2,1\.2\)/gi,''));
+                $(svg).find('rect').css('fill', color);
 				
 			};
 		};
-		
+
+        options.defaultStyle = styleFunction(color);
 		options.setStyle = styleFunction(color);
 
-		var marker = new L.SVGMarker(latlng, options); //new L.StarMarker(latlng, options);
+		var marker = new L.SVGMarker(latlng, options);
+
+        //marker.bindPopup('Test');
+
 
 		marker.on('click', function () {
-			if (marker.options.oldStyle) {
-				marker.options.setStyle = marker.options.oldStyle;
+			if (marker._clicked) {
+				marker.options.setStyle = marker.options.defaultStyle;
 				marker.redraw();
-				marker.options.oldStyle = null;
+                marker._clicked = false;
 			}
 			else {
-				marker.options.oldStyle = marker.options.setStyle;
 				marker.options.setStyle = function (svg) {
 					var $eye1 = $(svg).find('path:first');
 					
@@ -307,6 +385,7 @@ $(document).ready(function() {
 				};
 				
 				marker.redraw();
+                marker._clicked = true;
 			}
 		});
 		
@@ -321,10 +400,6 @@ $(document).ready(function() {
 			fillColor: 'hsl(' + colorValue + ',100%,50%)',
 			fillOpacity: 0.7,
 			rotation: 0.0,
-			position: {
-				x: 0,
-				y: 0
-			},
 			offset: 0,
 			radius: (Math.random() * 30) + 5,
 			innerRadius: 0
@@ -388,7 +463,21 @@ $(document).ready(function() {
 		};
 		*/
 
-		return new L.MapMarker(latlng, options);
+        var marker = new L.MapMarker(latlng, options);
+
+        marker.on('click', function () {
+            L.AnimationUtils.animate(marker, {
+                duration: 1000,
+                easing: L.AnimationUtils.easingFunctions.easeOut,
+                from: marker.options,
+                to: L.extend({}, options, {
+                    fillColor: 'hsl(' + Math.random() * 360 + ',100%,50%)',
+                    radius: Math.floor(Math.random() * 50 + 20)
+                })
+            });
+        });
+
+		return marker;
 	});
 
 	addMarkers('Radial Meter Markers', -8.0, 0.0, 2.0, 5, function (latlng, index) {
@@ -474,7 +563,7 @@ $(document).ready(function() {
 			},
 			'dataPoint3': {
 				fillColor: '#9E9AC8',
-				minValue: 0,
+				minValue: -40,
 				maxValue: 20,
 				maxHeight: 30,
 				displayText: function (value) {

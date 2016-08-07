@@ -2,6 +2,25 @@
 $(document).ready(function() {
 	var map;
 
+    // Function for resizing the map to fill the available space on the screen
+    var resize = function () {
+        var $map = $('#map');
+
+        $map.height($(window).height() - $('div.navbar').outerHeight());
+
+        if (map) {
+            map.invalidateSize();
+        }
+    };
+
+    // Resize the map element on window resize
+    $(window).on('resize', function () {
+        resize();
+    });
+
+    // Resize the map element
+    resize();
+
 	// create a map in the "map" div, set the view to a given place and zoom
 	map = L.map('map').setView([0.0, 0.0], 2);
 	
@@ -433,9 +452,13 @@ $(document).ready(function() {
 			count: {
 				color: colorFunction,
 				fillColor: fillColorFunction,
-				gradient: true
+				gradient: true,
+                displayName: 'Count'
 			}
 		},
+        legendOptions: {
+            gradient: true
+        },
 		layerOptions: {
 			fillOpacity: 0.7,
 			opacity: 1,
@@ -453,14 +476,12 @@ $(document).ready(function() {
 			weight: 1
 		}
 	};
-	
+
+    var legendControl = new L.Control.Legend();
+    map.addControl(legendControl);
+
 	var layer = new L.GeohashDataLayer(geohashData,options);
 	
 	map.addLayer(layer);
-	
-	$('#legend').append(layer.getLegend({
-		numSegments: 20,
-		width: 80,
-		className: 'well'
-	}));
+
 });

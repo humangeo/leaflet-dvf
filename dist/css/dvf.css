@@ -51,14 +51,15 @@ div.legend-box {
     width: 10px;
     height: 10px;
     display: inline-block;
-    margin-right: 8px;
+    margin-right: 4px;
     border: solid 1px #000;
     margin-bottom: 0px;
 }
 
-div.leaflet-div-icon div div.legend-box  {
+div.leaflet-div-icon div div.legend-box {
     width: 5px;
     height: 5px;
+    max-height: 5px;
     display: inline-block;
     margin-right: 4px;
     margin-bottom: 0px;
@@ -74,10 +75,6 @@ div.leaflet-div-icon div div.key {
 .data-layer-legend div {
     display: inline-block;
     font-size: small;
-}
-
-.data-layer-legend .legend-box, .data-layer-legend .key {
-    vertical-align: middle;
 }
 
 .choropleth-text {
@@ -115,7 +112,11 @@ div.leaflet-div-icon div div.key {
 }
 
 .data-layer-legend {
-    padding: 8px 0px 0px 0px;
+    padding: 8px 0px;
+}
+
+.data-layer-legend .legend-box, .data-layer-legend .key {
+    vertical-align: middle;
 }
 
 .scale-bars {
@@ -148,6 +149,13 @@ div.leaflet-div-icon div div.key {
     width: 268px;
     box-shadow: 0 1px 7px #999;
     overflow: hidden;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
 }
 
 .leaflet-control-legend.larger {
@@ -177,6 +185,10 @@ div.leaflet-div-icon div div.key {
     transition: opacity 1s;
 }
 
+img.photo {
+    max-width: none;
+}
+
 .photo-info {
     background-color: rgba(0, 0, 0, 0.6);
     padding: 10px;
@@ -200,7 +212,7 @@ div.leaflet-div-icon div div.key {
 }
 
 text.leaflet-svg-text {
+    text-anchor: middle;
     alignment-baseline: central;
     dominant-baseline: central;
-    text-anchor: middle;
 }

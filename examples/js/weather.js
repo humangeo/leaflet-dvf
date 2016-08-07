@@ -29,6 +29,11 @@ var weatherfeed_callback = function (data) {
 				color: tempColorFunction,
 				fillColor: tempFillColorFunction,
 				radius: radiusFunction,
+				text: function (value) {
+					return {
+						text: value
+					}
+				},
 				displayText: function (value) {
 					var values = convert(value);
 					
@@ -42,7 +47,9 @@ var weatherfeed_callback = function (data) {
 			iconSize: new L.Point(60,40),
 			fillOpacity: 0.8,
 			opacity: 1.0,
-			radius: 6
+			radius: 6,
+			dropShadow: false,
+			rotation: 0.0
 		},
 		tooltipOptions: {
 			iconSize: new L.Point(100,55),

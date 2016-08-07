@@ -145,21 +145,21 @@ $(document).ready(function() {
         cache:true
     });
 
-    // Function for requesting the latest earthquakes from USGS
-    var getData = function () {
+	// Function for requesting the latest earthquakes from USGS
+	var getData = function () {
 
-        if (lastLayer) {
-            map.removeLayer(lastLayer);
-        }
+		if (lastLayer) {
+			map.removeLayer(lastLayer);
+		}
 
-        $.ajax({
-            //url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
+		$.ajax({
+			//url: 'http://earthquake.usgs.gov/earthquakes/feed/geojsonp/all/day',
             url: 'http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojsonp',
-            type: 'GET',
-            dataType: 'jsonp',
+			type: 'GET',
+			dataType: 'jsonp',
             jsonp: false
-        });
-    };
+		});
+	};
 
 	// Get the latest earthquake data
 	getData();

@@ -247,9 +247,7 @@
      * A generic layer class for parsing any JSON based data structure and plotting locations on a map.  This is somewhat
      * analogous to the L.GeoJSON class, but has been generalized to support JSON structures beyond GeoJSON
      */
-    L.DataLayer = L.LayerGroup.extend({
-        includes: L.Mixin.Events,
-
+    L.DataLayer = L.FeatureGroup.extend({
         options: {
             recordsField: 'features',
             locationMode: L.LocationModes.LATLNG,
@@ -284,12 +282,13 @@
                 layerStyle.fillOpacity *= 1.5;
 
                 return layerStyle;
-            }
+            },
+            removeUnreferencedLayers: false
         },
 
         initialize: function (data, options) {
             L.setOptions(this, options);
-            L.LayerGroup.prototype.initialize.call(this, options);
+            L.FeatureGroup.prototype.initialize.call(this, options);
 
             data = data || {};
 
@@ -511,8 +510,9 @@
             return this._includeFunction ? this._includeFunction.call(this, record) : true;
         },
 
-        _loadRecords: function (records) {
+        _loadRecords: function (records, removeUnreferencedLayers) {
             var location;
+            var keys = {};
 
             records = this._preProcessRecords(records);
 
@@ -525,16 +525,31 @@
                     var includeLayer = this._shouldLoadRecord(record);
 
                     location = this._getLocation(record, recordIndex);
-                    
+
+                    var key = this.options.getIndexKey ? this.options.getIndexKey.call(this, location, record) : null;
+
                     if (includeLayer) {
                         this.locationToLayer(location, record);
                     }
                     else if (this._layerIndex) {
-                        var key = this.options.getIndexKey.call(this, location, record);
                         if (key in this._layerIndex) {
                             this.removeLayer(this._layerIndex[key]);
                             delete this._layerIndex[key];
                         }
+                    }
+
+                    if (key) {
+                        keys[key] = true;
+                    }
+                }
+            }
+
+            // Prune off any existing layers in the index
+            if (this._layerIndex && (removeUnreferencedLayers || this.options.removeUnreferencedLayers)) {
+                for (var layerKey in this._layerIndex) {
+                    if (!(layerKey in keys)) {
+                        this.removeLayer(this._layerIndex[layerKey]);
+                        delete this._layerIndex[layerKey];
                     }
                 }
             }
@@ -608,15 +623,14 @@
             this.reloadData();
         },
 
-        reloadData: function () {
+        reloadData: function (removeUnreferencedLayers) {
             if (!this._layerIndex) {
                 this.clearLayers();
-
                 this._addChildLayers();
             }
 
             if (this._data) {
-                this.addData(this._data);
+                this.addData(this._data, removeUnreferencedLayers);
             }
 
             this.fire('legendChanged', this);
@@ -624,7 +638,7 @@
             return this;
         },
 
-        addData: function (data) {
+        addData: function (data, removeUnreferencedLayers) {
             var records = this.options.recordsField !== null && this.options.recordsField.length > 0 ? L.Util.getFieldValue(data, this.options.recordsField) : data;
 
             if (this.options.getIndexKey && !this._layerIndex) {
@@ -636,7 +650,7 @@
                 this._preloadLocations(records);
             }
             else {
-                this._loadRecords(records);
+                this._loadRecords(records, removeUnreferencedLayers);
             }
 
             this._data = data;
@@ -782,8 +796,7 @@
                     else {
                         for (var layerProperty in propertyOptions) {
                             valueFunction = propertyOptions[layerProperty];
-
-                            layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : (valueFunction.call ? valueFunction.call(this, fieldValue) : valueFunction);
+                            layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : (valueFunction.call ? valueFunction.call(this, fieldValue, record) : valueFunction);
                         }
                     }
                 }

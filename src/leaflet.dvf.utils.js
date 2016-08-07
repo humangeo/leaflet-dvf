@@ -170,13 +170,28 @@
             properties: {}
         };
 
-        for (var key in this.options) {
+        var key;
+
+        for (key in this.options) {
             if (this.options.hasOwnProperty(key)) {
                 var value = this.options[key];
 
                 if (typeof(value) !== 'function') {
                     feature.properties[key] = value;
                 }
+            }
+        }
+
+        for (key in legendOptions) {
+            if (legendOptions.hasOwnProperty(key)) {
+                var categoryOptions = legendOptions[key];
+                var displayName = categoryOptions.displayName || key;
+
+                var legendElement = L.DomUtil.create('div', 'data-layer-legend', legend);
+                var legendBox = L.DomUtil.create('div', 'legend-box', legendElement);
+
+                L.DomUtil.create('div', 'key', legendElement).innerHTML = displayName;
+                L.StyleConverter.applySVGStyle(legendBox, categoryOptions);
             }
         }
 

@@ -348,6 +348,9 @@
 
             this._minX = minX;
             this._maxX = maxX;
+            this._xRange = maxX - minX;
+            this._minPoint = new L.Point(minX, rgbMinColor);
+            this._maxPoint = new L.Point(maxX, rgbMaxColor);
 
             this._redFunction = new L.LinearFunction(new L.Point(minX, red1), new L.Point(maxX, red2));
             this._greenFunction = new L.LinearFunction(new L.Point(minX, green1), new L.Point(maxX, green2));

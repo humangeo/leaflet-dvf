@@ -317,31 +317,47 @@
             var markerGuid = L.Util.guid();
 
             var exaggeration = options.exaggeration || 2;
-            var size = 2 * exaggeration;
+            var size = options.size || 2 * exaggeration;
+            var halfSize = size/2;
+            var style = L.extend({
+                fill: layer.options.color,
+                opacity: layer.options.opacity,
+                radius: halfSize,
+                numberOfSides: 3,
+                rotation: 0,
+                position: new L.Point(halfSize, halfSize)
+            }, options.style);
 
             layer._markers[type].setAttribute('id', markerGuid);
             layer._markers[type].setAttribute('markerWidth', size);
             layer._markers[type].setAttribute('markerHeight', size);
-            layer._markers[type].setAttribute('refX', exaggeration);
-            layer._markers[type].setAttribute('refY', exaggeration);
-            layer._markers[type].setAttribute('orient', 'auto');
-            layer._markers[type].setAttribute('markerUnits', 'strokeWidth');
+            layer._markers[type].setAttribute('refX', halfSize);
+            layer._markers[type].setAttribute('refY', halfSize);
+            layer._markers[type].setAttribute('orient', options.orient || 'auto');
+            layer._markers[type].setAttribute('markerUnits', options.markerUnits || 'strokeWidth');
 
             if (!layer._markerPath[type]) {
                 layer._markerPath[type] = L.SVG.create('path');
                 layer._markers[type].appendChild(layer._markerPath[type]);
             }
 
-            if (options.reverse) {
-                layer._markerPath[type].setAttribute('d', 'M0,' + exaggeration + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + exaggeration);
-            }
-            else {
-                layer._markerPath[type].setAttribute('d', 'M' + size + ',' + exaggeration + ' L0,' + size + ' L0,0 L' + size + ',' + exaggeration);
-            }
+            var points = new L.RegularPolygonMarker(new L.LatLng(0,0),{})._getPoints(new L.Point(0,0), false, style);
+            var d = new L.SVGPathBuilder(points, [], {
+                closePath: true
+            }).build(6);
 
-            layer._markerPath[type].setAttribute('style', 'fill: ' + layer.options.color + '; opacity: ' + layer.options.opacity);
+            /*
+             if (options.reverse) {
+             layer._markerPath[type].setAttribute('d', 'M0,' + halfSize + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + halfSize);
+             }
+             else {
+             layer._markerPath[type].setAttribute('d', 'M' + size + ',' + halfSize + ' L0,' + size + ' L0,0 L' + size + ',' + halfSize);
+             }
+             */
+            layer._markerPath[type].setAttribute('d', d);
+
+            layer._markerPath[type].setAttribute('style', 'fill: ' + style.fill + '; opacity: ' + style.opacity);
         },
-
         _createGradient: function (layer) {
             if (!this._defs) {
                 this._createDefs();

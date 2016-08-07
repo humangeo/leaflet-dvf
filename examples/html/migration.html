@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Examples - UNHCR Migration Data (1951 - 2014)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <link rel="stylesheet" href="../lib/leaflet-1.0/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
+    <style>
+        #map {
+            *background-image: url('../img/subtlepatterns/pw_maze_white/pw_maze_white.png');
+            background: #111;
+        }
+
+        #map div.leaflet-tile-pane {
+            opacity: 0.4;
+        }
+
+        div.leaflet-control-legend {
+            width: 400px;
+            max-height: 80px;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .legend-line {
+            margin-bottom: 20px;
+        }
+
+        .legend-line div.scale-bars i {
+            background: none !important;
+            width: 0px;
+            height: 0px !important;
+            vertical-align: middle;
+            border-left: none !important;
+        }
+
+        .line-legend .legend-box {
+            width: 0px;
+            height: 0px !important;
+            border-top: none !important;
+            border-right: none !important;
+        }
+
+        #info {
+            color: #fff;
+            margin: 10px;
+            position: absolute;
+            top: 200px;
+            right: 0px;
+            width: 400px;
+            overflow-y: auto;
+            z-index: 999;
+        }
+
+        #info table {
+            background-color: #fff;
+        }
+
+        div.leaflet-div-icon {
+            background-color: #111;
+            border-radius: 0px;
+            background-image: none;
+            color: #fff;
+            border: none;
+            text-align: left;
+            padding: 20px;
+            min-width: 200px;
+        }
+
+        div.leaflet-div-icon div.legend-box {
+            width: 134px;
+            height: 20px;
+            display: block;
+        }
+
+        div.leaflet-div-icon div.legend-values {
+            margin-top: 20px;
+        }
+
+        div.leaflet-div-icon div.key {
+            display: block;
+            font-weight: bold;
+            font-size: 17px;
+            line-height: 17px;
+            margin-top: 10px;
+        }
+
+        div.leaflet-div-icon div.value {
+            display: block;
+            font-size: 15px;
+            line-height: 15px;
+            width: 100%;
+            margin: 10px 0px;
+        }
+
+        div.leaflet-div-icon div.title {
+            display: block;
+            font-size: 15px;
+            line-height: 15px;
+            width: 100%;
+            margin: 10px 0px;
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        .leaflet-bar a.leaflet-disabled {
+            background-color: #222;
+            color: #333;
+        }
+
+        .leaflet-bar a, .leaflet-bar a:hover {
+            color: #fff;
+            background-color: #222;
+        }
+
+        .leaflet-bar a, .leaflet-control-layers-toggle {
+            background-color: #222;
+        }
+
+        .leaflet-control-layers-expanded {
+            background: #222;
+        }
+
+        .leaflet-control-layers .leaflet-control-layers-list, .leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+            background-color: #222;
+            color: #fff;
+        }
+
+        .leaflet-container .leaflet-control-attribution {
+            background: #222;
+            color: #ccc;
+        }
+
+        .leaflet-control-attribution a, .leaflet-control-attribution a:hover {
+            color: #999;
+        }
+    </style>
+</head>
+
+<body>
+<div class="navbar navbar-inverse">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">UNHCR Refugee Migration</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div id="map"></div>
+        <div id="info"><h1></h1><h2></h2><h3></h3></div>
+        <div id="regions"></div>
+    </div>
+</div>
+
+<script>
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+                    (i[r].q = i[r].q || []).push(arguments)
+                }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'http://www.google-analytics.com/analytics.js', 'ga');
+
+    ga('create', 'UA-42733116-1', 'humangeo.github.io');
+    ga('send', 'pageview');
+</script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../lib/humanize.min.js"></script>
+<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
+<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script type="text/javascript" src = "http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js" ></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+<script type="text/javascript" src="../../dist/data/countryData.min.js"></script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        var map;
+        var $info = $('#info');
+        var $map = $('#map');
+        var resize = function () {
+            $map.height($(window).height() - $('div.navbar').outerHeight());
+
+            if (map) {
+                map.invalidateSize();
+            }
+        };
+
+        $(window).on('resize', function () {
+            resize();
+        });
+
+        resize();
+
+        map = L.map('map').setView([20.9167, 32.8333], 3);
+
+        // Add the Stamen toner tiles as a base layer
+        var baseLayer = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',{
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>, Data from <a href="http://popstats.unhcr.org/en/overview">UNHCR</a>'
+        }).addTo(map);
+
+        // Add a layer control
+        var layerControl = L.control.layers().addTo(map);
+
+        // Add a legend control
+        /*
+        var legendControl = L.control.legend({
+            autoAdd: true
+        }).addTo(map);
+        */
+
+        // Lump all of the requests together so that they can be used w/ promises
+        // We want to start processing the data when all requests complete
+        var ajaxRequests = [$.ajax({
+            url: '../data/unhcr-refugee-countries.csv',
+            type: 'GET',
+            dataType: 'text'
+        }), $.ajax({
+            url: '../data/unhcr_popstats_export_time_series_all_data.csv',
+            type: 'GET',
+            dataType: 'text'
+        })];
+
+        var minCount = 0;
+        var maxCount = 2000000;
+        var minCumulative = 0;
+        var maxCumulative = 2000000;
+        $.when.apply($, ajaxRequests).done(function () {
+            var countryFile = arguments[0][0];
+            var dataFile = arguments[1][0];
+
+            var countries = d3.csv.parse(countryFile);
+            var migrationData = d3.csv.parse(dataFile);
+            var countriesLookup = L.GeometryUtils.arrayToMap(countries, 'name');
+
+            var getLocation = function (context, locationField, fieldValues, callback) {
+                var key = fieldValues[0];
+                var countryCode = countriesLookup[key];
+                var location;
+                var geoJSON;
+                var centroid;
+
+                if (countryCode) {
+                    var countries = L.countries || {};
+                    var countryCentroids = L.countryCentroids || {};
+                    var code = L.alpha2Lookup[countryCode.iso2] || countryCode.code;
+
+                    // If there's a code available, then try to get the associated polygon
+                    if (code) {
+                        geoJSON = countries[code];
+                        centroid = countryCentroids[code];
+                    }
+                    else {
+                        console.log(countryCode);
+                    }
+
+                    // Create a new GeoJSON layer from the polygon definition
+                    var geoJSONLayer = new L.GeoJSON(geoJSON);
+
+                    return {
+                        location: geoJSONLayer,
+                        text: L.GeometryUtils.getName(geoJSON) || code,
+                        center: centroid
+                    };
+                }
+
+                return location;
+            };
+
+            var cumulative = {};
+            var totals = {};
+            var totalByCountry = {}; // Subtract if it's origin, Add if it's destination
+            var regions = {};
+            var areas = {};
+            var areaColors = ['#F44336','#FF9800','#FFEB3B','#8BC34A','#00BCD4','#448AFF','#E91E63'];
+            var areaColorMap = {
+                'Africa': '#F44336',
+                'Asia': '#FF9800',
+                'Europe': '#FFEB3B',
+                'Latin America and the Caribbean': '#8BC34A',
+                'Northern America': '#00BCD4',
+                'Oceania': '#448AFF'
+            };
+            var colors = L.ColorBrewer.Qualitative.Paired['12'].slice(0).concat(L.ColorBrewer.Qualitative.Set1['9'].slice(0)).concat(L.ColorBrewer.Qualitative.Pastel1['9'].slice(0));
+            var totalByYear = {};
+
+            var areaColorChoices = [];
+            for (var acKey in areaColorMap) {
+                areaColorMap[acKey] = new L.RGBColorBlendFunction(0,6,areaColorMap[acKey],'#ffffff').sample(6);
+            }
+
+            // Fix Various/Unknown locations
+            migrationData = _.map(migrationData, function (record) {
+                if (record.Origin === 'Various/Unknown') {
+                    record.Origin = record.Destination;
+                }
+
+                var originRegion = countriesLookup[record.Origin] || {region:'Various/Unknown'};
+                var destinationRegion = countriesLookup[record.Destination] || {region:'Various/Unknown'};
+                var areaValue = originRegion.area ? originRegion.area.trim() : 'Various/Unknown';
+                var regionValue = originRegion.region.trim();
+
+                areas[areaValue] = areas[areaValue] || areaColorChoices.shift();
+                regions[regionValue] = regionValue === 'Various/Unknown' ? '#e3e3e3' : regions[regionValue] || colors.pop(); //areaColorMap[areaValue].shift();  //colors.pop();
+
+                record.area = areaValue;
+                record.region = regionValue;
+                record.OriginRegion = originRegion.region;
+                record.DestinationRegion = destinationRegion.region;
+                return record;
+            });
+
+            // Reject records with certain properties
+            migrationData = _.reject(migrationData, function (record) {
+                return isNaN(record.Value) || record.Value === '*' || record.Origin === 'Various/Unknown' || record.Destination === 'Various/Unknown' || record.Population !== 'Refugees (incl. refugee-like situations)';
+            });
+
+            // Get the min and max values for the number of refugees
+            _.each(migrationData, function (record) {
+                var recordKey = record.Destination + '_' + record.Origin;
+
+                totals[recordKey] = totals[recordKey] || 0;
+                cumulative[recordKey] = cumulative[recordKey] || {};
+                cumulative[recordKey][record.Year] = cumulative[recordKey][record.Year] || 0;
+
+                totals[recordKey] += Number(record.Value);
+                cumulative[recordKey][record.Year] = totals[recordKey];
+
+                record.Cumulative = totals[recordKey];
+
+                var valueNum = Number(record.Value);
+                minCount = Math.min(minCount, valueNum);
+                maxCount = Math.max(maxCount, valueNum);
+
+                minCumulative = Math.min(minCumulative, cumulative[recordKey][record.Year]);
+                maxCumulative = Math.max(maxCumulative, cumulative[recordKey][record.Year]);
+                totalByYear[record.Year] = totalByYear[record.Year] || 0;
+                totalByYear[record.Year] += valueNum;
+
+                totalByCountry[record.Origin] = totalByCountry[record.Origin] || {
+                    value: 0,
+                    min: 200000000,
+                    max: 0
+                };
+                totalByCountry[record.Destination] = totalByCountry[record.Destination] || {
+                    value: 0,
+                    min: 200000000,
+                    max: 0
+                };
+
+                totalByCountry[record.Origin].min = Math.min(totalByCountry[record.Origin].min, valueNum);
+                totalByCountry[record.Origin].max = Math.max(totalByCountry[record.Origin].max, valueNum);
+                totalByCountry[record.Origin].value -= valueNum;
+
+                totalByCountry[record.Destination].min = Math.min(totalByCountry[record.Destination].min, valueNum);
+                totalByCountry[record.Destination].max = Math.max(totalByCountry[record.Destination].max, valueNum);
+                totalByCountry[record.Destination].value += valueNum;
+            });
+
+            var timeIndex = _.groupBy(migrationData, function (record) {
+                return record.Year;
+            });
+
+            var weightFunction = new L.LinearFunction([minCumulative, 0.1], [maxCumulative, 30]);
+            var exaggerationFunction = new L.LinearFunction([minCumulative, 4], [maxCumulative, 60]);
+            var options = {
+                recordsField: null,
+                locationMode: L.LocationModes.CUSTOM,
+                fromField: 'Origin',
+                toField: 'Destination',
+                codeField: null,
+                getLocation: getLocation,
+                getEdge: L.Graph.EDGESTYLE.ARC,
+                getIndexKey: function (location, record) {
+                    return record.Destination + '_' + record.Origin;
+                },
+                setHighlight: function (style) {
+                    style.opacity = 0.3;
+                    return style;
+                },
+                unsetHighlight: function (style) {
+                    style.opacity = 0.9;
+                    return style;
+                },
+                layerOptions: {
+                    fill: false,
+                    opacity: 0.9,
+                    weight: 0.5,
+                    fillOpacity: 1.0,
+                    distanceToHeight: new L.LinearFunction([0, 20], [1000, 300]),
+                    // Q or C for quadratic or cubic bezier
+                    mode: 'C',
+                    lineJoin: 'square',
+                    lineCap: 'butt',
+                    /*animatePath: {
+                        property: 'stroke-dashoffset',
+                        duration: '1.0s',
+                        timingFunction: 'ease-in-out'
+                    }*/
+                },
+                legendOptions: {
+                    width: 200,
+                    numSegments: 5,
+                    className: 'legend-line'
+                },
+                tooltipOptions: {
+                    iconAnchor: new L.Point(-10, 0),
+                    iconSize: null,
+                    className: 'leaflet-div-icon line-legend'
+                },
+                removeUnreferencedLayers: false,
+                displayOptions: {
+                    region: {
+                        displayName: 'Region',
+                        color: new L.CategoryFunction(regions)
+                    },
+                    'Cumulative': {
+                        displayName: 'Count',
+                        weight: weightFunction,
+                        displayText: function (value) {
+                            return Humanize.compactInteger(value, 1);
+                        },
+                        markers: function (value) {
+                            return {
+                                end: {
+                                    size: exaggerationFunction.evaluate(value),
+                                    markerUnits: 'userSpaceOnUse',
+                                    style: {
+                                        opacity: 1.0
+                                    }
+                                }
+                            };
+                        },
+                        displayName: 'Number'
+                    }
+                }
+            };
+
+            var migrationGraph = new L.Graph([], options);
+            layerControl.addOverlay(migrationGraph, 'Refugee Migration');
+
+            var countryMin = 2000000000000;
+            var countryMax = 0;
+
+            var choropleth = new L.ChoroplethDataLayer(countriesLookup, {
+                recordsField: null,
+                locationMode: L.LocationModes.CUSTOM,
+                codeField: 'name',
+                getLocation: getLocation,
+                getIndexKey: function (location, record) {
+                    return record.name;
+                },
+                setHighlight: function (style) {
+                    style.opacity = 1.0;
+
+                    return style;
+                },
+                unsetHighlight: function (style) {
+                    style.opacity = 0.5;
+
+                    return style;
+                },
+                layerOptions: {
+                    opacity: 0.2,
+                    weight: 0.9,
+                    fillOpacity: 0.03
+                },
+                legendOptions: {
+                    width: 200,
+                    numSegments: 5,
+                    className: 'legend-line'
+                },
+                tooltipOptions: {
+                    iconAnchor: new L.Point(-10, 0),
+                    iconSize: null,
+                    className: 'leaflet-div-icon line-legend'
+                },
+                displayOptions: {
+                    region: {
+                        color: new L.CategoryFunction(regions),
+                        displayName: 'Region'
+                    }
+                },
+                onEachRecord: function (layer, record) {
+                    var clickFunction = function (migrationGraph, record) {
+                        /*
+                        var weightFunction = function (record) {
+                            return function (value, newRecord) {
+                                return new L.LinearFunction([totalByCountry[record.name].min, 1], [totalByCountry[record.name].max, 80]).evaluate(value);
+                            }
+                        };
+                        */
+
+
+                        return function () {
+                            migrationGraph.options.includeLayer = function (newRecord) {
+                                return newRecord.Destination === record.name || newRecord.Origin === record.name;
+                            };
+
+                            var weightFunction = new L.LinearFunction([minCumulative, 1], [maxCumulative, 80]);
+                            migrationGraph.options.displayOptions.Cumulative.weight = weightFunction; //weightFunction(record);
+
+                            migrationGraph.options.displayOptions.Cumulative.markers = function (value) {
+                                return {
+                                    end: {
+                                        size: 2 * exaggerationFunction.evaluate(value),
+                                        markerUnits: 'userSpaceOnUse'
+                                    }
+                                };
+                            };
+
+                            migrationGraph.reloadData(true);
+                        };
+                    };
+
+                    layer.on('click', clickFunction(migrationGraph, record));
+                }
+            });
+
+            layerControl.addOverlay(choropleth, 'Regions');
+            map.addLayer(migrationGraph);
+
+            var $info = $('#info');
+            var updateGraph = function (g, year) {
+                setTimeout(function () {
+                    $info.find('h1').html(year);
+                    $info.find('h2').html('Refugees: ' + Humanize.compactInteger(totalByYear[year], 1));
+                    $info.find('h3').html('Paths: ' + Humanize.intComma(timeIndex[year].length));
+                    g.setData(timeIndex[year]);
+                }, (year % 1950) * 1200);
+            };
+            for (var year in timeIndex) {
+                updateGraph(migrationGraph, year);
+            }
+
+        });
+    });
+</script>
+</body>
+</html>

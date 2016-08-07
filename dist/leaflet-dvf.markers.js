@@ -351,6 +351,9 @@
 
             this._minX = minX;
             this._maxX = maxX;
+            this._xRange = maxX - minX;
+            this._minPoint = new L.Point(minX, rgbMinColor);
+            this._maxPoint = new L.Point(maxX, rgbMaxColor);
 
             this._redFunction = new L.LinearFunction(new L.Point(minX, red1), new L.Point(maxX, red2));
             this._greenFunction = new L.LinearFunction(new L.Point(minX, green1), new L.Point(maxX, green2));
@@ -819,13 +822,28 @@
             properties: {}
         };
 
-        for (var key in this.options) {
+        var key;
+
+        for (key in this.options) {
             if (this.options.hasOwnProperty(key)) {
                 var value = this.options[key];
 
                 if (typeof(value) !== 'function') {
                     feature.properties[key] = value;
                 }
+            }
+        }
+
+        for (key in legendOptions) {
+            if (legendOptions.hasOwnProperty(key)) {
+                var categoryOptions = legendOptions[key];
+                var displayName = categoryOptions.displayName || key;
+
+                var legendElement = L.DomUtil.create('div', 'data-layer-legend', legend);
+                var legendBox = L.DomUtil.create('div', 'legend-box', legendElement);
+
+                L.DomUtil.create('div', 'key', legendElement).innerHTML = displayName;
+                L.StyleConverter.applySVGStyle(legendBox, categoryOptions);
             }
         }
 
@@ -948,7 +966,7 @@
                 pointToLayer: function (feature, latlng) {
                     var location = {
                         location: latlng,
-                        text: locationTextField ? L.Util.getFieldValue(record, locationTextField) : [latlng.lat.toFixed(3), latlng.lng.toFixed(3)].join(', '),
+                        text: locationTextFunction ? locationTextFunction(record) : [latlng.lat.toFixed(3), latlng.lng.toFixed(3)].join(', '),
                         center: latlng
                     };
 
@@ -967,7 +985,7 @@
 
             return {
                 location: geoJSONLayer,
-                text: locationTextField ? L.Util.getFieldValue(record, locationTextField) : null,
+                text: locationTextFunction ? locationTextFunction(record) : null,
                 center: center
             };
         },
@@ -2891,31 +2909,47 @@
             var markerGuid = L.Util.guid();
 
             var exaggeration = options.exaggeration || 2;
-            var size = 2 * exaggeration;
+            var size = options.size || 2 * exaggeration;
+            var halfSize = size/2;
+            var style = L.extend({
+                fill: layer.options.color,
+                opacity: layer.options.opacity,
+                radius: halfSize,
+                numberOfSides: 3,
+                rotation: 0,
+                position: new L.Point(halfSize, halfSize)
+            }, options.style);
 
             layer._markers[type].setAttribute('id', markerGuid);
             layer._markers[type].setAttribute('markerWidth', size);
             layer._markers[type].setAttribute('markerHeight', size);
-            layer._markers[type].setAttribute('refX', exaggeration);
-            layer._markers[type].setAttribute('refY', exaggeration);
-            layer._markers[type].setAttribute('orient', 'auto');
-            layer._markers[type].setAttribute('markerUnits', 'strokeWidth');
+            layer._markers[type].setAttribute('refX', halfSize);
+            layer._markers[type].setAttribute('refY', halfSize);
+            layer._markers[type].setAttribute('orient', options.orient || 'auto');
+            layer._markers[type].setAttribute('markerUnits', options.markerUnits || 'strokeWidth');
 
             if (!layer._markerPath[type]) {
                 layer._markerPath[type] = L.SVG.create('path');
                 layer._markers[type].appendChild(layer._markerPath[type]);
             }
 
-            if (options.reverse) {
-                layer._markerPath[type].setAttribute('d', 'M0,' + exaggeration + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + exaggeration);
-            }
-            else {
-                layer._markerPath[type].setAttribute('d', 'M' + size + ',' + exaggeration + ' L0,' + size + ' L0,0 L' + size + ',' + exaggeration);
-            }
+            var points = new L.RegularPolygonMarker(new L.LatLng(0,0),{})._getPoints(new L.Point(0,0), false, style);
+            var d = new L.SVGPathBuilder(points, [], {
+                closePath: true
+            }).build(6);
 
-            layer._markerPath[type].setAttribute('style', 'fill: ' + layer.options.color + '; opacity: ' + layer.options.opacity);
+            /*
+             if (options.reverse) {
+             layer._markerPath[type].setAttribute('d', 'M0,' + halfSize + ' L' + size + ',' + size + ' L' + size + ',0 L0,' + halfSize);
+             }
+             else {
+             layer._markerPath[type].setAttribute('d', 'M' + size + ',' + halfSize + ' L0,' + size + ' L0,0 L' + size + ',' + halfSize);
+             }
+             */
+            layer._markerPath[type].setAttribute('d', d);
+
+            layer._markerPath[type].setAttribute('style', 'fill: ' + style.fill + '; opacity: ' + style.opacity);
         },
-
         _createGradient: function (layer) {
             if (!this._defs) {
                 this._createDefs();

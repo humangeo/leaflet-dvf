@@ -156,7 +156,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </a>
-            <a class="brand" href="#">UNHCR Asymlum Seekers by Month (2015)</a>
+            <a class="brand" href="#">UNHCR Asymlum Seekers by Month (January 2015 - Present)</a>
 
             <div class="nav-collapse collapse">
                 <ul class="nav">
@@ -245,8 +245,6 @@
             type: 'GET',
             dataType: 'text'
         }), $.ajax({
-            //url: '../data/unhcr_asylum_seekers_2015.csv',
-            //url: '../data/unhcr_asylum_seekers_20160126.csv',
             url: '../data/unhcr_asylum_seekers_20160804.csv',
             type: 'GET',
             dataType: 'text'
@@ -308,6 +306,15 @@
                 if (record.Origin === 'Various/unknown') {
                     record.Origin = record.Destination;
                 }
+
+                if (record.Origin.indexOf('USA') === 0) {
+                    record.Origin = 'United States of America';
+                }
+
+                if (record.Destination.indexOf('USA') === 0) {
+                    record.Destination = 'United States of America';
+                }
+
                 var originRegion = countriesLookup[record.Origin] || {region:'Various/unknown'};
                 var regionValue = originRegion.region.trim();
                 regions[regionValue] = regions[regionValue] || colors.pop();
@@ -320,6 +327,9 @@
             migrationData = _.reject(migrationData, function (record) {
                 return isNaN(record.Value) || record.Value === '*' || record.Origin === 'Various/unknown' || record.Destination === 'Various/unknown';
             });
+
+            var byCountryMin = 0;
+            var byCountryMax = 0;
 
             // Get the min and max values for the number of refugees
             _.each(migrationData, function (record) {
@@ -341,41 +351,83 @@
                 totalByMonth[monthKey] = totalByMonth[monthKey] || 0;
                 totalByMonth[monthKey] += valueNum;
 
-                totalByCountry[record.Origin] = totalByCountry[record.Origin] || {};
-                totalByCountry[record.Destination] = totalByCountry[record.Destination] || {};
+                totalByCountry[record.Origin] = totalByCountry[record.Origin] || {key: record.Origin, value: 0};
+                totalByCountry[record.Destination] = totalByCountry[record.Destination] || {key: record.Destination, value: 0};
 
                 totalByCountry[record.Origin].value -= valueNum;
                 totalByCountry[record.Destination].value += valueNum;
+
+                byCountryMin = Math.min(byCountryMin, totalByCountry[record.Origin].value, totalByCountry[record.Destination].value);
+                byCountryMax = Math.max(byCountryMax, totalByCountry[record.Origin].value, totalByCountry[record.Destination].value);
             });
 
-            console.log(cumulative);
             var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             var years = [2015, 2016];
             var timeIndex = _.groupBy(migrationData, function (record) {
                 return record.Month + ' ' + record.Year;
             });
 
-            /*
-            var layer = new L.DataLayer(totalByCountry, {
+            var cumulativeColor = new L.CustomColorFunction(byCountryMin, byCountryMax, L.ColorBrewer.Diverging.RdYlGn['11']);
+            map.createPane('averageCountries');
+            map.createPane('topCountries');
+            map.createPane('lines');
+
+            var layer = new L.ChoroplethDataLayer(totalByCountry, {
                 recordsField: null,
                 locationMode: L.LocationModes.CUSTOM,
-                codeField: null,
+                codeField: 'key',
                 getLocation: getLocation,
                 layerOptions: {
-                    numberOfSides: 50
+                    color: 'white',
+                    fillOpacity: 0.6
+                },
+                tooltipOptions: {
+                    iconAnchor: new L.Point(-10, 0),
+                    iconSize: null,
+                    className: 'leaflet-div-icon line-legend'
                 },
                 displayOptions: {
                     value: {
-                        fillColor: new L.HSLHueFunction([minCount, 60], [maxCount, 15], {
-                            outputLuminosity: '60%'
-                        }),
-                        radius: new L.LinearFunction([minCount, 10], [maxCount, 50])
+                        color: cumulativeColor,
+                        fillColor: cumulativeColor,
+                        pane: function (value) {
+                            if (value >= 100000 || value <= -100000) {
+                                return 'topCountries';
+                            }
+                            else {
+                                return 'averageCountries';
+                            }
+                        },
+                        opacity: function (value) {
+                            if (value >= 100000 || value <= -100000) {
+                                return 1;
+                            }
+                            else {
+                                return 0.2;
+                            }
+                        },
+                        fillOpacity: function (value) {
+                            if (value >= 100000 || value <= -100000) {
+                                return 0.7;
+                            }
+                            else {
+                                return 0.1;
+                            }
+                        },
+                        weight: function (value) {
+                            if (value >= 100000 || value <= -100000) {
+                                return 3;
+                            }
+                            else {
+                                return 1;
+                            }
+                        }
                     }
                 }
             });
 
-            map.addLayer(layer);
-            */
+            layerControl.addOverlay(layer, 'Cumulative');
+
             var weightFunction = new L.LinearFunction([minCount, 0.1], [maxCount, 30]);
             var exaggerationFunction = new L.LinearFunction([minCount, 4], [maxCount, 60]);
             var options = {
@@ -400,6 +452,7 @@
                     return style;
                 },
                 layerOptions: {
+                    pane: 'lines',
                     fill: false,
                     //dashArray: [1,1],
                     opacity: 0.9,

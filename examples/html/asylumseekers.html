@@ -322,7 +322,7 @@
                 if (record.Destination.indexOf('Serbia and Kosovo') === 0) {
                     record.Destination = 'Serbia and Kosovo (S/RES/1244 (1999))'
                 }
-                
+
                 var originRegion = countriesLookup[record.Origin] || {region:'Various/unknown'};
                 var regionValue = originRegion.region.trim();
                 regions[regionValue] = regions[regionValue] || colors.pop();

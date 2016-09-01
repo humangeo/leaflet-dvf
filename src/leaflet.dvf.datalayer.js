@@ -44,7 +44,7 @@ L.LocationModes = {
 	 */
 	GEOHASH: function (record, index) {
 		var geohash = this.options.geohashField ? L.Util.getFieldValue(record, this.options.geohashField) : index;
-		var locationInfo = decodeGeoHash(geohash);
+		var locationInfo = GeoHash.decodeGeoHash(geohash);
 		var bounds;
 
 		if (locationInfo.latitude[2] && locationInfo.longitude[2]) {

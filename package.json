@@ -38,5 +38,8 @@
       ]
     }
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "geohash": "0.0.1"
+  }
 }

@@ -851,7 +851,7 @@
     };
 
     L.Util.updateLayer = function (layer, updateFunction) {
-        if (layer.eachLayer && !layer instanceof L.FeatureGroup) {
+        if (layer.eachLayer && !(layer instanceof L.FeatureGroup)) {
             layer.eachLayer(function (layer) {
                 L.Util.updateLayer(layer, updateFunction);
             });
@@ -7976,7 +7976,10 @@
 
             if (layer.getLegend) {
                 var element = document.getElementById(id);
-                element.parentNode.removeChild(element);
+
+                if (element) {
+                    element.parentNode.removeChild(element);
+                }
 
                 layer.off('legendChanged');
             }

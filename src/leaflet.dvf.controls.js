@@ -76,7 +76,10 @@ L.Control.Legend = L.Control.extend({
 
 		if (layer.getLegend) {
 			var element = document.getElementById(id);
-			element.parentNode.removeChild(element);
+
+			if (element) {
+				element.parentNode.removeChild(element);
+			}
 
 			layer.off('legendChanged');
 		}

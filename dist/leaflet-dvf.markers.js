@@ -825,7 +825,7 @@ L.Util.pointToGeoJSON = function () {
 };
 
 L.Util.updateLayer = function (layer, updateFunction) {
-	if (layer.eachLayer && !layer instanceof L.FeatureGroup) {
+	if (layer.eachLayer && !(layer instanceof L.FeatureGroup)) {
 		layer.eachLayer(function (layer) {
 			L.Util.updateLayer(layer, updateFunction);
 		});

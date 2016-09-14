@@ -725,7 +725,7 @@ $(document).ready(function() {
 
 			this.redraw();
 		});
-		
+
 		return radialChartMarker;
 	});
 

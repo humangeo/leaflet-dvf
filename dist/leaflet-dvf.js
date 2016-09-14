@@ -4737,7 +4737,7 @@
 	    _loadComponents: function () {
 	        var value, minValue, maxValue;
 	        var bar;
-	        var options = this.options;
+	        var options = L.Util.extend({}, this.options);
 	        var x;
 	        var y;
 	        var keys = Object.keys(this.options.data);
@@ -5239,6 +5239,7 @@
 	        var chartOptions = this.options.chartOptions;
 	        var chartOption;
 	        var key;
+			var minValue, maxValue, minRadius, maxRadius;
 
 	        // Iterate through the data values
 	        var bars = [];

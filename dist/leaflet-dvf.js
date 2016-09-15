@@ -4737,7 +4737,7 @@
 	    _loadComponents: function () {
 	        var value, minValue, maxValue;
 	        var bar;
-	        var options = L.Util.extend({}, this.options);
+	        var options = L.extend({}, this.options);
 	        var x;
 	        var y;
 	        var keys = Object.keys(this.options.data);

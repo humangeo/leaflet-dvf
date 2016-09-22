@@ -11,4 +11,4 @@ The primary goal of the framework is to simplify data visualization and thematic
 
 ## Getting Started
 
-Check out the [examples](https://github.com/humangeo/leaflet-dvf/wiki/2.-Examples) or read the [docs](https://github.com/humangeo/leaflet-dvf/wiki).
+Check out the [examples](https://github.com/humangeo/leaflet-dvf/wiki/2.-Examples) or read the [docs](https://github.com/humangeo/leaflet-dvf/wiki).  Details on Leaflet 1.0 compatibility can be found [here](https://github.com/humangeo/leaflet-dvf/wiki/1.0-Compatibility)

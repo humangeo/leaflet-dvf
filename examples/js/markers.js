@@ -426,7 +426,14 @@ $(document).ready(function() {
 			numSegments: 10
 		};
 
-		return new L.RadialMeterMarker(latlng, meterMarkerOptions);
+		var marker = new L.RadialMeterMarker(latlng, meterMarkerOptions);
+
+		marker.on('click', function (e) {
+			this.options.data.Speed = Math.random() * 200;
+			this.redraw();
+		});
+
+		return marker;
 	});
 
 	addMarkers('Bar Charts', 0.0, 14.0, 2.0, 5, function (latlng) {
@@ -494,18 +501,16 @@ $(document).ready(function() {
 
 		var barChart = new L.BarChartMarker(latlng, options);
 
-		var updateFunction = function () {
-			barChart.options.data = {
-					'dataPoint1': Math.random() * 20,
-					'dataPoint2': Math.random() * 20,
-					'dataPoint3': Math.random() * 20,
-					'dataPoint4': Math.random() * 20
+		barChart.on('click', function (e) {
+			this.options.data = {
+				'dataPoint1': Math.random() * 20,
+				'dataPoint2': Math.random() * 20,
+				'dataPoint3': Math.random() * 20,
+				'dataPoint4': Math.random() * 20
 			};
 
-			barChart.redraw();
-		};
-
-		//setInterval(updateFunction, 1000);
+			this.redraw();
+		});
 
 		return barChart;
 	});
@@ -708,7 +713,20 @@ $(document).ready(function() {
 			}
 		};
 
-		return new L.RadialBarChartMarker(latlng, options);
+		var radialChartMarker = new L.RadialBarChartMarker(latlng, options);
+
+		radialChartMarker.on('click', function (e) {
+			this.options.data = {
+				'dataPoint1': Math.random() * 20,
+				'dataPoint2': Math.random() * 20,
+				'dataPoint3': Math.random() * 20,
+				'dataPoint4': Math.random() * 20
+			};
+
+			this.redraw();
+		});
+
+		return radialChartMarker;
 	});
 
 	addMarkers('Stacked Regular Polygons', -8.0, 14.0, 2.0, 5, function (latlng, index) {

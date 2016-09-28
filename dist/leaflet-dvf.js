@@ -4190,7 +4190,7 @@ L.BarChartMarker = L.ChartMarker.extend({
 	_loadComponents: function () {
 		var value, minValue, maxValue;
 		var bar;
-		var options = this.options;
+		var options = L.Util.extend({}, this.options);
 		var x;
 		var y;
 		var keys = Object.keys(this.options.data);
@@ -4415,7 +4415,7 @@ L.PieChartMarker = L.ChartMarker.extend({
 		var maxDegrees = this.options.maxDegrees || 360.0;
 		var lastAngle = this.options.rotation;
 		var bar;
-		var options = this.options;
+		var options = L.Util.extend({}, this.options);
 		var data = this.options.data;
 		var chartOptions = this.options.chartOptions;
 		var chartOption;
@@ -4512,7 +4512,7 @@ L.CoxcombChartMarker = L.CoxcombChartMarker.extend({
 		var maxDegrees = this.options.maxDegrees || 360.0;
 		var lastAngle = this.options.rotation;
 		var bar;
-		var options = this.options;
+		var options = L.Util.extend({}, this.options);
 		var radiusX = 'radiusX' in this.options ? this.options.radiusX : this.options.radius;
 		var radiusY = 'radiusY' in this.options ? this.options.radiusY : this.options.radius;
 		var keys = Object.keys(this.options.data);
@@ -4611,7 +4611,7 @@ L.RadialBarChartMarker = L.ChartMarker.extend({
 		var angle = this.options.rotation;
 		var maxDegrees = this.options.maxDegrees || 360.0;
 		var bar;
-		var options = this.options;
+		var options = L.Util.extend({}, this.options);
 		var lastRadiusX = this.options.radiusX || this.options.radius;
 		var lastRadiusY = this.options.radiusY || this.options.radius;
 		var data = this.options.data;
@@ -4678,12 +4678,12 @@ L.StackedRegularPolygonMarker = L.ChartMarker.extend({
 		var lastRadiusX = 0;
 		var lastRadiusY = 0;
 		var bar;
-		var options = this.options;
+		var options = L.Util.extend({}, this.options);
 		var data = this.options.data;
 		var chartOptions = this.options.chartOptions;
 		var chartOption;
 		var key;
-		
+		var minValue, maxValue, minRadius, maxRadius;
 		// Iterate through the data values
 		var bars = [];
 		
@@ -4783,7 +4783,7 @@ L.RadialMeterMarker = L.ChartMarker.extend({
 		var startAngle = this.options.rotation;
 		var maxDegrees = this.options.maxDegrees || 360.0;
 		var bar;
-		var options = this.options;
+		var options = L.Util.extend({}, this.options);
 		var radiusX = this.options.radiusX || this.options.radius;
 		var radiusY = this.options.radiusY || this.options.radius;
 		var data = this.options.data;

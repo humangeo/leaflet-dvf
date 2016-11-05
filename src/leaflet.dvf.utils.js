@@ -807,7 +807,7 @@
                     var value = obj[property];
                     if (typeof value === 'object') {
                         var container = document.createElement('div');
-                        container.appendChild(L.HTMLUtils.buildTable(value, ignoreFields));
+                        container.appendChild(L.HTMLUtils.buildTable(value, className, ignoreFields));
                         value = container.innerHTML;
                     }
 

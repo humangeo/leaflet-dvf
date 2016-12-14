@@ -718,7 +718,7 @@ L.Graph = L.Graph.extend({
 				location = {
 					center: bounds.getCenter(),
 					location: line,
-					text: fromValue + ' - ' + toValue
+					text: fromLocation.text + ' - ' + toLocation.text
 				};
 			}
 		}

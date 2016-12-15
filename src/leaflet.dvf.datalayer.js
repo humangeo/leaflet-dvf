@@ -780,9 +780,9 @@
                 for (var property in displayOptions) {
 
                     var propertyOptions = displayOptions[property];
+                    var fieldValue = L.Util.getFieldValue(record, property);
 
                     if (!propertyOptions.excludeFromTooltip) {
-                        var fieldValue = L.Util.getFieldValue(record, property);
                         var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
 
                         legendDetails[property] = {

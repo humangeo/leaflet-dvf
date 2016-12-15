@@ -698,7 +698,8 @@
 
     L.Graph = L.Graph.extend({
         options: {
-            getEdge: L.Graph.EDGESTYLE.STRAIGHT
+            getEdge: L.Graph.EDGESTYLE.STRAIGHT,
+            useLocationText: true
         },
         _getLayer: function (location, layerOptions, record) {
             location.location.setStyle(layerOptions);
@@ -715,6 +716,9 @@
             var fromLocation = this.options.locationMode.call(this, fromValue, fromValue);
             var toLocation = this.options.locationMode.call(this, toValue, toValue);
 
+            var fromText = useLocationText ? fromLocation.text : fromValue;
+            var toText = useLocationText ? toLocation.text : toValue;
+
             // Get from location
             // Get to location
             // Create a line (arced or straight) connecting the two locations
@@ -729,7 +733,7 @@
                     location = {
                         center: bounds.getCenter(),
                         location: line,
-                        text: fromValue + ' - ' + toValue
+                        text: this.options.getLocationText ? this.options.getLocationText.call(this, record) : fromText + ' - ' + toText
                     };
                 }
             }

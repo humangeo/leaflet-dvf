@@ -780,15 +780,18 @@
                 for (var property in displayOptions) {
 
                     var propertyOptions = displayOptions[property];
-                    var fieldValue = L.Util.getFieldValue(record, property);
+
+                    if (!propertyOptions.excludeFromTooltip) {
+                        var fieldValue = L.Util.getFieldValue(record, property);
+                        var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
+
+                        legendDetails[property] = {
+                            name: propertyOptions.displayName,
+                            value: displayText
+                        };
+                    }
+
                     var valueFunction;
-                    var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
-
-                    legendDetails[property] = {
-                        name: propertyOptions.displayName,
-                        value: displayText
-                    };
-
                     if (propertyOptions.styles) {
                         layerOptions = L.extend(layerOptions, propertyOptions.styles[fieldValue]);
                         propertyOptions.styles[fieldValue] = layerOptions;
@@ -799,6 +802,7 @@
                             layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : (valueFunction.call ? valueFunction.call(this, fieldValue, record) : valueFunction);
                         }
                     }
+
                 }
             }
 
@@ -886,7 +890,7 @@
             var includeLayer = this._shouldLoadRecord(record);
 
             if (includeLayer) {
-                var dynamicOptions = this.options.dynamicOptions ? this.options.dynamicOptions(record) : this._getDynamicOptions(record);
+                var dynamicOptions = this.options.dynamicOptions ? this.options.dynamicOptions.call(this, record) : this._getDynamicOptions(record);
 
                 layerOptions = dynamicOptions.layerOptions;
                 legendDetails = dynamicOptions.legendDetails;

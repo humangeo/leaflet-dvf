@@ -22,3 +22,4 @@ Leaflet DVF is made possible by contributions from:
 * Aru Sahni [arusahni](https://github.com/arusahni)
 * Jeremy Battle [battlejj](https://github.com/battlejj)
 * Lucas Sallovitz [krusty](https://github.com/krusty)
+* Joakim Kejser [joakimkejser](https://github.com/joakimkejser)

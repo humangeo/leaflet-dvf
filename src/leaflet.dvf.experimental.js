@@ -716,8 +716,8 @@
             var fromLocation = this.options.locationMode.call(this, fromValue, fromValue);
             var toLocation = this.options.locationMode.call(this, toValue, toValue);
 
-            var fromText = useLocationText ? fromLocation.text : fromValue;
-            var toText = useLocationText ? toLocation.text : toValue;
+            var fromText = this.options.useLocationText && fromLocation ? fromLocation.text : fromValue;
+            var toText = this.options.useLocationText && toLocation ? toLocation.text : toValue;
 
             // Get from location
             // Get to location

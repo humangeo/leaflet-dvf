@@ -6123,18 +6123,20 @@
 
                 var latlng = e.latlng || e.target._latlng;
 
-                var tooltip = new L.Marker(latlng, {
-                    icon: icon
-                });
+                if (self.options.showLegendTooltips) {
+                    var tooltip = new L.Marker(latlng, {
+                        icon: icon
+                    });
 
-                target._map.addLayer(tooltip);
+                    target._map.addLayer(tooltip);
 
-                if (self.tooltip) {
-                    target._map.removeLayer(self.tooltip);
-                    self.tooltip = null;
+                    if (self.tooltip) {
+                        target._map.removeLayer(self.tooltip);
+                        self.tooltip = null;
+                    }
+
+                    self.tooltip = tooltip;
                 }
-
-                self.tooltip = tooltip;
 
                 if (setHighlight) {
                     layerOptions = setHighlight(layerOptions);
@@ -6341,9 +6343,7 @@
                     layer = this._getIndexedLayer(this._layerIndex, location, layerOptions, record);
 
                     if (layer) {
-                        if (this.options.showLegendTooltips) {
-                            this._bindMouseEvents(layer, layerOptions, legendDetails);
-                        }
+                        this._bindMouseEvents(layer, layerOptions, legendDetails);
 
                         if (this.options.onEachRecord) {
                             this.options.onEachRecord.call(this, layer, record, location, this);
@@ -8724,8 +8724,8 @@
             var fromLocation = this.options.locationMode.call(this, fromValue, fromValue);
             var toLocation = this.options.locationMode.call(this, toValue, toValue);
 
-            var fromText = useLocationText ? fromLocation.text : fromValue;
-            var toText = useLocationText ? toLocation.text : toValue;
+            var fromText = this.options.useLocationText && fromLocation ? fromLocation.text : fromValue;
+            var toText = this.options.useLocationText && toLocation ? toLocation.text : toValue;
 
             // Get from location
             // Get to location

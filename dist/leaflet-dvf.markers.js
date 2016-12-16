@@ -1423,7 +1423,7 @@ L.HTMLUtils = {
 				var value = obj[property];
 				if (typeof value === 'object') {
 					var container = document.createElement('div');
-					container.appendChild(L.HTMLUtils.buildTable(value, ignoreFields));
+					container.appendChild(L.HTMLUtils.buildTable(value, className, ignoreFields));
 					value = container.innerHTML;
 				}
 				
@@ -1822,7 +1822,8 @@ L.Animation = L.Class.extend({
 		this._inProgress = false;
 		this.fire('end');
 	}
-});;// @preserve This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
+});
+;// @preserve This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
 // Adapted from:  https://raw.github.com/mbostock/d3/master/lib/colorbrewer/colorbrewer.js
 L.ColorBrewer = {
 	Sequential: {

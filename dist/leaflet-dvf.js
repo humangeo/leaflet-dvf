@@ -1423,7 +1423,7 @@ L.HTMLUtils = {
 				var value = obj[property];
 				if (typeof value === 'object') {
 					var container = document.createElement('div');
-					container.appendChild(L.HTMLUtils.buildTable(value, ignoreFields));
+					container.appendChild(L.HTMLUtils.buildTable(value, className, ignoreFields));
 					value = container.innerHTML;
 				}
 				
@@ -1822,7 +1822,8 @@ L.Animation = L.Class.extend({
 		this._inProgress = false;
 		this.fire('end');
 	}
-});;// @preserve This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
+});
+;// @preserve This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
 // Adapted from:  https://raw.github.com/mbostock/d3/master/lib/colorbrewer/colorbrewer.js
 L.ColorBrewer = {
 	Sequential: {
@@ -8043,7 +8044,8 @@ L.Graph = L.DataLayer.extend({
 
 L.Graph = L.Graph.extend({
 	options: {
-		getEdge: L.Graph.EDGESTYLE.STRAIGHT
+		getEdge: L.Graph.EDGESTYLE.STRAIGHT,
+		useLocationText: true
 	},
 	_getLayer: function (location, layerOptions, record) {
 		location.location.setStyle(layerOptions);
@@ -8060,6 +8062,9 @@ L.Graph = L.Graph.extend({
 		var fromLocation = this.options.locationMode.call(this, fromValue, fromValue);
 		var toLocation = this.options.locationMode.call(this, toValue, toValue);
 
+		var fromText = this.options.useLocationText && fromLocation ? fromLocation.text : fromValue;
+		var toText = this.options.useLocationText && toLocation ? toLocation.text : toValue;
+
 		// Get from location
 		// Get to location
 		// Create a line (arced or straight) connecting the two locations
@@ -8074,7 +8079,7 @@ L.Graph = L.Graph.extend({
 				location = {
 					center: bounds.getCenter(),
 					location: line,
-					text: fromValue + ' - ' + toValue
+					text: this.options.getLocationText ? this.options.getLocationText.call(this, record) : fromText + ' - ' + toText
 				};
 			}
 		}

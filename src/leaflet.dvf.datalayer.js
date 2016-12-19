@@ -754,34 +754,40 @@ L.DataLayer = L.LayerGroup.extend({
 	},
 
 	_getDynamicOptions: function (record) {
-		var layerOptions = L.Util.extend({},this.options.layerOptions);
-		var displayOptions = this.options.displayOptions;
+		var layerOptions = L.Util.extend({}, this.options.layerOptions);
+		var displayOptions = this.options.displayOptions || {};
 		var legendDetails = {};
 
-		if (displayOptions) {
+		if (typeof displayOptions === 'function') {
+			return displayOptions.call(this, record, layerOptions);
+		}
+		else {
 			for (var property in displayOptions) {
 
 				var propertyOptions = displayOptions[property];
 				var fieldValue = L.Util.getFieldValue(record, property);
+
+				if (!propertyOptions.excludeFromTooltip) {
+					var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
+
+					legendDetails[property] = {
+						name: propertyOptions.displayName,
+						value: displayText
+					};
+				}
+
 				var valueFunction;
-				var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
-
-				legendDetails[property] = {
-					name: propertyOptions.displayName,
-					value: displayText
-				};
-
 				if (propertyOptions.styles) {
-					layerOptions = L.Util.extend(layerOptions, propertyOptions.styles[fieldValue]);
+					layerOptions = L.extend(layerOptions, propertyOptions.styles[fieldValue]);
 					propertyOptions.styles[fieldValue] = layerOptions;
 				}
 				else {
 					for (var layerProperty in propertyOptions) {
 						valueFunction = propertyOptions[layerProperty];
-
-						layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : (valueFunction.call ? valueFunction.call(this, fieldValue) : valueFunction);
+						layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : (valueFunction.call ? valueFunction.call(this, fieldValue, record) : valueFunction);
 					}
 				}
+
 			}
 		}
 

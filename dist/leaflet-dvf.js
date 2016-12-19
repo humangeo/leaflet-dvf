@@ -5658,7 +5658,7 @@ L.DataLayer = L.LayerGroup.extend({
 
 				var valueFunction;
 				if (propertyOptions.styles) {
-					layerOptions = L.extend(layerOptions, propertyOptions.styles[fieldValue]);
+					layerOptions = L.Util.extend(layerOptions, propertyOptions.styles[fieldValue]);
 					propertyOptions.styles[fieldValue] = layerOptions;
 				}
 				else {

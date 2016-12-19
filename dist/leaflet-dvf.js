@@ -5548,18 +5548,20 @@ L.DataLayer = L.LayerGroup.extend({
 
 			var latlng = e.latlng || e.target._latlng;
 
-			var tooltip = new L.Marker(latlng, {
-				icon: icon
-			});
+			if (self.options.showLegendTooltips) {
+				var tooltip = new L.Marker(latlng, {
+					icon: icon
+				});
 
-			self.addLayer(tooltip);
+				self.addLayer(tooltip);
 
-			if (self.tooltip) {
-				self.removeLayer(self.tooltip);
-				self.tooltip = null;
+				if (self.tooltip) {
+					self.removeLayer(self.tooltip);
+					self.tooltip = null;
+				}
+
+				self.tooltip = tooltip;
 			}
-
-			self.tooltip = tooltip;
 
 			if (setHighlight) {
 				layerOptions = setHighlight(layerOptions);
@@ -5764,9 +5766,7 @@ L.DataLayer = L.LayerGroup.extend({
 				layer = this._getIndexedLayer(this._layerIndex, location, layerOptions, record);
 
 				if (layer) {
-					if (this.options.showLegendTooltips) {
-						this._bindMouseEvents(layer, layerOptions, legendDetails);
-					}
+					this._bindMouseEvents(layer, layerOptions, legendDetails);
 
 					if (this.options.onEachRecord) {
 						this.options.onEachRecord.call(this, layer, record, location, this);

@@ -665,7 +665,7 @@
             }
         },
 
-        _bindMouseEvents: function (layer, layerOptions, legendDetails) {
+        _bindMouseEvents: function (layer, layerOptions, legendDetails, record) {
             var self = this;
             var options = this.options;
             var setHighlight = options.setHighlight;
@@ -676,7 +676,7 @@
 
                 var target = e.target;
                 var layerOptions = this.options || target.options;
-                var icon = new L.LegendIcon(legendDetails, layerOptions, {
+                var icon = tooltipOptions.getTooltip ? tooltipOptions.getTooltip.call(this, record, legendDetails, layerOptions) : new L.LegendIcon(legendDetails, layerOptions, {
                     className: tooltipOptions.className || 'leaflet-div-icon',
                     iconSize: tooltipOptions.iconSize,
                     iconAnchor: tooltipOptions.iconAnchor
@@ -904,7 +904,7 @@
                     layer = this._getIndexedLayer(this._layerIndex, location, layerOptions, record);
 
                     if (layer) {
-                        this._bindMouseEvents(layer, layerOptions, legendDetails);
+                        this._bindMouseEvents(layer, layerOptions, legendDetails, record);
 
                         if (this.options.onEachRecord) {
                             this.options.onEachRecord.call(this, layer, record, location, this);

@@ -65,6 +65,10 @@ div.leaflet-div-icon div div.legend-box {
     margin-bottom: 0px;
 }
 
+div.legend-box-hidden div div.legend-box {
+    display: none;
+}
+
 div.leaflet-div-icon div div.key {
     margin: 2px 4px 0px 0px;
     font-weight: bold;

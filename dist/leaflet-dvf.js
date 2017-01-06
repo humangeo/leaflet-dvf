@@ -6115,8 +6115,14 @@
 
                 var target = e.target;
                 var layerOptions = this.options || target.options;
+                var className = tooltipOptions.className || 'leaflet-div-icon';
+
+                if (self.options.tooltipOptions.hideLegendBox) {
+                    className += ' legend-box-hidden';
+                }
+
                 var icon = tooltipOptions.getTooltip ? tooltipOptions.getTooltip.call(this, record, legendDetails, layerOptions) : new L.LegendIcon(legendDetails, layerOptions, {
-                    className: tooltipOptions.className || 'leaflet-div-icon',
+                    className: className,
                     iconSize: tooltipOptions.iconSize,
                     iconAnchor: tooltipOptions.iconAnchor
                 });

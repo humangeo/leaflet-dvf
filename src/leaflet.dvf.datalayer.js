@@ -262,6 +262,7 @@
                 color: '#000'
             },
             showLegendTooltips: true,
+            bindMouseEvents: true,
             tooltipOptions: {
                 iconSize: new L.Point(60, 50),
                 iconAnchor: new L.Point(-5, 50),
@@ -676,21 +677,24 @@
 
                 var target = e.target;
                 var layerOptions = this.options || target.options;
-                var className = tooltipOptions.className || 'leaflet-div-icon';
 
-                if (self.options.tooltipOptions.hideLegendBox) {
-                    className += ' legend-box-hidden';
-                }
+                if (options.showLegendTooltips) {
+                    var className = tooltipOptions.className || 'leaflet-div-icon';
 
-                var icon = tooltipOptions.getTooltip ? tooltipOptions.getTooltip.call(this, record, legendDetails, layerOptions) : new L.LegendIcon(legendDetails, layerOptions, {
-                    className: className,
-                    iconSize: tooltipOptions.iconSize,
-                    iconAnchor: tooltipOptions.iconAnchor
-                });
+                    if (tooltipOptions.hideLegendBox) {
+                        className += ' legend-box-hidden';
+                    }
 
-                var latlng = e.latlng || e.target._latlng;
+                    var icon = tooltipOptions.getTooltip ?
+                        tooltipOptions.getTooltip.call(this, record, legendDetails, layerOptions) :
+                        new L.LegendIcon(legendDetails, layerOptions, {
+                            className: className,
+                            iconSize: tooltipOptions.iconSize,
+                            iconAnchor: tooltipOptions.iconAnchor
+                        });
 
-                if (self.options.showLegendTooltips) {
+                    var latlng = e.latlng || e.target._latlng;
+
                     var tooltip = new L.Marker(latlng, {
                         icon: icon
                     });
@@ -910,7 +914,9 @@
                     layer = this._getIndexedLayer(this._layerIndex, location, layerOptions, record);
 
                     if (layer) {
-                        this._bindMouseEvents(layer, layerOptions, legendDetails, record);
+                        if (this.options.bindMouseEvents) {
+                            this._bindMouseEvents(layer, layerOptions, legendDetails, record);
+                        }
 
                         if (this.options.onEachRecord) {
                             this.options.onEachRecord.call(this, layer, record, location, this);
@@ -1669,7 +1675,8 @@
      */
     L.ChartDataLayer = L.DataLayer.extend({
         options: {
-            showLegendTooltips: false
+            showLegendTooltips: false,
+            bindMouseEvents: false
         },
 
         initialize: function (data, options) {

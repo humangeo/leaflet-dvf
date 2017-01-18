@@ -7904,7 +7904,8 @@
     L.Control.Legend = L.Control.extend({
         options: {
             position: 'bottomright',
-            autoAdd: true
+            autoAdd: true,
+            toggleSize: true
         },
 
         onAdd: function (map) {
@@ -7929,18 +7930,22 @@
 
             this.toggleSize = L.bind(this.toggleSize, this);
 
-            L.DomEvent
-                .addListener(container, 'mouseover', this.toggleSize)
-                .addListener(container, 'mouseout', this.toggleSize)
-                .addListener(container, 'touchstart', this.toggleSize)
-                .addListener(container, 'touchend', this.toggleSize)
-                .addListener(container, 'mousedown', L.DomEvent.stopPropagation)
-                .addListener(container, {
-                    mousewheel: L.DomEvent.stopPropagation,
-                    MozMousePixelScroll: L.DomEvent.preventDefault
-                })
-                .addListener(container, 'click', L.DomEvent.stopPropagation)
-                .addListener(container, 'click', L.DomEvent.preventDefault);
+            if (this.options.toggleSize) {
+                L.DomEvent
+                    .addListener(container, 'mouseover', this.toggleSize)
+                    .addListener(container, 'mouseout', this.toggleSize)
+                    .addListener(container, 'touchstart', this.toggleSize)
+                    .addListener(container, 'touchend', this.toggleSize)
+                    .addListener(container, 'mousedown', L.DomEvent.stopPropagation)
+                    .addListener(container, {
+                        mousewheel: L.DomEvent.stopPropagation,
+                        MozMousePixelScroll: L.DomEvent.preventDefault
+                    })
+                    .addListener(container, 'click', L.DomEvent.stopPropagation)
+                    .addListener(container, 'click', L.DomEvent.preventDefault);
+            } else {
+                L.DomUtil.addClass(container, 'larger');
+            }
 
             return container;
         },
@@ -8005,8 +8010,9 @@
     L.control.legend = function (options) {
         return new L.Control.Legend(options);
     };
-    
-}(window, document)); /*
+
+}(window, document));
+ /*
  *
  */
 (function (window, document, undefined) { 

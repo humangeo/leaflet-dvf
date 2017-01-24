@@ -195,7 +195,7 @@
         var airlines = _.filter(_.keys(airlineLookup), function (airline) {
             return airline !== 'all';
         });
-        
+
         console.log(airlines);
         var styles = new L.StylesBuilder(airlines, {
             color: function (key) {return 'hsl(' + Math.random() * 360 + ',100%, 50%)'},

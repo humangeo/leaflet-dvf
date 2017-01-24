@@ -6246,7 +6246,6 @@
                         var valueFunction;
                         if (propertyOptions.styles) {
                             layerOptions = L.extend(layerOptions, propertyOptions.styles[fieldValue]);
-                            //propertyOptions.styles[fieldValue] = layerOptions;
                         }
                         for (var layerProperty in propertyOptions) {
                             if (propertyOptions.hasOwnProperty(layerProperty)) {

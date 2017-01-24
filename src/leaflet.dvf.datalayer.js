@@ -809,7 +809,7 @@
                             layerOptions = L.extend(layerOptions, propertyOptions.styles[fieldValue]);
                         }
                         for (var layerProperty in propertyOptions) {
-                            if (propertyOptions.hasOwnProperty(layerProperty)) {
+                            if (propertyOptions.hasOwnProperty(layerProperty) && layerProperty !== 'styles') {
                                 valueFunction = propertyOptions[layerProperty];
                                 layerOptions[layerProperty] =
                                     valueFunction.evaluate ?

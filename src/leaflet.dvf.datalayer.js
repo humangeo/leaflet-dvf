@@ -262,6 +262,7 @@
                 color: '#000'
             },
             showLegendTooltips: true,
+            bindMouseEvents: true,
             tooltipOptions: {
                 iconSize: new L.Point(60, 50),
                 iconAnchor: new L.Point(-5, 50),
@@ -665,7 +666,7 @@
             }
         },
 
-        _bindMouseEvents: function (layer, layerOptions, legendDetails) {
+        _bindMouseEvents: function (layer, layerOptions, legendDetails, record) {
             var self = this;
             var options = this.options;
             var setHighlight = options.setHighlight;
@@ -676,15 +677,24 @@
 
                 var target = e.target;
                 var layerOptions = this.options || target.options;
-                var icon = new L.LegendIcon(legendDetails, layerOptions, {
-                    className: tooltipOptions.className || 'leaflet-div-icon',
-                    iconSize: tooltipOptions.iconSize,
-                    iconAnchor: tooltipOptions.iconAnchor
-                });
 
-                var latlng = e.latlng || e.target._latlng;
+                if (options.showLegendTooltips) {
+                    var className = tooltipOptions.className || 'leaflet-div-icon';
 
-                if (self.options.showLegendTooltips) {
+                    if (tooltipOptions.hideLegendBox) {
+                        className += ' legend-box-hidden';
+                    }
+
+                    var icon = tooltipOptions.getTooltip ?
+                        tooltipOptions.getTooltip.call(this, record, legendDetails, layerOptions) :
+                        new L.LegendIcon(legendDetails, layerOptions, {
+                            className: className,
+                            iconSize: tooltipOptions.iconSize,
+                            iconAnchor: tooltipOptions.iconAnchor
+                        });
+
+                    var latlng = e.latlng || e.target._latlng;
+
                     var tooltip = new L.Marker(latlng, {
                         icon: icon
                     });
@@ -781,27 +791,33 @@
             else {
                 for (var property in displayOptions) {
 
-                    var propertyOptions = displayOptions[property];
-                    var fieldValue = L.Util.getFieldValue(record, property);
+                    if (displayOptions.hasOwnProperty(property)) {
+                        var propertyOptions = displayOptions[property];
+                        var fieldValue = L.Util.getFieldValue(record, property);
 
-                    if (!propertyOptions.excludeFromTooltip) {
-                        var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
+                        if (!propertyOptions.excludeFromTooltip) {
+                            var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
 
-                        legendDetails[property] = {
-                            name: propertyOptions.displayName,
-                            value: displayText
-                        };
-                    }
+                            legendDetails[property] = {
+                                name: propertyOptions.displayName,
+                                value: displayText
+                            };
+                        }
 
-                    var valueFunction;
-                    if (propertyOptions.styles) {
-                        layerOptions = L.extend(layerOptions, propertyOptions.styles[fieldValue]);
-                        propertyOptions.styles[fieldValue] = layerOptions;
-                    }
-                    else {
+                        var valueFunction;
+                        if (propertyOptions.styles) {
+                            layerOptions = L.extend(layerOptions, propertyOptions.styles[fieldValue]);
+                        }
                         for (var layerProperty in propertyOptions) {
-                            valueFunction = propertyOptions[layerProperty];
-                            layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : (valueFunction.call ? valueFunction.call(this, fieldValue, record) : valueFunction);
+                            if (propertyOptions.hasOwnProperty(layerProperty)) {
+                                valueFunction = propertyOptions[layerProperty];
+                                layerOptions[layerProperty] =
+                                    valueFunction.evaluate ?
+                                        valueFunction.evaluate(fieldValue) :
+                                        (valueFunction.call ?
+                                            valueFunction.call(this, fieldValue, record) :
+                                            valueFunction);
+                            }
                         }
                     }
 
@@ -904,7 +920,9 @@
                     layer = this._getIndexedLayer(this._layerIndex, location, layerOptions, record);
 
                     if (layer) {
-                        this._bindMouseEvents(layer, layerOptions, legendDetails);
+                        if (this.options.bindMouseEvents) {
+                            this._bindMouseEvents(layer, layerOptions, legendDetails, record);
+                        }
 
                         if (this.options.onEachRecord) {
                             this.options.onEachRecord.call(this, layer, record, location, this);
@@ -1663,7 +1681,8 @@
      */
     L.ChartDataLayer = L.DataLayer.extend({
         options: {
-            showLegendTooltips: false
+            showLegendTooltips: false,
+            bindMouseEvents: false
         },
 
         initialize: function (data, options) {

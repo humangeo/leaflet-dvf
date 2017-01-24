@@ -111,11 +111,7 @@
          });
 
 
-        var baseLayer = L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png', {
-            maxZoom: 32,
-            maxNativeZoom: 18,
-            detectRetina: true
-        }); //new L.StamenTileLayer('watercolor');
+        var baseLayer = new L.StamenTileLayer('watercolor');
 
         baseLayer.setCSSFilter(L.ImageFilters.Presets.CSS.Grayscale);
         baseLayer.addTo(map);

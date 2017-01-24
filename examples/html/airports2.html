@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Examples - Flight Data</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
+
+        #map {
+            background-image: url('../img/subtlepatterns/pw_maze_white/pw_maze_white.png');
+        }
+
+        #map div.leaflet-tile-pane {
+            opacity: 0.4;
+        }
+
+        div.leaflet-control-legend {
+            width: 400px;
+            max-height: 80px;
+        }
+
+        .legend-line {
+            margin-bottom: 20px;
+        }
+
+        .legend-line div.scale-bars i {
+            background: none !important;
+            width: 0px;
+            height: 0px !important;
+            vertical-align: middle;
+            border-left: none !important;
+        }
+
+        .line-legend .legend-box {
+            width: 0px;
+            height: 0px !important;
+            border-top: none !important;
+            border-right: none !important;
+        }
+
+        .airport-icon .icon-plane {
+            text-align: center;
+            vertical-align: middle;
+            display: inline-block;
+            text-shadow: 2px 2px 3px #555555
+        }
+
+        .airport-icon .code {
+            color: #777777;
+            text-align: center;
+            vertical-align: middle;
+            display: inline-block;
+            text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+            font-weight: bold;
+            *background-color: rgba(255, 255, 255, 0.5);
+            *border-radius: 3px;
+        }
+
+        #info {
+            margin: 10px;
+            position: absolute;
+            top: 200px;
+            right: 0px;
+            width: 400px;
+            height: 400px;
+            overflow-y: auto;
+            max-height: 400px;
+            z-index: 999;
+        }
+
+        #info table {
+            background-color: #fff;
+        }
+    </style>
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <link rel="stylesheet" href="../lib/leaflet-1.0/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
+</head>
+
+<body>
+<div class="navbar">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">Flight Data</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div id="map"></div>
+        <div id="info" class="leaflet-control-legend"><span style="font-style: italic; font-size: 16px;">Click on airport to view details</span></div>
+    </div>
+</div>
+
+<script>
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'http://www.google-analytics.com/analytics.js', 'ga');
+
+    ga('create', 'UA-42733116-1', 'humangeo.github.io');
+    ga('send', 'pageview');
+</script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.3"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script type="text/javascript" src = "http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js" ></script>
+<script type="text/javascript" src="../data/flightData.js"></script>
+<script type="text/javascript" src="../data/usAirports.js"></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+
+<script type="text/javascript">
+
+
+    $(document).ready(function () {
+        var map;
+        var $info = $('#info');
+        var $map = $('#map');
+        var resize = function () {
+            $map.height($(window).height() - $('div.navbar').outerHeight());
+
+            if (map) {
+                map.invalidateSize();
+            }
+        };
+
+        $(window).on('resize', function () {
+            resize();
+        });
+
+        resize();
+
+        map = L.map('map').setView([44.715514, -112.148438], 4);
+
+        // Add the Stamen toner tiles as a base layer
+        var baseLayer = new L.StamenTileLayer('toner', {
+            detectRetina: true
+        }).addTo(map);
+
+        // Add a layer control
+        var layerControl = L.control.layers().addTo(map);
+
+        // Add a legend control
+        var legendControl = L.control.legend({
+            autoAdd: false
+        }).addTo(map);
+
+        // Create a lookup of airports by code.  NOTE:  this is easy, but non-optimal, particularly with a large dataset
+        // Ideally, the lookup would have already been created on the server or created and imported directly
+        var airportsLookup = L.GeometryUtils.arrayToMap(airports, 'code');
+
+        // Sort flight data in descending order by the number of flights.  This will ensure that thicker lines get displayed
+        // below thinner lines
+        flights = _.sortBy(flights, function (value) {
+            return -1 * value.cnt;
+        });
+
+        // Group flight data by airline code
+        var airlineLookup = _.groupBy(flights, function (value) {
+            return value.airline;
+        });
+
+        var airlines = _.filter(_.keys(airlineLookup), function (airline) {
+            return airline !== 'all';
+        });
+
+        console.log(airlines);
+        var styles = new L.StylesBuilder(airlines, {
+            color: function (key) {return 'hsl(' + Math.random() * 360 + ',100%, 50%)'},
+            displayName: function (key) { return airlines[key] }
+        });
+
+        var maxCountAll = Number(flights[0].cnt);
+
+        // Get the top count of flights
+        flights = _.filter(flights, function (value) {
+            return value.airline !== 'all';
+        });
+
+        var maxCount = Number(flights[0].cnt);
+
+        var count = 0;
+
+        // Get an airport location.  This function looks up an airport from a provided airport code
+        var getLocation = function (context, locationField, fieldValues, callback) {
+            var key = fieldValues[0];
+            var airport = airportsLookup[key];
+            var location;
+
+            if (airport) {
+                var latlng = new L.LatLng(Number(airport.lat), Number(airport.lon));
+
+                location = {
+                    location: latlng,
+                    text: key,
+                    center: latlng
+                };
+            }
+
+            return location;
+        };
+
+        var sizeFunction = new L.LinearFunction([1, 16], [253, 48]);
+
+        var options = {
+            recordsField: null,
+            locationMode: L.LocationModes.CUSTOM,
+            fromField: 'airport1',
+            toField: 'airport2',
+            codeField: null,
+            getLocation: getLocation,
+            getEdge: L.Graph.EDGESTYLE.ARC,
+            includeLayer: function (record) {
+                return false;
+            },
+            getIndexKey: function (location, record) {
+                return record.airport1 + '_' + record.airport2;
+            },
+            setHighlight: function (style) {
+                style.opacity = 1.0;
+
+                return style;
+            },
+            unsetHighlight: function (style) {
+                style.opacity = 0.5;
+
+                return style;
+            },
+            layerOptions: {
+                fill: false,
+                opacity: 0.9,
+                //weight: 0.5,
+                fillOpacity: 1.0,
+                distanceToHeight: new L.LinearFunction([0, 20], [1000, 300]),
+
+                //The starting and ending percentages (0 - 1) along the line at which to position control points
+                //controlPointOffsets: new L.Point(0.2, 0.2),
+
+                // Q or C for quadratic or cubic bezier
+                mode: 'C',
+                markers: {
+                    end: true
+                },
+                /*
+                animatePath: {
+                    property: 'stroke-dashoffset',
+                    duration: '1.5s',
+                    timingFunction: 'ease-in-out'
+                }
+                */
+            },
+            legendOptions: {
+                width: 200,
+                numSegments: 5,
+                className: 'legend-line'
+            },
+            tooltipOptions: {
+                iconSize: new L.Point(80, 64),
+                iconAnchor: new L.Point(-5, 64),
+                className: 'leaflet-div-icon line-legend'
+            },
+            displayOptions: {
+                cnt: {
+                    weight: new L.LinearFunction([0, 1], [maxCount, 14]),
+                    displayName: 'Flights'
+                },
+
+                airline: {
+                    displayName: 'Airline',
+                    styles: styles.getStyles()
+                }
+
+            },
+            onEachRecord: function (layer, record, location) {
+                layer.bindPopup($(L.HTMLUtils.buildTable(record)).wrap('<div/>').parent().html());
+
+                location.location.animateLine({
+                    duration: Math.random() * 5000 + 500,
+                    easing: L.AnimationUtils.easingFunctions.easeOut
+                });
+            }
+        };
+
+        var allLayer = new L.Graph(flights, options);
+        map.addLayer(allLayer);
+
+        var airportsLayer = new L.MarkerDataLayer(airportsLookup, {
+            recordsField: null,
+            locationMode: L.LocationModes.LATLNG,
+            latitudeField: 'lat',
+            longitudeField: 'lon',
+            displayOptions: {
+                'direct_flights': {
+                    color: new L.HSLHueFunction([0, 200], [253, 330], {
+                        outputLuminosity: '60%'
+                    })
+                },
+                'code': {
+                    title: function (value) {
+                        return value;
+                    }
+                }
+            },
+            layerOptions: {
+                fill: false,
+                stroke: false,
+                weight: 0,
+                color: '#A0A0A0'
+            },
+            filter: function (record) {
+                return Number(record.carriers) > 3;
+            },
+            setIcon: function (record, options) {
+                var html = '<div><i class="icon-plane"></i><span class="code">' + record.code + '</span></div>';
+                var $html = $(html);
+                var $i = $html.find('i');
+
+                L.StyleConverter.applySVGStyle($i.get(0), options);
+
+                var directFlights = L.Util.getFieldValue(record, 'direct_flights');
+                var size = sizeFunction.evaluate(directFlights);
+
+                $i.width(size);
+                $i.height(size);
+                $i.css('font-size', size + 'px');
+                $i.css('line-height', size + 'px');
+
+                var $code = $html.find('.code');
+
+                $code.width(size);
+                $code.height(size);
+                $code.css('line-height', size + 'px');
+                $code.css('font-size', size / 3 + 'px');
+                $code.css('margin-top', -size / 2 + 'px');
+
+                var icon = new L.DivIcon({
+                    iconSize: new L.Point(size, size),
+                    iconAnchor: new L.Point(size / 2, size / 2),
+                    className: 'airport-icon',
+                    html: $html.wrap('<div/>').parent().html()
+                });
+
+                return icon;
+            },
+            onEachRecord: function (layer, record) {
+                layer.on('click', function () {
+                    $info.empty();
+                    $info.append($(L.HTMLUtils.buildTable(record)).wrap('<div/>').parent().html());
+                    allLayer.options.includeLayer = function (newRecord) {
+                       return newRecord.airport1 === record.code || newRecord.airport2 === record.code;
+                    };
+                    allLayer.reloadData();
+                });
+            }
+        });
+
+        map.addLayer(airportsLayer);
+        layerControl.addOverlay(airportsLayer, 'Airports');
+
+        // Iterate through the keys in the airlineLookup object.  Each key is an airline code
+        for (var key in airlineLookup) {
+
+            if (key !== 'all') {
+                // Create a graph layer that draws lines from the location in the fromField to the location in the toField.
+                // In this case, we'll use a custom locationMode and implement the getLocation function to lookup the airport
+                // location from the airport data we have available.
+                var airportOptions = L.extend(options, {
+                    includeLayer: function (record) {
+                        return record.airline === key;
+                    }
+                })
+
+                var flightLayer = new L.Graph(flights, airportOptions);
+
+                layerControl.addOverlay(flightLayer, key);
+
+                if (count === 0) {
+                    // Add the layers we want to display to the legend
+                    // Since all group lines use the same weight and color scales, just add the first layer to the legend
+                    legendControl.addLayer(flightLayer);
+
+                    // Add each layer to the map
+                    //map.addLayer(flightLayer);
+                }
+                count++;
+            }
+        }
+    });
+</script>
+</body>
+</html>

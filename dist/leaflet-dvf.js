@@ -6230,27 +6230,34 @@
             else {
                 for (var property in displayOptions) {
 
-                    var propertyOptions = displayOptions[property];
-                    var fieldValue = L.Util.getFieldValue(record, property);
+                    if (displayOptions.hasOwnProperty(property)) {
+                        var propertyOptions = displayOptions[property];
+                        var fieldValue = L.Util.getFieldValue(record, property);
 
-                    if (!propertyOptions.excludeFromTooltip) {
-                        var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
+                        if (!propertyOptions.excludeFromTooltip) {
+                            var displayText = propertyOptions.displayText ? propertyOptions.displayText(fieldValue) : fieldValue;
 
-                        legendDetails[property] = {
-                            name: propertyOptions.displayName,
-                            value: displayText
-                        };
-                    }
+                            legendDetails[property] = {
+                                name: propertyOptions.displayName,
+                                value: displayText
+                            };
+                        }
 
-                    var valueFunction;
-                    if (propertyOptions.styles) {
-                        layerOptions = L.extend(layerOptions, propertyOptions.styles[fieldValue]);
-                        propertyOptions.styles[fieldValue] = layerOptions;
-                    }
-                    else {
+                        var valueFunction;
+                        if (propertyOptions.styles) {
+                            layerOptions = L.extend(layerOptions, propertyOptions.styles[fieldValue]);
+                            //propertyOptions.styles[fieldValue] = layerOptions;
+                        }
                         for (var layerProperty in propertyOptions) {
-                            valueFunction = propertyOptions[layerProperty];
-                            layerOptions[layerProperty] = valueFunction.evaluate ? valueFunction.evaluate(fieldValue) : (valueFunction.call ? valueFunction.call(this, fieldValue, record) : valueFunction);
+                            if (propertyOptions.hasOwnProperty(layerProperty)) {
+                                valueFunction = propertyOptions[layerProperty];
+                                layerOptions[layerProperty] =
+                                    valueFunction.evaluate ?
+                                        valueFunction.evaluate(fieldValue) :
+                                        (valueFunction.call ?
+                                            valueFunction.call(this, fieldValue, record) :
+                                            valueFunction);
+                            }
                         }
                     }
 

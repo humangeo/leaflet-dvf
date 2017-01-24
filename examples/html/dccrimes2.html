@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Examples - DC Crimes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
+
+        .leaflet-tile-pane {
+            opacity: 0.1;
+        }
+
+    </style>
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="../lib/leaflet-1.0/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/ui.css" type="text/css" media="screen"/>
+
+</head>
+
+<body>
+<div class="navbar navbar-inverse">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">DC Crimes</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </div>
+</div>
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div id="map"></div>
+    </div>
+</div>
+<script>
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'http://www.google-analytics.com/analytics.js', 'ga');
+
+    ga('create', 'UA-42733116-1', 'humangeo.github.io');
+    ga('send', 'pageview');
+</script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
+<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
+<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
+<script type="text/javascript" src="../data/dccrimestats.js"></script>
+<script type="text/javascript" src="../data/dcprecinctstopo.js"></script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        var map;
+        var legendControl;
+
+        var resize = function () {
+            var $map = $('#map');
+
+            $map.height($(window).height() - $('div.navbar').outerHeight());
+
+            if (map) {
+                map.invalidateSize();
+            }
+        };
+
+        $(window).on('resize', function () {
+            resize();
+        });
+
+        resize();
+
+        var precincts = topojson.feature(precinctsTopo, precinctsTopo.objects.dcprecincts);
+
+        map = L.map('map').setView([38.8951, -77.0367], 12);
+
+        legendControl = new L.Control.Legend();
+
+        legendControl.addTo(map);
+
+        var baseLayer = new L.StamenTileLayer('toner', {
+            detectRetina: true
+        });
+
+        baseLayer.addTo(map);
+
+        var opacityFunction = new L.PiecewiseFunction([new L.LinearFunction(new L.Point(0, 0), new L.Point(1, 0.7)), new L.LinearFunction(new L.Point(1, 0.7), new L.Point(55, 0.7))]);
+
+        var stats = crimeStats.stats;
+        var minTotal = 1000000;
+        var maxTotal = -1;
+        for (var precinctKey in stats) {
+            var precinctData = stats[precinctKey];
+
+            var max = 0;
+            var topCrime = null;
+
+            var total = 0;
+            for (var crimeType in precinctData) {
+                var count = precinctData[crimeType];
+                if (crimeType !== 'THEFT/OTHER') {
+
+
+                    if (count > max) {
+                        max = count;
+                        topCrime = crimeType;
+                    }
+
+
+                }
+
+                total += count;
+
+            }
+
+            precinctData.total = total;
+            precinctData.top = topCrime;
+
+            minTotal = Math.min(minTotal, precinctData.total);
+            maxTotal = Math.max(maxTotal, precinctData.total);
+        }
+
+        var colorFunction = new L.CustomColorFunction(0, crimeStats.types.length - 1, L.ColorBrewer.Qualitative.Paired['9']);
+        var categoryMap = {};
+
+        for (var i = 0; i < crimeStats.types.length; ++i) {
+            var crimeType = crimeStats.types[i];
+            categoryMap[crimeType.term] = colorFunction.evaluate(i);
+        }
+
+        colorFunction = new L.CategoryFunction(categoryMap);
+
+        var options = {
+            recordsField: 'stats', //'precincts',
+            codeField: null, //'term',
+            locationMode: L.LocationModes.LOOKUP,
+            locationLookup: precincts,
+            locationIndexField: 'voting_precinct',
+            locationTextField: 'voting_precinct',
+            displayOptions: {
+                'top': {
+                    displayName: 'Top Crime',
+                    fillColor: colorFunction,
+                    color: colorFunction
+                }
+            },
+            layerOptions: {
+                fillOpacity: 0.4,
+                opacity: 1,
+                weight: 1,
+                stroke: true,
+                color: '#777',
+                dropShadow: false
+            },
+            tooltipOptions: {
+                iconSize: new L.Point(80, 60),
+                iconAnchor: new L.Point(-5, 60)
+            }
+        };
+
+        var crimesLayer = new L.ChoroplethDataLayer(crimeStats, options);
+
+        crimesLayer.getLegend = null;
+
+        map.addLayer(crimesLayer);
+
+        var crimeOptions = {
+            recordsField: 'stats',
+            codeField: null,
+            locationMode: L.LocationModes.LOOKUP,
+            locationLookup: precincts,
+            locationIndexField: 'voting_precinct',
+            locationTextField: 'voting_precinct',
+            chartOptions: {},
+            layerOptions: {
+                color: '#333',
+                stroke: true, //true
+                fillOpacity: 1.0,
+                opacity: 1,
+                weight: 0.6,
+                //radius: 20,
+                barWidth: 4,
+                width: 4,
+                gradient: true, //true
+                dropShadow: false, //true
+                drawReverse: true,
+                numberOfSides: 50
+            },
+            displayOptions: {
+                total: {
+                    radius: new L.LinearFunction([minTotal, 5], [maxTotal, 40])
+                }
+            },
+            tooltipOptions: {
+                iconSize: new L.Point(80, 60),
+                iconAnchor: new L.Point(-5, 60)
+            },
+            onEachRecord: function (layer, record) {
+                var $html = $(L.HTMLUtils.buildTable(record));
+
+                layer.bindPopup($html.wrap('<div/>').parent().html(), {
+                    minWidth: 400,
+                    maxWidth: 400
+                });
+            },
+            legendOptions: {
+                title: 'Crime Types'
+            }
+        };
+
+        for (var i = 0; i < crimeStats.types.length; ++i) {
+            var type = crimeStats.types[i];
+
+            if (type.term !== 'THEFT/OTHER') {
+                crimeOptions.chartOptions[type.term] = {
+                    //color: colorFunction.evaluate(type.term),
+                    fillColor: colorFunction.evaluate(type.term),
+                    minValue: 0,
+                    maxValue: 100,
+                    maxRadius: 10,
+                    maxHeight: 30,
+                    displayText: function (value) {
+                        return value.toFixed(0);
+                    }
+                }
+            }
+        }
+
+        var crimeChartLayer = new L.PieChartDataLayer(crimeStats, crimeOptions);
+
+        map.addLayer(crimeChartLayer);
+
+    });
+</script>
+</body>
+</html>

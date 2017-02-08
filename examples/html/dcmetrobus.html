@@ -110,7 +110,9 @@
         resize();
 
         // Initialize the map
-        map = L.map('map').setView([38.8951, -77.0367], 12);
+        map = L.map('map', {
+            //renderer: L.canvas()
+        }).setView([38.8951, -77.0367], 12);
 
         var baseLayer = new L.StamenTileLayer('toner', {
             detectRetina: true
@@ -200,7 +202,7 @@
                             },
                             getTrack: function (layer, location, trackLayer) {
                                 trackLayer = trackLayer || new L.Polyline([], {
-                                    dashArray: [2, 2],
+                                    dashArray: '2, 2',
                                     color: '#eee',
                                     weight: 2
                                 });

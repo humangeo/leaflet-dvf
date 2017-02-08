@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Examples - Geohashes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="../lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style>
+        body {
+            overflow: hidden;
+        }
+
+        .leaflet-tile-pane {
+            opacity: 0.3;
+        }
+
+        div.navbar {
+            margin-bottom: 0px;
+        }
+
+        #map {
+            padding: 0px;
+            margin: 0px;
+        }
+
+    </style>
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="../lib/leaflet-1.0/leaflet.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../../dist/css/dvf.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="../css/example.css" type="text/css" media="screen"/>
+
+</head>
+
+<body>
+<div class="navbar">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">Geohashes</a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="http://humangeo.github.io/leaflet-dvf">Home</a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </div>
+</div>
+
+<div id="map"></div>
+<script>
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'http://www.google-analytics.com/analytics.js', 'ga');
+
+    ga('create', 'UA-42733116-1', 'humangeo.github.io');
+    ga('send', 'pageview');
+</script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../lib/leaflet-1.0/leaflet-src.js"></script>
+<script type="text/javascript" src="../lib/jsts/javascript.util.js"></script>
+<script type="text/javascript" src="../lib/jsts/jsts.js"></script>
+<script type="text/javascript" src="../lib/date.format.js"></script>
+<script type="text/javascript" src="../lib/geohash.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>
+<script type="text/javascript" src="../../dist/leaflet-dvf.min.js"></script>
+<script type="text/javascript" src="http://chancejs.com/chance.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        var map;
+
+        // Function for resizing the map to fill the available space on the screen
+        var resize = function () {
+            var $map = $('#map');
+
+            $map.height($(window).height() - $('div.navbar').outerHeight());
+
+            if (map) {
+                map.invalidateSize();
+            }
+        };
+
+        // Resize the map element on window resize
+        $(window).on('resize', function () {
+            resize();
+        });
+
+        // Resize the map element
+        resize();
+
+        // create a map in the "map" div, set the view to a given place and zoom
+        map = L.map('map', {
+            renderer: L.canvas()
+        }).setView([0.0, 0.0], 2);
+
+        var baseLayer = new L.StamenTileLayer('toner', {
+            detectRetina: true
+        });
+
+        baseLayer.addTo(map);
+
+        var max = 30000;
+        var geohashData = {
+            "terms": [],
+        };
+
+        for (var h = 0; h < 5000; h++) {
+            geohashData.terms.push({
+                count: ~~(Math.random() * max),
+                term: chance.geohash({length: 3})
+            });
+        }
+
+        var colorFunction = new L.HSLHueFunction(new L.Point(0,200), new L.Point(max,0), {outputSaturation: '100%', outputLuminosity: '25%'});
+        var fillColorFunction = new L.HSLHueFunction(new L.Point(0,200), new L.Point(max,0), {outputSaturation: '100%', outputLuminosity: '50%'});
+
+        var options = {
+            recordsField: 'terms',
+            geohashField: 'term',
+            displayOptions: {
+                count: {
+                    color: colorFunction,
+                    fillColor: fillColorFunction,
+                    gradient: true,
+                    displayName: 'Count'
+                }
+            },
+            legendOptions: {
+                gradient: true
+            },
+            layerOptions: {
+                fillOpacity: 0.7,
+                opacity: 1,
+                weight: 1
+            }
+        };
+
+        var options2 = {
+            recordsField: 'data',
+            geohashField: null,
+            layerOptions: {
+                fillOpacity: 0.7,
+                opacity: 1,
+                weight: 1
+            }
+        };
+
+        var legendControl = new L.Control.Legend();
+        map.addControl(legendControl);
+
+        var layer = new L.GeohashDataLayer(geohashData,options);
+
+        map.addLayer(layer);
+
+    });
+</script>
+</body>
+</html>

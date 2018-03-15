@@ -135,7 +135,7 @@
                 success: function (data) {
                     // Setup a new data layer
                     if (!lastLayer) {
-                        var deviationFunction = new L.HSLHueFunction([-60, 0], [60, 240]);
+                        var deviationFunction = new L.HSLHueFunction([-60, 200], [60, 0]);
 
                         var dataLayer = new L.DataLayer(data, {
                             recordsField: 'BusPositions',

@@ -1,6 +1,6 @@
 /*
  @preserve Leaflet Data Visualization Framework, a JavaScript library for creating thematic maps using Leaflet
- (c) 2013-2015, Scott Fairgrieve, HumanGeo
+ (c) 2013-2018, Scott Fairgrieve, HumanGeo
  */ /*
  * Class for interpolating values along a line using a linear equation
  */
@@ -6833,8 +6833,6 @@
             refreshEvents: 'moveend',
             photoSet: 'public'
         },
-
-        includes: L.Mixin.Events,
 
         onAdd: function (map) {
             L.DataLayer.prototype.onAdd.call(this, map);

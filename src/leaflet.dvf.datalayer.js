@@ -1395,8 +1395,6 @@
             photoSet: 'public'
         },
 
-        includes: L.Mixin.Events,
-
         onAdd: function (map) {
             L.DataLayer.prototype.onAdd.call(this, map);
 
